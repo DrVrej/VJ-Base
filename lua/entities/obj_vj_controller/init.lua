@@ -480,11 +480,11 @@ function ENT:StartMovement(Dir, Rot)
 		npc:SetLastPosition(finalPos)
 		npc:SCHEDULE_GOTO_POSITION(ply:KeyDown(IN_SPEED) and "TASK_RUN_PATH" or "TASK_WALK_PATH", function(x)
 			if ply:KeyDown(IN_ATTACK2) && npc.IsVJBaseSNPC_Human then
-				x.FaceData = {Type = VJ.FACE_ENEMY}
+				x.TurnData = {Type = VJ.FACE_ENEMY}
 				x.CanShootWhenMoving = true
 			else
 				if self.VJC_BullseyeTracking then
-					x.FaceData = {Type = VJ.FACE_ENEMY}
+					x.TurnData = {Type = VJ.FACE_ENEMY}
 				else
 					npc:ResetTurnTarget()
 					x:EngTask("TASK_FACE_LASTPOSITION", 0)

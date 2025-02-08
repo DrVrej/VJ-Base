@@ -57,8 +57,8 @@ function SWEP:PrimaryAttack()
 	local anim = ACT_VM_SECONDARYATTACK
 	local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
 	self:SendWeaponAnim(anim)
-	self.NextIdleT = CurTime() + animTime
-	self.NextReloadT = CurTime() + animTime
+	self.PLY_NextIdleAnimT = CurTime() + animTime
+	self.PLY_NextReloadT = CurTime() + animTime
 	self:SetNextPrimaryFire(CurTime() + animTime)
 	
 	local fireSd = VJ.PICK(self.Primary.Sound)

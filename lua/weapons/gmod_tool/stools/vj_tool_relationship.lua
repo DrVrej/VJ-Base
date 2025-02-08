@@ -50,8 +50,8 @@ if CLIENT then
 		end
 		Panel:AddPanel(tutorial)
 
-		Panel:AddControl("Label", {Text = "#tool.vjstool.menu.label.recommendation"})
-		Panel:ControlHelp("#tool.vj_tool_relationship.label1")
+		Panel:AddControl("Label", {Text = "#tool.vj_tool_relationship.header"})
+		Panel:ControlHelp("#tool.vj_tool_relationship.header.help")
 		
 		VJ_NPCRELATION_TblCurrentValues = VJ_NPCRELATION_TblCurrentValues or {}
 		local CheckList = vgui.Create("DListView")
@@ -59,7 +59,7 @@ if CLIENT then
 			//CheckList:Center() -- No need since Size does it already
 			CheckList:SetSize( 100, 300 ) -- Size
 			CheckList:SetMultiSelect(false)
-			CheckList:AddColumn("#tool.vj_tool_relationship.header")
+			CheckList:AddColumn("#tool.vj_tool_relationship.tableheader")
 			CheckList.OnRowSelected = function(rowIndex,row) chat.AddText(Color(0,255,0),"Double click to ",Color(255,100,0),"remove ",Color(0,255,0),"a class") end
 			function CheckList:DoDoubleClick(lineID,line)
 				chat.AddText(Color(255,100,0)," "..line:GetValue(1).." ",Color(0,255,0),"removed!")
@@ -100,6 +100,16 @@ if CLIENT then
 		
 		local button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
+		button:SetText("#tool.vj_tool_relationship.button.antlion")
+		button:SetSize(50,20)
+		button:SetColor(Color(0,0,0,255))
+		button.DoClick = function()
+			InsertToTable("CLASS_ANTLION")
+		end
+		Panel:AddPanel(button)
+		
+		button = vgui.Create("DButton")
+		button:SetFont("DermaDefaultBold")
 		button:SetText("#tool.vj_tool_relationship.button.combine")
 		button:SetSize(50,20)
 		button:SetColor(Color(0,0,0,255))
@@ -110,11 +120,21 @@ if CLIENT then
 		
 		button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
-		button:SetText("#tool.vj_tool_relationship.button.antlion")
+		button:SetText("#tool.vj_tool_relationship.button.hecu")
 		button:SetSize(50,20)
 		button:SetColor(Color(0,0,0,255))
 		button.DoClick = function()
-			InsertToTable("CLASS_ANTLION")
+			InsertToTable("CLASS_UNITED_STATES")
+		end
+		Panel:AddPanel(button)
+		
+		button = vgui.Create("DButton")
+		button:SetFont("DermaDefaultBold")
+		button:SetText("#tool.vj_tool_relationship.button.xen")
+		button:SetSize(50,20)
+		button:SetColor(Color(0,0,0,255))
+		button.DoClick = function()
+			InsertToTable("CLASS_XEN")
 		end
 		Panel:AddPanel(button)
 		
@@ -138,7 +158,7 @@ if CLIENT then
 		end
 		Panel:AddPanel(button)
 		Panel:AddControl("Checkbox", {Label = "#tool.vj_tool_relationship.togglealliedply", Command = "vj_tool_relationship_allytoplyallies"})
-		Panel:ControlHelp(language.GetPhrase("#tool.vj_tool_relationship.label3").." CLASS_PLAYER_ALLY")
+		Panel:ControlHelp(language.GetPhrase("#tool.vj_tool_relationship.label3"))
 		
 		//Panel:AddControl("Label", {Text = "For PLAYER entities Only:"})
 		//Panel:AddControl("Checkbox", {Label = "Make NPCs interact with friendly player", Command = "vj_tool_spawner_playerinteract"})
@@ -203,17 +223,11 @@ else
 			local allynum = net.ReadFloat()
 			if #classtbl > 0 then
 				ent.VJ_NPC_Class = classtbl
-				if ent.IsVJBaseSNPC == true then
-					if table.HasValue(classtbl,"CLASS_PLAYER_ALLY") then
-						if allynum == 1 then ent.FriendsWithAllPlayerAllies = true end
-						ent.PlayerFriendly = true
-					else
-						ent.PlayerFriendly = false
-					end
+				if ent:IsNPC() && table.HasValue(classtbl, "CLASS_PLAYER_ALLY") && allynum == 1 then
+					ent.FriendsWithAllPlayerAllies = true
 				end
 			else
 				ent.VJ_NPC_Class = {nil}
-				ent.PlayerFriendly = false
 			end
 		end
 	end)

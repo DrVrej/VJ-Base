@@ -181,7 +181,6 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 					elseif !ent.VJ_NPC_Class && entInfoClass then
 						ent.VJ_NPC_Class = {entInfoClass}
 						if entInfoClass == "CLASS_PLAYER_ALLY" then
-							ent.PlayerFriendly = true
 							ent.FriendsWithAllPlayerAllies = true
 						end
 					end
@@ -252,15 +251,20 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 		ply.VJ_SD_InvestTime = 0
 		ply.VJ_SD_InvestLevel = 0
 		ply.VJ_ID_Living = true
-		if !VJ_CVAR_IGNOREPLAYERS then
-			for _, ent in ipairs(ents.GetAll()) do
-				if ent:IsNPC() && ent.IsVJBaseSNPC then
-					ent.RelationshipEnts[#ent.RelationshipEnts + 1] = ply
-					ent.RelationshipMemory[ply] = {}
+		if SERVER then
+			if !ply.VJ_NPC_Class then
+				ply.VJ_NPC_Class = {"CLASS_PLAYER_ALLY"}
+			end
+			
+			if !VJ_CVAR_IGNOREPLAYERS then
+				for _, ent in ipairs(ents.GetAll()) do
+					if ent:IsNPC() && ent.IsVJBaseSNPC then
+						ent.RelationshipEnts[#ent.RelationshipEnts + 1] = ply
+						ent.RelationshipMemory[ply] = {}
+					end
 				end
 			end
-		end
-		if SERVER then
+			
 			if !VJ_RecipientFilter then -- Just in case it wasn't created
 				VJ_RecipientFilter = RecipientFilter()
 			end

@@ -100,7 +100,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SCHEDULE_IDLE_STAND()
 	if self:IsMoving() or (self.NextIdleTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
-	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && (self.AA_CurrentMoveTime > CurTime() or self:BusyWithActivity()) then return end // self:GetVelocity():Length() > 0
+	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && (self.AA_CurrentMoveTime > CurTime() or self:IsBusy("Activities")) then return end // self:GetVelocity():Length() > 0
 	self:MaintainIdleAnimation(self:GetIdealActivity() != ACT_IDLE)
 	return true
 end
@@ -156,10 +156,11 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 	if self:IsRunningBehavior() or self.bDoingEngineSchedule then return true end -- true = Run "MaintainSchedule" in engine
 	//self:SetArrivalActivity(ACT_COWER)
 	//self:SetArrivalSpeed(1000)
+	local isMoving = self:IsMoving()
 	
 	-- Apply walk frames to both activities and sequences
 	-- Parts of it replicate TASK_PLAY_SEQUENCE - https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc_schedule.cpp#L3312
-	if self:GetSequenceMoveDist(self:GetSequence()) > 0 && !self:IsSequenceFinished() && !self:IsMoving() && ((self:GetSequence() == self:GetIdealSequence()) or (self:GetActivity() == ACT_DO_NOT_DISTURB)) && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then
+	if !isMoving && self:GetSequenceMoveDist(self:GetSequence()) > 0 && !self:IsSequenceFinished() && ((self:GetSequence() == self:GetIdealSequence()) or (self:GetActivity() == ACT_DO_NOT_DISTURB)) && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then
 		self:AutoMovement(self:GetAnimTimeInterval())
 	end
 	
@@ -175,7 +176,7 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 			-- This is needed because:
 				-- 1. Often times translating alone will NOT update the movement animation!
 				-- 2. Half of the time, the engine will NOT even call the translate function!
-		if self:IsMoving() then
+		if isMoving then
 			local moveAct = self:GetMovementActivity()
 			if self:GetActivity() == moveAct then
 				self:SetMovementActivity(moveAct) -- Force update the movement sequence, aka "m_sequence" in the engine
@@ -212,9 +213,9 @@ function ENT:OnTaskFailed(failCode, failString)
 		-- Give it a very small delay to let the engine set its values before we continue
 		timer.Simple(0.05, function()
 			if IsValid(self) then
-				local curSchedule2 = self.CurrentSchedule
-				if curSchedule2 && curSchedule == curSchedule2 then -- Make sure the schedule hasn't changed!
-					curSchedule = curSchedule2
+				local curScheduleNew = self.CurrentSchedule
+				if curScheduleNew && curSchedule == curScheduleNew then -- Make sure the schedule hasn't changed!
+					curSchedule = curScheduleNew
 					if curSchedule.ResetOnFail then
 						curSchedule.FailureHandled = true
 						self:StopMoving()
@@ -328,9 +329,9 @@ function ENT:StartSchedule(schedule)
 		//self:SetArrivalActivity(self.WeaponAttackAnim)
 	//end
 	
-	-- Handle facing data sent by "FaceData"
+	-- Handle facing data sent by schedule's "TurnData"
 		-- Type = Type of facing it should do | Target = The vector/ent to face (Not required for enemy facing!)
-	local turnData = schedule.FaceData
+	local turnData = schedule.TurnData
 	if turnData then
 		local faceType = turnData.Type
 		if !self.CanTurnWhileMoving or !faceType then
@@ -353,11 +354,12 @@ function ENT:StartSchedule(schedule)
 	
 	-- Clear certain systems that should be notified that we have moved
 	if schedule.HasMovement then
+		self.LastHiddenZoneT = 0
 		if !schedule.CanShootWhenMoving or self.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND then // self.WeaponAttackState && self.WeaponAttackState >= VJ.WEP_ATTACK_STATE_FIRE
 			self.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 		end
-		self.LastHiddenZoneT = 0
-		if self.LastAnimType != VJ.ANIM_TYPE_GESTURE then -- Movements shouldn't interrupt gestures
+		-- Movements shouldn't interrupt gestures
+		if self.LastAnimType != VJ.ANIM_TYPE_GESTURE then
 			self.LastAnimSeed = 0
 		end
 	end
@@ -371,14 +373,15 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoSchedule(schedule)
 	if self:TaskFinished() then self:NextTask(schedule) end
-	if self.CurrentTask then self:RunTask(self.CurrentTask) end
+	local curTask = self.CurrentTask
+	if curTask then self:RunTask(curTask) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopCurrentSchedule()
 	local schedule = self.CurrentSchedule
 	//VJ.DEBUG_Print(self, "StopCurrentSchedule", schedule)
 	if schedule then
-		timer.Remove("timer_pauseattacks_reset"..self:EntIndex())
+		timer.Remove("attack_pause_reset" .. self:EntIndex())
 		self.NextIdleTime = 0
 		self.NextChaseTime = 0
 		self.AnimLockTime = 0
@@ -425,12 +428,14 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:NextTask(schedule)
 	//VJ.DEBUG_Print(self, "NextTask", schedule)
-	self.CurrentTaskID = self.CurrentTaskID + 1
-	if (self.CurrentTaskID > schedule:NumTasks()) then -- If this was the last task then finish up
+	local taksID = self.CurrentTaskID
+	taksID = taksID + 1
+	if (taksID > schedule:NumTasks()) then -- If this was the last task then finish up
 		self:ScheduleFinished(schedule)
 		return
 	end
-	self:SetTask(schedule:GetTask(self.CurrentTaskID)) -- Switch to the next task
+	self.CurrentTaskID = taksID
+	self:SetTask(schedule:GetTask(taksID)) -- Switch to the next task
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

@@ -19,18 +19,6 @@ SWEP.ReplacementWeapon = nil -- When picked up by a player it gives them a repla
 	-- Table = Replaces the weapon by going in order of the table until a valid class name is given
 SWEP.HoldType = "ar2"
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- View Model ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.ViewModel = "models/weapons/c_pistol.mdl"
-SWEP.UseHands = false -- Should this weapon use Garry's Mod hands? (The model must support it!)
-SWEP.ViewModelFlip = false -- Flip the model? Usually used for CS:S models
-SWEP.ViewModelFOV = 55 -- Player FOV for the view model
-SWEP.BobScale = 1.5 -- Bob effect when moving
-SWEP.SwayScale = 1 -- Default is 1, The scale of the viewmodel sway
-SWEP.CSMuzzleFlashes = false -- Recommended to enable for Counter Strike: Source models
-SWEP.DrawAmmo = true -- Draw regular Garry's Mod HUD?
-SWEP.DrawCrosshair = true -- Draw Crosshair?
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ World Model ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.WorldModel = "models/weapons/w_rif_ak47.mdl"
@@ -81,7 +69,17 @@ SWEP.NPC_SecondaryFireSoundLevel = 90 -- The sound level to use for the secondar
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Player Only ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- ====== Inventory-Related ====== --
+	-- ====== View model ====== --
+SWEP.ViewModel = "models/weapons/c_pistol.mdl"
+SWEP.UseHands = false -- Should this weapon use Garry's Mod hands? (The model must support it!)
+SWEP.ViewModelFlip = false -- Flip the model? Usually used for CS:S models
+SWEP.ViewModelFOV = 55 -- Player FOV for the view model
+SWEP.BobScale = 1.5 -- Bob effect when moving
+SWEP.SwayScale = 1 -- Scale of the viewmodel sway
+SWEP.CSMuzzleFlashes = false -- Recommended to enable for Counter Strike: Source models
+SWEP.DrawAmmo = true -- Draw regular Garry's Mod HUD?
+SWEP.DrawCrosshair = true -- Draw Crosshair?
+	-- ====== Inventory ====== --
 SWEP.Slot = 2 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 6)
 SWEP.SlotPos = 4 -- Which part of that slot do you want the SWEP to be in? (1 2 3 4 5 6)
 SWEP.Weight = 30 -- Decides whether we should switch from/to this
@@ -97,9 +95,9 @@ SWEP.DeploySound = {} -- Sound played when the weapon is deployed
 SWEP.HasIdleAnimation = true -- Does it have a idle animation?
 SWEP.AnimTbl_Idle = ACT_VM_IDLE
 	-- ====== Reload ====== --
+SWEP.AnimTbl_Reload = ACT_VM_RELOAD
 SWEP.HasReloadSound = false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.ReloadSound = {}
-SWEP.AnimTbl_Reload = ACT_VM_RELOAD
 SWEP.Reload_TimeUntilAmmoIsSet = 1 -- Time until ammo is set to the weapon
 	-- ====== Secondary Fire ====== --
 SWEP.Secondary.Automatic = false -- Should the weapon continue firing as long as the attack button is held down?
@@ -111,7 +109,7 @@ SWEP.Secondary.DefaultClip = 5 -- Default number of bullets in a clip | It will 
 SWEP.Secondary.Delay = false -- Time until it can shoot again
 SWEP.AnimTbl_SecondaryFire = ACT_VM_SECONDARYATTACK
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Dry Fire ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Dry Fire (Players & NPCs) ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- Examples: Under water, out of ammo
 SWEP.HasDryFireSound = true -- Should it play a sound when it's out of ammo?
@@ -119,7 +117,7 @@ SWEP.DryFireSound = {} -- The sound that it plays when the weapon is out of ammo
 SWEP.DryFireSoundLevel = 50 -- Dry fire sound level
 SWEP.DryFireSoundPitch = VJ.SET(90, 100) -- Dry fire sound pitch
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Primary Fire ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Primary Fire (Players & NPCs) ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.DisableBulletCode = false -- The bullet won't spawn, this can be used when creating a projectile-based weapon
 SWEP.Primary.Damage = 5
@@ -270,12 +268,12 @@ function SWEP:CustomOnRemove() end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.RenderGroup = RENDERGROUP_OPAQUE
 
-SWEP.Reloading = false
-SWEP.NextReloadT = 0
-SWEP.NextIdleT = 0
-SWEP.InitHasIdleAnimation = false
 SWEP.Primary.DefaultClip = 0
-SWEP.NextNPCDrySoundT = 0
+SWEP.Reloading = false
+SWEP.PLY_NextReloadT = 0
+SWEP.PLY_NextIdleAnimT = 0
+SWEP.InitHasIdleAnimation = false
+SWEP.NPC_NextDrySoundT = 0
 SWEP.NPC_NextPrimaryFireT = 0
 SWEP.NPC_AnimationSet = VJ.ANIM_SET_CUSTOM
 SWEP.NPC_SecondaryFireNextT = 0
@@ -410,7 +408,7 @@ function SWEP:Equip(newOwner)
 			self:Remove()
 		end
 	elseif newOwner:IsNPC() then
-		hook.Add("Think", self, self.NPC_ServerNextFire)
+		hook.Add("Think", self, self.NPC_Think)
 		if newOwner.IsVJBaseSNPC then
 			if newOwner.IsVJBaseSNPC_Human then
 				newOwner.Weapon_OriginalFiringDistanceFar = newOwner.Weapon_OriginalFiringDistanceFar or newOwner.Weapon_FiringDistanceFar
@@ -447,7 +445,7 @@ function SWEP:Deploy()
 	local owner = self:GetOwner()
 	self:OnDeploy()
 	if owner:IsNPC() then
-		hook.Add("Think", self, self.NPC_ServerNextFire)
+		hook.Add("Think", self, self.NPC_Think)
 	elseif owner:IsPlayer() then
 		if self.HasDeploySound then
 			local deploySD = VJ.PICK(self.DeploySound)
@@ -461,8 +459,8 @@ function SWEP:Deploy()
 		self:SendWeaponAnim(anim)
 		self:SetNextPrimaryFire(curTime + animTime)
 		self:SetNextSecondaryFire(curTime + animTime)
-		self.NextIdleT = curTime + animTime
-		self.NextReloadT = curTime + animTime
+		self.PLY_NextIdleAnimT = curTime + animTime
+		self.PLY_NextReloadT = curTime + animTime
 	end
 	return true -- Or else the player won't be able to get the weapon!
 end
@@ -524,7 +522,7 @@ function SWEP:Think() -- NOTE: This only runs for players not NPCs!
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:NPC_ServerNextFire()
+function SWEP:NPC_Think()
 	if !IsValid(self) then return end
 	local owner = self:GetOwner()
 	if !IsValid(owner) or !owner:IsNPC() or owner:GetActiveWeapon() != self then return end
@@ -541,24 +539,26 @@ function SWEP:NPC_CanFire()
 	local owner = self:GetOwner()
 	if IsValid(owner) && owner:IsNPC() then
 		local ene = owner:GetEnemy()
-		if (owner.IsVJBaseSNPC_Human && IsValid(ene) && !owner:CanFireWeapon(true, true)) or (self.NPC_StandingOnly && owner:IsMoving()) then
+		local isVJHuman = owner.IsVJBaseSNPC_Human
+		if (isVJHuman && IsValid(ene) && !owner:CanFireWeapon(true, true)) or (self.NPC_StandingOnly && owner:IsMoving()) then
 			return false
 		end
-		if (owner.IsVJBaseSNPC_Human && (owner.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE or (owner.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND && VJ.IsCurrentAnim(owner, owner.WeaponAttackAnim)))) or (!owner.IsVJBaseSNPC_Human) then
+		if (isVJHuman && (owner.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE or (owner.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND && VJ.IsCurrentAnim(owner, owner.WeaponAttackAnim)))) or (!isVJHuman) then
+			local isControlled = owner.VJ_IsBeingControlled
 			-- For VJ Humans only, ammo check
-			if owner.IsVJBaseSNPC_Human && owner.Weapon_CanReload && self:Clip1() <= 0 then -- No ammo!
-				if owner.VJ_IsBeingControlled then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
-				if !self.IsMeleeWeapon && self.HasDryFireSound && CurTime() > self.NextNPCDrySoundT then
+			if isVJHuman && owner.Weapon_CanReload && self:Clip1() <= 0 then -- No ammo!
+				if isControlled then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
+				if self.HasDryFireSound && !self.IsMeleeWeapon && CurTime() > self.NPC_NextDrySoundT then
 					local sdTbl = VJ.PICK(self.DryFireSound)
 					if sdTbl != false then owner:EmitSound(sdTbl, 80, math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter) end
 					if self.NPC_NextPrimaryFire != false then
-						self.NextNPCDrySoundT = CurTime() + self.NPC_NextPrimaryFire
+						self.NPC_NextDrySoundT = CurTime() + self.NPC_NextPrimaryFire
 					end
 				end
 				return false
 			end
-			if IsValid(ene) && ((!owner.VJ_IsBeingControlled) or (owner.VJ_IsBeingControlled && owner.VJ_TheController:KeyDown(IN_ATTACK2))) then
-				-- Check to make sure the enemy is within the firing cone!
+			-- Check to make sure the enemy is within the firing cone!
+			if IsValid(ene) && ((!isControlled) or (isControlled && owner.VJ_TheController:KeyDown(IN_ATTACK2))) then
 				local spawnPos = self:GetPos() //self:GetBulletPos() -- Because "GetBulletPos" is VERY costly sadly =(
 				local aimPos = owner.IsVJBaseSNPC and owner:GetAimPosition(ene, spawnPos, 0) or ene:BodyTarget(spawnPos)
 				local aimDir = aimPos - spawnPos
@@ -621,7 +621,7 @@ function SWEP:NPCShoot_Primary()
 					timer.Simple(tv, function() if IsValid(self) && IsValid(owner) && self:NPC_CanFire() then self:PrimaryAttack() end end)
 				end
 			end
-			if owner.IsVJBaseSNPC then owner.WeaponLastShotTime = CurTime() end
+			owner.WeaponLastShotTime = CurTime()
 		end
 	end)
 end
@@ -638,13 +638,13 @@ function SWEP:PrimaryAttack(UseAlt)
 	
 	if self.Reloading or self:GetNextSecondaryFire() > CurTime() then return end
 	if isNPC && !owner.VJ_IsBeingControlled && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return end
-	if self.IsMeleeWeapon == false && ((isPly && self.Primary.AllowInWater == false && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then
+	if !self.IsMeleeWeapon && ((isPly && !self.Primary.AllowInWater && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then
 		if SERVER then
 			owner:EmitSound(VJ.PICK(self.DryFireSound), self.DryFireSoundLevel, math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b))
 		end
 		return
 	end
-	if (!self:CanPrimaryAttack()) then return end
+	if !self:CanPrimaryAttack() then return end
 	if self:OnPrimaryAttack("Initial") == true then return end
 	
 	if isNPC && owner.IsVJBaseSNPC then
@@ -673,8 +673,8 @@ function SWEP:PrimaryAttack(UseAlt)
 	end
 	
 	-- Firing Gesture
-	if owner.IsVJBaseSNPC_Human && owner.DisableWeaponFiringGesture != true then
-		owner:PlayAnim(owner:TranslateActivity(VJ.PICK(owner.AnimTbl_WeaponAttackGesture)), false, false, false, 0, {AlwaysUseGesture=true})
+	if owner.IsVJBaseSNPC_Human && !owner.DisableWeaponFiringGesture then
+		owner:PlayAnim(owner:TranslateActivity(VJ.PICK(owner.AnimTbl_WeaponAttackGesture)), false, false, false, 0, {AlwaysUseGesture = true})
 	end
 	
 	-- MELEE WEAPON
@@ -692,7 +692,7 @@ function SWEP:PrimaryAttack(UseAlt)
 				VJ.DamageSpecialEnts(owner, v, dmginfo)
 				v:TakeDamageInfo(dmginfo, owner)
 				if v:IsPlayer() then
-					v:ViewPunch(Angle(math.random(-1, 1)*10, math.random(-1, 1)*10, math.random(-1, 1)*10))
+					v:ViewPunch(Angle(math.random(-1, 1) * 10, math.random(-1, 1) * 10, math.random(-1, 1) * 10))
 				end
 				self:OnPrimaryAttack("MeleeHit", v)
 				meleeHitEnt = true
@@ -778,8 +778,8 @@ function SWEP:PrimaryAttack(UseAlt)
 		local anim = VJ.PICK(self.AnimTbl_PrimaryFire)
 		local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
 		self:SendWeaponAnim(anim)
-		self.NextIdleT = CurTime() + animTime
-		self.NextReloadT = CurTime() + animTime
+		self.PLY_NextIdleAnimT = CurTime() + animTime
+		self.PLY_NextReloadT = CurTime() + animTime
 	end
 	self:OnPrimaryAttack("PostFire")
 	//self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
@@ -862,42 +862,43 @@ function SWEP:SecondaryAttack()
 	local anim = VJ.PICK(self.AnimTbl_SecondaryFire)
 	local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
 	self:SendWeaponAnim(anim)
-	self.NextIdleT = CurTime() + animTime
-	self.NextReloadT = CurTime() + animTime
+	self.PLY_NextIdleAnimT = CurTime() + animTime
+	self.PLY_NextReloadT = CurTime() + animTime
 	
 	self:SetNextSecondaryFire(CurTime() + (self.Secondary.Delay == false and animTime or self.Secondary.Delay))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:DoIdleAnimation()
-	if !self.HasIdleAnimation or CurTime() < self.NextIdleT then return end
+	if !self.HasIdleAnimation or CurTime() < self.PLY_NextIdleAnimT then return end
 	local owner = self:GetOwner()
 	if IsValid(owner) then
 		owner:SetAnimation(PLAYER_IDLE)
 		local anim = VJ.PICK(self.AnimTbl_Idle)
 		local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
 		self:SendWeaponAnim(anim)
-		self.NextIdleT = CurTime() + animTime
+		self.PLY_NextIdleAnimT = CurTime() + animTime
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:TranslateActivity(act)
 	local owner = self:GetOwner()
-	if (owner:IsNPC()) then
+	if owner:IsNPC() then
 		if owner.IsVJBaseSNPC then
 			local wepT = owner.AnimationTranslations[act]
-			if (wepT) then
+			if wepT then
 				if istable(wepT) then
 					return VJ.PICK(wepT)
 				end
 				return wepT
 			end
-		elseif (self.ActivityTranslateAI[act]) then -- For non-VJ NPCs
+		-- Non-VJ NPCs
+		elseif self.ActivityTranslateAI[act] then
 			return self.ActivityTranslateAI[act]
 		end
 		return -1
 	end
 	
-	-- For non-NPCs
+	-- Players
 	if self.ActivityTranslate[act] != nil then
 		return self.ActivityTranslate[act]
 	end
@@ -919,7 +920,7 @@ end
 function SWEP:Reload()
 	if !IsValid(self) then return end
 	local owner = self:GetOwner()
-	if !IsValid(owner) or !owner:IsPlayer() or !owner:Alive() or owner:GetAmmoCount(self.Primary.Ammo) == 0 or self.Reloading or CurTime() < self.NextReloadT then return end // or !owner:KeyDown(IN_RELOAD)
+	if !IsValid(owner) or !owner:IsPlayer() or !owner:Alive() or owner:GetAmmoCount(self.Primary.Ammo) == 0 or self.Reloading or CurTime() < self.PLY_NextReloadT then return end // or !owner:KeyDown(IN_RELOAD)
 	if self:Clip1() < self.Primary.ClipSize then
 		self.Reloading = true
 		self:OnReload("Start")
@@ -942,7 +943,7 @@ function SWEP:Reload()
 		local anim = VJ.PICK(self.AnimTbl_Reload)
 		local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
 		self:SendWeaponAnim(anim)
-		self.NextIdleT = CurTime() + animTime
+		self.PLY_NextIdleAnimT = CurTime() + animTime
 		timer.Simple(animTime, function()
 			if IsValid(self) then
 				self.Reloading = false
@@ -962,14 +963,14 @@ end
 function SWEP:Holster(newWep)
 	//if CLIENT then return end
 	if self == newWep or self.Reloading then return end
-	hook.Remove("Think", self) -- Otherwise "NPC_ServerNextFire" will just keep running!
+	hook.Remove("Think", self) -- Otherwise "NPC_Think" will just keep running!
 	self.HasIdleAnimation = false
 	//self:SendWeaponAnim(ACT_VM_HOLSTER)
 	return self:OnHolster(newWep)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnDrop()
-	hook.Remove("Think", self) -- Otherwise "NPC_ServerNextFire" will just keep running!
+	hook.Remove("Think", self) -- Otherwise "NPC_Think" will just keep running!
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CanBePickedUpByNPCs()

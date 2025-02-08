@@ -7,7 +7,7 @@ if !SERVER then return end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
 
-local stinkyMatTypes = {alienflesh=true, antlion=true, armorflesh=true, bloodyflesh=true, flesh=true, zombieflesh=true, player=true}
+local stinkyMatTypes = {alienflesh = true, antlion = true, armorflesh = true, bloodyflesh = true, flesh = true, zombieflesh = true, player = true}
 	-- Material types: https://developer.valvesoftware.com/wiki/Material_surface_properties
 -- Localized static values
 local IsValid = IsValid
