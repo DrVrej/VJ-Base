@@ -270,12 +270,12 @@ properties.Add("vj_pr_npc_gib",{
 		if (!self:Filter(ent, ply)) then return end
 		ent:SetHealth(0)
 		local dmg = DamageInfo()
+		dmg:SetDamage(ent:Health() + 999)
+		dmg:SetDamageType(DMG_ALWAYSGIB)
 		dmg:SetAttacker(ply)
 		dmg:SetInflictor(ply)
-		dmg:SetDamage(ent:Health() + 99999)
-		dmg:SetDamageType(DMG_ALWAYSGIB)
 		ent:TakeDamageInfo(dmg)
-		ply:ChatPrint("Gibbed "..ent:GetName()..".")
+		ply:ChatPrint("Gibbed " .. ent:GetName() .. ".")
 	end
 })
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

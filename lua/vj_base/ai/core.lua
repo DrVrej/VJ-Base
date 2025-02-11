@@ -23,6 +23,7 @@ local isstring = isstring
 local tonumber = tonumber
 local string_sub = string.sub
 local string_find = string.find
+local string_left = string.Left
 local table_concat = table.concat
 local table_remove = table.remove
 local bAND = bit.band
@@ -33,7 +34,6 @@ local math_atan2 = math.atan2
 local math_min = math.min
 local math_max = math.max
 local math_angDif = math.AngleDifference
-local varCPly = "CLASS_PLAYER_ALLY"
 local StopSound = VJ.STOPSOUND
 local PICK = VJ.PICK
 local VJ_STATE_NONE = VJ_STATE_NONE
@@ -513,7 +513,7 @@ end
 				- The base will attempt to convert it activity, if it fails, it will play it as a sequence
 				- This behavior can be overridden by AlwaysUseSequence & AlwaysUseGesture options
 		- lockAnim = Should the animation be locked and not interrupted? | Includes activities, behaviors, idle, chasing, attacking, etc. | DEFAULT: false
-			- NOTE: This automatically turns off if it's a gesture, only works for activities and sequences!
+			- NOTE: This automatically turns off for gestures, it only works for activities and sequences!
 			- false = Interruptible by everything!
 			- true = Interruptible by nothing, completely locked!
 			- "LetAttacks" = Interruptible ONLY by attacks!
@@ -523,17 +523,17 @@ end
 			- false = Don't face the enemy
 			- true = Constantly face the enemy even behind walls, objects, etc.
 			- "Visible" = Only face the enemy while it's visible
-		- animDelay = Delays the animation by the given number | DEFAULT: 0
+		- animDelay = Delays the animation by the given amount of time | DEFAULT: 0
 		- extraOptions = Table that holds extra options to modify parts of the code
 			- OnFinish(interrupted, anim) = A function that runs when the animation finishes | DEFAULT: nil
-				- interrupted = Was the animation cut off? Basically something else stopped it before the animation fully completed
-				- anim = The animation it played, it can be a string or an activity enumeration
-			- AlwaysUseSequence = The base will force attempt to play this animation as a sequence regardless of the other options | DEFAULT: false
-			- AlwaysUseGesture = The base will force attempt to play this animation as a gesture regardless of the other options | DEFAULT: false
+				- interrupted = Was the animation cut off? (Something stopped it before the animation completed)
+				- anim = Animation it played, can be a string or an activity enum
+			- AlwaysUseSequence = Force attempt to play this animation as a sequence regardless of the other options | DEFAULT: false
+			- AlwaysUseGesture = Force attempt to play this animation as a gesture regardless of the other options | DEFAULT: false
 				- NOTE: Combining "AlwaysUseSequence" and "AlwaysUseGesture" will force it to play a gesture-sequence
 			- PlayBackRate = How fast should the animation play? | DEFAULT: Whatever the current playback rate is
-			- PlayBackRateCalculated = If the playback rate is already calculated in the lockAnimTime, then set this to true! | DEFAULT: false
-		- customFunc() = TODO: NOT FINISHED
+			- PlayBackRateCalculated = If the playback rate is already calculated in the "lockAnimTime", then set this to true! | DEFAULT: false
+		- customFunc(schedule, animation) = TODO: NOT FINISHED
 	Returns
 		- Animation, this may be an activity number or a string depending on how the animation played
 			- ACT_INVALID = No animation was played or found
@@ -542,19 +542,16 @@ end
 		- Enum, Type of animation it played, such as activity, sequence, and gesture
 			- Enums are VJ.ANIM_TYPE_*
 -----------------------------------------------------------]]
-local varGes = "vjges_"
-local varSeq = "vjseq_"
---
 function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, extraOptions, customFunc)
 	animation = PICK(animation)
 	if !animation then return ACT_INVALID, 0, ANIM_TYPE_NONE end
 	
 	lockAnim = lockAnim or false
 	if lockAnimTime == nil then -- If user didn't put anything, then default it to 0
-		lockAnimTime = 0 -- Set this value to false to let the base calculate the time
+		lockAnimTime = 0
 	end
-	faceEnemy = faceEnemy or false -- Should it face the enemy while playing this animation?
-	animDelay = tonumber(animDelay) or 0 -- How much time until it starts playing the animation (seconds)
+	faceEnemy = faceEnemy or false
+	animDelay = tonumber(animDelay) or 0
 	extraOptions = extraOptions or {}
 	local isGesture = false
 	local isSequence = false
@@ -565,8 +562,8 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 		local finalString; -- Only define a table if we need to!
 		local posCur = 1
 		for i = 1, #animation do
-			local posStartGes, posEndGes = string_find(animation, varGes, posCur) -- Check for "vjges_"
-			local posStartSeq, posEndSeq = string_find(animation, varSeq, posCur) -- Check for "vjges_"
+			local posStartGes, posEndGes = string_find(animation, "vjges_", posCur) -- Check for "vjges_"
+			local posStartSeq, posEndSeq = string_find(animation, "vjseq_", posCur) -- Check for "vjseq_"
 			if !posStartGes && !posStartSeq then -- No ges or seq was found, end the loop!
 				if finalString then
 					finalString[#finalString + 1] = string_sub(animation, posCur)
@@ -832,7 +829,7 @@ end
 	Helps you decide the pitch for the NPC, very useful for speech-type of sounds!
 		- pitch1 = Random min, set to false to self.GeneralSoundPitch1 | DEFAULT = self.GeneralSoundPitch1
 		- pitch2 = Random max, set to false to self.GeneralSoundPitch2 | DEFAULT = self.GeneralSoundPitch2
-		NOTE: if self.UseTheSameGeneralSoundPitch is true then the default values will be self.UseTheSameGeneralSoundPitch_PickedNumber
+		NOTE: if self.UseGeneralSoundPitch is true then the default values will be self.UseTheSameGeneralSoundPitch_PickedNumber
 	Returns
 		- Number, the randomized number between pitch1 & pitch2
 -----------------------------------------------------------]]
@@ -841,7 +838,7 @@ function ENT:GetSoundPitch(pitch1, pitch2)
 	local finalPitch2 = self.GeneralSoundPitch2
 	local pickedNum = self.UseTheSameGeneralSoundPitch_PickedNumber
 	-- If the NPC is set to use the same sound pitch all the time and it's not 0 then use that pitch
-	if self.UseTheSameGeneralSoundPitch && pickedNum != 0 then
+	if self.UseGeneralSoundPitch && pickedNum != 0 then
 		finalPitch1 = pickedNum
 		finalPitch2 = pickedNum
 	end
@@ -974,7 +971,7 @@ local function UTIL_VecToYaw(vec) -- Based on: https://github.com/ValveSoftware/
 end
 --
 function ENT:OverrideMoveFacing(flInterval, move)
-	if !self.DisableFootStepSoundTimer then self:FootStepSoundCode() end
+	if !self.DisableFootStepSoundTimer then self:PlayFootstepSound() end
 	//VJ.DEBUG_Print(self, "OverrideMoveFacing", flInterval)
 	//PrintTable(move)
 	
@@ -1291,10 +1288,6 @@ function ENT:OnChangeActivity(newAct)
 	//end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:KeyValue(key, value)
-	//VJ.DEBUG_Print(self, "KeyValue", key, value)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRestore()
 	//VJ.DEBUG_Print(self, "OnRestore")
 	self:StopMoving()
@@ -1313,6 +1306,13 @@ function ENT:OnRestore()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:KeyValue(k, v)
+	//VJ.DEBUG_Print(self, "KeyValue", key, value)
+	if string_left(k, 2) == "On" then
+		self:StoreOutput(k, v)
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AcceptInput(key, activator, caller, data)
 	//VJ.DEBUG_Print(self, "AcceptInput", key, activator, caller, data)
 	local funcCustom = self.OnInput; if funcCustom then funcCustom(self, key, activator, caller, data) end
@@ -1328,10 +1328,19 @@ function ENT:AcceptInput(key, activator, caller, data)
 		self:SetState(VJ_STATE_FREEZE)
 	elseif key == "StopScripting" then
 		self:SetState(VJ_STATE_NONE)
-	elseif key == "SetHealth" then
-		self:SetHealth(data)
-		self:SetMaxHealth(data)
+	elseif key == "break" then
+		local dmginfo = DamageInfo()
+		dmginfo:SetDamage(self:Health())
+		dmginfo:SetDamageType(DMG_ALWAYSGIB)
+		dmginfo:SetAttacker(activator)
+		dmginfo:SetInflictor(activator)
+		self:TakeDamageInfo(dmginfo)
+		return true
+	//elseif key == "SetHealth" then
+		//self:SetHealth(data)
+		//self:SetMaxHealth(data)
 	end
+	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:HandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
@@ -1349,7 +1358,7 @@ function ENT:Touch(entity)
 		if self.Passive_RunOnTouch && entity.VJ_ID_Living && CurTime() > self.TakingCoverT && entity.Behavior != VJ_BEHAVIOR_PASSIVE && entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:CheckRelationship(entity) != D_LI then
 			self:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH")
 			self:PlaySoundSystem("Alert")
-			self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
+			self.TakingCoverT = CurTime() + math.Rand(3, 4)
 			return
 		end
 	elseif !self.DisableTouchFindEnemy && !self.IsFollowing && entity.VJ_ID_Living && !IsValid(self:GetEnemy()) && self:CheckRelationship(entity) != D_LI && !self:IsBusy() then
@@ -1359,8 +1368,8 @@ function ENT:Touch(entity)
 		return
 	end
 	
-	-- Handle "MoveOutOfFriendlyPlayersWay" system
-	if self.MoveOutOfFriendlyPlayersWay && !self.IsGuard then
+	-- Handle "YieldToAlliedPlayers" system
+	if self.YieldToAlliedPlayers && !self.IsGuard then
 		-- entity is player
 		if entity:IsPlayer() then
 			if self:CheckRelationship(entity) == D_LI then
@@ -1543,8 +1552,9 @@ function ENT:MaintainMedicBehavior()
 			
 			-- Handle the heal time and animation
 			local timeUntilHeal = self.Medic_TimeUntilHeal
-			if !self.Medic_DisableAnimation then
-				local _, animTime = self:PlayAnim(self.AnimTbl_Medic_GiveHealth, true, false)
+			local anims = self.AnimTbl_Medic_GiveHealth
+			if anims then
+				local _, animTime = self:PlayAnim(anims, true, false)
 				if !timeUntilHeal then -- Only change the heal time if "self.Medic_TimeUntilHeal" is set to false!
 					timeUntilHeal = animTime
 				end
@@ -1570,7 +1580,7 @@ function ENT:MaintainMedicBehavior()
 						if VJ.GetNearestDistance(self, ally) <= (self.Medic_HealDistance + 20) then -- Are we still in healing distance?
 							if self:OnMedicBehavior("OnHeal", ally) != false then
 								local friCurHP = ally:Health()
-								ally:SetHealth(math_min(math_max(friCurHP + self.Medic_HealthAmount, friCurHP), ally:GetMaxHealth()))
+								ally:SetHealth(math_min(math_max(friCurHP + self.Medic_HealAmount, friCurHP), ally:GetMaxHealth()))
 								timer.Remove("timer_melee_bleed"..ally:EntIndex())
 								timer.Adjust("timer_melee_slowply"..ally:EntIndex(), 0)
 								ally.VJ_SpeedEffectT = 0
@@ -1599,7 +1609,7 @@ function ENT:MaintainMedicBehavior()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainConstantlyFaceEnemy()
-	if self.LatestEnemyDistance < self.ConstantlyFaceEnemyDistance then
+	if self.LatestEnemyDistance < self.ConstantlyFaceEnemy_MinDistance then
 		-- Handle "IfVisible" and "IfAttacking" cases
 		if (self.ConstantlyFaceEnemy_IfVisible && !self.EnemyData.IsVisible) or (!self.ConstantlyFaceEnemy_IfAttacking && self.AttackType) then return end
 		local postures = self.ConstantlyFaceEnemy_Postures
@@ -1845,14 +1855,14 @@ function ENT:MaintainRelationships()
 				if myClassesChanged or entCachedClasses != entClasses then
 					-- Handle "self.VJ_NPC_Class"
 					for _, friClass in ipairs(myClasses) do
-						//if friClass == varCPly && !self.PlayerFriendly then self.PlayerFriendly = true end -- If player ally then set the PlayerFriendly to true
+						//if friClass == "CLASS_PLAYER_ALLY" && !self.PlayerFriendly then self.PlayerFriendly = true end -- If player ally then set the PlayerFriendly to true
 						if entClasses && VJ.HasValue(entClasses, friClass) then
 							if entIsPLY then
 								calculatedDisp = D_LI
 							else
 								-- Since we both have "CLASS_PLAYER_ALLY" then we need to do a special check if we both also have "self.FriendsWithAllPlayerAllies"
 								-- If we both do NOT have that, then we both like players but not each other!
-								if friClass == varCPly then
+								if friClass == "CLASS_PLAYER_ALLY" then
 									if myFriPlyAllies && ent.FriendsWithAllPlayerAllies then
 										calculatedDisp = D_LI
 									end
@@ -1926,10 +1936,10 @@ function ENT:MaintainRelationships()
 					end
 				end
 				
-				-- MoveOutOfFriendlyPlayersWay system, Based on:
+				-- YieldToAlliedPlayers system, Based on:
 					-- "CNPC_PlayerCompanion::PredictPlayerPush"	--> https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/hl2/npc_playercompanion.cpp#L548
 					-- "CAI_BaseNPC::TestPlayerPushing"				--> https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L12676
-				if entIsPLY && self.MoveOutOfFriendlyPlayersWay && !self.IsGuard && ent:GetMoveType() != MOVETYPE_NOCLIP then // && !self:IsBusy("Activities")
+				if entIsPLY && self.YieldToAlliedPlayers && !self.IsGuard && ent:GetMoveType() != MOVETYPE_NOCLIP then // && !self:IsBusy("Activities")
 					local plyVel = ent:GetInternalVariable("m_vecSmoothedVelocity")
 					if plyVel:LengthSqr() >= 19600 then -- 140 * 140 = 19600
 						local delta = self:WorldSpaceCenter() - (ent:WorldSpaceCenter() + plyVel * 0.4);
@@ -2077,7 +2087,7 @@ function ENT:Allies_CallHelp(dist)
 						if ent:IsMoving() && self.CurrentScheduleName != "SCHEDULE_IDLE_WANDER" then
 							continue
 						end
-						ent:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-50, 50) + self:GetForward()*math.random(-50, 50))
+						ent:SetLastPosition(self:GetPos() + self:GetRight() * math.random(-50, 50) + self:GetForward() * math.random(-50, 50))
 						ent:SCHEDULE_GOTO_POSITION("TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.TurnData = {Type = VJ.FACE_ENEMY} end)
 					else
 						continue
@@ -2102,9 +2112,12 @@ function ENT:Allies_CallHelp(dist)
 				self:OnCallForHelp(ent, isFirst)
 				self:PlaySoundSystem("CallForHelp")
 				-- Play the animation
-				if self.HasCallForHelpAnimation && curTime > self.NextCallForHelpAnimationT then
-					self:PlayAnim(self.AnimTbl_CallForHelp, true, false, self.CallForHelpAnimationFaceEnemy)
-					self.NextCallForHelpAnimationT = curTime + self.NextCallForHelpAnimationTime
+				if curTime > self.NextCallForHelpAnimationT then
+					local anims = self.AnimTbl_CallForHelp
+					if anims then
+						self:PlayAnim(anims, true, false, self.CallForHelpAnimationFaceEnemy)
+						self.NextCallForHelpAnimationT = curTime + self.NextCallForHelpAnimationTime
+					end
 				end
 				isFirst = false
 			end
@@ -2392,7 +2405,7 @@ function ENT:SpawnBloodParticles(dmginfo, hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SpawnBloodDecal(dmginfo, hitgroup)
+function ENT:SpawnBloodDecals(dmginfo, hitgroup)
 	local decals = self.BloodDecal
 	if !PICK(decals) then return end
 	
@@ -2441,7 +2454,7 @@ function ENT:SpawnBloodPool(dmginfo, hitgroup, corpse)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:FootStepSoundCode(customSD)
+function ENT:PlayFootstepSound(customSD)
 	if self.HasSounds && self.HasFootStepSound && self.MovementType != VJ_MOVETYPE_STATIONARY && self:IsOnGround() then
 		if self.DisableFootStepSoundTimer then
 			-- Use custom table if available, if none found then use the footstep sound table
@@ -2468,21 +2481,24 @@ function ENT:FootStepSoundCode(customSD)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IdleSoundCode(customSD, sdType)
+-- combatIdle = Play combat idle if possible
+function ENT:PlayIdleSound(customSD, sdType, combatIdle)
 	if !self.HasSounds or !self.HasIdleSounds or self.Dead then return end
 	
-	if self.NextIdleSoundT_RegularChange < CurTime() && self.NextIdleSoundT < CurTime() then
+	local curTime = CurTime()
+	if self.NextIdleSoundT_RegularChange < curTime && self.NextIdleSoundT < curTime then
 		sdType = sdType or VJ.CreateSound
-		customSD = PICK(customSD)
+		if customSD then
+			customSD = PICK(customSD)
+		end
 		local setTimer = true
 		
-		local hasEnemy = IsValid(self:GetEnemy())
 		-- Yete CombatIdle tsayn chouni YEV gerna barz tsayn hanel, ere vor barz tsayn han e
-		if hasEnemy && !PICK(self.SoundTbl_CombatIdle) && !self.IdleSounds_NoRegularIdleOnAlerted then
-			hasEnemy = false
+		if combatIdle && !PICK(self.SoundTbl_CombatIdle) && !self.IdleSounds_NoRegularIdleOnAlerted then
+			combatIdle = false
 		end
 		
-		if hasEnemy then
+		if combatIdle then
 			local pickedSD = PICK(self.SoundTbl_CombatIdle)
 			if (math.random(1,self.CombatIdleSoundChance) == 1 && pickedSD) or customSD then
 				if customSD then pickedSD = customSD end
@@ -2492,15 +2508,15 @@ function ENT:IdleSoundCode(customSD, sdType)
 		else
 			local pickedSD = PICK(self.SoundTbl_Idle)
 			local sdtbl2 = PICK(self.SoundTbl_IdleDialogue)
-			local sdrand = math.random(1, self.IdleSoundChance)
+			local sdrand = math.random(1, self.IdleSoundChance) == 1
 			local function RegularIdle()
-				if (sdrand == 1 && pickedSD) or customSD then
+				if (sdrand && pickedSD) or customSD then
 					if customSD then pickedSD = customSD end
 					StopSound(self.CurrentIdleSound)
 					self.CurrentIdleSound = sdType(self, pickedSD, self.IdleSoundLevel, self:GetSoundPitch(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
 				end
 			end
-			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds && math.random(1, 2) == 1 then
+			if sdtbl2 && sdrand && self.HasIdleDialogueSounds && math.random(1, 2) == 1 then
 				local foundEnt;
 				local canAnswer = false
 				
@@ -2531,7 +2547,7 @@ function ENT:IdleSoundCode(customSD, sdType)
 					if canAnswer then -- If we have a VJ NPC that can answer
 						local dur = SoundDuration(sdtbl2)
 						if dur == 0 then dur = 3 end -- Since some file types don't return a proper duration =(
-						local talkTime = CurTime() + (dur + 0.5)
+						local talkTime = curTime + (dur + 0.5)
 						setTimer = false
 						self.NextIdleSoundT = talkTime
 						self.NextWanderTime = talkTime
@@ -2555,13 +2571,13 @@ function ENT:IdleSoundCode(customSD, sdType)
 						-- For the other NPC to answer back:
 						timer.Simple(dur + 0.3, function()
 							if IsValid(self) && IsValid(foundEnt) && !foundEnt:OnIdleDialogue(self, "Answer") then
-								local response = foundEnt:IdleDialogueAnswerSoundCode()
+								local response = foundEnt:PlaySoundSystem("IdleDialogueAnswer")
 								if response > 0 then -- If the ally responded, then make sure both SNPCs stand still & don't play another idle sound until the whole conversation is finished!
-									local curTime = CurTime()
-									self.NextIdleSoundT = curTime + response + 0.5
-									self.NextWanderTime = curTime + response + 1
-									foundEnt.NextIdleSoundT = curTime + response + 0.5
-									foundEnt.NextWanderTime = curTime + response + 1
+									local curTime2 = CurTime()
+									self.NextIdleSoundT = curTime2 + response + 0.5
+									self.NextWanderTime = curTime2 + response + 1
+									foundEnt.NextIdleSoundT = curTime2 + response + 0.5
+									foundEnt.NextWanderTime = curTime2 + response + 1
 								end
 							end
 						end)
@@ -2574,26 +2590,451 @@ function ENT:IdleSoundCode(customSD, sdType)
 			end
 		end
 		if setTimer then
-			self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle.a, self.NextSoundTime_Idle.b)
+			self.NextIdleSoundT = curTime + math.Rand(self.NextSoundTime_Idle.a, self.NextSoundTime_Idle.b)
 		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IdleDialogueAnswerSoundCode(customSD, sdType)
-	if self.Dead or !self.HasSounds or !self.HasIdleDialogueAnswerSounds then return 0 end
+function ENT:PlaySoundSystem(sdSet, customSD, sdType)
+	if !self.HasSounds or !sdSet then return end
 	sdType = sdType or VJ.CreateSound
-	customSD = PICK(customSD)
-	local pickedSD = PICK(self.SoundTbl_IdleDialogueAnswer)
-	if (math.random(1, self.IdleDialogueAnswerSoundChance) == 1 && pickedSD) or customSD then
-		if customSD then pickedSD = customSD end
-		StopSound(self.CurrentSpeechSound)
-		StopSound(self.CurrentExtraSpeechSound)
-		StopSound(self.CurrentIdleSound)
-		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2, 3)
-		self.CurrentSpeechSound = sdType(self, pickedSD, self.IdleDialogueAnswerSoundLevel, self:GetSoundPitch(self.IdleDialogueAnswerSoundPitch.a, self.IdleDialogueAnswerSoundPitch.b))
-		return SoundDuration(pickedSD) -- Return the duration of the sound, which will be used to make the other SNPC stand still
+	if customSD then
+		customSD = PICK(customSD)
 	end
-	return 0
+	
+	if sdSet == "IdleDialogueAnswer" then
+		if self.HasIdleDialogueAnswerSounds then
+			local pickedSD = PICK(self.SoundTbl_IdleDialogueAnswer)
+			if (math.random(1, self.IdleDialogueAnswerSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentExtraSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(2, 3)
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.IdleDialogueSoundLevel, self:GetSoundPitch(self.IdleDialogueSoundPitch.a, self.IdleDialogueSoundPitch.b))
+				return SoundDuration(pickedSD) -- Return the duration of the sound, which will be used to make the other NPC stand still
+			end
+			return 0
+		end
+		return 0
+	elseif sdSet == "FollowPlayer" then
+		if self.HasFollowPlayerSounds then
+			local pickedSD = PICK(self.SoundTbl_FollowPlayer)
+			if (math.random(1, self.FollowPlayerSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.FollowPlayerSoundLevel, self:GetSoundPitch(self.FollowPlayerPitch.a, self.FollowPlayerPitch.b))
+			end
+		end
+	elseif sdSet == "UnFollowPlayer" then
+		if self.HasFollowPlayerSounds then
+			local pickedSD = PICK(self.SoundTbl_UnFollowPlayer)
+			if (math.random(1, self.FollowPlayerSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.FollowPlayerSoundLevel, self:GetSoundPitch(self.FollowPlayerPitch.a, self.FollowPlayerPitch.b))
+			end
+		end
+	elseif sdSet == "OnReceiveOrder" then
+		if self.HasOnReceiveOrderSounds then
+			local pickedSD = PICK(self.SoundTbl_OnReceiveOrder)
+			if (math.random(1, self.OnReceiveOrderSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT = self.NextIdleSoundT + 2
+				self.NextAlertSoundT = CurTime() + 2
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.OnReceiveOrderSoundLevel, self:GetSoundPitch(self.OnReceiveOrderSoundPitch.a, self.OnReceiveOrderSoundPitch.b))
+			end
+		end
+	elseif sdSet == "YieldToAlliedPlayer" then
+		if self.HasYieldToAlliedPlayerSounds then
+			local pickedSD = PICK(self.SoundTbl_YieldToAlliedPlayer)
+			if (math.random(1, self.YieldToAlliedPlayerSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.YieldToAlliedPlayerSoundLevel, self:GetSoundPitch(self.YieldToAlliedPlayerSoundPitch.a, self.YieldToAlliedPlayerSoundPitch.b))
+			end
+		end
+	elseif sdSet == "MedicBeforeHeal" then
+		if self.HasMedicSounds_BeforeHeal then
+			local pickedSD = PICK(self.SoundTbl_MedicBeforeHeal)
+			if (math.random(1, self.MedicBeforeHealSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.BeforeHealSoundLevel, self:GetSoundPitch(self.BeforeHealSoundPitch.a, self.BeforeHealSoundPitch.b))
+			end
+		end
+	elseif sdSet == "MedicOnHeal" then
+		if self.HasMedicSounds_AfterHeal then
+			local pickedSD = PICK(self.SoundTbl_MedicAfterHeal) or "items/smallmedkit1.wav"
+			if (math.random(1, self.MedicAfterHealSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
+				self.CurrentMedicAfterHealSound = sdType(self, pickedSD, self.AfterHealSoundLevel, self:GetSoundPitch(self.AfterHealSoundPitch.a, self.AfterHealSoundPitch.b))
+			end
+		end
+	elseif sdSet == "MedicReceiveHeal" then
+		if self.HasMedicSounds_ReceiveHeal then
+			local pickedSD = PICK(self.SoundTbl_MedicReceiveHeal)
+			if (math.random(1, self.MedicReceiveHealSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.MedicReceiveHealSoundLevel, self:GetSoundPitch(self.MedicReceiveHealSoundPitch.a, self.MedicReceiveHealSoundPitch.b))
+			end
+		end
+	elseif sdSet == "OnPlayerSight" then
+		if self.HasOnPlayerSightSounds then
+			local pickedSD = PICK(self.SoundTbl_OnPlayerSight)
+			if (math.random(1, self.OnPlayerSightSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
+				self.NextAlertSoundT = CurTime() + math.random(1,2)
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.OnPlayerSightSoundLevel, self:GetSoundPitch(self.OnPlayerSightSoundPitch.a, self.OnPlayerSightSoundPitch.b))
+			end
+		end
+	elseif sdSet == "InvestigateSound" then
+		if self.HasInvestigateSounds && CurTime() > self.NextInvestigateSoundT then
+			local pickedSD = PICK(self.SoundTbl_Investigate)
+			if (math.random(1, self.InvestigateSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT = self.NextIdleSoundT + 2
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.InvestigateSoundLevel, self:GetSoundPitch(self.InvestigateSoundPitch.a, self.InvestigateSoundPitch.b))
+			end
+			self.NextInvestigateSoundT = CurTime() + math.Rand(self.NextSoundTime_Investigate.a, self.NextSoundTime_Investigate.b)
+		end
+	elseif sdSet == "LostEnemy" then
+		if self.HasLostEnemySounds && CurTime() > self.NextLostEnemySoundT then
+			local pickedSD = PICK(self.SoundTbl_LostEnemy)
+			if (math.random(1, self.LostEnemySoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT = self.NextIdleSoundT + 2
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.LostEnemySoundLevel, self:GetSoundPitch(self.LostEnemySoundPitch.a, self.LostEnemySoundPitch.b))
+			end
+			self.NextLostEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_LostEnemy.a, self.NextSoundTime_LostEnemy.b)
+		end
+	elseif sdSet == "Alert" then
+		if self.HasAlertSounds then
+			local pickedSD = PICK(self.SoundTbl_Alert)
+			if (math.random(1, self.AlertSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				local dur = CurTime() + ((((SoundDuration(pickedSD) > 0) and SoundDuration(pickedSD)) or 2) + 1)
+				self.NextIdleSoundT = dur
+				self.NextPainSoundT = dur
+				self.NextSuppressingSoundT = CurTime() + 4
+				self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert.a, self.NextSoundTime_Alert.b)
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.AlertSoundLevel, self:GetSoundPitch(self.AlertSoundPitch.a, self.AlertSoundPitch.b))
+			end
+		end
+	elseif sdSet == "CallForHelp" then
+		if self.HasCallForHelpSounds then
+			local pickedSD = PICK(self.SoundTbl_CallForHelp)
+			if (math.random(1, self.CallForHelpSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT = self.NextIdleSoundT + 2
+				self.NextSuppressingSoundT = CurTime() + math.random(2.5, 4)
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.CallForHelpSoundLevel, self:GetSoundPitch(self.CallForHelpSoundPitch.a, self.CallForHelpSoundPitch.b))
+			end
+		end
+	elseif sdSet == "BeforeMeleeAttack" then
+		if self.HasMeleeAttackSounds then
+			local pickedSD = PICK(self.SoundTbl_BeforeMeleeAttack)
+			if (math.random(1, self.BeforeMeleeAttackSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentExtraSpeechSound)
+				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				self.NextIdleSoundT_RegularChange = CurTime() + 1
+				self.CurrentExtraSpeechSound = sdType(self, pickedSD, self.BeforeMeleeAttackSoundLevel, self:GetSoundPitch(self.BeforeMeleeAttackSoundPitch.a, self.BeforeMeleeAttackSoundPitch.b))
+			end
+		end
+	elseif sdSet == "MeleeAttack" then
+		if self.HasMeleeAttackSounds then
+			local pickedSD = PICK(self.SoundTbl_MeleeAttack)
+			if (math.random(1, self.MeleeAttackSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				self.NextIdleSoundT_RegularChange = CurTime() + 1
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.MeleeAttackSoundLevel, self:GetSoundPitch(self.MeleeAttackSoundPitch.a, self.MeleeAttackSoundPitch.b))
+			end
+			if self.HasExtraMeleeAttackSounds then
+				pickedSD = PICK(self.SoundTbl_MeleeAttackExtra)
+				if (math.random(1, self.ExtraMeleeSoundChance) == 1 && pickedSD) or customSD then
+					if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+					VJ.EmitSound(self, pickedSD, self.ExtraMeleeAttackSoundLevel, self:GetSoundPitch(self.ExtraMeleeSoundPitch.a, self.ExtraMeleeSoundPitch.b))
+				end
+			end
+		end
+	elseif sdSet == "MeleeAttackMiss" then
+		if self.HasMeleeAttackMissSounds then
+			local pickedSD = PICK(self.SoundTbl_MeleeAttackMiss)
+			if (math.random(1, self.MeleeAttackMissSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				StopSound(self.CurrentMeleeAttackMissSound)
+				self.NextIdleSoundT_RegularChange = CurTime() + 1
+				self.CurrentMeleeAttackMissSound = sdType(self, pickedSD, self.MeleeAttackMissSoundLevel, self:GetSoundPitch(self.MeleeAttackMissSoundPitch.a, self.MeleeAttackMissSoundPitch.b))
+			end
+		end
+	elseif sdSet == "BecomeEnemyToPlayer" then
+		if self.HasBecomeEnemyToPlayerSounds then
+			local pickedSD = PICK(self.SoundTbl_BecomeEnemyToPlayer)
+			if (math.random(1, self.BecomeEnemyToPlayerChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				local dur = CurTime() + ((((SoundDuration(pickedSD) > 0) and SoundDuration(pickedSD)) or 2) + 1)
+				self.NextPainSoundT = dur
+				self.NextAlertSoundT = dur
+				self.NextInvestigateSoundT = CurTime() + 2
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(2, 3)
+				self.NextSuppressingSoundT = CurTime() + math.random(2.5, 4)
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.BecomeEnemyToPlayerSoundLevel, self:GetSoundPitch(self.BecomeEnemyToPlayerPitch.a, self.BecomeEnemyToPlayerPitch.b))
+			end
+		end
+	elseif sdSet == "OnKilledEnemy" then
+		if self.HasOnKilledEnemySounds && CurTime() > self.NextOnKilledEnemySoundT then
+			local pickedSD = PICK(self.SoundTbl_OnKilledEnemy)
+			if (math.random(1, self.OnKilledEnemySoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT = self.NextIdleSoundT + 2
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.OnKilledEnemySoundLevel, self:GetSoundPitch(self.OnKilledEnemySoundPitch.a, self.OnKilledEnemySoundPitch.b))
+			end
+			self.NextOnKilledEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_OnKilledEnemy.a, self.NextSoundTime_OnKilledEnemy.b)
+		end
+	elseif sdSet == "AllyDeath" then
+		if self.HasOnKilledEnemySounds && CurTime() > self.NextAllyDeathSoundT then
+			local pickedSD = PICK(self.SoundTbl_AllyDeath)
+			if (math.random(1, self.AllyDeathSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT = self.NextIdleSoundT + 2
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.AllyDeathSoundLevel, self:GetSoundPitch(self.AllyDeathSoundPitch.a, self.AllyDeathSoundPitch.b))
+			end
+			self.NextAllyDeathSoundT = CurTime() + math.Rand(self.NextSoundTime_AllyDeath.a, self.NextSoundTime_AllyDeath.b)
+		end
+	elseif sdSet == "Pain" then
+		if self.HasPainSounds && CurTime() > self.NextPainSoundT then
+			local pickedSD = PICK(self.SoundTbl_Pain)
+			local sdDur = 2
+			if (math.random(1, self.PainSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT_RegularChange = CurTime() + 1
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.PainSoundLevel, self:GetSoundPitch(self.PainSoundPitch.a, self.PainSoundPitch.b))
+				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
+			end
+			self.NextPainSoundT = CurTime() + sdDur
+		end
+	elseif sdSet == "Impact" then
+		if self.HasImpactSounds then
+			local pickedSD = PICK(self.SoundTbl_Impact)
+			if (math.random(1, self.ImpactSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				self.CurrentImpactSound = sdType(self, pickedSD, self.ImpactSoundLevel, self:GetSoundPitch(self.ImpactSoundPitch.a, self.ImpactSoundPitch.b))
+			end
+		end
+	elseif sdSet == "DamageByPlayer" then
+		//if self.HasDamageByPlayerSounds && CurTime() > self.NextDamageByPlayerSoundT then -- This is done in the call instead
+			local pickedSD = PICK(self.SoundTbl_DamageByPlayer)
+			local sdDur = 2
+			if (math.random(1, self.DamageByPlayerSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
+				self.NextPainSoundT = CurTime() + sdDur
+				self.NextIdleSoundT_RegularChange = CurTime() + sdDur
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.DamageByPlayerSoundLevel, self:GetSoundPitch(self.DamageByPlayerPitch.a, self.DamageByPlayerPitch.b))
+			end
+			self.NextDamageByPlayerSoundT = CurTime() + sdDur
+		//end
+	elseif sdSet == "Death" then
+		if self.HasDeathSounds then
+			local pickedSD = PICK(self.SoundTbl_Death)
+			if (math.random(1, self.DeathSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				self.CurrentDeathSound = sdType(self, pickedSD, self.DeathSoundLevel, self:GetSoundPitch(self.DeathSoundPitch.a, self.DeathSoundPitch.b))
+			end
+		end
+	elseif sdSet == "Gib" then
+		if self.HasGibOnDeathSounds then
+			sdType = VJ.EmitSound
+			if customSD then
+				sdType(self, customSD, 80, math.random(80, 100))
+			else
+				sdType(self, "vj_base/gib/splat.wav", 80, math.random(85, 100))
+				sdType(self, "vj_base/gib/break1.wav", 80, math.random(85, 100))
+				sdType(self, "vj_base/gib/break2.wav", 80, math.random(85, 100))
+				sdType(self, "vj_base/gib/break3.wav", 80, math.random(85, 100))
+			end
+		end
+	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-- Creature Base Sound Systems --=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
+	elseif sdSet == "BeforeRangeAttack" then
+		if self.HasBeforeRangeAttackSound then
+			local pickedSD = PICK(self.SoundTbl_BeforeRangeAttack)
+			if (math.random(1, self.BeforeRangeAttackSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentExtraSpeechSound)
+				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				self.NextIdleSoundT_RegularChange = CurTime() + 1
+				self.CurrentExtraSpeechSound = sdType(self, pickedSD, self.BeforeRangeAttackSoundLevel, self:GetSoundPitch(self.BeforeRangeAttackPitch.a, self.BeforeRangeAttackPitch.b))
+			end
+		end
+	elseif sdSet == "RangeAttack" then
+		if self.HasRangeAttackSound then
+			local pickedSD = PICK(self.SoundTbl_RangeAttack)
+			if (math.random(1, self.RangeAttackSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				self.NextIdleSoundT_RegularChange = CurTime() + 1
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.RangeAttackSoundLevel, self:GetSoundPitch(self.RangeAttackPitch.a, self.RangeAttackPitch.b))
+			end
+		end
+	elseif sdSet == "BeforeLeapAttack" then
+		if self.HasBeforeLeapAttackSound then
+			local pickedSD = PICK(self.SoundTbl_BeforeLeapAttack)
+			if (math.random(1, self.BeforeLeapAttackSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentExtraSpeechSound)
+				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				self.NextIdleSoundT_RegularChange = CurTime() + 1
+				self.CurrentExtraSpeechSound = sdType(self, pickedSD, self.BeforeLeapAttackSoundLevel, self:GetSoundPitch(self.BeforeLeapAttackSoundPitch.a, self.BeforeLeapAttackSoundPitch.b))
+			end
+		end
+	elseif sdSet == "LeapAttackJump" then
+		if self.HasLeapAttackJumpSound then
+			local pickedSD = PICK(self.SoundTbl_LeapAttackJump)
+			if (math.random(1, self.LeapAttackJumpSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				self.NextIdleSoundT_RegularChange = CurTime() + 1
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.LeapAttackJumpSoundLevel, self:GetSoundPitch(self.LeapAttackJumpSoundPitch.a, self.LeapAttackJumpSoundPitch.b))
+			end
+		end
+	elseif sdSet == "LeapAttackDamage" then
+		if self.HasLeapAttackDamageSound then
+			local pickedSD = PICK(self.SoundTbl_LeapAttackDamage)
+			if (math.random(1, self.LeapAttackDamageSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				StopSound(self.CurrentSpeechSound)
+				self.NextIdleSoundT_RegularChange = CurTime() + 1
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.LeapAttackDamageSoundLevel, self:GetSoundPitch(self.LeapAttackDamageSoundPitch.a, self.LeapAttackDamageSoundPitch.b))
+			end
+		end
+	elseif sdSet == "LeapAttackDamageMiss" then
+		if self.HasLeapAttackDamageMissSound then
+			local pickedSD = PICK(self.SoundTbl_LeapAttackDamageMiss)
+			if (math.random(1, self.LeapAttackDamageMissSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				self.NextIdleSoundT_RegularChange = CurTime() + 1
+				self.CurrentLeapAttackDamageMissSound = sdType(self, pickedSD, self.LeapAttackDamageMissSoundLevel, self:GetSoundPitch(self.LeapAttackDamageMissSoundPitch.a, self.LeapAttackDamageMissSoundPitch.b))
+			end
+		end
+	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-- Human Base Sound Systems --=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
+	elseif sdSet == "Suppressing" then
+		if self.HasSuppressingSounds && CurTime() > self.NextSuppressingSoundT then
+			local pickedSD = PICK(self.SoundTbl_Suppressing)
+			if (math.random(1, self.SuppressingSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT_RegularChange = CurTime() + 2
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.SuppressingSoundLevel, self:GetSoundPitch(self.SuppressingPitch.a, self.SuppressingPitch.b))
+			end
+			self.NextSuppressingSoundT = CurTime() + math.Rand(self.NextSoundTime_Suppressing.a, self.NextSoundTime_Suppressing.b)
+		end
+	elseif sdSet == "WeaponReload" then
+		if self.HasWeaponReloadSounds then
+			local pickedSD = PICK(self.SoundTbl_WeaponReload)
+			if (math.random(1, self.WeaponReloadSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				self.NextIdleSoundT_RegularChange = CurTime() + ((SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or 3.5)
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.WeaponReloadSoundLevel, self:GetSoundPitch(self.WeaponReloadSoundPitch.a, self.WeaponReloadSoundPitch.b))
+			end
+		end
+	elseif sdSet == "GrenadeAttack" then
+		if self.HasGrenadeAttackSounds && CurTime() > self.NextGrenadeAttackSoundT then
+			local pickedSD = PICK(self.SoundTbl_GrenadeAttack)
+			if (math.random(1, self.GrenadeAttackSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.GrenadeAttackSoundLevel, self:GetSoundPitch(self.GrenadeAttackSoundPitch.a, self.GrenadeAttackSoundPitch.b))
+			end
+		end
+	elseif sdSet == "OnGrenadeSight" then
+		if self.HasOnGrenadeSightSounds && CurTime() > self.NextOnGrenadeSightSoundT then
+			local pickedSD = PICK(self.SoundTbl_OnGrenadeSight)
+			local sdDur = 3
+			if (math.random(1, self.OnGrenadeSightSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
+				self.NextIdleSoundT_RegularChange = CurTime() + sdDur
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.OnGrenadeSightSoundLevel, self:GetSoundPitch(self.OnGrenadeSightSoundPitch.a, self.OnGrenadeSightSoundPitch.b))
+			end
+			self.NextOnGrenadeSightSoundT = CurTime() + sdDur
+		end
+	elseif sdSet == "OnDangerSight" then
+		if self.HasOnDangerSightSounds && CurTime() > self.NextOnDangerSightSoundT then
+			local pickedSD = PICK(self.SoundTbl_OnDangerSight)
+			local sdDur = 3
+			if (math.random(1, self.OnDangerSightSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentIdleSound)
+				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
+				self.NextIdleSoundT_RegularChange = CurTime() + sdDur
+				self.CurrentSpeechSound = sdType(self, pickedSD, self.OnDangerSightSoundLevel, self:GetSoundPitch(self.OnDangerSightSoundPitch.a, self.OnDangerSightSoundPitch.b))
+			end
+			self.NextOnDangerSightSoundT = CurTime() + sdDur
+		end
+	else -- Such as "Speech"
+		if customSD then
+			StopSound(self.CurrentSpeechSound)
+			StopSound(self.CurrentIdleSound)
+			self.NextIdleSoundT_RegularChange = CurTime() + ((((SoundDuration(customSD) > 0) and SoundDuration(customSD)) or 2) + 1)
+			self.CurrentSpeechSound = sdType(self, customSD, 80, self:GetSoundPitch(self.GeneralSoundPitch1, self.GeneralSoundPitch2))
+		end
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RemoveTimers()
@@ -2719,11 +3160,10 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- ///// OBSOLETE FUNCTIONS | Do not to use! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// Backwards Compatibility | Do not to use! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 local dispToVal = {[D_LI] = false, [D_HT] = true, [D_NU] = "Neutral"}
 function ENT:DoRelationshipCheck(ent) return dispToVal[self:CheckRelationship(ent)] end
 function ENT:FaceCertainPosition(target, faceTime) return self:SetTurnTarget(target, faceTime) end
@@ -2745,6 +3185,7 @@ function ENT:VJ_GetNearestPointToEntity(ent, centerNPC) return VJ.GetNearestPosi
 function ENT:VJ_GetNearestPointToEntityDistance(ent, centerNPC) return VJ.GetNearestDistance(self, ent, centerNPC) end
 function ENT:BusyWithActivity() return self:IsBusy("Activities") end
 function ENT:IsBusyWithBehavior() return self:IsBusy("Behaviors") end
+function ENT:FootStepSoundCode(customSD) self:PlayFootstepSound(customSD) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Checks all 4 sides around the NPC
@@ -2765,7 +3206,7 @@ local str1 = "1"
 function ENT:VJ_CheckAllFourSides(checkDist, returnPos, sides)
 	checkDist = checkDist or 200
 	sides = sides or str1111
-	local result = returnPos == true and {} or {Forward=false, Backward=false, Right=false, Left=false}
+	local result = returnPos == true and {} or {Forward = false, Backward = false, Right = false, Left = false}
 	local i = 0
 	local myPos = self:GetPos()
 	local myPosCentered = myPos + self:OBBCenter()

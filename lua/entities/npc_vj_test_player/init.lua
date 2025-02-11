@@ -7,10 +7,8 @@ include("shared.lua")
 -----------------------------------------------*/
 ENT.Model = {"models/player/kleiner.mdl"}
 ENT.StartHealth = 100
-ENT.UsePoseParameterMovement = true
-
 ENT.BloodColor = VJ.BLOOD_COLOR_RED
-
+ENT.UsePoseParameterMovement = true
 ENT.VJ_NPC_Class = {"CLASS_PLAYER_ALLY"}
 ENT.FriendsWithAllPlayerAllies = true
 
@@ -21,13 +19,13 @@ ENT.WeaponInventory_AntiArmorList = {"weapon_vj_rpg"}
 ENT.WeaponInventory_MeleeList = {"weapon_vj_crowbar"}
 
 ENT.HasGrenadeAttack = true
-ENT.TimeUntilGrenadeIsReleased = 0.85 -- Time until the grenade is released
+ENT.TimeUntilGrenadeIsReleased = 0.85
 ENT.GrenadeAttackModel = "models/weapons/w_npcnade.mdl"
 ENT.AnimTbl_GrenadeAttack = "vjges_gesture_item_throw"
 
 ENT.AnimTbl_Medic_GiveHealth = "vjges_gesture_item_drop"
 ENT.AnimTbl_CallForHelp = {"vjges_gesture_signal_group", "vjges_gesture_signal_forward"}
-ENT.CallForBackUpOnDamageAnimation = "vjges_gesture_signal_halt"
+ENT.AnimTbl_CallForBackUpOnDamage = "vjges_gesture_signal_halt"
 ENT.Weapon_WaitOnOcclusion = false
 
 ENT.FootStepTimeRun = 0.3

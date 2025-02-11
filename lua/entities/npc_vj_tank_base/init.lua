@@ -334,10 +334,11 @@ end
 function ENT:SelectSchedule()
 	if self.Dead then return end
 
-	self:IdleSoundCode()
+	local eneValid = IsValid(self:GetEnemy())
+	self:PlayIdleSound(nil, nil, eneValid)
 	self:MaintainIdleBehavior()
 	
-	if IsValid(self:GetEnemy()) then
+	if eneValid then
 		if self.VJ_IsBeingControlled then
 			if self.VJ_TheController:KeyDown(IN_FORWARD) then
 				self.Tank_Status = 0

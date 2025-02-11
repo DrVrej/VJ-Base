@@ -148,7 +148,7 @@ local entInfos = {
 local ignoredNPCs = {npc_cranedriver = true, npc_missiledefense = true, monster_generic = true,  monster_furniture = true,  npc_furniture = true,  npc_helicoptersensor = true, monster_gman = true,  npc_grenade_frag = true,  bullseye_strider_focus = true,  npc_bullseye = true,  npc_enemyfinder = true,  hornet = true}
 local grenadeEnts = {npc_grenade_frag = true, grenade_hand = true, obj_spore = true, obj_grenade = true, obj_handgrenade = true, doom3_grenade = true, fas2_thrown_m67 = true, cw_grenade_thrown = true, obj_cpt_grenade = true, cw_flash_thrown = true, ent_hl1_grenade = true, rtbr_grenade_frag = true}
 local grenadeGrabbableEnts = {npc_grenade_frag = true, obj_spore = true, obj_handgrenade = true, obj_cpt_grenade = true, cw_grenade_thrown = true, cw_flash_thrown = true, cw_smoke_thrown = true, ent_hl1_grenade = true, rtbr_grenade_frag = true}
-local attackableEnts = {prop_physics = true, prop_physics_multiplayer = true, prop_physics_respawnable = true, func_breakable = true, func_physbox = true, prop_door_rotating = true, item_item_crate = true}
+local attackableEnts = {prop_physics = true, prop_physics_multiplayer = true, prop_physics_respawnable = true, func_breakable = true, func_physbox = true, prop_door_rotating = true, item_item_crate = true, prop_glados_core = true, weapon_striderbuster = true}
 local destructibleEnts = {func_breakable_surf = true, sent_sakariashelicopter = true}
 --
 hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)

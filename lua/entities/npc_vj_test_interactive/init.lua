@@ -11,7 +11,7 @@ ENT.BloodColor = VJ.BLOOD_COLOR_RED
 ENT.Behavior = VJ_BEHAVIOR_PASSIVE
 ENT.VJ_NPC_Class = {"CLASS_PLAYER_ALLY"}
 ENT.FriendsWithAllPlayerAllies = true
-ENT.MoveOutOfFriendlyPlayersWay = false
+ENT.YieldToAlliedPlayers = false
 ENT.FollowPlayer = false
 
 ENT.HasFootStepSound = false

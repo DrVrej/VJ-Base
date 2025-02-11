@@ -15,7 +15,6 @@ AccessorFunc(ENT, "m_fMaxYawSpeed", "MaxYawSpeed", FORCE_NUMBER)
 ------ Core ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = false -- Model(s) to spawn with | Picks a random one if it's a table
-ENT.EntitiesToNoCollide = false -- Set to a table of entity class names for the NPC to not collide with otherwise leave it to false
 ENT.CanChatMessage = true -- Should this NPC be allowed to post in a player's chat? | Example: "Blank no longer likes you."
 	-- ====== Health ====== --
 ENT.StartHealth = 50 -- Starting health of the NPC
@@ -25,7 +24,7 @@ ENT.HealthRegenerationDelay = VJ.SET(2, 4) -- How much time until the health inc
 ENT.HealthRegenerationResetOnDmg = true -- Should the delay reset when it receives damage?
 	-- ====== Collision / Hitbox ====== --
 ENT.HullType = HULL_HUMAN -- List of Hull types: https://wiki.facepunch.com/gmod/Enums/HULL
-ENT.HasSetSolid = true -- set to false to disable SetSolid
+ENT.EntitiesToNoCollide = false -- Set to a table of entity class names for the NPC to not collide with otherwise leave it to false
 	-- ====== Sight & Speed ====== --
 ENT.SightDistance = 6500 -- Initial sight distance | To retrieve: "self:GetMaxLookDistance()" | To change: "self:SetMaxLookDistance(distance)"
 ENT.SightAngle = 156 -- Initial field of view | To retrieve: "self:GetFOV()" | To change: "self:SetFOV(degree)" | 360 = See all around
@@ -69,8 +68,8 @@ ENT.AA_MoveAccelerate = 5 -- The NPC will gradually speed up to the max movement
 	-- 0 = Constant max speed | 1 = Increase very slowly | 50 = Increase very quickly
 ENT.AA_MoveDecelerate = 5 -- The NPC will slow down as it approaches its destination | Calculation = MaxSpeed / x
 	-- 1 = Constant max speed | 2 = Slow down slightly | 5 = Slow down normally | 50 = Slow down extremely slow
-	-- ====== NPC Controller Data ====== --
-ENT.VJC_Data = {
+	-- ====== NPC Controller ====== --
+ENT.ControllerVars = {
 	CameraMode = 1, -- Sets the default camera mode | 1 = Third Person, 2 = First Person
 	ThirdP_Offset = Vector(0, 0, 0), -- The offset for the controller when the camera is in third person
 	FirstP_Bone = "ValveBiped.Bip01_Head1", -- If left empty, the base will attempt to calculate a position for first person
@@ -85,65 +84,58 @@ ENT.VJC_Data = {
 ENT.CanOpenDoors = true -- Can it open doors?
 ENT.CanReceiveOrders = true -- Can the NPC receive orders from others? | Ex: Allies calling for help, allies requesting backup on damage, etc.
 	-- When false it will not receive the following: "CallForHelp", "CallForBackUpOnDamage", "BringFriendsOnDeath", "AlertFriendsOnDeath", "Passive_AlliesRunOnDamage"
-ENT.CanAlly = true -- Put to false if you want it not to have any allies
-ENT.VJ_NPC_Class = {} -- NPCs with the same class with be allied to each other
+ENT.CanAlly = true -- Can it ally with other entities?
+ENT.VJ_NPC_Class = {} -- Relationship classes, any entity with the same class will be seen as an ally
 	-- Common Classes:
 		-- Players / Resistance / Black Mesa = "CLASS_PLAYER_ALLY" || HECU = "CLASS_UNITED_STATES" || Portal = "CLASS_APERTURE"
 		-- Combine = "CLASS_COMBINE" || Zombie = "CLASS_ZOMBIE" || Antlions = "CLASS_ANTLION" || Xen = "CLASS_XEN" || Black-Ops = "CLASS_BLACKOPS"
-ENT.FriendsWithAllPlayerAllies = false -- Should this NPC be friends with other player allies?
+ENT.FriendsWithAllPlayerAllies = false -- Should it be allied with other player allies? | Used alongside "CLASS_PLAYER_ALLY"
 ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- Type of AI behavior to use for this NPC
-	-- VJ_BEHAVIOR_AGGRESSIVE = Default behavior, attacks enemies || VJ_BEHAVIOR_NEUTRAL = Neutral to everything, unless provoked
-	-- VJ_BEHAVIOR_PASSIVE = Doesn't attack, but can be attacked by others || VJ_BEHAVIOR_PASSIVE_NATURE = Doesn't attack and is allied with everyone
-ENT.IsGuard = false -- If set to false, it will attempt to stick to its current position at all times
+ENT.IsGuard = false -- Should it guard its position? | Will attempt to stay around its guarding position
 ENT.AlertedToIdleTime = VJ.SET(14, 16) -- How much time until it calms down after the enemy has been killed/disappeared | Sets self.Alerted to false after the timer expires
 ENT.TimeUntilEnemyLost = 15 -- Time until it resets its enemy if the enemy is not visible
-ENT.MoveOutOfFriendlyPlayersWay = true -- Should the NPC move and give space to friendly players?
+ENT.YieldToAlliedPlayers = true -- Should it give space to allied players?
 ENT.BecomeEnemyToPlayer = false -- Should it become enemy towards an allied player if it's damaged by them or it witnesses another ally killed by them?
-	-- false = Don't | number = Threshold, where each negative event increases it by 1, if it passes this number it will become enemy
+	-- false = Don't turn hostile to allied players | number = Threshold, where each negative event increases it by 1, if it passes this number it will become enemy
 ENT.CanEat = false -- Should it search and eat organic stuff when idle?
 ENT.NextEatTime = 30 -- How much time until it can eat again after devouring something?
-	-- ====== Passive Behavior ====== --
-ENT.Passive_RunOnTouch = true -- Should it run away and make a alert sound when something collides with it?
-ENT.Passive_NextRunOnTouchTime = VJ.SET(3, 4) -- How much until it can run away again when something collides with it?
-ENT.Passive_RunOnDamage = true -- Should it run when it's damaged? | This doesn't impact how self.Passive_AlliesRunOnDamage works
+	-- ====== Passive Behaviors ====== --
+ENT.Passive_RunOnTouch = true -- Should it run and make a alert sound when something collides with it?
+ENT.Passive_RunOnDamage = true -- Should it run when damaged? | This doesn't effect "self.Passive_AlliesRunOnDamage"
 ENT.Passive_AlliesRunOnDamage = true -- Should its allies (other passive NPCs) also run when it's damaged?
-ENT.Passive_AlliesRunOnDamageDistance = 800 -- Any allies within this distance will run when it's damaged
-ENT.Passive_NextRunOnDamageTime = VJ.SET(6, 7) -- How much until it can run the code again?
 	-- ====== On Player Sight ====== --
 ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Example: Play a sound
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
 ENT.OnPlayerSightDispositionLevel = 1 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
-ENT.OnPlayerSightOnlyOnce = true -- If true, it will only run the code once | Sets self.HasOnPlayerSight to false once it runs!
+ENT.OnPlayerSightOnlyOnce = true -- If true, it will only run it once | Sets "self.HasOnPlayerSight" to false after it runs!
 ENT.OnPlayerSightNextTime = VJ.SET(15, 20) -- How much time should it pass until it runs the code again?
 	-- ====== Call For Help ====== --
-ENT.CallForHelp = true -- Can the NPC request allies for help while in combat?
+ENT.CallForHelp = true -- Can it request allies for help while in combat?
 ENT.CallForHelpDistance = 2000 -- -- How far away the NPC's call for help travels
 ENT.NextCallForHelpTime = 4 -- Time until it calls for help again
-ENT.HasCallForHelpAnimation = true -- if true, it will play the call for help animation
-ENT.AnimTbl_CallForHelp = {}
-ENT.CallForHelpAnimationFaceEnemy = true -- Should it face the enemy when playing the animation?
-ENT.NextCallForHelpAnimationTime = 30 -- How much time until it can play the animation again?
+ENT.AnimTbl_CallForHelp = false -- Call for help animations | false = Don't play an animation
+ENT.CallForHelpAnimationFaceEnemy = true -- Should it face the enemy while playing the animation?
+ENT.NextCallForHelpAnimationTime = 30 -- How much time until it can play an animation again?
 	-- ====== Medic ====== --
+ENT.Medic_CanBeHealed = true -- Can this NPC be healed by medics?
 ENT.IsMedic = false -- Is this NPC a medic? It will heal friendly players and NPCs
-ENT.AnimTbl_Medic_GiveHealth = ACT_SPECIAL_ATTACK1 -- Animations is plays when giving health to an ally
-ENT.Medic_DisableAnimation = false -- if true, it will disable the animation code
+ENT.AnimTbl_Medic_GiveHealth = ACT_SPECIAL_ATTACK1 -- Animations to play when it heals an ally | false = Don't play an animation
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.Medic_TimeUntilHeal = false -- Time until the ally receives health
 ENT.Medic_CheckDistance = 600 -- How far does it check for allies that are hurt? | World units
 ENT.Medic_HealDistance = 30 -- How close does it have to be until it stops moving and heals its ally?
-ENT.Medic_HealthAmount = 25 -- How health does it give?
+ENT.Medic_HealAmount = 25 -- How health does it give?
 ENT.Medic_NextHealTime = VJ.SET(10, 15) -- How much time until it can give health to an ally again
 ENT.Medic_SpawnPropOnHeal = true -- Should it spawn a prop, such as small health vial at a attachment when healing an ally?
 ENT.Medic_SpawnPropOnHealModel = "models/healthvial.mdl" -- The model that it spawns
 ENT.Medic_SpawnPropOnHealAttachment = "anim_attachment_LH" -- The attachment it spawns on
-ENT.Medic_CanBeHealed = true -- Can this NPC be healed by medics?
 	-- ====== Follow System ====== --
 	-- Associated variables: self.FollowData, self.IsFollowing
-ENT.FollowPlayer = true -- Should the NPC follow the player when the player presses a certain key? | Restrictions: Player has to be friendly and the NPC's move type cannot be stationary!
-ENT.FollowMinDistance = 100 -- Minimum distance the NPC should come to the player | The base automatically adds the NPC's size to this variable to account for different sizes!
-ENT.NextFollowUpdateTime = 0.5 -- Time until it checks if it should move to the player again | Lower number = More performance loss
+ENT.FollowPlayer = true -- Should it follow the player when the player presses the USE key? | Restrictions: Player has to be allied and the NPC's move type cannot be stationary!
+ENT.FollowMinDistance = 100 -- Minimum distance it should come when following something | The base automatically adds the NPC's size to this variable to account for different sizes!
+ENT.FollowUpdateTime = 0.5 -- Time until it checks if it should move to its target again | Lower number = More performance loss
 	-- ====== Movement & Idle ====== --
-ENT.IdleAlwaysWander = false -- Should the NPC constantly wander while idling?
+ENT.IdleAlwaysWander = false -- Should it constantly wander while idle?
 ENT.DisableWandering = false
 ENT.DisableChasingEnemy = false
 	-- ====== Constantly Face Enemy ====== --
@@ -151,7 +143,7 @@ ENT.ConstantlyFaceEnemy = false -- Should it face the enemy constantly?
 ENT.ConstantlyFaceEnemy_IfVisible = true -- Should it only face the enemy if it's visible?
 ENT.ConstantlyFaceEnemy_IfAttacking = false -- Should it face the enemy when attacking?
 ENT.ConstantlyFaceEnemy_Postures = "Both" -- "Both" = Moving or standing | "Moving" = Only when moving | "Standing" = Only when standing
-ENT.ConstantlyFaceEnemyDistance = 2500 -- How close does it have to be until it starts to face the enemy?
+ENT.ConstantlyFaceEnemy_MinDistance = 2500 -- How close does it have to be until it starts to face the enemy?
 	-- ====== Pose Parameter ====== --
 ENT.HasPoseParameterLooking = true -- Does it look at its enemy using pose parameters?
 ENT.PoseParameterLooking_CanReset = true -- Should it reset its pose parameters if there is no enemies?
@@ -159,7 +151,7 @@ ENT.PoseParameterLooking_InvertPitch = false -- Inverts the pitch pose parameter
 ENT.PoseParameterLooking_InvertYaw = false -- Inverts the yaw pose parameters (Y)
 ENT.PoseParameterLooking_InvertRoll = false -- Inverts the roll pose parameters (Z)
 ENT.PoseParameterLooking_TurningSpeed = 10 -- How fast does the parameter turn?
-ENT.PoseParameterLooking_Names = {pitch={}, yaw={}, roll={}} -- Custom pose parameters to use, can put as many as needed
+ENT.PoseParameterLooking_Names = {pitch = {}, yaw = {}, roll = {}} -- Custom pose parameters to use, can put as many as needed
 	-- ====== Investigation ====== --
 	-- Showcase: https://www.youtube.com/watch?v=cCqoqSDFyC4
 ENT.CanInvestigate = true -- Can it detect and investigate disturbances? | EX: Sounds, movement, flashlight, bullet hits
@@ -169,10 +161,11 @@ ENT.NoChaseAfterCertainRange = false -- Should the NPC stop chasing when the ene
 ENT.NoChaseAfterCertainRange_FarDistance = 2000 -- How far until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
 ENT.NoChaseAfterCertainRange_CloseDistance = 300 -- How near until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
 ENT.NoChaseAfterCertainRange_Type = "Regular" -- "Regular" = Default behavior | "OnlyRange" = Only does it if it's able to range attack
-	-- ====== Prop Attacking & Pushing ====== --
-ENT.AttackProps = true -- Should it attack props when trying to move?
-ENT.PushProps = true -- Should it push props when trying to move?
-ENT.PropAP_MaxSize = 1 -- This is a scale number for the max size it can attack/push | x < 1  = Smaller props & x > 1  = Larger props | Default base value: 1
+	-- ====== Prop Damaging & Pushing Behavior ====== --
+	-- By default this requires the NPC to have a melee attack, unless coded otherwise
+ENT.PropInteraction = true -- Controls how it should interact with props
+	-- false = Disable both damaging and pushing | true = Damage and push | "OnlyDamage" = Damage but don't push | "OnlyPush" = Push but don't damage
+ENT.PropInteraction_MaxScale = 1 -- Max prop size scale multiplier | x < 1  = Smaller props | x > 1  = Larger props
 	-- ====== Control ====== --
 	-- Adjust these variables carefully! Wrong adjustment can have unintended effects!
 ENT.FindEnemy_CanSeeThroughWalls = false -- Should it be able to see through walls and objects? | Useful to make it know where the enemy is at all times
@@ -198,6 +191,8 @@ ENT.HasBloodPool = true -- Should a blood pool spawn by its corpse?
 ENT.BloodPool = {} -- Blood pools to be spawned by the corpse
 	-- ====== Immunity ====== --
 ENT.GodMode = false -- Immune to everything
+ENT.ForceDamageFromBosses = false -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJ_ID_Boss"
+ENT.AllowIgnition = true -- Can this NPC be set on fire?
 ENT.Immune_AcidPoisonRadiation = false -- Immune to Acid, Poison and Radiation
 ENT.Immune_Bullet = false -- Immune to bullet type damages
 ENT.Immune_Blast = false -- Immune to explosive-type damages
@@ -206,8 +201,6 @@ ENT.Immune_Electricity = false -- Immune to electrical-type damages | Example: s
 ENT.Immune_Fire = false -- Immune to fire-type damages
 ENT.Immune_Melee = false -- Immune to melee-type damage | Example: Crowbar, slash damages
 ENT.Immune_Sonic = false -- Immune to sonic-type damages
-ENT.ForceDamageFromBosses = false -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJ_ID_Boss"
-ENT.AllowIgnition = true -- Can this NPC be set on fire?
 	-- ====== Flinching ====== --
 ENT.CanFlinch = 0 -- 0 = Don't flinch | 1 = Flinch at any damage | 2 = Flinch only from certain damages
 ENT.FlinchDamageTypes = {DMG_BLAST} -- If it uses damage-based flinching, which types of damages should it flinch from?
@@ -220,13 +213,11 @@ ENT.AnimTbl_Flinch = ACT_FLINCH_PHYSICS -- The regular flinch animations to play
 ENT.HitGroupFlinching_DefaultWhenNotHit = true -- If it uses hitgroup flinching, should it do the regular flinch if it doesn't hit any of the specified hitgroups?
 ENT.HitGroupFlinching_Values = false -- EXAMPLES: {{HitGroup = {HITGROUP_HEAD}, Animation = {ACT_FLINCH_HEAD}}, {HitGroup = {HITGROUP_LEFTARM}, Animation = {ACT_FLINCH_LEFTARM}}, {HitGroup = {HITGROUP_RIGHTARM}, Animation = {ACT_FLINCH_RIGHTARM}}, {HitGroup = {HITGROUP_LEFTLEG}, Animation = {ACT_FLINCH_LEFTLEG}}, {HitGroup = {HITGROUP_RIGHTLEG}, Animation = {ACT_FLINCH_RIGHTLEG}}}
 	-- ====== Call For Back On Damage ====== --
-	-- NOTE: This AI component only runs when there is NO enemy detected!
-ENT.CallForBackUpOnDamage = true -- Should the NPC call for help when damaged?
+ENT.CallForBackUpOnDamage = true -- Should it call for help when damaged while it has no active enemy?
 ENT.CallForBackUpOnDamageDistance = 800 -- How far away does the call for help go?
 ENT.CallForBackUpOnDamageLimit = 4 -- How many allies should it call? | 0 = Unlimited
+ENT.AnimTbl_CallForBackUpOnDamage = false -- Animations to play when it calls for backup on damage
 ENT.NextCallForBackUpOnDamageTime = VJ.SET(9, 11) -- How much time until it can run this AI component again
-ENT.CallForBackUpOnDamageAnimation = {} -- Animations played when it calls for help on damage
-ENT.DisableCallForBackUpOnDamageAnimation = false -- Disables the animations from playing
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Death & Corpse ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -386,25 +377,25 @@ ENT.DamageByPlayerDispositionLevel = 1 -- At which disposition levels it should 
 ENT.MeleeAttackSlowPlayerSoundFadeOutTime = 1 -- 0 = Fade out instantly
 	-- ====== Footstep Sound ====== --
 ENT.HasFootStepSound = true -- Can the NPC play footstep sounds?
-ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
+ENT.DisableFootStepSoundTimer = false -- Disables the timer system for footstep sounds, allowing to utilize model events
 ENT.FootStepTimeWalk = 1 -- Delay between footstep sounds while it is walking | false = Disable while walking
 ENT.FootStepTimeRun = 0.5 -- Delay between footstep sounds while it is running | false = Disable while running
 	-- ====== Idle Sound ====== --
-ENT.HasIdleSounds = true -- If set to false, it won't play the idle sounds
+ENT.HasIdleSounds = true -- Can it play idle sounds? | Controls "self.SoundTbl_Idle", "self.SoundTbl_IdleDialogue", ad "self.SoundTbl_CombatIdle"
 ENT.IdleSounds_PlayOnAttacks = false -- It will be able to continue and play idle sounds when it performs an attack
 ENT.IdleSounds_NoRegularIdleOnAlerted = false -- if set to true, it will not play the regular idle sound table if the combat idle sound table is empty
-	-- ====== Idle dialogue Sound ====== --
+	-- ====== Idle Dialogue Sound ====== --
 	-- When an allied NPC or player is within range, it will play these sounds rather than regular idle sounds
 	-- If the ally is a VJ NPC and has dialogue answer sounds, it will respond back
 ENT.HasIdleDialogueSounds = true -- If set to false, it won't play the idle dialogue sounds
 ENT.HasIdleDialogueAnswerSounds = true -- If set to false, it won't play the idle dialogue answer sounds
-ENT.IdleDialogueDistance = 400 -- How close should the ally be for the NPC to talk to the it?
-ENT.IdleDialogueCanTurn = true -- If set to false, it won't turn when a dialogue occurs
-	-- ====== Main Control ====== --
+ENT.IdleDialogueDistance = 400 -- How close should an ally be for it to initiate a dialogue
+ENT.IdleDialogueCanTurn = true -- Should it turn to to face its dialogue target?
+	-- ====== Other Sound Controls ====== --
 ENT.HasBreathSound = true -- Should it make a breathing sound?
 ENT.HasOnReceiveOrderSounds = true -- If set to false, it won't play any sound when it receives an order from an ally
 ENT.HasFollowPlayerSounds = true -- Can it play follow and unfollow player sounds?
-ENT.HasMoveOutOfPlayersWaySounds = true -- If set to false, it won't play any sounds when it moves out of the player's way
+ENT.HasYieldToAlliedPlayerSounds = true -- If set to false, it won't play any sounds when it moves out of the player's way
 ENT.HasMedicSounds_BeforeHeal = true -- If set to false, it won't play any sounds before it gives a med kit to an ally
 ENT.HasMedicSounds_AfterHeal = true -- If set to false, it won't play any sounds after it gives a med kit to an ally
 ENT.HasMedicSounds_ReceiveHeal = true -- If set to false, it won't play any sounds when it receives a medkit
@@ -414,7 +405,7 @@ ENT.HasLostEnemySounds = true -- If set to false, it won't play any sounds when 
 ENT.HasAlertSounds = true -- If set to false, it won't play the alert sounds
 ENT.HasCallForHelpSounds = true -- If set to false, it won't play any sounds when it calls for help
 ENT.HasBecomeEnemyToPlayerSounds = true -- If set to false, it won't play the become enemy to player sounds
-ENT.HasMeleeAttackSounds = true -- If set to false, it won't play the melee attack sound
+ENT.HasMeleeAttackSounds = true -- Can it play melee attack sounds? | Controls "self.SoundTbl_BeforeMeleeAttack", "self.SoundTbl_MeleeAttack", and "self.SoundTbl_MeleeAttackExtra"
 ENT.HasExtraMeleeAttackSounds = false -- Set to true to use the extra melee attack sounds
 ENT.HasMeleeAttackMissSounds = true -- If set to false, it won't play the melee attack miss sound
 ENT.HasMeleeAttackSlowPlayerSound = true -- Does it have a sound when it slows down the player?
@@ -424,8 +415,8 @@ ENT.HasBeforeLeapAttackSound = true -- If set to false, it won't play any sounds
 ENT.HasLeapAttackJumpSound = true -- If set to false, it won't play any sounds when it leaps at the enemy while leap attacking
 ENT.HasLeapAttackDamageSound = true -- If set to false, it won't play any sounds when it successfully hits the enemy while leap attacking
 ENT.HasLeapAttackDamageMissSound = true -- If set to false, it won't play any sounds when it misses the enemy while leap attacking
-ENT.HasOnKilledEnemySound = true -- Should it play a sound when it kills an enemy?
-ENT.HasAllyDeathSound = true -- Should it paly a sound when an ally dies?
+ENT.HasOnKilledEnemySounds = true -- Should it play a sound when it kills an enemy?
+ENT.HasAllyDeathSounds = true -- Should it paly a sound when an ally dies?
 ENT.HasPainSounds = true -- If set to false, it won't play the pain sounds
 ENT.HasImpactSounds = true -- If set to false, it won't play the impact sounds
 ENT.HasDamageByPlayerSounds = true -- If set to false, it won't play the damage by player sounds
@@ -444,7 +435,7 @@ ENT.SoundTbl_CombatIdle = false
 ENT.SoundTbl_OnReceiveOrder = false
 ENT.SoundTbl_FollowPlayer = false
 ENT.SoundTbl_UnFollowPlayer = false
-ENT.SoundTbl_MoveOutOfPlayersWay = false
+ENT.SoundTbl_YieldToAlliedPlayer = false
 ENT.SoundTbl_MedicBeforeHeal = false
 ENT.SoundTbl_MedicAfterHeal = false -- Effect
 ENT.SoundTbl_MedicReceiveHeal = false
@@ -479,7 +470,7 @@ ENT.IdleDialogueAnswerSoundChance = 1
 ENT.CombatIdleSoundChance = 1
 ENT.OnReceiveOrderSoundChance = 1
 ENT.FollowPlayerSoundChance = 1 -- Controls both "self.SoundTbl_FollowPlayer" and "self.SoundTbl_UnFollowPlayer"
-ENT.MoveOutOfPlayersWaySoundChance = 2
+ENT.YieldToAlliedPlayerSoundChance = 2
 ENT.MedicBeforeHealSoundChance = 1
 ENT.MedicAfterHealSoundChance = 1
 ENT.MedicReceiveHealSoundChance = 1
@@ -526,12 +517,11 @@ ENT.SoundTrackVolume = 1
 ENT.FootStepSoundLevel = 70
 ENT.BreathSoundLevel = 60
 ENT.IdleSoundLevel = 75
-ENT.IdleDialogueSoundLevel = 75
-ENT.IdleDialogueAnswerSoundLevel = 75
+ENT.IdleDialogueSoundLevel = 75 -- Controls both "self.SoundTbl_IdleDialogue" and "self.SoundTbl_IdleDialogueAnswer"
 ENT.CombatIdleSoundLevel = 80
 ENT.OnReceiveOrderSoundLevel = 80
 ENT.FollowPlayerSoundLevel = 75 -- Controls both "self.SoundTbl_FollowPlayer" and "self.SoundTbl_UnFollowPlayer"
-ENT.MoveOutOfPlayersWaySoundLevel = 75
+ENT.YieldToAlliedPlayerSoundLevel = 75
 ENT.BeforeHealSoundLevel = 75
 ENT.AfterHealSoundLevel = 75
 ENT.MedicReceiveHealSoundLevel = 75
@@ -560,21 +550,19 @@ ENT.DamageByPlayerSoundLevel = 75
 ENT.DeathSoundLevel = 80
 	-- ====== Sound Pitch ====== --
 	-- Range: 0 - 255 | Lower pitch < x > Higher pitch
-ENT.UseTheSameGeneralSoundPitch = true -- If set to true, the base will decide a number when the NPC spawns and uses it for all sound pitches set to false
+ENT.UseGeneralSoundPitch = true -- Should it decide a number when it spawns and use it for all sounds pitches set to false?
 	-- It picks the number between these two variables below:
-		-- These two variables control any sound pitch variable that is set to false
 ENT.GeneralSoundPitch1 = 90
 ENT.GeneralSoundPitch2 = 100
-	-- To not use the variables above, set the pitch to something other than false
+--
 ENT.FootStepPitch = VJ.SET(80, 100)
 ENT.BreathSoundPitch = VJ.SET(100, 100)
 ENT.IdleSoundPitch = VJ.SET(false, false)
-ENT.IdleDialogueSoundPitch = VJ.SET(false, false)
-ENT.IdleDialogueAnswerSoundPitch = VJ.SET(false, false)
+ENT.IdleDialogueSoundPitch = VJ.SET(false, false) -- Controls both "self.SoundTbl_IdleDialogue" and "self.SoundTbl_IdleDialogueAnswer"
 ENT.CombatIdleSoundPitch = VJ.SET(false, false)
 ENT.OnReceiveOrderSoundPitch = VJ.SET(false, false)
 ENT.FollowPlayerPitch = VJ.SET(false, false) -- Controls both "self.SoundTbl_FollowPlayer" and "self.SoundTbl_UnFollowPlayer"
-ENT.MoveOutOfPlayersWaySoundPitch = VJ.SET(false, false)
+ENT.YieldToAlliedPlayerSoundPitch = VJ.SET(false, false)
 ENT.BeforeHealSoundPitch = VJ.SET(false, false)
 ENT.AfterHealSoundPitch = VJ.SET(100, 100)
 ENT.MedicReceiveHealSoundPitch = VJ.SET(false, false)
@@ -998,8 +986,7 @@ local vj_npc_snd_medic = GetConVar("vj_npc_snd_medic")
 local vj_npc_snd_callhelp = GetConVar("vj_npc_snd_callhelp")
 local vj_npc_snd_receiveorder = GetConVar("vj_npc_snd_receiveorder")
 local vj_npc_creature_opendoor = GetConVar("vj_npc_creature_opendoor")
-local vj_npc_melee_prop_push = GetConVar("vj_npc_melee_prop_push")
-local vj_npc_melee_prop_attack = GetConVar("vj_npc_melee_prop_attack")
+local vj_npc_melee_propap = GetConVar("vj_npc_melee_propap")
 local vj_npc_corpse_collision = GetConVar("vj_npc_corpse_collision")
 local vj_npc_debug_engine = GetConVar("vj_npc_debug_engine")
 local vj_npc_difficulty = GetConVar("vj_npc_difficulty")
@@ -1028,8 +1015,6 @@ local function InitConvars(self)
 	if vj_npc_anim_death:GetInt() == 0 then self.HasDeathAnimation = false end
 	if vj_npc_corpse:GetInt() == 0 then self.HasDeathCorpse = false end
 	if vj_npc_loot:GetInt() == 0 then self.DropDeathLoot = false end
-	if vj_npc_melee_prop_push:GetInt() == 0 then self.PushProps = false end
-	if vj_npc_melee_prop_attack:GetInt() == 0 then self.AttackProps = false end
 	if vj_npc_melee_bleed:GetInt() == 0 then self.MeleeAttackBleedEnemy = false end
 	if vj_npc_melee_ply_slow:GetInt() == 0 then self.SlowPlayerOnMeleeAttack = false end
 	if vj_npc_wander:GetInt() == 0 then self.DisableWandering = true end
@@ -1073,6 +1058,24 @@ local function InitConvars(self)
 	if vj_npc_snd_callhelp:GetInt() == 0 then self.HasCallForHelpSounds = false end
 	if vj_npc_snd_receiveorder:GetInt() == 0 then self.HasOnReceiveOrderSounds = false end
 	if vj_npc_creature_opendoor:GetInt() == 0 then self.CanOpenDoors = false end
+	local propAPType = vj_npc_melee_propap:GetInt()
+	if propAPType != 1 then
+		if propAPType == 0 then -- Disable
+			self.PropInteraction = false
+		elseif propAPType == 2 && self.PropInteraction != "OnlyPush" then -- Only damage
+			if self.PropInteraction == "OnlyDamage" then
+				self.PropInteraction = false
+			else
+				self.PropInteraction = "OnlyDamage"
+			end
+		elseif propAPType == 3 && self.PropInteraction != "OnlyDamage" then -- Only push
+			if self.PropInteraction == "OnlyPush" then
+				self.PropInteraction = false
+			else
+				self.PropInteraction = "OnlyPush"
+			end
+		end
+	end
 	local corpseCollision = vj_npc_corpse_collision:GetInt()
 	if corpseCollision != 0 && self.DeathCorpseCollisionType == COLLISION_GROUP_DEBRIS then
 		if corpseCollision == 1 then
@@ -1113,9 +1116,28 @@ local function ApplyBackwardsCompatibility(self)
 	if self.CustomOnHandleAnimEvent then self.OnAnimEvent = function(_, ev, evTime, evCycle, evType, evOptions) self:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions) end end
 	if self.CustomOnDeath_AfterCorpseSpawned then self.OnCreateDeathCorpse = function(_, dmginfo, hitgroup, corpseEnt) self:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) end end
 	if self.Immune_Physics then self:SetPhysicsDamageScale(0) end
+	if self.VJC_Data then self.ControllerVars = self.VJC_Data end
+	if self.HasCallForHelpAnimation == false then self.AnimTbl_CallForHelp = false end
+	if self.Medic_DisableAnimation == true then self.AnimTbl_Medic_GiveHealth = false end
+	if self.ConstantlyFaceEnemyDistance then self.ConstantlyFaceEnemy_MinDistance = self.ConstantlyFaceEnemyDistance end
+	if self.CallForBackUpOnDamageAnimation then self.AnimTbl_CallForBackUpOnDamage = self.CallForBackUpOnDamageAnimation end
+	if self.UseTheSameGeneralSoundPitch then self.UseGeneralSoundPitch = self.UseTheSameGeneralSoundPitch end
+	if self.PropAP_MaxSize then self.PropInteraction_MaxScale = self.PropAP_MaxSize end
+	if self.AttackProps == false or self.PushProps == false then
+		if self.AttackProps == false && self.PushProps == false then
+			self.PropInteraction = false
+		elseif self.AttackProps == false then
+			self.PropInteraction = "OnlyPush"
+		elseif self.PushProps == false then
+			self.PropInteraction = "OnlyDamage"
+		end
+	end
+	if self.SoundTbl_MoveOutOfPlayersWay then self.SoundTbl_YieldToAlliedPlayer = self.SoundTbl_MoveOutOfPlayersWay end
 	if self.MaxJumpLegalDistance then self.JumpVars.MaxRise = self.MaxJumpLegalDistance.a; self.JumpVars.MaxDrop = self.MaxJumpLegalDistance.b end
 	if self.VJ_IsHugeMonster then self.VJ_ID_Boss = self.VJ_IsHugeMonster end
+	if self.Medic_HealthAmount then self.Medic_HealAmount = self.Medic_HealthAmount end
 	if self.UsePlayerModelMovement then self.UsePoseParameterMovement = true end
+	if self.MoveOutOfFriendlyPlayersWay != nil then self.YieldToAlliedPlayers = self.MoveOutOfFriendlyPlayersWay end
 	if self.WaitBeforeDeathTime then self.DeathDelayTime = self.WaitBeforeDeathTime end
 	if self.HasDeathRagdoll != nil then self.HasDeathCorpse = self.HasDeathRagdoll end
 	if self.AllowedToGib != nil then self.CanGib = self.AllowedToGib end
@@ -1286,7 +1308,7 @@ function ENT:Initialize()
 	local models = PICK(self.Model); if models then self:SetModel(models) end
 	self:SetHullType(self.HullType)
 	self:SetHullSizeNormal()
-	if self.HasSetSolid then self:SetSolid(SOLID_BBOX) end
+	self:SetSolid(SOLID_BBOX)
 	self:SetCollisionGroup(COLLISION_GROUP_NPC)
 	self:SetMaxYawSpeed(self.TurningSpeed)
 	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
@@ -1307,7 +1329,7 @@ function ENT:Initialize()
 	if !self.RelationshipMemory then self.RelationshipMemory = {} end
 	self.AnimationTranslations = {}
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3, 6)
-	self.UseTheSameGeneralSoundPitch_PickedNumber = (self.UseTheSameGeneralSoundPitch and math.random(self.GeneralSoundPitch1, self.GeneralSoundPitch2)) or 0
+	self.UseTheSameGeneralSoundPitch_PickedNumber = (self.UseGeneralSoundPitch and math.random(self.GeneralSoundPitch1, self.GeneralSoundPitch2)) or 0
 	local sightConvar = vj_npc_sight_distance:GetInt(); if sightConvar > 0 then self.SightDistance = sightConvar end
 	
 	-- Capabilities & Movement
@@ -1742,7 +1764,7 @@ function ENT:Think()
 						end
 						followData.Moving = false
 					end
-					followData.NextUpdateT = curTime + self.NextFollowUpdateTime
+					followData.NextUpdateT = curTime + self.FollowUpdateTime
 				end
 			else
 				self:ResetFollowBehavior()
@@ -2212,13 +2234,14 @@ end
 local propColBlacklist = {[COLLISION_GROUP_DEBRIS] = true, [COLLISION_GROUP_DEBRIS_TRIGGER] = true, [COLLISION_GROUP_DISSOLVING] = true, [COLLISION_GROUP_IN_VEHICLE] = true, [COLLISION_GROUP_WORLD] = true}
 --
 function ENT:MaintainPropAP(customEnts)
-	if !self.PushProps && !self.AttackProps then return false end
+	local behavior = self.PropInteraction
+	if !behavior then return false end
 	local myPos = self:GetPos()
 	local myCenter = myPos + self:OBBCenter()
 	for _, ent in ipairs(customEnts or ents.FindInSphere(myCenter, self.MeleeAttackDistance * 1.2)) do
 		if ent.VJ_ID_Attackable then
 			local vPhys = ent:GetPhysicsObject()
-			if IsValid(vPhys) && !propColBlacklist[ent:GetCollisionGroup()] && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((ent:GetPos() - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius / 1.3))) then
+			if IsValid(vPhys) && !propColBlacklist[ent:GetCollisionGroup()] && (customEnts or (self:GetInternalVariable("m_latchedHeadDirection"):Dot((ent:GetPos() - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius / 1.3)))) then
 				local tr = util.TraceLine({
 					start = myCenter,
 					endpos = ent:NearestPoint(myCenter),
@@ -2226,13 +2249,14 @@ function ENT:MaintainPropAP(customEnts)
 				})
 				if !tr.HitWorld && !tr.HitSky then
 					-- Attacking: Make sure it has health
-					if self.AttackProps && ent:Health() > 0 then
+					if (behavior == true or behavior == "OnlyDamage") && ent:Health() > 0 then
 						return true
 					end
 					-- Pushing: Make sure it's not a small object and the NPC is appropriately sized to push the object
-					if self.PushProps && ent:GetMoveType() != MOVETYPE_PUSH && vPhys:GetMass() > 4 && vPhys:GetSurfaceArea() > 800 then
+					local surfaceArea = vPhys:GetSurfaceArea() or 900
+					if (behavior == true or behavior == "OnlyPush") && ent:GetMoveType() != MOVETYPE_PUSH && surfaceArea > 800 then // && vPhys:GetMass() > 4
 						local myPhys = self:GetPhysicsObject()
-						if IsValid(myPhys) && (myPhys:GetSurfaceArea() * self.PropAP_MaxSize) >= vPhys:GetSurfaceArea() then
+						if IsValid(myPhys) && (myPhys:GetSurfaceArea() * self.PropInteraction_MaxScale) >= surfaceArea then
 							return true
 						end
 					end
@@ -2259,61 +2283,73 @@ function ENT:MeleeAttackCode(isPropAttack)
 		if ent == self or ent:GetClass() == myClass or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then continue end
 		if ent:IsPlayer() && (ent.VJ_IsControllingNPC or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
 		if ((ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible) && self:GetInternalVariable("m_latchedHeadDirection"):Dot((Vector(ent:GetPos().x, ent:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
-			if isPropAttack == true && ent.VJ_ID_Living && VJ.GetNearestDistance(self, ent, true) > self.MeleeAttackDistance then continue end //if (self:GetPos():Distance(ent:GetPos()) <= VJ.GetNearestDistance(self, ent) && VJ.GetNearestDistance(self, ent) <= self.MeleeAttackDistance) == false then
+			if isPropAttack && ent.VJ_ID_Living && VJ.GetNearestDistance(self, ent, true) > self.MeleeAttackDistance then continue end -- Since this attack initiated as prop attack, its melee distance may be off!
+			local applyDmg = true
 			local isProp = ent.VJ_ID_Attackable
 			if self:CustomOnMeleeAttack_AfterChecks(ent, isProp) == true then continue end
-			-- Remove prop constraints and push it (If possible)
+			-- Handle prop interaction
+			local propBehavior = self.PropInteraction
 			if isProp then
-				local phys = ent:GetPhysicsObject()
-				if IsValid(phys) && self:MaintainPropAP({ent}) then
-					hitRegistered = true
-					phys:EnableMotion(true)
-					//phys:EnableGravity(true)
-					phys:Wake()
-					//constraint.RemoveAll(ent)
-					//if util.IsValidPhysicsObject(ent, 1) then
-					constraint.RemoveConstraints(ent, "Weld") //end
-					if self.PushProps then
-						local curEnemy = self:GetEnemy()
-						phys:ApplyForceCenter((IsValid(curEnemy) and curEnemy:GetPos() or myPos) + self:GetForward()*(phys:GetMass() * 700) + self:GetUp()*(phys:GetMass() * 200))
+				if propBehavior then
+					if (propBehavior == true or propBehavior == "OnlyDamage") && (ent:Health() > 0 or ent:GetInternalVariable("m_takedamage") == 2) then
+						hitRegistered = true
+						applyDmg = true
+					elseif propBehavior == "OnlyPush" then
+						applyDmg = false
 					end
+					local phys = ent:GetPhysicsObject()
+					if IsValid(phys) && self:MaintainPropAP({ent}) then
+						phys:EnableMotion(true)
+						phys:Wake()
+						constraint.RemoveConstraints(ent, "Weld") //constraint.RemoveAll(ent)
+						if propBehavior == true or propBehavior == "OnlyPush" then
+							hitRegistered = true
+							local curEnemy = self:GetEnemy()
+							local physMass = phys:GetMass()
+							phys:ApplyForceCenter((IsValid(curEnemy) and curEnemy:GetPos() or myPos) + self:GetForward() * (physMass * 700) + self:GetUp() * (physMass * 200))
+						end
+					end
+				else -- We can't damage or push props
+					applyDmg = false
 				end
 			end
-			-- Knockback (Don't push things like doors, trains, elevators as it will make them fly when activated)
-			if self.HasMeleeAttackKnockBack && ent:GetMoveType() != MOVETYPE_PUSH && ent.MovementType != VJ_MOVETYPE_STATIONARY && (!ent.VJ_ID_Boss or ent.IsVJBaseSNPC_Tank) then
-				ent:SetGroundEntity(NULL)
-				ent:SetVelocity(self:MeleeAttackKnockbackVelocity(ent))
-			end
-			-- Apply actual damage
-			if !self.DisableDefaultMeleeAttackDamageCode then
-				local applyDmg = DamageInfo()
-				applyDmg:SetDamage(self:ScaleByDifficulty(self.MeleeAttackDamage))
-				applyDmg:SetDamageType(self.MeleeAttackDamageType)
-				if ent.VJ_ID_Living then applyDmg:SetDamageForce(self:GetForward() * ((applyDmg:GetDamage() + 100) * 70)) end
-				applyDmg:SetInflictor(self)
-				applyDmg:SetAttacker(self)
-				VJ.DamageSpecialEnts(self, ent, applyDmg)
-				ent:TakeDamageInfo(applyDmg, self)
-			end
-			-- Bleed Enemy
-			if self.MeleeAttackBleedEnemy && ent.VJ_ID_Living && (!ent.VJ_ID_Boss or self.VJ_ID_Boss) && math.random(1, self.MeleeAttackBleedEnemyChance) == 1 then
-				local bleedName = "timer_melee_bleed" .. ent:EntIndex() -- Timer's name
-				local bleedDmg = self:ScaleByDifficulty(self.MeleeAttackBleedEnemyDamage) -- How much damage each rep does
-				timer.Create(bleedName, self.MeleeAttackBleedEnemyTime, self.MeleeAttackBleedEnemyReps, function()
-					if IsValid(ent) && ent:Health() > 0 then
-						local applyDmg = DamageInfo()
-						applyDmg:SetDamage(bleedDmg)
-						applyDmg:SetDamageType(DMG_GENERIC)
-						applyDmg:SetDamageCustom(VJ.DMG_BLEED)
-						if self:IsValid() then
-							applyDmg:SetInflictor(self)
-							applyDmg:SetAttacker(self)
+			if applyDmg then
+				-- Knockback | Ignore doors, trains, elevators as it will make them fly when activated
+				if self.HasMeleeAttackKnockBack && ent:GetMoveType() != MOVETYPE_PUSH && ent.MovementType != VJ_MOVETYPE_STATIONARY && (!ent.VJ_ID_Boss or ent.IsVJBaseSNPC_Tank) then
+					ent:SetGroundEntity(NULL)
+					ent:SetVelocity(self:MeleeAttackKnockbackVelocity(ent))
+				end
+				-- Apply damage
+				if !self.DisableDefaultMeleeAttackDamageCode then
+					local dmgInfo = DamageInfo()
+					dmgInfo:SetDamage(self:ScaleByDifficulty(self.MeleeAttackDamage))
+					dmgInfo:SetDamageType(self.MeleeAttackDamageType)
+					if ent.VJ_ID_Living then dmgInfo:SetDamageForce(self:GetForward() * ((dmgInfo:GetDamage() + 100) * 70)) end
+					dmgInfo:SetInflictor(self)
+					dmgInfo:SetAttacker(self)
+					VJ.DamageSpecialEnts(self, ent, dmgInfo)
+					ent:TakeDamageInfo(dmgInfo, self)
+				end
+				-- Apply bleeding damage
+				if self.MeleeAttackBleedEnemy && ent.VJ_ID_Living && (!ent.VJ_ID_Boss or self.VJ_ID_Boss) && math.random(1, self.MeleeAttackBleedEnemyChance) == 1 then
+					local bleedName = "timer_melee_bleed" .. ent:EntIndex() -- Timer's name
+					local bleedDmg = self:ScaleByDifficulty(self.MeleeAttackBleedEnemyDamage) -- How much damage each rep does
+					timer.Create(bleedName, self.MeleeAttackBleedEnemyTime, self.MeleeAttackBleedEnemyReps, function()
+						if IsValid(ent) && ent:Health() > 0 then
+							local dmgInfo = DamageInfo()
+							dmgInfo:SetDamage(bleedDmg)
+							dmgInfo:SetDamageType(DMG_GENERIC)
+							dmgInfo:SetDamageCustom(VJ.DMG_BLEED)
+							if self:IsValid() then
+								dmgInfo:SetInflictor(self)
+								dmgInfo:SetAttacker(self)
+							end
+							ent:TakeDamageInfo(dmgInfo)
+						else -- Remove the timer if the entity is dead in attempt to remove it before the entity respawns (Essential for players)
+							timer.Remove(bleedName)
 						end
-						ent:TakeDamageInfo(applyDmg)
-					else -- Remove the timer if the entity is dead in attempt to remove it before the entity respawns (Essential for players)
-						timer.Remove(bleedName)
-					end
-				end)
+					end)
+				end
 			end
 			if ent:IsPlayer() then
 				-- Apply DSP
@@ -2563,11 +2599,11 @@ function ENT:SelectSchedule()
 	local hasCond = self.HasCondition
 	local curTime = CurTime()
 	local eneValid = IsValid(self:GetEnemy())
-	self:IdleSoundCode()
+	self:PlayIdleSound(nil, nil, eneValid)
 	
 	-- Handle move away behavior
 	if hasCond(self, COND_PLAYER_PUSHING) && curTime > self.TakingCoverT && !self:IsBusy("Activities") then
-		self:PlaySoundSystem("MoveOutOfPlayersWay")
+		self:PlaySoundSystem("YieldToAlliedPlayer")
 		if eneValid then -- Face current enemy
 			schedule_player_move.TurnData.Type = VJ.FACE_ENEMY_VISIBLE
 			schedule_player_move.TurnData.Target = nil
@@ -2755,7 +2791,7 @@ function ENT:OnTakeDamage(dmginfo)
 			self:OnBleed(dmginfo, hitgroup)
 			-- Spawn the blood particle only if it's not caused by the default fire entity [Causes the damage position to be at Vector(0, 0, 0)]
 			if self.HasBloodParticle && !isFireEnt then self:SpawnBloodParticles(dmginfo, hitgroup) end
-			if self.HasBloodDecal then self:SpawnBloodDecal(dmginfo, hitgroup) end
+			if self.HasBloodDecal then self:SpawnBloodDecals(dmginfo, hitgroup) end
 			self:PlaySoundSystem("Impact", nil, VJ.EmitSound)
 		end
 	end
@@ -2824,7 +2860,7 @@ function ENT:OnTakeDamage(dmginfo)
 					end
 					self:ClearSchedule()
 					self.NextFlinchT = curTime + 1
-					local playedAnim = !self.DisableCallForBackUpOnDamageAnimation and self:PlayAnim(self.CallForBackUpOnDamageAnimation, true, false, true) or false
+					local playedAnim = self:PlayAnim(self.AnimTbl_CallForBackUpOnDamage, true, false, true)
 					if !playedAnim && !self:IsBusy("Activities") then
 						self:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.TurnData = {Type = VJ.FACE_ENEMY} end)
 					end
@@ -2894,16 +2930,16 @@ function ENT:OnTakeDamage(dmginfo)
 				self:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH")
 			end
 			if self.Passive_AlliesRunOnDamage then -- Make passive allies run too!
-				local allies = self:Allies_Check(self.Passive_AlliesRunOnDamageDistance)
+				local allies = self:Allies_Check(self:OBBMaxs():Distance(self:OBBMins()) * 20)
 				if allies != false then
 					for _, ally in ipairs(allies) do
-						ally.TakingCoverT = curTime + math.Rand(ally.Passive_NextRunOnDamageTime.b, ally.Passive_NextRunOnDamageTime.a)
+						ally.TakingCoverT = curTime + math.Rand(6, 7)
 						ally:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH")
 						ally:PlaySoundSystem("Alert")
 					end
 				end
 			end
-			self.TakingCoverT = curTime + math.Rand(self.Passive_NextRunOnDamageTime.a, self.Passive_NextRunOnDamageTime.b)
+			self.TakingCoverT = curTime + math.Rand(6, 7)
 		end
 	end
 	
@@ -3219,365 +3255,6 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			for _, child in ipairs(self.DeathCorpse_ChildEnts) do
 				child:Remove()
 			end
-		end
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PlaySoundSystem(sdSet, customSD, sdType)
-	if !self.HasSounds or !sdSet then return end
-	sdType = sdType or VJ.CreateSound
-	customSD = PICK(customSD)
-	
-	if sdSet == "FollowPlayer" then
-		if self.HasFollowPlayerSounds then
-			local pickedSD = PICK(self.SoundTbl_FollowPlayer)
-			if (math.random(1, self.FollowPlayerSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.FollowPlayerSoundLevel, self:GetSoundPitch(self.FollowPlayerPitch.a, self.FollowPlayerPitch.b))
-			end
-		end
-	elseif sdSet == "UnFollowPlayer" then
-		if self.HasFollowPlayerSounds then
-			local pickedSD = PICK(self.SoundTbl_UnFollowPlayer)
-			if (math.random(1, self.FollowPlayerSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.FollowPlayerSoundLevel, self:GetSoundPitch(self.FollowPlayerPitch.a, self.FollowPlayerPitch.b))
-			end
-		end
-	elseif sdSet == "OnReceiveOrder" then
-		if self.HasOnReceiveOrderSounds then
-			local pickedSD = PICK(self.SoundTbl_OnReceiveOrder)
-			if (math.random(1, self.OnReceiveOrderSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				self.NextIdleSoundT = self.NextIdleSoundT + 2
-				self.NextAlertSoundT = CurTime() + 2
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.OnReceiveOrderSoundLevel, self:GetSoundPitch(self.OnReceiveOrderSoundPitch.a, self.OnReceiveOrderSoundPitch.b))
-			end
-		end
-	elseif sdSet == "MoveOutOfPlayersWay" then
-		if self.HasMoveOutOfPlayersWaySounds then
-			local pickedSD = PICK(self.SoundTbl_MoveOutOfPlayersWay)
-			if (math.random(1, self.MoveOutOfPlayersWaySoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.MoveOutOfPlayersWaySoundLevel, self:GetSoundPitch(self.MoveOutOfPlayersWaySoundPitch.a, self.MoveOutOfPlayersWaySoundPitch.b))
-			end
-		end
-	elseif sdSet == "MedicBeforeHeal" then
-		if self.HasMedicSounds_BeforeHeal then
-			local pickedSD = PICK(self.SoundTbl_MedicBeforeHeal)
-			if (math.random(1, self.MedicBeforeHealSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.BeforeHealSoundLevel, self:GetSoundPitch(self.BeforeHealSoundPitch.a, self.BeforeHealSoundPitch.b))
-			end
-		end
-	elseif sdSet == "MedicOnHeal" then
-		if self.HasMedicSounds_AfterHeal then
-			local pickedSD = PICK(self.SoundTbl_MedicAfterHeal) or "items/smallmedkit1.wav"
-			if (math.random(1, self.MedicAfterHealSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
-				self.CurrentMedicAfterHealSound = sdType(self, pickedSD, self.AfterHealSoundLevel, self:GetSoundPitch(self.AfterHealSoundPitch.a, self.AfterHealSoundPitch.b))
-			end
-		end
-	elseif sdSet == "MedicReceiveHeal" then
-		if self.HasMedicSounds_ReceiveHeal then
-			local pickedSD = PICK(self.SoundTbl_MedicReceiveHeal)
-			if (math.random(1, self.MedicReceiveHealSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.MedicReceiveHealSoundLevel, self:GetSoundPitch(self.MedicReceiveHealSoundPitch.a, self.MedicReceiveHealSoundPitch.b))
-			end
-		end
-	elseif sdSet == "OnPlayerSight" then
-		if self.HasOnPlayerSightSounds then
-			local pickedSD = PICK(self.SoundTbl_OnPlayerSight)
-			if (math.random(1, self.OnPlayerSightSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
-				self.NextAlertSoundT = CurTime() + math.random(1,2)
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.OnPlayerSightSoundLevel, self:GetSoundPitch(self.OnPlayerSightSoundPitch.a, self.OnPlayerSightSoundPitch.b))
-			end
-		end
-	elseif sdSet == "InvestigateSound" then
-		if self.HasInvestigateSounds && CurTime() > self.NextInvestigateSoundT then
-			local pickedSD = PICK(self.SoundTbl_Investigate)
-			if (math.random(1, self.InvestigateSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				self.NextIdleSoundT = self.NextIdleSoundT + 2
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.InvestigateSoundLevel, self:GetSoundPitch(self.InvestigateSoundPitch.a, self.InvestigateSoundPitch.b))
-			end
-			self.NextInvestigateSoundT = CurTime() + math.Rand(self.NextSoundTime_Investigate.a, self.NextSoundTime_Investigate.b)
-		end
-	elseif sdSet == "LostEnemy" then
-		if self.HasLostEnemySounds && CurTime() > self.NextLostEnemySoundT then
-			local pickedSD = PICK(self.SoundTbl_LostEnemy)
-			if (math.random(1, self.LostEnemySoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				self.NextIdleSoundT = self.NextIdleSoundT + 2
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.LostEnemySoundLevel, self:GetSoundPitch(self.LostEnemySoundPitch.a, self.LostEnemySoundPitch.b))
-			end
-			self.NextLostEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_LostEnemy.a, self.NextSoundTime_LostEnemy.b)
-		end
-	elseif sdSet == "Alert" then
-		if self.HasAlertSounds then
-			local pickedSD = PICK(self.SoundTbl_Alert)
-			if (math.random(1, self.AlertSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				local dur = CurTime() + ((((SoundDuration(pickedSD) > 0) and SoundDuration(pickedSD)) or 2) + 1)
-				self.NextIdleSoundT = dur
-				self.NextPainSoundT = dur
-				self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert.a, self.NextSoundTime_Alert.b)
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.AlertSoundLevel, self:GetSoundPitch(self.AlertSoundPitch.a, self.AlertSoundPitch.b))
-			end
-		end
-	elseif sdSet == "CallForHelp" then
-		if self.HasCallForHelpSounds then
-			local pickedSD = PICK(self.SoundTbl_CallForHelp)
-			if (math.random(1, self.CallForHelpSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				self.NextIdleSoundT = self.NextIdleSoundT + 2
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.CallForHelpSoundLevel, self:GetSoundPitch(self.CallForHelpSoundPitch.a, self.CallForHelpSoundPitch.b))
-			end
-		end
-	elseif sdSet == "BecomeEnemyToPlayer" then
-		if self.HasBecomeEnemyToPlayerSounds then
-			local pickedSD = PICK(self.SoundTbl_BecomeEnemyToPlayer)
-			if (math.random(1, self.BecomeEnemyToPlayerChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				local dur = CurTime() + ((((SoundDuration(pickedSD) > 0) and SoundDuration(pickedSD)) or 2) + 1)
-				self.NextPainSoundT = dur
-				self.NextAlertSoundT = dur
-				self.NextInvestigateSoundT = CurTime() + 2
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(2, 3)
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.BecomeEnemyToPlayerSoundLevel, self:GetSoundPitch(self.BecomeEnemyToPlayerPitch.a, self.BecomeEnemyToPlayerPitch.b))
-			end
-		end
-	elseif sdSet == "OnKilledEnemy" then
-		if self.HasOnKilledEnemySound && CurTime() > self.NextOnKilledEnemySoundT then
-			local pickedSD = PICK(self.SoundTbl_OnKilledEnemy)
-			if (math.random(1, self.OnKilledEnemySoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				self.NextIdleSoundT = self.NextIdleSoundT + 2
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.OnKilledEnemySoundLevel, self:GetSoundPitch(self.OnKilledEnemySoundPitch.a, self.OnKilledEnemySoundPitch.b))
-			end
-			self.NextOnKilledEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_OnKilledEnemy.a, self.NextSoundTime_OnKilledEnemy.b)
-		end
-	elseif sdSet == "AllyDeath" then
-		if self.HasOnKilledEnemySound && CurTime() > self.NextAllyDeathSoundT then
-			local pickedSD = PICK(self.SoundTbl_AllyDeath)
-			if (math.random(1, self.AllyDeathSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				self.NextIdleSoundT = self.NextIdleSoundT + 2
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.AllyDeathSoundLevel, self:GetSoundPitch(self.AllyDeathSoundPitch.a, self.AllyDeathSoundPitch.b))
-			end
-			self.NextAllyDeathSoundT = CurTime() + math.Rand(self.NextSoundTime_AllyDeath.a, self.NextSoundTime_AllyDeath.b)
-		end
-	elseif sdSet == "Pain" then
-		if self.HasPainSounds && CurTime() > self.NextPainSoundT then
-			local pickedSD = PICK(self.SoundTbl_Pain)
-			local sdDur = 2
-			if (math.random(1, self.PainSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.PainSoundLevel, self:GetSoundPitch(self.PainSoundPitch.a, self.PainSoundPitch.b))
-				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
-			end
-			self.NextPainSoundT = CurTime() + sdDur
-		end
-	elseif sdSet == "Impact" then
-		if self.HasImpactSounds then
-			local pickedSD = PICK(self.SoundTbl_Impact)
-			if (math.random(1, self.ImpactSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				self.CurrentImpactSound = sdType(self, pickedSD, self.ImpactSoundLevel, self:GetSoundPitch(self.ImpactSoundPitch.a, self.ImpactSoundPitch.b))
-			end
-		end
-	elseif sdSet == "DamageByPlayer" then
-		//if self.HasDamageByPlayerSounds && CurTime() > self.NextDamageByPlayerSoundT then -- This is done in the call instead
-			local pickedSD = PICK(self.SoundTbl_DamageByPlayer)
-			local sdDur = 2
-			if (math.random(1, self.DamageByPlayerSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentIdleSound)
-				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
-				self.NextPainSoundT = CurTime() + sdDur
-				self.NextIdleSoundT_RegularChange = CurTime() + sdDur
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.DamageByPlayerSoundLevel, self:GetSoundPitch(self.DamageByPlayerPitch.a, self.DamageByPlayerPitch.b))
-			end
-			self.NextDamageByPlayerSoundT = CurTime() + sdDur
-		//end
-	elseif sdSet == "Death" then
-		if self.HasDeathSounds then
-			local pickedSD = PICK(self.SoundTbl_Death)
-			if (math.random(1, self.DeathSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				self.CurrentDeathSound = sdType(self, pickedSD, self.DeathSoundLevel, self:GetSoundPitch(self.DeathSoundPitch.a, self.DeathSoundPitch.b))
-			end
-		end
-	elseif sdSet == "Gib" then
-		if self.HasGibOnDeathSounds then
-			sdType = VJ.EmitSound
-			if customSD then
-				sdType(self, customSD, 80, math.random(80, 100))
-			else
-				sdType(self, "vj_base/gib/splat.wav", 80, math.random(85, 100))
-				sdType(self, "vj_base/gib/break1.wav", 80, math.random(85, 100))
-				sdType(self, "vj_base/gib/break2.wav", 80, math.random(85, 100))
-				sdType(self, "vj_base/gib/break3.wav", 80, math.random(85, 100))
-			end
-		end
-	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-- Base-Specific Sound Tables --=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
-	elseif sdSet == "BeforeMeleeAttack" then
-		if self.HasMeleeAttackSounds then
-			local pickedSD = PICK(self.SoundTbl_BeforeMeleeAttack)
-			if (math.random(1, self.BeforeMeleeAttackSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentExtraSpeechSound)
-				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentExtraSpeechSound = sdType(self, pickedSD, self.BeforeMeleeAttackSoundLevel, self:GetSoundPitch(self.BeforeMeleeAttackSoundPitch.a, self.BeforeMeleeAttackSoundPitch.b))
-			end
-		end
-	elseif sdSet == "MeleeAttack" then
-		if self.HasMeleeAttackSounds then
-			local pickedSD = PICK(self.SoundTbl_MeleeAttack)
-			if (math.random(1, self.MeleeAttackSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.MeleeAttackSoundLevel, self:GetSoundPitch(self.MeleeAttackSoundPitch.a, self.MeleeAttackSoundPitch.b))
-			end
-			if self.HasExtraMeleeAttackSounds then
-				pickedSD = PICK(self.SoundTbl_MeleeAttackExtra)
-				if (math.random(1, self.ExtraMeleeSoundChance) == 1 && pickedSD) or customSD then
-					if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-					VJ.EmitSound(self, pickedSD, self.ExtraMeleeAttackSoundLevel, self:GetSoundPitch(self.ExtraMeleeSoundPitch.a, self.ExtraMeleeSoundPitch.b))
-				end
-			end
-		end
-	elseif sdSet == "MeleeAttackMiss" then
-		if self.HasMeleeAttackMissSounds then
-			local pickedSD = PICK(self.SoundTbl_MeleeAttackMiss)
-			if (math.random(1, self.MeleeAttackMissSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				StopSound(self.CurrentMeleeAttackMissSound)
-				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentMeleeAttackMissSound = sdType(self, pickedSD, self.MeleeAttackMissSoundLevel, self:GetSoundPitch(self.MeleeAttackMissSoundPitch.a, self.MeleeAttackMissSoundPitch.b))
-			end
-		end
-	elseif sdSet == "BeforeRangeAttack" then
-		if self.HasBeforeRangeAttackSound then
-			local pickedSD = PICK(self.SoundTbl_BeforeRangeAttack)
-			if (math.random(1, self.BeforeRangeAttackSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentExtraSpeechSound)
-				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentExtraSpeechSound = sdType(self, pickedSD, self.BeforeRangeAttackSoundLevel, self:GetSoundPitch(self.BeforeRangeAttackPitch.a, self.BeforeRangeAttackPitch.b))
-			end
-		end
-	elseif sdSet == "RangeAttack" then
-		if self.HasRangeAttackSound then
-			local pickedSD = PICK(self.SoundTbl_RangeAttack)
-			if (math.random(1, self.RangeAttackSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.RangeAttackSoundLevel, self:GetSoundPitch(self.RangeAttackPitch.a, self.RangeAttackPitch.b))
-			end
-		end
-	elseif sdSet == "BeforeLeapAttack" then
-		if self.HasBeforeLeapAttackSound then
-			local pickedSD = PICK(self.SoundTbl_BeforeLeapAttack)
-			if (math.random(1, self.BeforeLeapAttackSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				StopSound(self.CurrentExtraSpeechSound)
-				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentExtraSpeechSound = sdType(self, pickedSD, self.BeforeLeapAttackSoundLevel, self:GetSoundPitch(self.BeforeLeapAttackSoundPitch.a, self.BeforeLeapAttackSoundPitch.b))
-			end
-		end
-	elseif sdSet == "LeapAttackJump" then
-		if self.HasLeapAttackJumpSound then
-			local pickedSD = PICK(self.SoundTbl_LeapAttackJump)
-			if (math.random(1, self.LeapAttackJumpSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSound(self.CurrentSpeechSound)
-				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.LeapAttackJumpSoundLevel, self:GetSoundPitch(self.LeapAttackJumpSoundPitch.a, self.LeapAttackJumpSoundPitch.b))
-			end
-		end
-	elseif sdSet == "LeapAttackDamage" then
-		if self.HasLeapAttackDamageSound then
-			local pickedSD = PICK(self.SoundTbl_LeapAttackDamage)
-			if (math.random(1, self.LeapAttackDamageSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				StopSound(self.CurrentSpeechSound)
-				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.LeapAttackDamageSoundLevel, self:GetSoundPitch(self.LeapAttackDamageSoundPitch.a, self.LeapAttackDamageSoundPitch.b))
-			end
-		end
-	elseif sdSet == "LeapAttackDamageMiss" then
-		if self.HasLeapAttackDamageMissSound then
-			local pickedSD = PICK(self.SoundTbl_LeapAttackDamageMiss)
-			if (math.random(1, self.LeapAttackDamageMissSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentLeapAttackDamageMissSound = sdType(self, pickedSD, self.LeapAttackDamageMissSoundLevel, self:GetSoundPitch(self.LeapAttackDamageMissSoundPitch.a, self.LeapAttackDamageMissSoundPitch.b))
-			end
-		end
-	else -- Such as "Speech"
-		if customSD then
-			StopSound(self.CurrentSpeechSound)
-			StopSound(self.CurrentIdleSound)
-			self.NextIdleSoundT_RegularChange = CurTime() + ((((SoundDuration(customSD) > 0) and SoundDuration(customSD)) or 2) + 1)
-			self.CurrentSpeechSound = sdType(self, customSD, 80, self:GetSoundPitch(self.GeneralSoundPitch1, self.GeneralSoundPitch2))
 		end
 	end
 end

@@ -36,8 +36,8 @@ function ENT:OnStopControlling(keyPressed) end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.VJC_Data_Player = nil -- A hash table to hold all the values that need to be reset after the player stops controlling
-ENT.VJC_Data_NPC = nil -- A hash table to hold all the values that need to be reset after the NPC is uncontrolled
+ENT.ControllerVars_Player = nil -- A hash table to hold all the values that need to be reset after the player stops controlling
+ENT.ControllerVars_NPC = nil -- A hash table to hold all the values that need to be reset after the NPC is uncontrolled
 ENT.VJC_Camera_Mode = 1 -- Current camera mode | 1 = Third, 2 = First
 ENT.VJC_Camera_CurZoom = Vector(0, 0, 0)
 ENT.VJC_Key_Last = BUTTON_CODE_NONE -- The last button the user pressed
@@ -102,7 +102,7 @@ function ENT:StartControlling()
 	for _, v in ipairs(ply:GetWeapons()) do
 		weps[#weps + 1] = v:GetClass()
 	end
-	self.VJC_Data_Player = {
+	self.ControllerVars_Player = {
 		health = ply:Health(),
 		armor = ply:Armor(),
 		weapons = weps,
@@ -189,8 +189,8 @@ function ENT:SetControlledNPC(npc)
 	self.VJCE_Bullseye = bullseye
 
 	-- Set the NPC
-	if !npc.VJC_Data then
-		npc.VJC_Data = {
+	if !npc.ControllerVars then
+		npc.ControllerVars = {
 			CameraMode = 1, -- Sets the default camera mode | 1 = Third Person, 2 = First Person
 			ThirdP_Offset = Vector(0, 0, 0), -- The offset for the controller when the camera is in third person
 			FirstP_Bone = "ValveBiped.Bip01_Head1", -- If left empty, the base will attempt to calculate a position for first person
@@ -199,7 +199,7 @@ function ENT:SetControlledNPC(npc)
 		}
 	end
 	local ply = self.VJCE_Player
-	self.VJC_Camera_Mode = npc.VJC_Data.CameraMode -- Get the NPC's default camera mode
+	self.VJC_Camera_Mode = npc.ControllerVars.CameraMode -- Get the NPC's default camera mode
 	self.VJC_NPC_LastPos = npc:GetPos()
 	npc.VJ_IsBeingControlled = true
 	npc.VJ_TheController = ply
@@ -216,7 +216,7 @@ function ENT:SetControlledNPC(npc)
 			npc:ResetEnemy()
 			npc:SetEnemy(bullseye)
 		end
-		self.VJC_Data_NPC = {
+		self.ControllerVars_NPC = {
 			[1] = npc.DisableWandering,
 			[2] = npc.DisableChasingEnemy,
 			[3] = npc.DisableTakeDamageFindEnemy,
@@ -314,7 +314,7 @@ end)
 function ENT:SendDataToClient(reset)
 	local ply = self.VJCE_Player
 	local npc = self.VJCE_NPC
-	local npcData = npc.VJC_Data
+	local npcData = npc.ControllerVars
 
 	net.Start("vj_controller_data")
 		net.WriteBool(ply.VJ_IsControllingNPC)
@@ -417,7 +417,7 @@ function ENT:Think()
 				local turnData = npc.TurnData
 				if turnData.Target != self.VJCE_Bullseye then
 					npc:SetTurnTarget(self.VJCE_Bullseye, 1)
-				elseif npc:GetActivity() == ACT_IDLE && npc:GetIdealActivity() == ACT_IDLE then -- Check both current act AND ideal act because certain activities only change the current act (Ex: UpdateTurnActivity function)
+				elseif npc:GetActivity() == ACT_IDLE && npc:GetIdealActivity() == ACT_IDLE && npc:DeltaIdealYaw() <= -45 or npc:DeltaIdealYaw() >= 45 then -- Check both current act AND ideal act because certain activities only change the current act (Ex: UpdateTurnActivity function)
 					npc:UpdateTurnActivity()
 					if npc:GetIdealActivity() != ACT_IDLE then -- If ideal act is no longer idle, then we have selected a turn activity!
 						npc.NextIdleTime = CurTime() + npc:DecideAnimationLength(npc:GetIdealActivity())
@@ -522,7 +522,7 @@ function ENT:StopControlling(keyPressed)
 	local npc = self.VJCE_NPC
 	local ply = self.VJCE_Player
 	if IsValid(ply) then
-		local plyData = self.VJC_Data_Player
+		local plyData = self.ControllerVars_Player
 		ply:UnSpectate()
 		ply:KillSilent() -- If we don't, we will get bugs like not being able to pick up weapons when walking over them
 		if self.VJC_Player_CanRespawn or keyPressed then
@@ -559,7 +559,7 @@ function ENT:StopControlling(keyPressed)
 	self.VJCE_Player = NULL
 
 	if IsValid(npc) then
-		local npcData = self.VJC_Data_NPC
+		local npcData = self.ControllerVars_NPC
 		//npc:StopMoving()
 		npc.VJ_IsBeingControlled = false
 		npc.VJ_TheController = NULL

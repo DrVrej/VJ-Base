@@ -11,7 +11,6 @@ include("vj_base/ai/base_tank.lua")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 0
 ENT.SightDistance = 10000
-ENT.HasSetSolid = false -- set to false to disable SetSolid
 ENT.MovementType = VJ_MOVETYPE_STATIONARY -- How the NPC moves around
 ENT.CanTurnWhileStationary = false -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
 ENT.GodMode = true -- Immune to everything
@@ -133,6 +132,7 @@ local vj_npc_range = GetConVar("vj_npc_range")
 local vj_npc_reduce_vfx = GetConVar("vj_npc_reduce_vfx")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
+	self:SetSolid(SOLID_NONE)
 	self.Tank_NextIdleParticles = CurTime() + 1
 	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
 	self:SetPhysicsDamageScale(0) -- Take no physics damage
@@ -196,10 +196,11 @@ end
 function ENT:SelectSchedule()
 	if self.Dead then return end
 	
-	self:IdleSoundCode()
+	local eneValid = IsValid(self:GetEnemy())
+	self:PlayIdleSound(nil, nil, eneValid)
 	self:MaintainIdleBehavior()
 	
-	if IsValid(self:GetEnemy()) then
+	if eneValid then
 		-- Can always fire when being controlled
 		if self:GetParent().VJ_IsBeingControlled then
 			self.Tank_Status = 0
