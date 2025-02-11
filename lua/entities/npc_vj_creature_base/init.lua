@@ -922,7 +922,7 @@ local ANIM_TYPE_GESTURE = VJ.ANIM_TYPE_GESTURE
 
 ENT.MeleeAttack_DoingPropAttack = false
 ENT.PropAP_IsVisible = false
-ENT.PropAP_NextCheckT = 0
+ENT.PropInteraction_NextCheckT = 0
 ENT.IsAbleToRangeAttack = true
 ENT.IsAbleToLeapAttack = true
 ENT.LeapAttackHasJumped = false
@@ -986,7 +986,7 @@ local vj_npc_snd_medic = GetConVar("vj_npc_snd_medic")
 local vj_npc_snd_callhelp = GetConVar("vj_npc_snd_callhelp")
 local vj_npc_snd_receiveorder = GetConVar("vj_npc_snd_receiveorder")
 local vj_npc_creature_opendoor = GetConVar("vj_npc_creature_opendoor")
-local vj_npc_melee_propap = GetConVar("vj_npc_melee_propap")
+local vj_npc_melee_propint = GetConVar("vj_npc_melee_propint")
 local vj_npc_corpse_collision = GetConVar("vj_npc_corpse_collision")
 local vj_npc_debug_engine = GetConVar("vj_npc_debug_engine")
 local vj_npc_difficulty = GetConVar("vj_npc_difficulty")
@@ -1058,7 +1058,7 @@ local function InitConvars(self)
 	if vj_npc_snd_callhelp:GetInt() == 0 then self.HasCallForHelpSounds = false end
 	if vj_npc_snd_receiveorder:GetInt() == 0 then self.HasOnReceiveOrderSounds = false end
 	if vj_npc_creature_opendoor:GetInt() == 0 then self.CanOpenDoors = false end
-	local propAPType = vj_npc_melee_propap:GetInt()
+	local propAPType = vj_npc_melee_propint:GetInt()
 	if propAPType != 1 then
 		if propAPType == 0 then -- Disable
 			self.PropInteraction = false
@@ -2025,13 +2025,13 @@ function ENT:Think()
 								if eneIsVisible && eneDistNear < self.MeleeAttackDistance && self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius)) then
 									atkType = 1
 								-- Check for possible props that we can attack/push
-								elseif curTime > self.PropAP_NextCheckT then
-									local propCheck = self:MaintainPropAP()
+								elseif curTime > self.PropInteraction_NextCheckT then
+									local propCheck = self:MaintainPropInteraction()
 									if propCheck then
 										atkType = 2
 									end
 									self.PropAP_IsVisible = propCheck
-									self.PropAP_NextCheckT = curTime + 0.5
+									self.PropInteraction_NextCheckT = curTime + 0.5
 								end
 							end
 							if atkType && self:CustomAttackCheck_MeleeAttack() == true then
@@ -2233,7 +2233,7 @@ end
 --------------------------------------------------------------------------------------------------------------------------------------------
 local propColBlacklist = {[COLLISION_GROUP_DEBRIS] = true, [COLLISION_GROUP_DEBRIS_TRIGGER] = true, [COLLISION_GROUP_DISSOLVING] = true, [COLLISION_GROUP_IN_VEHICLE] = true, [COLLISION_GROUP_WORLD] = true}
 --
-function ENT:MaintainPropAP(customEnts)
+function ENT:MaintainPropInteraction(customEnts)
 	local behavior = self.PropInteraction
 	if !behavior then return false end
 	local myPos = self:GetPos()
@@ -2298,7 +2298,7 @@ function ENT:MeleeAttackCode(isPropAttack)
 						applyDmg = false
 					end
 					local phys = ent:GetPhysicsObject()
-					if IsValid(phys) && self:MaintainPropAP({ent}) then
+					if IsValid(phys) && self:MaintainPropInteraction({ent}) then
 						phys:EnableMotion(true)
 						phys:Wake()
 						constraint.RemoveConstraints(ent, "Weld") //constraint.RemoveAll(ent)
