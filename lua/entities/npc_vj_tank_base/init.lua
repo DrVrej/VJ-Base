@@ -11,10 +11,9 @@ include("vj_base/ai/base_tank.lua")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 200
 ENT.SightDistance = 10000
-ENT.MovementType = VJ_MOVETYPE_PHYSICS -- How the NPC moves around
-ENT.ForceDamageFromBosses = true -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJ_ID_Boss"
-ENT.DeathDelayTime = 2 -- Time until the NPC spawns the corpse, removes itself, etc.
-ENT.AlertFriendsOnDeath = true -- Should the NPC's allies get alerted while it's dying? | Its allies will also need to have this variable set to true!
+ENT.MovementType = VJ_MOVETYPE_PHYSICS
+ENT.ForceDamageFromBosses = true
+ENT.DeathDelayTime = 2
 	-- ====== Sound Paths ====== --
 ENT.SoundTbl_Breath = "vj_base/vehicles/armored/engine_idle.wav"
 ENT.SoundTbl_Death = "VJ.Explosion"

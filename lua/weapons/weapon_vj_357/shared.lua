@@ -38,4 +38,4 @@ SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_SpawnShells = false
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound = false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
-SWEP.Reload_TimeUntilAmmoIsSet = 2.7 -- Time until ammo is set to the weapon
+SWEP.Reload_TimeUntilAmmoIsSet = 2.7

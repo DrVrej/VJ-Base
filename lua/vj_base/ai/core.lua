@@ -134,6 +134,28 @@ ENT.NextCallForBackUpOnDamageT = 0
 ENT.NextDamageByPlayerSoundT = 0
 ENT.NextPainSoundT = 0
 ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
+ENT.TimersToRemove = {
+    "state_reset",
+	"wep_reload_reset",
+    "wep_state_reset",
+    "turn_reset",
+    "flinch_reset",
+	"alert_reset",
+    "attack_pause_reset",
+    "attack_melee_start",
+    "attack_melee_reset",
+    "attack_melee_reset_able",
+    "attack_range_start",
+    "attack_range_reset",
+    "attack_range_reset_able",
+    "attack_leap_jump",
+    "attack_leap_start",
+    "attack_leap_reset",
+    "attack_leap_reset_able",
+	"attack_grenade_start",
+    "attack_grenade_reset",
+    "attack_grenade_reset_able"
+}
 //ENT.SavedDmgInfo = {} -- Set later
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -556,7 +578,9 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 	local isGesture = false
 	local isSequence = false
 	local isString = isstring(animation)
+	local isRecheck = false
 	
+	::recheck::
 	-- Handle "vjges_" and "vjseq_"
 	if isString then
 		local finalString; -- Only define a table if we need to!
@@ -599,6 +623,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 		isSequence = true
 		if isnumber(animation) then -- If it's an activity, then convert it to a string
 			animation = self:GetSequenceName(self:SelectWeightedSequence(animation))
+			isString = true
 		end
 	elseif isString && !isSequence then -- Only for regular & gesture strings
 		-- If it can be played as an activity, then convert it!
@@ -611,16 +636,23 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 		end
 	end
 	
-	-- If the given animation doesn't exist, then check to see if it does in the weapon translation list
-	if VJ.AnimExists(self, animation) == false then
-		if !isString then -- If it's an activity then check for possible translation
-			-- If it returns the same activity as "animation", then there isn't even a translation for it so don't play any animation =(
-			if self:TranslateActivity(animation) == animation then
-				return ACT_INVALID, 0, ANIM_TYPE_NONE
+	-- Check for activity translations
+	if !isString && !isRecheck then
+		local translation = self:TranslateActivity(animation)
+		if translation != animation then
+			animation = translation
+			-- The translation is a string, recheck as it might be a gesture activity
+			if isstring(translation) then
+				isString = true
+				isRecheck = true
+				goto recheck
 			end
-		else -- No animation =(
-			return ACT_INVALID, 0, ANIM_TYPE_NONE
 		end
+	end
+	
+	-- Check if the animation actually exists
+	if VJ.AnimExists(self, animation) == false then
+		return ACT_INVALID, 0, ANIM_TYPE_NONE
 	end
 	
 	local animType = ((isGesture and ANIM_TYPE_GESTURE) or isSequence and ANIM_TYPE_SEQUENCE) or ANIM_TYPE_ACTIVITY -- Find the animation type
@@ -1263,7 +1295,7 @@ end
 local vecZN100 = Vector(0, 0, -100)
 --
 function ENT:IsJumpLegal(startPos, apex, endPos)
-	local jumpData = self.JumpVars
+	local jumpData = self.JumpParameters
 	if !jumpData.Enabled then return false end
 	if ((endPos.z - startPos.z) > jumpData.MaxRise) or ((apex.z - startPos.z) > jumpData.MaxRise) or ((startPos.z - endPos.z) > jumpData.MaxDrop) or (startPos:Distance(endPos) > jumpData.MaxDistance) then
 		return false
@@ -2126,7 +2158,7 @@ function ENT:Allies_CallHelp(dist)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Checks allies around the NPC and return all of them as a table
+	Checks allies around the NPC that can receive orders and return all of them as a table
 		- dist = How far to check for allies | DEFAULT: 800
 	Returns
 		- false, Failed to find any allies
@@ -2154,7 +2186,7 @@ function ENT:Allies_Check(dist)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Checks allies around the NPC and brings them to the NPC
+	Checks allies around the NPC and brings them to the NPC if they can receive orders
 		- formType = Type of formation the allies should do | DEFAULT: "Random"
 			- Types: "Random" | "Diamond"
 		- dist = How far to check for allies | DEFAULT: 800
@@ -2164,8 +2196,7 @@ end
 		- onlyVis = Should it only allow allies that are visible? | DEFAULT: false
 	Returns
 		- false, Failed to find any allies
-		- true, Number of allies surpassed or reached the limit
-		- nil, Allies found but within the limit
+		- true, Found at least 1 ally
 -----------------------------------------------------------]]
 function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 	local myPos = self:GetPos()
@@ -2203,9 +2234,10 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 					ent:SCHEDULE_GOTO_POSITION("TASK_WALK_PATH", function(x) x.CanShootWhenMoving = true x.TurnData = {Type = VJ.FACE_ENEMY} end)
 				end
 			end
-			if limit != 0 && it >= limit then return true end -- Return true if it reached the limit
+			if limit != 0 && it >= limit then return true end -- Reached the limit
 		end
 	end
+	return it > 0
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -3186,6 +3218,9 @@ function ENT:VJ_GetNearestPointToEntityDistance(ent, centerNPC) return VJ.GetNea
 function ENT:BusyWithActivity() return self:IsBusy("Activities") end
 function ENT:IsBusyWithBehavior() return self:IsBusy("Behaviors") end
 function ENT:FootStepSoundCode(customSD) self:PlayFootstepSound(customSD) end
+function ENT:MeleeAttackCode(isPropAttack) self:ExecuteMeleeAttack(isPropAttack) end
+function ENT:RangeAttackCode() self:ExecuteRangeAttack() end
+function ENT:LeapDamageCode() self:ExecuteLeapAttack() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Checks all 4 sides around the NPC

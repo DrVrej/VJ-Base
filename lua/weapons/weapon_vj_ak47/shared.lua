@@ -35,7 +35,7 @@ SWEP.Primary.Sound = "VJ.Weapon_AK47.Single"
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellType = "RifleShellEject"
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.Reload_TimeUntilAmmoIsSet	= 1.8 -- Time until ammo is set to the weapon
+SWEP.Reload_TimeUntilAmmoIsSet	= 1.8
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnAnimEvent(pos, ang, event, options)
 	if event == 5001 then return true end -- Asiga hose vor shtke gedervadz flash-e

@@ -25,14 +25,14 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.Model = "models/vj_base/weapons/w_grenade.mdl" -- Model(s) to spawn with | Picks a random one if it's a table
+ENT.Model = "models/vj_base/weapons/w_grenade.mdl"
 ENT.ProjectileType = VJ.PROJ_TYPE_PROP
-ENT.DoesRadiusDamage = true -- Should it deal radius damage when it collides with something?
+ENT.DoesRadiusDamage = true
 ENT.RadiusDamageRadius = 250
 ENT.RadiusDamage = 80
-ENT.RadiusDamageUseRealisticRadius = true -- Should the damage decrease the farther away the hit entity is from the radius origin?
+ENT.RadiusDamageUseRealisticRadius = true
 ENT.RadiusDamageType = DMG_BLAST
-ENT.RadiusDamageForce = 90 -- Damage force to apply to the hit entity | false = Don't apply any force
+ENT.RadiusDamageForce = 90
 ENT.CollisionBehavior = VJ.PROJ_COLLISION_NONE
 ENT.CollisionDecal = "Scorch"
 ENT.SoundTbl_OnCollide = "weapons/hegrenade/he_bounce-1.wav"

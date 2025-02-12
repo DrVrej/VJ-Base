@@ -34,4 +34,4 @@ SWEP.PrimaryEffects_ShellType = "RifleShellEject"
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasDeploySound = false -- Does the weapon have a deploy sound?
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.Reload_TimeUntilAmmoIsSet	= 2.1 -- Time until ammo is set to the weapon
+SWEP.Reload_TimeUntilAmmoIsSet	= 2.1

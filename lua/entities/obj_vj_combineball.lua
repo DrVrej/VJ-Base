@@ -26,11 +26,11 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.Model = "models/effects/combineball.mdl" -- Model(s) to spawn with | Picks a random one if it's a table
+ENT.Model = "models/effects/combineball.mdl"
 ENT.CollisionBehavior = VJ.PROJ_COLLISION_PERSIST
 ENT.CollisionDecal = "FadingScorch"
-ENT.DirectDamage = 200 -- How much damage should it do when it hits something
-ENT.DirectDamageType = bit.bor(DMG_DISSOLVE, DMG_BLAST, DMG_SHOCK) -- Damage type
+ENT.DirectDamage = 200
+ENT.DirectDamageType = bit.bor(DMG_DISSOLVE, DMG_BLAST, DMG_SHOCK)
 ENT.SoundTbl_Idle = "weapons/physcannon/energy_sing_loop4.wav"
 ENT.SoundTbl_OnCollide = {"weapons/physcannon/energy_bounce1.wav", "weapons/physcannon/energy_bounce2.wav"}
 

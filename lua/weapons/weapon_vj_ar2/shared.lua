@@ -49,7 +49,7 @@ SWEP.DryFireSound = "weapons/ar2/ar2_empty.wav"
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound = false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.ReloadSound = "weapons/ar2/ar2_reload.wav"
-SWEP.Reload_TimeUntilAmmoIsSet = 0.8 -- Time until ammo is set to the weapon
+SWEP.Reload_TimeUntilAmmoIsSet = 0.8
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_SecondaryFire_BeforeTimer(eneEnt, fireTime)
 	VJ.EmitSound(self, "weapons/cguard/charging.wav", 70)

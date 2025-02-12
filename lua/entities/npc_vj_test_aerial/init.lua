@@ -6,7 +6,6 @@ include("shared.lua")
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
 ENT.Model = "models/mortarsynth.mdl"
-	// models/gunship.mdl // models/combine_helicopter.mdl
 ENT.StartHealth = 150
 ENT.HullType = HULL_TINY
 ENT.MovementType = VJ_MOVETYPE_AERIAL
@@ -25,7 +24,7 @@ ENT.TimeUntilMeleeAttackDamage = 0.7
 ENT.NextAnyAttackTime_Melee = false
 ENT.MeleeAttackDamage = 30
 ENT.HasExtraMeleeAttackSounds = true
-	-- ====== Sound Paths ====== --
+
 ENT.SoundTbl_Breath = "npc/scanner/scanner_combat_loop1.wav"
 ENT.SoundTbl_Idle = {"npc/scanner/scanner_talk1.wav", "npc/scanner/scanner_talk2.wav"}
 ENT.SoundTbl_Alert = "npc/scanner/combat_scan5.wav"

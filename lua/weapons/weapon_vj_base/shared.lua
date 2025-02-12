@@ -105,7 +105,7 @@ SWEP.Secondary.Ammo = "none" -- Ammo type
 SWEP.Secondary.TakeAmmo = 1 -- How much ammo should it take on each shot?
 SWEP.Secondary.ClipSize = 0 -- Max amount of rounds per clip
 SWEP.Secondary.DefaultClip = 5 -- Default number of bullets in a clip | It will give this amount on initial pickup
-	-- To let the base automatically detect the animation duration, set this to false:
+	-- Set to false to let the base auto calculate the duration:
 SWEP.Secondary.Delay = false -- Time until it can shoot again
 SWEP.AnimTbl_SecondaryFire = ACT_VM_SECONDARYATTACK
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -589,12 +589,15 @@ function SWEP:NPCShoot_Primary()
 	-- Secondary Fire
 	if self.NPC_HasSecondaryFire && owner.Weapon_CanSecondaryFire && CurTime() > self.NPC_SecondaryFireNextT && ene:GetPos():Distance(owner:GetPos()) <= self.NPC_SecondaryFireDistance then
 		if math.random(1, self.NPC_SecondaryFireChance) == 1 then
-			local anim, animDur = owner:PlayAnim(VJ.PICK(owner.AnimTbl_WeaponAttackSecondary), true, false, true)
+			local anim, animDur, animType = owner:PlayAnim(owner.AnimTbl_WeaponAttackSecondary, true, false, true)
+			if animType != VJ.ANIM_TYPE_GESTURE then
+				animDur = animDur - 0.5
+			end
 			local fireTime = (anim == ACT_INVALID and 0) or owner.Weapon_SecondaryFireTime or animDur
-				-- If no animation was found then fireTime is 0, otherwise if "Weapon_SecondaryFireTime" is false then use animation time
+			self.NPC_SecondaryFireNextT = CurTime() + fireTime + 0.5 -- Prevent attempting to fire again
 			self:NPC_SecondaryFire_BeforeTimer(ene, fireTime)
 			timer.Simple(fireTime, function()
-				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && CurTime() > self.NPC_SecondaryFireNextT && (anim == ACT_INVALID or (anim && VJ.IsCurrentAnim(owner, anim))) then -- ONLY check for cur anim IF it even had one!
+				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && (anim == ACT_INVALID or animType == VJ.ANIM_TYPE_GESTURE or (anim && VJ.IsCurrentAnim(owner, anim))) then -- ONLY check for cur anim IF it even had one!
 					self:NPC_SecondaryFire()
 					if self.NPC_HasSecondaryFireSound then
 						local fireSd = VJ.PICK(self.NPC_SecondaryFireSound)

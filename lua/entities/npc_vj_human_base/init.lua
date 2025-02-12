@@ -33,7 +33,7 @@ ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted t
 ENT.CanTurnWhileMoving = true -- Can the NPC turn while moving? | EX: GoldSrc NPCs, Facing enemy while running to cover, Facing the player while moving out of the way
 	-- ====== Movement ====== --
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
-ENT.MovementType = VJ_MOVETYPE_GROUND -- How the NPC moves around
+ENT.MovementType = VJ_MOVETYPE_GROUND
 ENT.UsePoseParameterMovement = false -- Sets the NPC's "move_x" and "move_y" pose parameters while moving | Required for player models to move properly!
 	-- Movement: JUMP --
 	-- Requires "CAP_MOVE_JUMP" capability
@@ -43,7 +43,7 @@ ENT.UsePoseParameterMovement = false -- Sets the NPC's "move_x" and "move_y" pos
 	--     /   \
 	--    /     [S]   <- Start
 	--  [E]           <- End
-ENT.JumpVars = {
+ENT.JumpParameters = {
 	Enabled = true, -- Can the NPC do movements jumps?
 	MaxRise = 80, -- How high it can jump up ((S -> A) AND (S -> E))
 	MaxDrop = 230, -- How low it can jump down (E -> S)
@@ -52,7 +52,7 @@ ENT.JumpVars = {
 	-- Movement: STATIONARY --
 ENT.CanTurnWhileStationary = true -- Can the NPC turn while it's stationary?
 	-- ====== NPC Controller ====== --
-ENT.ControllerVars = {
+ENT.ControllerParameters = {
 	CameraMode = 1, -- Sets the default camera mode | 1 = Third Person, 2 = First Person
 	ThirdP_Offset = Vector(0, 0, 0), -- The offset for the controller when the camera is in third person
 	FirstP_Bone = "ValveBiped.Bip01_Head1", -- If left empty, the base will attempt to calculate a position for first person
@@ -66,7 +66,7 @@ ENT.ControllerVars = {
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.CanOpenDoors = true -- Can it open doors?
 ENT.CanReceiveOrders = true -- Can the NPC receive orders from others? | Ex: Allies calling for help, allies requesting backup on damage, etc.
-	-- When false it will not receive the following: "CallForHelp", "CallForBackUpOnDamage", "BringFriendsOnDeath", "AlertFriendsOnDeath", "Passive_AlliesRunOnDamage"
+	-- When false it will not receive the following: "CallForHelp", "CallForBackUpOnDamage", "DeathAllyResponse", "Passive_AlliesRunOnDamage"
 ENT.CanAlly = true -- Can it ally with other entities?
 ENT.VJ_NPC_Class = {} -- Relationship classes, any entity with the same class will be seen as an ally
 	-- Common Classes:
@@ -75,7 +75,7 @@ ENT.VJ_NPC_Class = {} -- Relationship classes, any entity with the same class wi
 ENT.FriendsWithAllPlayerAllies = false -- Should it be allied with other player allies? | Used alongside "CLASS_PLAYER_ALLY"
 ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- Type of AI behavior to use for this NPC
 ENT.IsGuard = false -- Should it guard its position? | Will attempt to stay around its guarding position
-ENT.AlertedToIdleTime = VJ.SET(14, 16) -- How much time until it calms down after the enemy has been killed/disappeared | Sets self.Alerted to false after the timer expires
+ENT.AlertToIdleDelay = VJ.SET(14, 16) -- How much time until it calms down after the enemy has been killed/disappeared | Sets self.Alerted to false after the timer expires
 ENT.TimeUntilEnemyLost = 15 -- Time until it resets its enemy if the enemy is not visible
 ENT.YieldToAlliedPlayers = true -- Should it give space to allied players?
 ENT.BecomeEnemyToPlayer = false -- Should it become enemy towards an allied player if it's damaged by them or it witnesses another ally killed by them?
@@ -85,14 +85,14 @@ ENT.Passive_RunOnTouch = true -- Should it run and make a alert sound when somet
 ENT.Passive_RunOnDamage = true -- Should it run when damaged? | This doesn't effect "self.Passive_AlliesRunOnDamage"
 ENT.Passive_AlliesRunOnDamage = true -- Should its allies (other passive NPCs) also run when it's damaged?
 	-- ====== On Player Sight ====== --
-ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Example: Play a sound
+ENT.HasOnPlayerSight = false -- Should do something when it a player?
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
 ENT.OnPlayerSightDispositionLevel = 1 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 ENT.OnPlayerSightOnlyOnce = true -- If true, it will only run it once | Sets "self.HasOnPlayerSight" to false after it runs!
 ENT.OnPlayerSightNextTime = VJ.SET(15, 20) -- How much time should it pass until it runs the code again?
 	-- ====== Call For Help ====== --
 ENT.CallForHelp = true -- Can it request allies for help while in combat?
-ENT.CallForHelpDistance = 2000 -- -- How far away the NPC's call for help travels
+ENT.CallForHelpDistance = 2000 -- How far away the NPC's call for help travels
 ENT.NextCallForHelpTime = 4 -- Time until it calls for help again
 ENT.AnimTbl_CallForHelp = {ACT_SIGNAL_ADVANCE, ACT_SIGNAL_FORWARD} -- Call for help animations | false = Don't play an animation
 ENT.CallForHelpAnimationFaceEnemy = true -- Should it face the enemy while playing the animation?
@@ -101,7 +101,7 @@ ENT.NextCallForHelpAnimationTime = 30 -- How much time until it can play an anim
 ENT.Medic_CanBeHealed = true -- Can this NPC be healed by medics?
 ENT.IsMedic = false -- Is this NPC a medic? It will heal friendly players and NPCs
 ENT.AnimTbl_Medic_GiveHealth = ACT_SPECIAL_ATTACK1 -- Animations to play when it heals an ally | false = Don't play an animation
-	-- To let the base automatically detect the animation duration, set this to false:
+	-- Set to false to let the base auto calculate the duration:
 ENT.Medic_TimeUntilHeal = false -- Time until the ally receives health
 ENT.Medic_CheckDistance = 600 -- How far does it check for allies that are hurt? | World units
 ENT.Medic_HealDistance = 30 -- How close does it have to be until it stops moving and heals its ally?
@@ -114,7 +114,7 @@ ENT.Medic_SpawnPropOnHealAttachment = "anim_attachment_LH" -- The attachment it 
 	-- Associated variables: self.FollowData, self.IsFollowing
 ENT.FollowPlayer = true -- Should it follow the player when the player presses the USE key? | Restrictions: Player has to be allied and the NPC's move type cannot be stationary!
 ENT.FollowMinDistance = 100 -- Minimum distance it should come when following something | The base automatically adds the NPC's size to this variable to account for different sizes!
-ENT.FollowUpdateTime = 0.5 -- Time until it checks if it should move to its target again | Lower number = More performance loss
+ENT.FollowUpdateInterval = 0.5 -- Time until it checks if it should move to its target again | Lower number = More performance loss
 	-- ====== Movement & Idle ====== --
 ENT.IdleAlwaysWander = false -- Should it constantly wander while idle?
 ENT.DisableWandering = false
@@ -136,7 +136,7 @@ ENT.PoseParameterLooking_Names = {pitch = {}, yaw = {}, roll = {}} -- Custom pos
 	-- ====== Investigation ====== --
 	-- Showcase: https://www.youtube.com/watch?v=cCqoqSDFyC4
 ENT.CanInvestigate = true -- Can it detect and investigate disturbances? | EX: Sounds, movement, flashlight, bullet hits
-ENT.InvestigateSoundDistance = 9 -- How far can the NPC hear sounds? | This number is multiplied by the calculated volume of the detectable sound
+ENT.InvestigateSoundDistance = 9 -- Max sound hearing distance multiplier | This multiplies the calculated volume of the sound
 	-- ====== Danger & Grenade Detection ====== --
 	-- Showcase: https://www.youtube.com/watch?v=XuaMWPTe6rA
 	-- EXAMPLES: Props that are one fire, especially objects like barrels that are about to explode, Combine mine that is triggered and about to explode, The location that the Antlion Worker's spit is going to hit, Combine Flechette that is about to explode,
@@ -153,9 +153,9 @@ ENT.AnimTbl_MoveToCover = ACT_RUN_CROUCH -- The animation it plays when moving t
 	-- ====== Control ====== --
 	-- Adjust these variables carefully! Wrong adjustment can have unintended effects!
 ENT.FindEnemy_CanSeeThroughWalls = false -- Should it be able to see through walls and objects? | Useful to make it know where the enemy is at all times
-ENT.DisableFindEnemy = false -- Disables FindEnemy code, friendly code still works though
-ENT.DisableTakeDamageFindEnemy = false -- Disables the AI component that allows the NPC to find enemies all around it when it's damaged while idling
-ENT.DisableTouchFindEnemy = false -- Disables the AI component that makes the NPC turn and look at an enemy that touched it
+ENT.DisableFindEnemy = false -- Disables the AI component that looks for enemies
+ENT.DisableTakeDamageFindEnemy = false -- Disables the AI component that makes it look for the enemy that attacked it
+ENT.DisableTouchFindEnemy = false -- Disables the AI component that makes it turn and look at enemies that collide with it
 ENT.NextProcessTime = 1 -- Time until it runs the essential part of the AI, which can be performance heavy!
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Damaged / Injured ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -176,9 +176,9 @@ ENT.BloodPool = {} -- Blood pools to be spawned by the corpse
 	-- ====== Immunity ====== --
 ENT.GodMode = false -- Immune to everything
 ENT.ForceDamageFromBosses = false -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJ_ID_Boss"
-ENT.AllowIgnition = true -- Can this NPC be set on fire?
+ENT.AllowIgnition = true -- Can it be set on fire?
 ENT.Immune_AcidPoisonRadiation = false -- Immune to Acid, Poison and Radiation
-ENT.Immune_Bullet = false -- Immune to bullet type damages
+ENT.Immune_Bullet = false -- Immune to bullet-type damages
 ENT.Immune_Blast = false -- Immune to explosive-type damages
 ENT.Immune_Dissolve = false -- Immune to dissolving | Example: Combine Ball
 ENT.Immune_Electricity = false -- Immune to electrical-type damages | Example: shock or laser
@@ -189,12 +189,12 @@ ENT.Immune_Sonic = false -- Immune to sonic-type damages
 ENT.CanFlinch = 0 -- 0 = Don't flinch | 1 = Flinch at any damage | 2 = Flinch only from certain damages
 ENT.FlinchDamageTypes = {DMG_BLAST} -- If it uses damage-based flinching, which types of damages should it flinch from?
 ENT.FlinchChance = 16 -- Chance of it flinching from 1 to x | 1 will make it always flinch
-	-- To let the base automatically detect the animation duration, set this to false:
+	-- Set to false to let the base auto calculate the duration:
 ENT.NextMoveAfterFlinchTime = false -- How much time until it can move, attack, etc.
-	-- To let the base automatically detect the animation duration, set this to false:
+	-- Set to false to let the base auto calculate the duration:
 ENT.NextFlinchTime = 5 -- How much time until it can flinch again?
-ENT.AnimTbl_Flinch = ACT_FLINCH_PHYSICS -- The regular flinch animations to play
-ENT.HitGroupFlinching_DefaultWhenNotHit = true -- If it uses hitgroup flinching, should it do the regular flinch if it doesn't hit any of the specified hitgroups?
+ENT.AnimTbl_Flinch = ACT_FLINCH_PHYSICS
+ENT.HitGroupFlinching_DefaultWhenNotHit = true -- Should it play "self.AnimTbl_Flinch" when none of the hitgroups hit?
 ENT.HitGroupFlinching_Values = false -- EXAMPLES: {{HitGroup = {HITGROUP_HEAD}, Animation = {ACT_FLINCH_HEAD}}, {HitGroup = {HITGROUP_LEFTARM}, Animation = {ACT_FLINCH_LEFTARM}}, {HitGroup = {HITGROUP_RIGHTARM}, Animation = {ACT_FLINCH_RIGHTARM}}, {HitGroup = {HITGROUP_LEFTLEG}, Animation = {ACT_FLINCH_LEFTLEG}}, {HitGroup = {HITGROUP_RIGHTLEG}, Animation = {ACT_FLINCH_RIGHTLEG}}}
 	-- ====== Call For Back On Damage ====== --
 ENT.CallForBackUpOnDamage = true -- Should it call for help when damaged while it has no active enemy?
@@ -213,20 +213,17 @@ ENT.MoveOrHideOnDamageByEnemy_NextTime = VJ.SET(3, 3.5) -- How long until it can
 ------ Death & Corpse ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.DeathDelayTime = 0 -- Time until the NPC spawns the corpse, removes itself, etc.
-	-- ====== Ally Reaction On Death ====== --
-	-- Default: Creature base uses "BringFriends" and Human base uses "AlertFriends"
-	-- "BringFriendsOnDeath" takes priority over "AlertFriendsOnDeath"!
-ENT.BringFriendsOnDeath = false -- Should the NPC's allies come to its position while it's dying?
-ENT.BringFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
-ENT.BringFriendsOnDeathLimit = 3 -- How many people should it call? | 0 = Unlimited
-ENT.AlertFriendsOnDeath = true -- Should the NPC's allies get alerted while it's dying? | Its allies will also need to have this variable set to true!
-ENT.AlertFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
-ENT.AlertFriendsOnDeathLimit = 50 -- How many people should it alert?
+	-- ====== Ally Responses ====== --
+	-- An ally must have "self.CanReceiveOrders" enabled to respond!
+ENT.DeathAllyResponse = "OnlyAlert" -- How should allies response when it dies?
+	-- false = No reactions | true = Allies respond by becoming alert and moving to its location | "OnlyAlert" = Allies respond by becoming alert
+ENT.DeathAllyResponse_Range = 800 -- Max distance allies respond to its death
+ENT.DeathAllyResponse_MoveLimit = 4 -- Max number of allies that can move to its location when responding to its death
 	-- ====== Death Animation ====== --
-ENT.HasDeathAnimation = false -- Does it play an animation when it dies?
+	-- NOTE: This is added on top of "self.DeathDelayTime"
+ENT.HasDeathAnimation = false -- Should it play death animations?
 ENT.AnimTbl_Death = {}
-	-- To let the base automatically detect the animation duration, set this to false:
-	-- NOTE: This is added on top of "self.DeathDelayTime" !
+	-- Set to false to let the base auto calculate the duration:
 ENT.DeathAnimationTime = false -- How long should the death animation play?
 ENT.DeathAnimationChance = 1 -- Put 1 if you want it to play the animation all the time
 ENT.DeathAnimationDecreaseLengthAmount = 0 -- This will decrease the time until it turns into a corpse
@@ -253,19 +250,19 @@ ENT.DeathLoot = {"weapon_frag", "item_healthvial"} -- List of entities it will r
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Melee Attack ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.HasMeleeAttack = true -- Can this NPC melee attack?
+ENT.HasMeleeAttack = true -- Can it melee attack?
 ENT.MeleeAttackDamage = 10
-ENT.MeleeAttackDamageType = DMG_CLUB -- Type of Damage
+ENT.MeleeAttackDamageType = DMG_CLUB
 ENT.HasMeleeAttackKnockBack = true -- Should knockback be applied on melee hit? | Use "MeleeAttackKnockbackVelocity" function to edit the velocity
 	-- ====== Animation ====== --
 ENT.AnimTbl_MeleeAttack = ACT_MELEE_ATTACK1
 ENT.MeleeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.MeleeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the melee attack animation?
-ENT.MeleeAttackAnimationDecreaseLengthAmount = 0 -- This will decrease the time until starts chasing again. Use it to fix animation pauses until it chases the enemy.
+ENT.MeleeAttackAnimationDecreaseLengthAmount = 0 -- Decreases animation time | Use it to fix animations that have extra frames at the end
 	-- ====== Distance ====== --
-ENT.MeleeAttackDistance = false -- How close an enemy has to be to trigger a melee attack | false = Let the base auto calculate on initialize based on the NPC's collision bounds
+ENT.MeleeAttackDistance = false -- How close an enemy has to be to trigger a melee attack | false = Auto calculate on initialize based on its collision bounds
 ENT.MeleeAttackAngleRadius = 100 -- What is the attack angle radius? | 100 = In front of the NPC | 180 = All around the NPC
-ENT.MeleeAttackDamageDistance = false -- How far does the damage go? | false = Let the base auto calculate on initialize based on the NPC's collision bounds
+ENT.MeleeAttackDamageDistance = false -- How far does the damage go? | false = Auto calculate on initialize based on its collision bounds
 ENT.MeleeAttackDamageAngleRadius = 100 -- What is the damage angle radius? | 100 = In front of the NPC | 180 = All around the NPC
 	-- ====== Timer ====== --
 	-- Set this to false to make the attack event-based:
@@ -279,15 +276,15 @@ ENT.MeleeAttackReps = 1 -- How many times does it run the melee attack code?
 ENT.MeleeAttackExtraTimers = nil -- Extra melee attack timers, EX: {1, 1.4} | it will run the damage code after the given amount of seconds
 ENT.StopMeleeAttackAfterFirstHit = false -- Should it stop the melee attack from running rest of timers when it hits an enemy?
 	-- ====== Control ====== --
-ENT.DisableMeleeAttackAnimation = false -- if true, it will disable the animation code
-ENT.DisableDefaultMeleeAttackCode = false -- When set to true, it will completely disable the melee attack code
+ENT.DisableMeleeAttackAnimation = false -- Disable the default animation code
+ENT.DisableDefaultMeleeAttackCode = false -- Completely disable the default melee attack code
 ENT.DisableDefaultMeleeAttackDamageCode = false -- Disables the default melee attack damage code
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Weapon Attack ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.DisableWeapons = false -- If set to true, it won't be able to use weapons
+ENT.DisableWeapons = false -- Disable the ability for it to use weapons
 ENT.Weapon_NoSpawnMenu = false -- Should it ignore the weapon override setting from the spawn menu?
-ENT.Weapon_Accuracy = 1 -- NPC's accuracy with weapons, affects bullet spread! | x < 1 = Better accuracy | x > 1 = Worse accuracy
+ENT.Weapon_Accuracy = 1 -- Its accuracy with weapons, affects bullet spread! | x < 1 = Better accuracy | x > 1 = Worse accuracy
 ENT.Weapon_CanFireWhileMoving = true -- Can it fire its weapon while it's moving?
 ENT.Weapon_StrafeWhileFiring = true -- Should it move randomly while firing a weapon?
 ENT.Weapon_StrafeWhileFiringDelay = VJ.SET(3, 6) -- How much time until it can randomly move again?
@@ -296,30 +293,30 @@ ENT.Weapon_WaitOnOcclusionTime = VJ.SET(3, 5) -- How long should it wait before 
 ENT.Weapon_WaitOnOcclusionMinDist = 100 -- Skip this behavior if the occluded enemy is within this distance
 ENT.Weapon_UnarmedBehavior = true -- Should it use the fleeing behavior when it's unarmed? | It will run and hide from enemies
 	-- ====== Distance ====== --
-ENT.Weapon_FiringDistanceFar = 3000 -- How far away it can shoot
-ENT.Weapon_FiringDistanceClose = 10 -- How close until it stops shooting
-ENT.Weapon_RetreatDistance = 150 -- If enemy is within this distance, it will retreat back | 0 = Never back away
+ENT.Weapon_FiringDistanceFar = 3000 -- Max distance it can fire a weapon
+ENT.Weapon_FiringDistanceClose = 10 -- Min distance it can fire a weapon
+ENT.Weapon_RetreatDistance = 150 -- Minimum distance an enemy has to be for it to retreat back | 0 = Never retreat
 ENT.Weapon_AimTurnDiff = false -- Weapon aim turning threshold between 0 and 1 | "self.HasPoseParameterLooking" must be set to true!
 	-- EXAMPLES: 0.707106781187 = 45 degrees | 0.866025403784 = 30 degrees | 1 = 0 degrees, always turn!
 	-- false = Let base decide based on animation set and weapon hold type
 	-- ====== Primary Fire ====== --
 ENT.AnimTbl_WeaponAttack = ACT_RANGE_ATTACK1 -- Animation(s) to play while firing a weapon
-ENT.Weapon_CanCrouchAttack = true -- Can it crouch while shooting?
-ENT.Weapon_CrouchAttackChance = 2 -- How much chance of crouching? | 1 = Crouch whenever possible
+ENT.Weapon_CanCrouchAttack = true -- Can it crouch while firing a weapon?
+ENT.Weapon_CrouchAttackChance = 2 -- What is the chance of it crouching? | 1 = Crouch whenever possible
 ENT.AnimTbl_WeaponAttackCrouch = ACT_RANGE_ATTACK1_LOW -- Animation(s) to play while firing a weapon in crouched position
-ENT.DisableWeaponFiringGesture = false -- If set to true, it will disable the weapon firing gestures
+ENT.DisableWeaponFiringGesture = false -- Disables weapon firing gesture animations
 ENT.AnimTbl_WeaponAttackGesture = ACT_GESTURE_RANGE_ATTACK1 -- Gesture animation(s) to play while firing a weapon
 	-- ====== Secondary Fire ====== --
-ENT.Weapon_CanSecondaryFire = true -- Can the NPC use the weapon's secondary fire if it's available?
-ENT.AnimTbl_WeaponAttackSecondary = "shootAR2alt" -- Animation(s) to play while firing the weapon's secondary attack
-	-- To let the base automatically detect the animation duration, set this to false:
-ENT.Weapon_SecondaryFireTime = 0.9 -- The weapon uses this integer to set the time until the firing code is ran
+ENT.Weapon_CanSecondaryFire = true -- Can it use a weapon's secondary fire if it's available?
+ENT.AnimTbl_WeaponAttackSecondary = ACT_RANGE_ATTACK2 -- Animation(s) to play while firing the weapon's secondary attack
+	-- Set to false to let the base auto calculate the duration:
+ENT.Weapon_SecondaryFireTime = false -- How much time until the secondary fire's projectile is released
 	-- ====== Reloading ====== --
-ENT.Weapon_CanReload = true -- Can the NPC reload its weapon?
+ENT.Weapon_CanReload = true -- Can it reload weapons?
 ENT.Weapon_FindCoverOnReload = true -- Should it attempt to find cover before proceeding to reload?
-ENT.AnimTbl_WeaponReload = ACT_RELOAD -- Animations that play when the NPC reloads
-ENT.AnimTbl_WeaponReloadCovered = ACT_RELOAD_LOW -- Animations that play when the NPC reloads, but behind cover
-ENT.DisableWeaponReloadAnimation = false -- if true, it will disable the animation code when reloading
+ENT.AnimTbl_WeaponReload = ACT_RELOAD
+ENT.AnimTbl_WeaponReloadCovered = ACT_RELOAD_LOW
+ENT.DisableWeaponReloadAnimation = false -- Disables the default reload animation code
 	-- ====== Weapon Inventory ====== --
 	-- Weapons are given on spawn and the NPC will only switch to those if the requirements are met
 	-- All are stored in "self.WeaponInventory" with the following keys:
@@ -331,7 +328,7 @@ ENT.WeaponInventory_MeleeList = false -- On spawn it will give the NPC one of th
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Grenade Attack ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.HasGrenadeAttack = false -- Should the NPC have a grenade attack?
+ENT.HasGrenadeAttack = false -- Does it have a grenade attack?
 ENT.GrenadeAttackEntity = "obj_vj_grenade" -- Entities that it can spawn when throwing a grenade | If set as a table, it picks a random entity | VJ: "obj_vj_grenade" | HL2: "npc_grenade_frag"
 ENT.GrenadeAttackModel = nil -- Overrides the model of the grenade | Can be nil, string, and table | Does NOT apply to picked up grenades and forced grenade attacks with custom entity
 ENT.GrenadeAttackAttachment = "anim_attachment_LH" -- The attachment that the grenade will be set to | -1 = Skip to use "self.GrenadeAttackBone" instead
@@ -340,18 +337,18 @@ ENT.GrenadeAttackBone = "ValveBiped.Bip01_L_Finger1" -- The bone that the grenad
 ENT.AnimTbl_GrenadeAttack = "grenThrow"
 ENT.GrenadeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.GrenadeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the grenade attack animation?
-ENT.DisableGrenadeAttackAnimation = false -- if true, it will disable the animation code when doing grenade attack
+ENT.DisableGrenadeAttackAnimation = false -- Disable the default animation code when doing grenade attack
 	-- ====== Distance & Chance ====== --
 ENT.GrenadeAttackChance = 4 -- 1 in x chance that it will throw a grenade when all the requirements are met | 1 = Throw it every time
-ENT.GrenadeAttackThrowDistance = 1500 -- How far it can throw grenades
-ENT.GrenadeAttackThrowDistanceClose = 400 -- How close until it stops throwing grenades
+ENT.GrenadeAttackThrowDistance = 1500 -- Max distance it can throw a grenade
+ENT.GrenadeAttackThrowDistanceClose = 400 -- Min distance it can throw a grenade
 	-- ====== Timer ====== --
 	-- Set this to false to make the attack event-based:
 ENT.TimeUntilGrenadeIsReleased = 0.72 -- Time until the grenade is released
 ENT.NextThrowGrenadeTime = VJ.SET(10, 15) -- Time until it can throw a grenade again
 	-- To let the base automatically detect the attack duration, set this to false:
 ENT.NextAnyAttackTime_Grenade = VJ.SET(false, false) -- How much time until it can use any attack again? | Counted in Seconds
-ENT.GrenadeAttackFuseTime = 3 -- The grenade's fuse start time right after the NPC throws it
+ENT.GrenadeAttackFuseTime = 3 -- Grenade's fuse start time right after the NPC throws it
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Sound ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -874,6 +871,7 @@ function ENT:SetAnimationTranslations(wepHoldType)
 	------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	if self.AnimModelSet == VJ.ANIM_SET_COMBINE then
 		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.71120220422745 end
+		self.AnimationTranslations[ACT_RANGE_ATTACK2] 				= VJ.SequenceToActivity(self, "shootAR2alt")
 		
 		self.AnimationTranslations[ACT_COVER_LOW] 					= {ACT_COVER, "vjseq_Leanwall_CrouchLeft_A_idle", "vjseq_Leanwall_CrouchLeft_B_idle", "vjseq_Leanwall_CrouchLeft_C_idle", "vjseq_Leanwall_CrouchLeft_D_idle"}
 		//self.AnimationTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1 -- No need to translate, it's already the correct animation
@@ -958,6 +956,8 @@ function ENT:SetAnimationTranslations(wepHoldType)
 	elseif self.AnimModelSet == VJ.ANIM_SET_METROCOP then
 		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.71120220422745 end
 		
+		//self.AnimationTranslations[ACT_RANGE_ATTACK2] 					= VJ.SequenceToActivity(self, "shootAR2alt") -- They don't have secondary animation!
+		
 		-- Do not translate crouch walking and also make the crouch running a walking one instead
 		self.AnimationTranslations[ACT_RUN_CROUCH] 						= ACT_WALK_CROUCH
 		
@@ -1033,6 +1033,8 @@ function ENT:SetAnimationTranslations(wepHoldType)
 	elseif self.AnimModelSet == VJ.ANIM_SET_REBEL then
 		local isFemale = VJ.AnimExists(self, ACT_IDLE_ANGRY_PISTOL)
 		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.78187280893326 end
+		
+		self.AnimationTranslations[ACT_RANGE_ATTACK2] 					= VJ.SequenceToActivity(self, "shoot_ar2_alt")
 		
 		-- Handguns use a different set!
 		self.AnimationTranslations[ACT_COVER_LOW] 						= {ACT_COVER_LOW_RPG, ACT_COVER_LOW, "vjseq_coverlow_l", "vjseq_coverlow_r"}
@@ -1619,7 +1621,6 @@ ENT.NextDangerDetectionT = 0
 ENT.NextOnGrenadeSightSoundT = 0
 ENT.NextOnDangerSightSoundT = 0
 ENT.NextMoveOrHideOnDamageByEnemyT = 0
-ENT.TimersToRemove = {"attack_grenade_start", "attack_grenade_reset", "attack_grenade_reset_able", "wep_reload_reset", "wep_state_reset", "state_reset", "turn_reset", "flinch_reset", "attack_pause_reset", "attack_melee_start", "attack_melee_reset", "attack_melee_reset_able", "alert_reset"}
 
 local vj_npc_debug = GetConVar("vj_npc_debug")
 local vj_npc_processtime = GetConVar("vj_npc_processtime")
@@ -1787,7 +1788,7 @@ local function ApplyBackwardsCompatibility(self)
 	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end
 	if self.CustomOnThink_AIEnabled then self.OnThinkActive = function() self:CustomOnThink_AIEnabled() end end
 	if self.CustomOnTakeDamage_OnBleed then self.OnBleed = function(_, dmginfo, hitgroup) self:CustomOnTakeDamage_OnBleed(dmginfo, hitgroup) end end
-	if self.CustomOnMoveRandomlyWhenShooting then self.OnWeaponStrafeWhileFiring = function() self:CustomOnMoveRandomlyWhenShooting() end end
+	if self.CustomOnMoveRandomlyWhenShooting then self.OnWeaponStrafeWhileFiring = function() return self:CustomOnMoveRandomlyWhenShooting() end end
 	if self.CustomOnAcceptInput then self.OnInput = function(_, key, activator, caller, data) self:CustomOnAcceptInput(key, activator, caller, data) end end
 	if self.CustomOnHandleAnimEvent then self.OnAnimEvent = function(_, ev, evTime, evCycle, evType, evOptions) self:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions) end end
 	if self.CustomOnWeaponReload then self.OnWeaponReload = function() self:CustomOnWeaponReload() end end
@@ -1799,14 +1800,25 @@ local function ApplyBackwardsCompatibility(self)
 	if self.WaitForEnemyToComeOut != nil then self.Weapon_WaitOnOcclusion = self.WaitForEnemyToComeOut end
 	if self.WaitForEnemyToComeOutTime then self.Weapon_WaitOnOcclusionTime = self.WaitForEnemyToComeOutTime end
 	if self.Immune_Physics then self:SetPhysicsDamageScale(0) end
-	if self.VJC_Data then self.ControllerVars = self.VJC_Data end
+	if self.BringFriendsOnDeath != nil or self.AlertFriendsOnDeath != nil then
+		if self.AlertFriendsOnDeath == true && (self.BringFriendsOnDeath == false or self.BringFriendsOnDeath == nil) then
+			self.DeathAllyResponse = "OnlyAlert"
+		elseif self.BringFriendsOnDeath == false && self.AlertFriendsOnDeath == false then
+			self.DeathAllyResponse = false
+		end
+	end
+	if self.BringFriendsOnDeathDistance then self.DeathAllyResponse_Range = self.BringFriendsOnDeathDistance end
+	if self.AlertFriendsOnDeath then self.DeathAllyResponse_Range = self.AlertFriendsOnDeath end
+	if self.BringFriendsOnDeathLimit then self.DeathAllyResponse_MoveLimit = self.BringFriendsOnDeathLimit end
+	if self.VJC_Data then self.ControllerParameters = self.VJC_Data end
 	if self.HasCallForHelpAnimation == false then self.AnimTbl_CallForHelp = false end
 	if self.Medic_DisableAnimation == true then self.AnimTbl_Medic_GiveHealth = false end
 	if self.ConstantlyFaceEnemyDistance then self.ConstantlyFaceEnemy_MinDistance = self.ConstantlyFaceEnemyDistance end
 	if self.CallForBackUpOnDamageAnimation then self.AnimTbl_CallForBackUpOnDamage = self.CallForBackUpOnDamageAnimation end
-	if self.UseTheSameGeneralSoundPitch then self.UseGeneralSoundPitch = self.UseTheSameGeneralSoundPitch end
+	if self.UseTheSameGeneralSoundPitch != nil then self.UseGeneralSoundPitch = self.UseTheSameGeneralSoundPitch end
+	if self.AlertedToIdleTime then self.AlertToIdleDelay = self.AlertedToIdleTime end
 	if self.SoundTbl_MoveOutOfPlayersWay then self.SoundTbl_YieldToAlliedPlayer = self.SoundTbl_MoveOutOfPlayersWay end
-	if self.MaxJumpLegalDistance then self.JumpVars.MaxRise = self.MaxJumpLegalDistance.a; self.JumpVars.MaxDrop = self.MaxJumpLegalDistance.b end
+	if self.MaxJumpLegalDistance then self.JumpParameters.MaxRise = self.MaxJumpLegalDistance.a; self.JumpParameters.MaxDrop = self.MaxJumpLegalDistance.b end
 	if self.VJ_IsHugeMonster then self.VJ_ID_Boss = self.VJ_IsHugeMonster end
 	if self.Medic_HealthAmount then self.Medic_HealAmount = self.Medic_HealthAmount end
 	if self.UsePlayerModelMovement then self.UsePoseParameterMovement = true end
@@ -1819,7 +1831,7 @@ local function ApplyBackwardsCompatibility(self)
 	if self.HasItemDropsOnDeath != nil then self.DropDeathLoot = self.HasItemDropsOnDeath end
 	if self.ItemDropsOnDeathChance != nil then self.DeathLootChance = self.ItemDropsOnDeathChance end
 	if self.ItemDropsOnDeath_EntityList != nil then self.DeathLoot = self.ItemDropsOnDeath_EntityList end
-	if self.AllowMovementJumping != nil then self.JumpVars.Enabled = self.AllowMovementJumping end
+	if self.AllowMovementJumping != nil then self.JumpParameters.Enabled = self.AllowMovementJumping end
 	if self.HasShootWhileMoving == false then self.Weapon_CanFireWhileMoving = false end
 	if self.HasWeaponBackAway == false then self.Weapon_RetreatDistance = 0 end
 	if self.WeaponBackAway_Distance then self.Weapon_RetreatDistance = self.WeaponBackAway_Distance end
@@ -2520,7 +2532,7 @@ function ENT:Think()
 						end
 						followData.Moving = false
 					end
-					followData.NextUpdateT = curTime + self.FollowUpdateTime
+					followData.NextUpdateT = curTime + self.FollowUpdateInterval
 				end
 			else
 				self:ResetFollowBehavior()
@@ -2760,10 +2772,10 @@ function ENT:Think()
 						if self.TimeUntilMeleeAttackDamage == false then
 							finishAttack[VJ.ATTACK_TYPE_MELEE](self)
 						else -- If it's not event based...
-							timer.Create("attack_melee_start" .. self:EntIndex(), self.TimeUntilMeleeAttackDamage / self.AnimPlaybackRate, self.MeleeAttackReps, function() if self.AttackSeed == seed then self:MeleeAttackCode() end end)
+							timer.Create("attack_melee_start" .. self:EntIndex(), self.TimeUntilMeleeAttackDamage / self.AnimPlaybackRate, self.MeleeAttackReps, function() if self.AttackSeed == seed then self:ExecuteMeleeAttack() end end)
 							if self.MeleeAttackExtraTimers then
 								for k, t in ipairs(self.MeleeAttackExtraTimers) do
-									self:AddExtraAttackTimer("attack_melee_start"..curTime + k, t, function() if self.AttackSeed == seed then self:MeleeAttackCode() end end)
+									self:AddExtraAttackTimer("attack_melee_start"..curTime + k, t, function() if self.AttackSeed == seed then self:ExecuteMeleeAttack() end end)
 								end
 							end
 						end
@@ -2861,7 +2873,7 @@ function ENT:Think()
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MeleeAttackCode()
+function ENT:ExecuteMeleeAttack()
 	if self.Dead or self.PauseAttacks or self.Flinching or self.AttackType == VJ.ATTACK_TYPE_GRENADE or (self.StopMeleeAttackAfterFirstHit && self.AttackState == VJ.ATTACK_STATE_EXECUTED_HIT) then return end
 	self:CustomOnMeleeAttack_BeforeChecks()
 	if self.DisableDefaultMeleeAttackCode then return end
@@ -3035,7 +3047,7 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 	timer.Create("attack_grenade_start" .. self:EntIndex(), (releaseTime == false and timer.TimeLeft("attack_grenade_reset" .. self:EntIndex())) or releaseTime / self.AnimPlaybackRate, 1, function()
 		if self.AttackSeed == seed then
 			if isLiveEnt && !IsValid(customEnt) then return end
-			self:GrenadeAttackThrow(customEnt, disableOwner, landDir)
+			self:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
 		end
 	end)
 	return true
@@ -3057,7 +3069,7 @@ end
 		- false, Grenade attack was canceled
 		- Entity, The grenade that was thrown
 -----------------------------------------------------------]]
-function ENT:GrenadeAttackThrow(customEnt, disableOwner, landDir)
+function ENT:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
 	if self.Dead or self.PauseAttacks or self.Flinching or self.AttackType == VJ.ATTACK_TYPE_MELEE then return false end
 	local grenade;
 	local isLiveEnt = IsValid(customEnt) -- Whether or not the given custom entity is live
@@ -3709,7 +3721,7 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 	if self.VJ_DEBUG && GetConVar("vj_npc_debug_resetenemy"):GetInt() == 1 then VJ.DEBUG_Print(self, "ResetEnemy", tostring(ene)) end
 	eneData.Reset = true
 	self:SetNPCState(NPC_STATE_ALERT)
-	timer.Create("alert_reset" .. self:EntIndex(), math.Rand(self.AlertedToIdleTime.a, self.AlertedToIdleTime.b), 1, function() if !IsValid(self:GetEnemy()) then self.Alerted = false self:SetNPCState(NPC_STATE_IDLE) end end)
+	timer.Create("alert_reset" .. self:EntIndex(), math.Rand(self.AlertToIdleDelay.a, self.AlertToIdleDelay.b), 1, function() if !IsValid(self:GetEnemy()) then self.Alerted = false self:SetNPCState(NPC_STATE_IDLE) end end)
 	self:OnResetEnemy()
 	local moveToEnemy = false
 	if eneValid then
@@ -3858,7 +3870,7 @@ function ENT:OnTakeDamage(dmginfo)
 			
 			self:PlaySoundSystem("Pain")
 			
-			-- Move or hide when damaged while enemy is valid | RESULT: May play a hiding animation OR may move to take cover from enemy
+			-- Move or hide when damaged while enemy is valid | RESULT: May play a hiding animation OR move to take cover from enemy
 			if self.MoveOrHideOnDamageByEnemy && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && IsValid(self:GetEnemy()) && curTime > self.NextMoveOrHideOnDamageByEnemyT && !self.IsFollowing && !self.AttackType && curTime > self.TakingCoverT && self.EnemyData.IsVisible && self:GetWeaponState() != VJ.WEP_STATE_RELOADING && self.LatestEnemyDistance < self.Weapon_FiringDistanceFar then
 				local wep = self:GetActiveWeapon()
 				if !self.MoveOrHideOnDamageByEnemy_OnlyMove && self:DoCoverTrace(self:GetPos() + self:OBBCenter(), self:GetEnemy():EyePos()) then
@@ -3991,28 +4003,37 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 	if self.IsFollowing then self:ResetFollowBehavior() end
 	local dmgInflictor = dmginfo:GetInflictor()
 	local dmgAttacker = dmginfo:GetAttacker()
+	local myPos = self:GetPos()
 	
 	if VJ_CVAR_AI_ENABLED then
-		local allies = self:Allies_Check(math_max(800, self.BringFriendsOnDeathDistance, self.AlertFriendsOnDeathDistance))
-		if allies != false then
-			local noAlert = true -- Don't run the AlertFriendsOnDeath if we have BringFriendsOnDeath enabled!
-			if self.BringFriendsOnDeath then
-				self:Allies_Bring("Diamond", self.BringFriendsOnDeathDistance, allies, self.BringFriendsOnDeathLimit, true)
-				noAlert = false
-			end
+		-- Always at least 800 range to let things unrelated to "self.DeathAllyResponse" run
+		local allies = self:Allies_Check(math_min(800, self.DeathAllyResponse_Range))
+		if allies then
 			local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer && dmgAttacker:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or false
-			local it = 0 -- Number of allies that have been alerted
+			local responseType = self.DeathAllyResponse
+			local movedAllyNum = 0 -- Number of allies that have moved
 			for _, ally in ipairs(allies) do
-				ally:DoReadyAlert()
 				ally:OnAllyKilled(self)
 				ally:PlaySoundSystem("AllyDeath")
 				
-				-- AlertFriendsOnDeath
-				if noAlert && self.AlertFriendsOnDeath && !IsValid(ally:GetEnemy()) && ally.AlertFriendsOnDeath && it != self.AlertFriendsOnDeathLimit && self:GetPos():Distance(ally:GetPos()) < self.AlertFriendsOnDeathDistance && (!IsValid(ally:GetActiveWeapon()) or (IsValid(ally:GetActiveWeapon()) && !(ally:GetActiveWeapon().IsMeleeWeapon))) then
-					it = it + 1
-					local faceTime = math.Rand(5, 8)
-					ally:SetTurnTarget(self:GetPos(), faceTime, true)
-					ally.NextIdleTime = CurTime() + faceTime
+				if responseType && myPos:Distance(ally:GetPos()) < self.DeathAllyResponse_Range then
+					local moved = false
+					-- Bring ally
+					if responseType == true && movedAllyNum < self.DeathAllyResponse_MoveLimit then
+						moved = self:Allies_Bring("Random", self.DeathAllyResponse_Range, {ally}, 0, true)
+						if moved then
+							movedAllyNum = movedAllyNum + 1
+						end
+					end
+					-- Alert ally
+					if (responseType == true or responseType == "OnlyAlert") && !IsValid(ally:GetEnemy()) then
+						ally:DoReadyAlert()
+						if !moved then
+							local faceTime = math.Rand(5, 8)
+							ally:SetTurnTarget(myPos, faceTime, true)
+							ally.NextIdleTime = CurTime() + faceTime
+						end
+					end
 				end
 				
 				-- BecomeEnemyToPlayer
@@ -4041,7 +4062,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 	if self.Bleeds && self.HasBloodDecal then
 		local bloodDecal = PICK(self.BloodDecal)
 		if bloodDecal then
-			local decalPos = self:GetPos() + vecZ4
+			local decalPos = myPos + vecZ4
 			self:SetLocalPos(decalPos) -- NPC is too close to the ground, we need to move it up a bit
 			local tr = util.TraceLine({start = decalPos, endpos = decalPos - vecZ500, filter = self})
 			util.Decal(bloodDecal, tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)

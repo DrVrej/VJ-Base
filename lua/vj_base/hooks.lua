@@ -317,7 +317,7 @@ hook.Add("PlayerDeath", "VJ_PlayerDeath", function(victim, inflictor, attacker)
 	VJ_NPCPLY_DEATH(victim, attacker, inflictor) -- Arguments are flipped between the hooks for some reason...
 	
 	-- Let allied VJ NPCs know that the player died
-	for _, ent in ipairs(ents.FindInSphere(victim:GetPos(), 400)) do
+	for _, ent in ipairs(ents.FindInSphere(victim:GetPos(), 800)) do
 		if ent.IsVJBaseSNPC && ent:Disposition(victim) == D_LI then
 			ent:OnAllyKilled(victim)
 			ent:PlaySoundSystem("AllyDeath")
