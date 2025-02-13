@@ -189,8 +189,8 @@ function ENT:SetControlledNPC(npc)
 	self.VJCE_Bullseye = bullseye
 
 	-- Set the NPC
-	if !npc.ControllerParameters then
-		npc.ControllerParameters = {
+	if !npc.ControllerParams then
+		npc.ControllerParams = {
 			CameraMode = 1,
 			ThirdP_Offset = Vector(0, 0, 0),
 			FirstP_Bone = "ValveBiped.Bip01_Head1",
@@ -199,7 +199,7 @@ function ENT:SetControlledNPC(npc)
 		}
 	end
 	local ply = self.VJCE_Player
-	self.VJC_Camera_Mode = npc.ControllerParameters.CameraMode -- Get the NPC's default camera mode
+	self.VJC_Camera_Mode = npc.ControllerParams.CameraMode -- Get the NPC's default camera mode
 	self.VJC_NPC_LastPos = npc:GetPos()
 	npc.VJ_IsBeingControlled = true
 	npc.VJ_TheController = ply
@@ -219,20 +219,20 @@ function ENT:SetControlledNPC(npc)
 		self.ControllerVars_NPC = {
 			[1] = npc.DisableWandering,
 			[2] = npc.DisableChasingEnemy,
-			[3] = npc.DisableTakeDamageFindEnemy,
+			[3] = npc.DamageResponse,
 			[4] = npc.DisableTouchFindEnemy,
 			[5] = npc.CallForHelp,
-			[6] = npc.CallForBackUpOnDamage,
+			[6] = npc.DamageAllyResponse,
 			[7] = npc.DeathAllyResponse,
 			[8] = npc.FollowPlayer,
 			[9] = npc.CanDetectDangers,
 			[10] = npc.Passive_RunOnTouch,
-			[11] = npc.Passive_RunOnDamage,
+			//[11] = npc.Passive_RunOnDamage,
 			[12] = npc.IsGuard,
 			[13] = npc.CanReceiveOrders,
 			[14] = npc.FindEnemy_CanSeeThroughWalls,
 			[15] = npc:GetFOV(),
-			[16] = npc.MoveOrHideOnDamageByEnemy,
+			[16] = npc.CombatDamageResponse,
 			[17] = npc.BecomeEnemyToPlayer,
 			[18] = npc.CanEat,
 			[19] = npc.LimitChaseDistance,
@@ -242,20 +242,19 @@ function ENT:SetControlledNPC(npc)
 		}
 		npc.DisableWandering = true
 		npc.DisableChasingEnemy = true
-		npc.DisableTakeDamageFindEnemy = true
+		npc.DamageResponse = false
 		npc.DisableTouchFindEnemy = true
 		npc.CallForHelp = false
-		npc.CallForBackUpOnDamage = false
+		npc.DamageAllyResponse = false
 		npc.DeathAllyResponse = npc.DeathAllyResponse == true and "OnlyAlert" or false
 		npc.FollowPlayer = false
 		npc.CanDetectDangers = false
 		npc.Passive_RunOnTouch = false
-		npc.Passive_RunOnDamage = false
 		npc.IsGuard = false
 		npc.CanReceiveOrders = false
 		npc.FindEnemy_CanSeeThroughWalls = true
 		npc:SetFOV(360)
-		npc.MoveOrHideOnDamageByEnemy = false
+		npc.CombatDamageResponse = false
 		npc.BecomeEnemyToPlayer = false
 		npc.CanEat = false
 		npc.LimitChaseDistance = false
@@ -314,7 +313,7 @@ end)
 function ENT:SendDataToClient(reset)
 	local ply = self.VJCE_Player
 	local npc = self.VJCE_NPC
-	local npcData = npc.ControllerParameters
+	local npcData = npc.ControllerParams
 
 	net.Start("vj_controller_data")
 		net.WriteBool(ply.VJ_IsControllingNPC)
@@ -505,12 +504,12 @@ function ENT:ToggleBullseyeTracking()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ToggleMovementJumping()
-	if !self.VJCE_NPC.JumpParameters.Enabled then
+	if !self.VJCE_NPC.JumpParams.Enabled then
 		if self.VJC_Player_CanChatMessage then self.VJCE_Player:ChatPrint("#vjbase.controller.print.jump.enable") end
-		self.VJCE_NPC.JumpParameters.Enabled = true
+		self.VJCE_NPC.JumpParams.Enabled = true
 	else
 		if self.VJC_Player_CanChatMessage then self.VJCE_Player:ChatPrint("#vjbase.controller.print.jump.disable") end
-		self.VJCE_NPC.JumpParameters.Enabled = false
+		self.VJCE_NPC.JumpParams.Enabled = false
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -568,20 +567,20 @@ function ENT:StopControlling(keyPressed)
 		if npc.IsVJBaseSNPC then
 			npc.DisableWandering = npcData[1]
 			npc.DisableChasingEnemy = npcData[2]
-			npc.DisableTakeDamageFindEnemy = npcData[3]
+			npc.DamageResponse = npcData[3]
 			npc.DisableTouchFindEnemy = npcData[4]
 			npc.CallForHelp = npcData[5]
-			npc.CallForBackUpOnDamage = npcData[6]
+			npc.DamageAllyResponse = npcData[6]
 			npc.DeathAllyResponse = npcData[7]
 			npc.FollowPlayer = npcData[8]
 			npc.CanDetectDangers = npcData[9]
 			npc.Passive_RunOnTouch = npcData[10]
-			npc.Passive_RunOnDamage = npcData[11]
+			//npc.Passive_RunOnDamage = npcData[11]
 			npc.IsGuard = npcData[12]
 			npc.CanReceiveOrders = npcData[13]
 			npc.FindEnemy_CanSeeThroughWalls = npcData[14]
 			npc:SetFOV(npcData[15])
-			npc.MoveOrHideOnDamageByEnemy = npcData[16]
+			npc.CombatDamageResponse = npcData[16]
 			npc.BecomeEnemyToPlayer = npcData[17]
 			npc.CanEat = npcData[18]
 			npc.LimitChaseDistance = npcData[19]

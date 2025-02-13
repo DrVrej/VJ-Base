@@ -224,7 +224,7 @@ else
 			if #classtbl > 0 then
 				ent.VJ_NPC_Class = classtbl
 				if ent:IsNPC() && table.HasValue(classtbl, "CLASS_PLAYER_ALLY") && allynum == 1 then
-					ent.FriendsWithAllPlayerAllies = true
+					ent.AlliedWithPlayerAllies = true
 				end
 			else
 				ent.VJ_NPC_Class = {nil}

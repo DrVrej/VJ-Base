@@ -105,8 +105,7 @@ SWEP.Secondary.Ammo = "none" -- Ammo type
 SWEP.Secondary.TakeAmmo = 1 -- How much ammo should it take on each shot?
 SWEP.Secondary.ClipSize = 0 -- Max amount of rounds per clip
 SWEP.Secondary.DefaultClip = 5 -- Default number of bullets in a clip | It will give this amount on initial pickup
-	-- Set to false to let the base auto calculate the duration:
-SWEP.Secondary.Delay = false -- Time until it can shoot again
+SWEP.Secondary.Delay = false -- Time until it can shoot again | false = Base auto calculates the duration
 SWEP.AnimTbl_SecondaryFire = ACT_VM_SECONDARYATTACK
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Dry Fire (Players & NPCs) ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -676,8 +675,8 @@ function SWEP:PrimaryAttack(UseAlt)
 	end
 	
 	-- Firing Gesture
-	if owner.IsVJBaseSNPC_Human && !owner.DisableWeaponFiringGesture then
-		owner:PlayAnim(owner:TranslateActivity(VJ.PICK(owner.AnimTbl_WeaponAttackGesture)), false, false, false, 0, {AlwaysUseGesture = true})
+	if owner.IsVJBaseSNPC_Human && owner.AnimTbl_WeaponAttackGesture then
+		owner:PlayAnim(owner.AnimTbl_WeaponAttackGesture, false, false, false, 0, {AlwaysUseGesture = true})
 	end
 	
 	-- MELEE WEAPON

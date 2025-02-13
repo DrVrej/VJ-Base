@@ -181,7 +181,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 					elseif !ent.VJ_NPC_Class && entInfoClass then
 						ent.VJ_NPC_Class = {entInfoClass}
 						if entInfoClass == "CLASS_PLAYER_ALLY" then
-							ent.FriendsWithAllPlayerAllies = true
+							ent.AlliedWithPlayerAllies = true
 						end
 					end
 					
@@ -248,9 +248,10 @@ end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 	if IsValid(ply) then
+		ply.VJ_ID_Living = true
+		ply.VJ_ID_Healable = true
 		ply.VJ_SD_InvestTime = 0
 		ply.VJ_SD_InvestLevel = 0
-		ply.VJ_ID_Living = true
 		if SERVER then
 			if !ply.VJ_NPC_Class then
 				ply.VJ_NPC_Class = {"CLASS_PLAYER_ALLY"}

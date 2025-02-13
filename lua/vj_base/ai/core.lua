@@ -60,6 +60,8 @@ local vj_npc_gib_collision = GetConVar("vj_npc_gib_collision")
 local vj_npc_gib_fade = GetConVar("vj_npc_gib_fade")
 local vj_npc_gib_fadetime = GetConVar("vj_npc_gib_fadetime")
 
+ENT.VJ_ID_Healable = true
+
 ENT.VJ_DEBUG = false
 ENT.VJ_IsBeingControlled = false
 ENT.VJ_IsBeingControlled_Tool = false
@@ -130,7 +132,7 @@ ENT.NextCallForHelpAnimationT = 0
 ENT.NextLostEnemySoundT = 0
 ENT.NextAllyDeathSoundT = 0
 ENT.NextOnKilledEnemySoundT = 0
-ENT.NextCallForBackUpOnDamageT = 0
+ENT.NextDamageAllyResponseT = 0
 ENT.NextDamageByPlayerSoundT = 0
 ENT.NextPainSoundT = 0
 ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
@@ -1295,7 +1297,7 @@ end
 local vecZN100 = Vector(0, 0, -100)
 --
 function ENT:IsJumpLegal(startPos, apex, endPos)
-	local jumpData = self.JumpParameters
+	local jumpData = self.JumpParams
 	if !jumpData.Enabled then return false end
 	if ((endPos.z - startPos.z) > jumpData.MaxRise) or ((apex.z - startPos.z) > jumpData.MaxRise) or ((startPos.z - endPos.z) > jumpData.MaxDrop) or (startPos:Distance(endPos) > jumpData.MaxDistance) then
 		return false
@@ -1542,12 +1544,13 @@ function ENT:ResetMedicBehavior()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainMedicBehavior()
-	if !self.IsMedic or self.Weapon_UnarmedBehavior_Active then return end -- Do NOT heal if playing scared animations!
-	if !self.Medic_Status then -- Not healing anyone, so check around for allies
+	if self.Weapon_UnarmedBehavior_Active then return end -- Do NOT heal if playing scared animations!
+	
+	-- Not healing anyone, check around for allies
+	if !self.Medic_Status then
 		if CurTime() < self.Medic_NextHealT then return end
 		for _, ent in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
-			-- Only allow VJ Base NPCs and players
-			if ent != self && (ent.IsVJBaseSNPC or ent:IsPlayer()) && !ent.VJ_ST_Healing && !ent.VJ_ID_Vehicle && ent:Health() <= (ent:GetMaxHealth() * 0.75) && ((ent.Medic_CanBeHealed && !IsValid(self:GetEnemy()) && (!IsValid(ent:GetEnemy()) or ent.VJ_IsBeingControlled)) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(ent) == D_LI then
+			if ent != self && (ent.IsVJBaseSNPC or ent:IsPlayer()) && ent.VJ_ID_Healable && !ent.VJ_ST_Healing && !ent.VJ_ID_Vehicle && ent:Health() <= (ent:GetMaxHealth() * 0.75) && ((ent:IsNPC() && !IsValid(self:GetEnemy()) && (!IsValid(ent:GetEnemy()) or ent.VJ_IsBeingControlled)) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(ent) == D_LI then
 				self.Medic_Target = ent
 				self.Medic_Status = "Active"
 				ent.VJ_ST_Healing = true
@@ -1559,7 +1562,9 @@ function ENT:MaintainMedicBehavior()
 	elseif self.Medic_Status != "Healing" then
 		local ally = self.Medic_Target
 		if !IsValid(ally) or !ally:Alive() or (ally:Health() > ally:GetMaxHealth() * 0.75) or self:CheckRelationship(ally) != D_LI then self:ResetMedicBehavior() return end
-		if self:Visible(ally) && VJ.GetNearestDistance(self, ally) <= self.Medic_HealDistance then -- Are we in healing distance?
+		
+		-- Heal them!
+		if self:Visible(ally) && VJ.GetNearestDistance(self, ally) <= self.Medic_HealDistance then
 			self.Medic_Status = "Healing"
 			self:OnMedicBehavior("BeforeHeal")
 			self:PlaySoundSystem("MedicBeforeHeal")
@@ -1631,7 +1636,8 @@ function ENT:MaintainMedicBehavior()
 					end
 				end
 			end)
-		elseif !self:IsBusy("Activities") then -- If we aren't in healing distance, then go after the ally
+		 -- We aren't in healing distance, go after the ally!
+		elseif !self:IsBusy("Activities") then
 			self.NextIdleTime = CurTime() + 4
 			self.NextChaseTime = CurTime() + 4
 			self:SetTarget(ally)
@@ -1834,7 +1840,7 @@ function ENT:MaintainRelationships()
 	local mySightDist = self:GetMaxLookDistance()
 	local myHandlePerceived = self.HandlePerceivedRelationship
 	local myCanAlly = self.CanAlly
-	local myFriPlyAllies = self.FriendsWithAllPlayerAllies
+	local myFriPlyAllies = self.AlliedWithPlayerAllies
 	local notIsNeutral = self.Behavior != VJ_BEHAVIOR_NEUTRAL
 	local customFunc = self.OnMaintainRelationships
 	local nearestDist = false
@@ -1892,10 +1898,10 @@ function ENT:MaintainRelationships()
 							if entIsPLY then
 								calculatedDisp = D_LI
 							else
-								-- Since we both have "CLASS_PLAYER_ALLY" then we need to do a special check if we both also have "self.FriendsWithAllPlayerAllies"
+								-- Since we both have "CLASS_PLAYER_ALLY" then we need to do a special check if we both also have "self.AlliedWithPlayerAllies"
 								-- If we both do NOT have that, then we both like players but not each other!
 								if friClass == "CLASS_PLAYER_ALLY" then
-									if myFriPlyAllies && ent.FriendsWithAllPlayerAllies then
+									if myFriPlyAllies && ent.AlliedWithPlayerAllies then
 										calculatedDisp = D_LI
 									end
 								else
@@ -1905,8 +1911,8 @@ function ENT:MaintainRelationships()
 						end
 					end
 					
-					-- Handle "self.PlayerFriendly" AND "self.FriendsWithAllPlayerAllies" (As a backup in case the NPC doesn't have the "CLASS_PLAYER_ALLY" class)
-					//if !calculatedDisp && self.PlayerFriendly && (entIsPLY or (entIsNPC && myFriPlyAllies && ent.PlayerFriendly && ent.FriendsWithAllPlayerAllies)) then
+					-- Handle "self.PlayerFriendly" AND "self.AlliedWithPlayerAllies" (As a backup in case the NPC doesn't have the "CLASS_PLAYER_ALLY" class)
+					//if !calculatedDisp && self.PlayerFriendly && (entIsPLY or (entIsNPC && myFriPlyAllies && ent.PlayerFriendly && ent.AlliedWithPlayerAllies)) then
 						//calculatedDisp = D_LI
 					//end
 					
@@ -2206,7 +2212,7 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 	local myClass = self:GetClass()
 	local it = 0
 	for _, ent in ipairs(entsTbl or ents.FindInSphere(myPos, dist)) do
-		if ent != self && ent.IsVJBaseSNPC && ent:IsNPC() && ent:Alive() && (ent:GetClass() == myClass or ent:Disposition(self) == D_LI) && ent.Behavior != VJ_BEHAVIOR_PASSIVE && ent.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !ent.IsFollowing && !ent.IsGuard && ent.CanReceiveOrders then
+		if ent != self && ent.IsVJBaseSNPC && ent:IsNPC() && ent:Alive() && (ent:GetClass() == myClass or ent:Disposition(self) == D_LI) && ent.Behavior != VJ_BEHAVIOR_PASSIVE && ent.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !ent.IsFollowing && !ent.IsGuard && ent.CanReceiveOrders && CurTime() > ent.TakingCoverT then
 			if onlyVis && !ent:Visible(self) then continue end
 			if !IsValid(ent:GetEnemy()) && myPos:Distance(ent:GetPos()) < dist then
 				self.NextWanderTime = CurTime() + 8
@@ -2283,19 +2289,19 @@ end
 --
 function ENT:Flinch(dmginfo, hitgroup)
 	local curTime = CurTime()
-	if self.CanFlinch == 0 or self.Flinching or self.AnimLockTime > curTime or self.NextFlinchT > curTime or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
+	local flinchType = self.CanFlinch
+	if !flinchType or flinchType == 0 or self.Flinching or self.AnimLockTime > curTime or self.NextFlinchT > curTime or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
 	
 	-- DMG_FORCE_FLINCH: Skip secondary checks, flinch chance, and damage types!
 	local customDmgType = dmginfo:GetDamageCustom()
-	if customDmgType == VJ.DMG_FORCE_FLINCH or (customDmgType != VJ.DMG_BLEED && self.TakingCoverT < curTime && math.random(1, self.FlinchChance) == 1 && ((self.CanFlinch == 1) or (self.CanFlinch == 2 && flinchDamageTypeCheck(self.FlinchDamageTypes, dmginfo:GetDamageType())))) then
+	if customDmgType == VJ.DMG_FORCE_FLINCH or (customDmgType != VJ.DMG_BLEED && self.TakingCoverT < curTime && math.random(1, self.FlinchChance) == 1 && (flinchType == true or flinchType == 1 or ((flinchType == "DamageTypes" or flinchType == 2) && flinchDamageTypeCheck(self.FlinchDamageTypes, dmginfo:GetDamageType())))) then
 		if self:OnFlinch(dmginfo, hitgroup, "PriorExecution") then return end
 		
-		local function RunFlinch(hitgroupInfo)
+		local function executeFlinch(hitgroupAnim)
 			self.Flinching = true
 			self:StopAttacks(true)
 			self.AttackAnimTime = 0
-			local anim = PICK(hitgroupInfo and hitgroupInfo.Animation or self.AnimTbl_Flinch)
-			local _, animDur = self:PlayAnim(anim, true, self:DecideAnimationLength(anim, self.NextMoveAfterFlinchTime), false, 0, {PlayBackRateCalculated = true})
+			local _, animDur = self:PlayAnim(hitgroupAnim or self.AnimTbl_Flinch, true, false, false)
 			timer.Create("flinch_reset" .. self:EntIndex(), animDur, 1, function() self.Flinching = false end)
 			self:OnFlinch(dmginfo, hitgroup, "Execute")
 			self.NextFlinchT = curTime + (!self.NextFlinchTime and animDur or self.NextFlinchTime)
@@ -2306,20 +2312,26 @@ function ENT:Flinch(dmginfo, hitgroup)
 		if hitgroupTbl then
 			for _, v in ipairs(hitgroupTbl) do
 				local hitGroups = v.HitGroup
-				-- Sub-table of hitGroups
-				for hitgroupX = 1, #hitGroups do
-					if hitGroups[hitgroupX] == hitgroup then
-						RunFlinch(v)
+				if istable(hitGroups) then -- Sub-table hitgroup
+					for hitgroupX = 1, #hitGroups do
+						if hitGroups[hitgroupX] == hitgroup then
+							executeFlinch(v.Animation)
+							return
+						end
+					end
+				else -- non-table hitrgoup
+					if hitGroups == hitgroup then
+						executeFlinch(v.Animation)
 						return
 					end
 				end
 			end
 			if self.HitGroupFlinching_DefaultWhenNotHit then
-				RunFlinch(nil)
+				executeFlinch()
 			end
 		-- Non-hitgroup flinching
 		else
-			RunFlinch(nil)
+			executeFlinch()
 		end
 	end
 end

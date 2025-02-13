@@ -130,7 +130,7 @@ function ENT:SpawnEntity(spawnKey, spawnTbl, initSpawn)
 		ent.VJ_NPC_Class = istable(spawnNPCClass) && spawnNPCClass or {spawnNPCClass}
 	end
 	if spawnFriToPlyAllies then
-		ent.FriendsWithAllPlayerAllies = true
+		ent.AlliedWithPlayerAllies = true
 	end
 	if ent:IsNPC() && spawnWepPicked != false && string.lower(spawnWepPicked) != "none" then
 		if string.lower(spawnWepPicked) == "default" then -- Default weapon from the spawn menu

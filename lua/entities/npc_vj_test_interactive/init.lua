@@ -10,7 +10,7 @@ ENT.StartHealth = 50
 ENT.BloodColor = VJ.BLOOD_COLOR_RED
 ENT.Behavior = VJ_BEHAVIOR_PASSIVE
 ENT.VJ_NPC_Class = {"CLASS_PLAYER_ALLY"}
-ENT.FriendsWithAllPlayerAllies = true
+ENT.AlliedWithPlayerAllies = true
 ENT.YieldToAlliedPlayers = false
 ENT.FollowPlayer = false
 

@@ -274,14 +274,15 @@ VJ_ST_Healing					bool		It's healing itself or by another entity
 VJ_ST_Eating					bool		It's eating something (Ex: a corpse)
 VJ_ST_BeingEaten				bool		It's being eaten by something
 
--- Identifiers
-VJ_ID_Living					bool		It's a living and should be detected by VJ NPCs | Includes: Players, NPCs, NextBots
-VJ_ID_Attackable				bool		It should be attacked or pushed by NPCs in certain cases (Ex: It's in the way while an NPC is chasing)
-VJ_ID_Destructible				bool		It should be damaged by attacks, projectiles, etc. (Ex: It's in the crossfire of a melee attack)
-VJ_ID_Grabbable					bool		It can be grabbed up by NPCs (Ex: Grenades)
-VJ_ID_Danger					bool		It's dangerous and should be detected as a regular danger by NPCs
-VJ_ID_Grenade					bool		It's a grenade type and should be detected as a grenade danger by NPCs
-VJ_ID_Boss						bool		It's a large and/or a boss | Affects parts of the entity, for example It won't receive any melee knock back
+-- Identifiers & Tags
+VJ_ID_Living					bool		It's a living entity and should be detected by VJ NPCs | Default includes: Players, NPCs, NextBots
+VJ_ID_Attackable				bool		Can it be attacked or pushed by NPCs in certain cases? (Ex: It's in the way while an NPC is chasing)
+VJ_ID_Destructible				bool		Can it be damaged by attacks, projectiles, etc? (Ex: It's in the crossfire of a melee attack)
+VJ_ID_Grabbable					bool		Can it be grabbed up by NPCs (Ex: Humanoids picking up grenades)
+VJ_ID_Healable					bool		Can it be healed by NPCs? (Ex: Allied medic NPCs)
+VJ_ID_Danger					bool		Should it be detected as a regular danger by NPCs?
+VJ_ID_Grenade					bool		Should it be detected as a grenade type of danger by NPCs?
+VJ_ID_Boss						bool		Large and/or boss entities (Ex: It won't receive melee knock backs)
 VJ_ID_Police					bool		Police officers, metrocops, etc.
 VJ_ID_Civilian					bool		Civilians, citizens, etc.
 VJ_ID_Headcrab					bool		Headcrabs

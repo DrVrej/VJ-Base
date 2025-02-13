@@ -10,7 +10,7 @@ ENT.StartHealth = 100
 ENT.BloodColor = VJ.BLOOD_COLOR_RED
 ENT.UsePoseParameterMovement = true
 ENT.VJ_NPC_Class = {"CLASS_PLAYER_ALLY"}
-ENT.FriendsWithAllPlayerAllies = true
+ENT.AlliedWithPlayerAllies = true
 
 ENT.HasMeleeAttack = true
 ENT.AnimTbl_MeleeAttack = "vjseq_seq_meleeattack01"
@@ -19,19 +19,19 @@ ENT.WeaponInventory_AntiArmorList = {"weapon_vj_rpg"}
 ENT.WeaponInventory_MeleeList = {"weapon_vj_crowbar"}
 
 ENT.HasGrenadeAttack = true
-ENT.TimeUntilGrenadeIsReleased = 0.85
+ENT.GrenadeAttackThrowTime = 0.85
 ENT.GrenadeAttackModel = "models/weapons/w_npcnade.mdl"
 ENT.AnimTbl_GrenadeAttack = "vjges_gesture_item_throw"
 
 ENT.AnimTbl_Medic_GiveHealth = "vjges_gesture_item_drop"
 ENT.AnimTbl_CallForHelp = {"vjges_gesture_signal_group", "vjges_gesture_signal_forward"}
-ENT.AnimTbl_CallForBackUpOnDamage = "vjges_gesture_signal_halt"
+ENT.AnimTbl_DamageAllyResponse = "vjges_gesture_signal_halt"
 ENT.Weapon_WaitOnOcclusion = false
 
 ENT.FootStepTimeRun = 0.3
 ENT.FootStepTimeWalk = 0.5
 
-ENT.CanFlinch = 1
+ENT.CanFlinch = true
 ENT.NextFlinchTime = 1
 ENT.AnimTbl_Flinch = {"vjges_flinch_01", "vjges_flinch_02"}
 ENT.HitGroupFlinching_Values = {
