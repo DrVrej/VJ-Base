@@ -1589,9 +1589,8 @@ function ENT:TranslateActivity(act)
 				return self:ResolveAnimation(translation)
 			end
 			return translation[math.random(1, #translation)] or act -- "or act" = To make sure it doesn't return nil when the table is empty!
-		else
-			return translation
 		end
+		return translation
 	end
 	return act
 end

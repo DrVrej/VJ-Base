@@ -1,5 +1,3 @@
-IncludeCS("ai_translations.lua")
-
 SWEP.IsVJBaseWeapon = true
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Core & Information ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -15,8 +13,8 @@ SWEP.Category = "VJ Base"
 //SWEP.AdminOnly = false
 SWEP.MadeForNPCsOnly = false -- Is this weapon meant to be for NPCs only?
 SWEP.ReplacementWeapon = nil -- When picked up by a player it gives them a replacement weapon | Useful for NPC-only weapons
-	-- String = Replaces the weapon if it's a valid class name
-	-- Table = Replaces the weapon by going in order of the table until a valid class name is given
+	-- string = Replaces the weapon if it's a valid class name
+	-- table = Replaces the weapon by going in order of the table until a valid class name is found
 SWEP.HoldType = "ar2"
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ World Model ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -343,29 +341,29 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:SetDefaultValues(holdType)
 	if holdType == "pistol" then
-		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "VJ.Weapon.Draw_Pistol" end
-		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_base/weapons/dryfire_pistol.wav" end
-		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_base/weapons/reload_pistol.wav" end
+		if !VJ.PICK(self.DeploySound) then self.DeploySound = "VJ.Weapon.Draw_Pistol" end
+		if !VJ.PICK(self.DryFireSound) then self.DryFireSound = "vj_base/weapons/dryfire_pistol.wav" end
+		if !VJ.PICK(self.NPC_ReloadSound) then self.NPC_ReloadSound = "vj_base/weapons/reload_pistol.wav" end
 	elseif holdType == "revolver" then
-		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "VJ.Weapon.Draw_Pistol" end
-		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_base/weapons/dryfire_revolver.wav" end
-		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_base/weapons/reload_revolver.wav" end
+		if !VJ.PICK(self.DeploySound) then self.DeploySound = "VJ.Weapon.Draw_Pistol" end
+		if !VJ.PICK(self.DryFireSound) then self.DryFireSound = "vj_base/weapons/dryfire_revolver.wav" end
+		if !VJ.PICK(self.NPC_ReloadSound) then self.NPC_ReloadSound = "vj_base/weapons/reload_revolver.wav" end
 	elseif holdType == "shotgun" or holdType == "crossbow" then
-		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "VJ.Weapon.Draw_Shotgun" end
-		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_base/weapons/dryfire_shotgun.wav" end
-		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_base/weapons/reload_shotgun.wav" end
+		if !VJ.PICK(self.DeploySound) then self.DeploySound = "VJ.Weapon.Draw_Shotgun" end
+		if !VJ.PICK(self.DryFireSound) then self.DryFireSound = "vj_base/weapons/dryfire_shotgun.wav" end
+		if !VJ.PICK(self.NPC_ReloadSound) then self.NPC_ReloadSound = "vj_base/weapons/reload_shotgun.wav" end
 	elseif holdType == "rpg" then
-		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "VJ.Weapon.Draw_Rifle" end
-		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_base/weapons/dryfire_rifle.wav" end
-		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_base/weapons/reload_rpg.wav" end
+		if !VJ.PICK(self.DeploySound) then self.DeploySound = "VJ.Weapon.Draw_Rifle" end
+		if !VJ.PICK(self.DryFireSound) then self.DryFireSound = "vj_base/weapons/dryfire_rifle.wav" end
+		if !VJ.PICK(self.NPC_ReloadSound) then self.NPC_ReloadSound = "vj_base/weapons/reload_rpg.wav" end
 	elseif holdType == "melee" or holdType == "melee2" or holdType == "knife" then
 		self.DeploySound = "VJ.Weapon.Draw_Rifle"
 		self.HasDryFireSound = false
 		self.NPC_HasReloadSound = false
 	else -- "smg", "ar2" and any other that didn't match
-		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "VJ.Weapon.Draw_Rifle" end
-		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_base/weapons/dryfire_rifle.wav" end
-		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_base/weapons/reload_rifle.wav" end
+		if !VJ.PICK(self.DeploySound) then self.DeploySound = "VJ.Weapon.Draw_Rifle" end
+		if !VJ.PICK(self.DryFireSound) then self.DryFireSound = "vj_base/weapons/dryfire_rifle.wav" end
+		if !VJ.PICK(self.NPC_ReloadSound) then self.NPC_ReloadSound = "vj_base/weapons/reload_rifle.wav" end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -884,24 +882,19 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:TranslateActivity(act)
 	local owner = self:GetOwner()
-	if owner:IsNPC() then
-		if owner.IsVJBaseSNPC then
-			local wepT = owner.AnimationTranslations[act]
-			if wepT then
-				if istable(wepT) then
-					return VJ.PICK(wepT)
-				end
-				return wepT
+	if owner.IsVJBaseSNPC then
+		local translation = owner.AnimationTranslations[act]
+		if translation then
+			if istable(translation) then
+				return translation[math.random(1, #translation)] or act
 			end
-		-- Non-VJ NPCs
-		elseif self.ActivityTranslateAI[act] then
-			return self.ActivityTranslateAI[act]
+			return translation
 		end
-		return -1
-	end
-	
+	-- Non-VJ NPCs
+	elseif owner:IsNPC() && self.ActivityTranslateAI[act] then
+		return self.ActivityTranslateAI[act]
 	-- Players
-	if self.ActivityTranslate[act] != nil then
+	elseif self.ActivityTranslate[act] then
 		return self.ActivityTranslate[act]
 	end
 	return -1
@@ -979,11 +972,6 @@ function SWEP:CanBePickedUpByNPCs()
 	return self.NPC_CanBePickedUp
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:OnRemove()
-	self:StopParticles()
-	self:CustomOnRemove()
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:GetWeaponCustomPosition(owner)
 	local boneID = owner:LookupBone(self.WorldModel_CustomPositionBone)
 	if !boneID then return false end
@@ -1035,4 +1023,185 @@ if CLIENT then
 		end
 		if drawMdl then self:DrawModel() end
 	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:OnRemove()
+	self:StopParticles()
+	self:CustomOnRemove()
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- !!! USED ONLY FOR DEFAULT HL2 NPCS, NOT VJ NPCS !!!
+function SWEP:SetupWeaponHoldTypeForAI(holdType)
+	local owner = self:GetOwner()
+	if owner.IsVJBaseSNPC then return end
+	
+	-- Yete NPC-en Rebel-e, ere vor medz zenki animation-ere kordzadze yerp vor ge kalegor
+	local bezdigZenk_Kalel = ACT_WALK_AIM_PISTOL
+	local bezdigZenk_Vazel = ACT_RUN_AIM_PISTOL
+	if self.NPC_AnimationSet == VJ.ANIM_SET_REBEL then
+		bezdigZenk_Kalel = ACT_WALK_AIM_RIFLE
+		bezdigZenk_Vazel = ACT_RUN_AIM_RIFLE
+	end
+	
+	-- Yete NPC-en Combine-e yev bizdig zenk pernere, ere vor medz zenki animation-ere kordzadze
+	local rifleOverride = false
+	local medzZenk_Genal = ACT_IDLE_SMG1
+	local medzZenk_Kalel = ACT_WALK_RIFLE
+	if self.NPC_AnimationSet == VJ.ANIM_SET_COMBINE && (holdType == "pistol" or holdType == "revolver") then
+		rifleOverride = true
+		medzZenk_Genal = VJ.SequenceToActivity(owner, "idle_unarmed")
+		medzZenk_Kalel = VJ.SequenceToActivity(owner, "walkunarmed_all")
+	end
+	
+	-- Yete NPC-en Metrocop-e gamal Rebel-e, ere vor medz zenki animation-ere kordzadze yerp vor ge kalegor
+	local bonbakshen_varichadz = ACT_RANGE_ATTACK_SHOTGUN_LOW
+	local bonbakshen_Vazel = ACT_RUN_AIM_SHOTGUN
+	if self.NPC_AnimationSet == VJ.ANIM_SET_METROCOP or self.NPC_AnimationSet == VJ.ANIM_SET_REBEL then
+		bonbakshen_varichadz = ACT_RANGE_ATTACK_SMG1_LOW
+		//bonbakshen_Kalel = ACT_WALK_AIM_RIFLE
+		bonbakshen_Vazel = ACT_RUN_AIM_RIFLE
+	end
+	
+	self.ActivityTranslateAI = {}
+	if rifleOverride or holdType == "ar2" or holdType == "smg" then
+		if holdType == "ar2" or rifleOverride then
+			self.ActivityTranslateAI[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_AR2
+			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_AR2
+			self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] 				= ACT_RANGE_AIM_AR2_LOW
+			self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_AR2_LOW
+		elseif holdType == "smg" then
+			self.ActivityTranslateAI[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SMG1
+			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SMG1
+			self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] 				= ACT_RANGE_AIM_SMG1_LOW
+			self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW
+		end
+		self.ActivityTranslateAI[ACT_COVER_LOW] 					= ACT_COVER_SMG1_LOW
+		self.ActivityTranslateAI[ACT_RELOAD] 						= ACT_RELOAD_SMG1
+		self.ActivityTranslateAI[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
+		self.ActivityTranslateAI[ACT_GESTURE_RELOAD] 				= ACT_GESTURE_RELOAD_SMG1
+		self.ActivityTranslateAI[ACT_IDLE] 							= medzZenk_Genal
+		self.ActivityTranslateAI[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SMG1
+		self.ActivityTranslateAI[ACT_IDLE_RELAXED] 					= ACT_IDLE_SMG1_RELAXED
+		self.ActivityTranslateAI[ACT_IDLE_STIMULATED] 				= ACT_IDLE_SMG1_STIMULATED
+		self.ActivityTranslateAI[ACT_IDLE_AGITATED] 				= ACT_IDLE_ANGRY_SMG1
+		self.ActivityTranslateAI[ACT_IDLE_AIM_RELAXED] 				= ACT_IDLE_SMG1_RELAXED
+		self.ActivityTranslateAI[ACT_IDLE_AIM_STIMULATED] 			= ACT_IDLE_AIM_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_IDLE_AIM_AGITATED] 			= ACT_IDLE_ANGRY_SMG1
+		self.ActivityTranslateAI[ACT_WALK] 							= medzZenk_Kalel
+		self.ActivityTranslateAI[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE
+		self.ActivityTranslateAI[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_WALK_RELAXED] 					= ACT_WALK_RIFLE_RELAXED
+		self.ActivityTranslateAI[ACT_WALK_STIMULATED] 				= ACT_WALK_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_WALK_AGITATED] 				= ACT_WALK_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_WALK_AIM_RELAXED] 				= ACT_WALK_RIFLE_RELAXED
+		self.ActivityTranslateAI[ACT_WALK_AIM_STIMULATED] 			= ACT_WALK_AIM_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_WALK_AIM_AGITATED] 			= ACT_WALK_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RUN] 							= ACT_RUN_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_RELAXED] 					= ACT_RUN_RIFLE_RELAXED
+		self.ActivityTranslateAI[ACT_RUN_STIMULATED] 				= ACT_RUN_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_RUN_AGITATED] 					= ACT_RUN_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_AIM_RELAXED] 				= ACT_RUN_RIFLE_RELAXED
+		self.ActivityTranslateAI[ACT_RUN_AIM_STIMULATED] 			= ACT_RUN_AIM_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_RUN_AIM_AGITATED] 				= ACT_RUN_AIM_RIFLE
+	elseif holdType == "crossbow" or holdType == "shotgun" then
+		self.ActivityTranslateAI[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SHOTGUN
+		self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SHOTGUN
+		self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] 				= ACT_RANGE_AIM_AR2_LOW
+		self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW] 			= bonbakshen_varichadz
+		self.ActivityTranslateAI[ACT_COVER_LOW] 					= ACT_COVER_SMG1_LOW
+		self.ActivityTranslateAI[ACT_RELOAD] 						= ACT_RELOAD_SHOTGUN
+		self.ActivityTranslateAI[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW //ACT_RELOAD_SHOTGUN_LOW
+		self.ActivityTranslateAI[ACT_GESTURE_RELOAD] 				= ACT_GESTURE_RELOAD_SHOTGUN
+		
+		self.ActivityTranslateAI[ACT_IDLE] 							= ACT_IDLE_SMG1
+		self.ActivityTranslateAI[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SHOTGUN
+		self.ActivityTranslateAI[ACT_IDLE_RELAXED] 					= ACT_IDLE_SHOTGUN_RELAXED
+		self.ActivityTranslateAI[ACT_IDLE_STIMULATED] 				= ACT_IDLE_SHOTGUN_STIMULATED
+		self.ActivityTranslateAI[ACT_IDLE_AGITATED] 				= ACT_IDLE_SHOTGUN_AGITATED
+		self.ActivityTranslateAI[ACT_IDLE_AIM_RELAXED] 				= ACT_SHOTGUN_IDLE_DEEP
+		self.ActivityTranslateAI[ACT_IDLE_AIM_STIMULATED] 			= ACT_SHOTGUN_IDLE_DEEP
+		self.ActivityTranslateAI[ACT_IDLE_AIM_AGITATED] 			= ACT_SHOTGUN_IDLE_DEEP
+		
+		self.ActivityTranslateAI[ACT_WALK] 							= ACT_WALK_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_WALK_AIM] 						= ACT_WALK_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE
+		self.ActivityTranslateAI[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_WALK_RELAXED] 					= ACT_WALK_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_WALK_STIMULATED] 				= ACT_WALK_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_WALK_AGITATED] 				= ACT_WALK_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_WALK_AIM_RELAXED] 				= ACT_WALK_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_WALK_AIM_STIMULATED] 			= ACT_WALK_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_WALK_AIM_AGITATED] 			= ACT_WALK_AIM_SHOTGUN
+		
+		self.ActivityTranslateAI[ACT_RUN] 							= ACT_RUN_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_AIM] 						= bonbakshen_Vazel
+		self.ActivityTranslateAI[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_RELAXED] 					= ACT_RUN_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_STIMULATED] 				= ACT_RUN_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_AGITATED] 					= ACT_RUN_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_AIM_RELAXED] 				= ACT_RUN_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_RUN_AIM_STIMULATED] 			= ACT_RUN_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_RUN_AIM_AGITATED] 				= ACT_RUN_AIM_SHOTGUN
+	elseif holdType == "rpg" then
+		self.ActivityTranslateAI[ACT_RANGE_ATTACK1] 				= ACT_CROUCHIDLE
+		self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SMG1
+		self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] 				= ACT_RANGE_AIM_SMG1_LOW
+		self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW
+		self.ActivityTranslateAI[ACT_COVER_LOW] 					= ACT_COVER_LOW_RPG
+		self.ActivityTranslateAI[ACT_RELOAD] 						= ACT_RELOAD_SMG1
+		self.ActivityTranslateAI[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
+		self.ActivityTranslateAI[ACT_GESTURE_RELOAD] 				= ACT_GESTURE_RELOAD_SMG1
+		self.ActivityTranslateAI[ACT_IDLE] 							= ACT_IDLE_RPG
+		self.ActivityTranslateAI[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_RPG
+		self.ActivityTranslateAI[ACT_IDLE_RELAXED] 					= ACT_IDLE_RPG_RELAXED
+		self.ActivityTranslateAI[ACT_IDLE_STIMULATED] 				= ACT_IDLE_SMG1_STIMULATED
+		self.ActivityTranslateAI[ACT_IDLE_AGITATED] 				= ACT_IDLE_ANGRY_RPG
+		self.ActivityTranslateAI[ACT_IDLE_AIM_RELAXED] 				= ACT_IDLE_RPG_RELAXED
+		self.ActivityTranslateAI[ACT_IDLE_AIM_STIMULATED] 			= ACT_IDLE_AIM_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_IDLE_AIM_AGITATED] 			= ACT_IDLE_ANGRY_RPG
+		self.ActivityTranslateAI[ACT_WALK] 							= ACT_WALK_RPG
+		self.ActivityTranslateAI[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RPG
+		self.ActivityTranslateAI[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_RPG
+		self.ActivityTranslateAI[ACT_WALK_RELAXED] 					= ACT_WALK_RPG_RELAXED
+		self.ActivityTranslateAI[ACT_WALK_STIMULATED] 				= ACT_WALK_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_WALK_AGITATED] 				= ACT_WALK_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_WALK_AIM_RELAXED] 				= ACT_WALK_RPG_RELAXED
+		self.ActivityTranslateAI[ACT_WALK_AIM_STIMULATED] 			= ACT_WALK_AIM_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_WALK_AIM_AGITATED] 			= ACT_WALK_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RUN] 							= ACT_RUN_RPG
+		self.ActivityTranslateAI[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
+		self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_RPG
+		self.ActivityTranslateAI[ACT_RUN_RELAXED] 					= ACT_RUN_RPG_RELAXED
+		self.ActivityTranslateAI[ACT_RUN_STIMULATED] 				= ACT_RUN_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_RUN_AGITATED] 					= ACT_RUN_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_AIM_RELAXED] 				= ACT_RUN_RPG_RELAXED
+		self.ActivityTranslateAI[ACT_RUN_AIM_STIMULATED] 			= ACT_RUN_AIM_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_RUN_AIM_AGITATED] 				= ACT_RUN_AIM_RIFLE
+	else
+		-- revolver or pistol
+		self.ActivityTranslateAI[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_PISTOL
+		self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_PISTOL
+		self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] 				= ACT_RANGE_AIM_PISTOL_LOW
+		self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_PISTOL_LOW
+		self.ActivityTranslateAI[ACT_COVER_LOW] 					= ACT_COVER_PISTOL_LOW
+		self.ActivityTranslateAI[ACT_RELOAD] 						= ACT_RELOAD_PISTOL
+		self.ActivityTranslateAI[ACT_RELOAD_LOW] 					= ACT_RELOAD_PISTOL_LOW
+		self.ActivityTranslateAI[ACT_GESTURE_RELOAD] 				= ACT_GESTURE_RELOAD_PISTOL
+		self.ActivityTranslateAI[ACT_IDLE] 							= ACT_IDLE_PISTOL
+		self.ActivityTranslateAI[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_PISTOL
+		
+		self.ActivityTranslateAI[ACT_WALK] 							= ACT_WALK_PISTOL
+		self.ActivityTranslateAI[ACT_WALK_AIM] 						= bezdigZenk_Kalel
+		
+		self.ActivityTranslateAI[ACT_RUN] 							= ACT_RUN_PISTOL
+		self.ActivityTranslateAI[ACT_RUN_AIM] 						= bezdigZenk_Vazel
+	end
+	return
 end
