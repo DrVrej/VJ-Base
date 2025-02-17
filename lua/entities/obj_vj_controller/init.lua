@@ -220,7 +220,7 @@ function ENT:SetControlledNPC(npc)
 			[1] = npc.DisableWandering,
 			[2] = npc.DisableChasingEnemy,
 			[3] = npc.DamageResponse,
-			[4] = npc.DisableTouchFindEnemy,
+			[4] = npc.EnemyTouchDetection,
 			[5] = npc.CallForHelp,
 			[6] = npc.DamageAllyResponse,
 			[7] = npc.DeathAllyResponse,
@@ -230,7 +230,7 @@ function ENT:SetControlledNPC(npc)
 			//[11] = npc.Passive_RunOnDamage,
 			[12] = npc.IsGuard,
 			[13] = npc.CanReceiveOrders,
-			[14] = npc.FindEnemy_CanSeeThroughWalls,
+			[14] = npc.EnemyXRayDetection,
 			[15] = npc:GetFOV(),
 			[16] = npc.CombatDamageResponse,
 			[17] = npc.BecomeEnemyToPlayer,
@@ -238,12 +238,12 @@ function ENT:SetControlledNPC(npc)
 			[19] = npc.LimitChaseDistance,
 			[20] = npc.ConstantlyFaceEnemy,
 			[21] = npc.IsMedic,
-			[22] = npc.DisableFindEnemy,
+			[22] = npc.EnemyDetection,
 		}
 		npc.DisableWandering = true
 		npc.DisableChasingEnemy = true
 		npc.DamageResponse = false
-		npc.DisableTouchFindEnemy = true
+		npc.EnemyTouchDetection = false
 		npc.CallForHelp = false
 		npc.DamageAllyResponse = false
 		npc.DeathAllyResponse = npc.DeathAllyResponse == true and "OnlyAlert" or false
@@ -252,7 +252,7 @@ function ENT:SetControlledNPC(npc)
 		npc.Passive_RunOnTouch = false
 		npc.IsGuard = false
 		npc.CanReceiveOrders = false
-		npc.FindEnemy_CanSeeThroughWalls = true
+		npc.EnemyXRayDetection = true
 		npc:SetFOV(360)
 		npc.CombatDamageResponse = false
 		npc.BecomeEnemyToPlayer = false
@@ -262,7 +262,7 @@ function ENT:SetControlledNPC(npc)
 		npc.IsMedic = false
 		npc.PauseAttacks = true
 		npc.NextThrowGrenadeT = 0
-		npc.DisableFindEnemy = true
+		npc.EnemyDetection = false
 		for _, v in ipairs(npc.RelationshipEnts) do
 			if IsValid(v) then
 				npc:AddEntityRelationship(v, D_NU)
@@ -568,7 +568,7 @@ function ENT:StopControlling(keyPressed)
 			npc.DisableWandering = npcData[1]
 			npc.DisableChasingEnemy = npcData[2]
 			npc.DamageResponse = npcData[3]
-			npc.DisableTouchFindEnemy = npcData[4]
+			npc.EnemyTouchDetection = npcData[4]
 			npc.CallForHelp = npcData[5]
 			npc.DamageAllyResponse = npcData[6]
 			npc.DeathAllyResponse = npcData[7]
@@ -578,7 +578,7 @@ function ENT:StopControlling(keyPressed)
 			//npc.Passive_RunOnDamage = npcData[11]
 			npc.IsGuard = npcData[12]
 			npc.CanReceiveOrders = npcData[13]
-			npc.FindEnemy_CanSeeThroughWalls = npcData[14]
+			npc.EnemyXRayDetection = npcData[14]
 			npc:SetFOV(npcData[15])
 			npc.CombatDamageResponse = npcData[16]
 			npc.BecomeEnemyToPlayer = npcData[17]
@@ -586,7 +586,7 @@ function ENT:StopControlling(keyPressed)
 			npc.LimitChaseDistance = npcData[19]
 			npc.ConstantlyFaceEnemy = npcData[20]
 			npc.IsMedic = npcData[21]
-			npc.DisableFindEnemy = npcData[22]
+			npc.EnemyDetection = npcData[22]
 		end
 	end
 	//self.VJCE_Camera:Remove()

@@ -81,7 +81,7 @@ VJ.WEP_STATE_RELOADING				= 2 -- Weapon is reloading
 VJ.WEP_ATTACK_STATE_NONE			= false -- No attack state is set | DEFAULT
 VJ.WEP_ATTACK_STATE_AIM				= 1 -- It's aiming the weapon but not firing
 VJ.WEP_ATTACK_STATE_AIM_MOVE		= 2 -- It's aiming the weapon and moving but not firing
-VJ.WEP_ATTACK_STATE_AIM_OCCLUSION	= 3 -- It's aiming the weapon because the enemy is occluded and it ran the "Weapon_WaitOnOcclusion" behavior (not firing)
+VJ.WEP_ATTACK_STATE_AIM_OCCLUSION	= 3 -- It's aiming the weapon because the enemy is occluded and it ran the "Weapon_OcclusionDelay" behavior (not firing)
 VJ.WEP_ATTACK_STATE_FIRE			= 10 -- It's firing the weapon (including while standing still OR moving)
 VJ.WEP_ATTACK_STATE_FIRE_STAND		= 11 -- It's firing the weapon while standing still or crouching
 

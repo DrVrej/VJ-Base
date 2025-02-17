@@ -36,17 +36,16 @@ ENT.TimedSpawn_OnlyOne = true -- If it's true then it will only have one SNPC sp
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Sound Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Idle
-ENT.HasIdleSounds = true -- Does it have idle sounds?
-ENT.SoundTbl_Idle = {}
-ENT.IdleSoundChance = 1 -- How much chance to play the sound? 1 = always
+-- Sounds to play while idle
+ENT.SoundTbl_Idle = {} -- false = Don't play any sounds | string or table of strings = Sounds to play
+ENT.IdleSoundChance = 1 -- How much chance to play the sound? | 1 = Always
 ENT.IdleSoundLevel = 80
 ENT.IdleSoundPitch = VJ.SET(80, 100)
-ENT.NextSoundTime_Idle = VJ.SET(0.2, 0.5)
--- On Entity Spawn
-ENT.HasSpawnEntitySound = true -- Does it play a sound on entity spawn?
-ENT.SoundTbl_SpawnEntity = {}
-ENT.SpawnEntitySoundChance = 1 -- How much chance to play the sound? 1 = always
+ENT.NextSoundTime_Idle = VJ.SET(4, 10)
+
+-- Sounds to play when it spawns an entity
+ENT.SoundTbl_SpawnEntity = {} -- false = Don't play any sounds | string or table of strings = Sounds to play
+ENT.SpawnEntitySoundChance = 1 -- How much chance to play the sound? | 1 = Always
 ENT.SpawnEntitySoundLevel = 80
 ENT.SpawnEntitySoundPitch = VJ.SET(80, 100)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -147,7 +146,10 @@ function ENT:SpawnEntity(spawnKey, spawnTbl, initSpawn)
 	//table_remove(self.CurrentEntities, spawnKey) 
 	//table.insert(self.CurrentEntities, spawnKey, {SpawnPosition=spawnPos, Entities=spawnEnts, WeaponsList=wepList, Ent=ent, Dead=false})
 	self:OnSpawnEntity(ent, spawnKey, spawnTbl, initSpawn)
-	self:PlaySpawnEntitySound()
+	local sdTbl = self.SoundTbl_SpawnEntity
+	if sdTbl && math.random(1, self.SpawnEntitySoundChance) then
+		VJ.EmitSound(self, sdTbl, self.SpawnEntitySoundLevel, math.random(self.SpawnEntitySoundPitch.a, self.SpawnEntitySoundPitch.b))
+	end
 	timer.Simple(0.1, function() if IsValid(self) && self.SingleSpawner then self:DoSingleSpawn() end end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -183,13 +185,22 @@ function ENT:Think()
 	//print("-----------------------------------------------------------")
 	//PrintTable(self.CurrentEntities)
 	self:OnThink()
-	self:PlayIdleSound()
+	
+	-- Idle sound
+	local sdTbl = self.SoundTbl_Idle
+	if sdTbl && CurTime() > self.NextIdleSoundT then
+		if math.random(1, self.IdleSoundChance) == 1 then
+			VJ.STOPSOUND(self.CurrentIdleSound)
+			self.CurrentIdleSound = VJ.CreateSound(self, sdTbl, self.IdleSoundLevel, math.random(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
+		end
+		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle.a, self.NextSoundTime_Idle.b)
+	end
 	
 	-- If it's a continuous spawner then make sure to respawn any entity that has been removed
-	if self.VJBaseSpawnerDisabled == false && self.SingleSpawner == false then
+	if !self.VJBaseSpawnerDisabled && !self.SingleSpawner then
 		for spawnKey, spawnTbl in ipairs(self.CurrentEntities) do
 			-- If entity is removed AND we are NOT already respawning it, then respawn!
-			if !IsValid(spawnTbl.Ent) && spawnTbl.Dead == false then
+			if !IsValid(spawnTbl.Ent) && !spawnTbl.Dead then
 				spawnTbl.Dead = true -- To make sure we do NOT respawn it more than once!
 				timer.Simple(self.TimedSpawn_Time, function()
 					if IsValid(self) then
@@ -216,24 +227,6 @@ function ENT:DoSingleSpawn()
 	self.Dead = true
 	VJ.STOPSOUND(self.CurrentIdleSound)
 	self:Remove()
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PlayIdleSound()
-	if !self.HasIdleSounds then return end
-	if CurTime() > self.NextIdleSoundT then
-		if math.random(1, self.IdleSoundChance) == 1 then
-			VJ.STOPSOUND(self.CurrentIdleSound)
-			self.CurrentIdleSound = VJ.CreateSound(self, self.SoundTbl_Idle, self.IdleSoundLevel, math.random(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
-		end
-		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle.a, self.NextSoundTime_Idle.b)
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PlaySpawnEntitySound()
-	if !self.HasSpawnEntitySound then return end
-	if math.random(1, self.SpawnEntitySoundChance) then
-		VJ.EmitSound(self, self.SoundTbl_SpawnEntity, self.SpawnEntitySoundLevel, math.random(self.SpawnEntitySoundPitch.a, self.SpawnEntitySoundPitch.b))
-	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()

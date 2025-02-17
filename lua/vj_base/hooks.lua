@@ -17,7 +17,16 @@ local vj_npc_wep_ply_pickup = GetConVar("vj_npc_wep_ply_pickup")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local entInfos = {
 	-- Resistance NPCs
-	npc_citizen = {classNPC = "CLASS_PLAYER_ALLY"},
+	npc_citizen = {classNPC = "CLASS_PLAYER_ALLY", func = function(ent)
+		if ent:HasSpawnFlags(SF_CITIZEN_MEDIC) then -- Medic rebels
+			ent.IsMedic = true
+		end
+		for key, val in pairs(ent:GetKeyValues()) do
+			if key == "hostile" && val == 1 then -- Enemy / Combine Rebels
+				return "CLASS_COMBINE"
+			end
+		end
+	end},
 	npc_vortigaunt = {classNPC = "CLASS_PLAYER_ALLY"},
 	npc_monk = {classNPC = "CLASS_PLAYER_ALLY"},
 	npc_dog = {classNPC = "CLASS_PLAYER_ALLY"},
@@ -158,30 +167,33 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 	if ent:IsNPC() or ent:IsNextBot() then
 		ent.VJ_ID_Living = true
 		if SERVER && !ignoredNPCs[entClass] then
-			local entInfoClass = false
 			local entIsVJ = ent.IsVJBaseSNPC
 			if entIsVJ then
 				ent.NextProcessT = CurTime() + math.Rand(0.15, 1)
-			elseif entInfo then
-				entInfoClass = entInfo.classNPC
-				if entInfo.func then
-					local classOverride = entInfo.func(ent)
-					if classOverride then
-						entInfoClass = classOverride
-					end
-				end
 			end
-			-- Wait 0.1 seconds to make sure the NPC is initialized properly
+			-- Wait 0.1 seconds to make sure the NPC is initialized properly (key values, spawn flags, etc.)
 			timer.Simple(0.1, function()
 				if IsValid(ent) then
 					if entIsVJ then
 						if !ent.RelationshipEnts then ent.RelationshipEnts = {} end
 						if !ent.RelationshipMemory then ent.RelationshipMemory = {} end
 					-- Apply the appropriate class for non-VJ NPCs
-					elseif !ent.VJ_NPC_Class && entInfoClass then
-						ent.VJ_NPC_Class = {entInfoClass}
-						if entInfoClass == "CLASS_PLAYER_ALLY" then
-							ent.AlliedWithPlayerAllies = true
+					else
+						local entInfoClass = false
+						if entInfo then
+							entInfoClass = entInfo.classNPC
+							if entInfo.func then
+								local classOverride = entInfo.func(ent)
+								if classOverride then
+									entInfoClass = classOverride
+								end
+							end
+						end
+						if !ent.VJ_NPC_Class && entInfoClass then
+							ent.VJ_NPC_Class = {entInfoClass}
+							if entInfoClass == "CLASS_PLAYER_ALLY" then
+								ent.AlliedWithPlayerAllies = true
+							end
 						end
 					end
 					

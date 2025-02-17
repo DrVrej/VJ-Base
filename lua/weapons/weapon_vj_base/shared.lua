@@ -410,11 +410,11 @@ function SWEP:Equip(newOwner)
 		hook.Add("Think", self, self.NPC_Think)
 		if newOwner.IsVJBaseSNPC then
 			if newOwner.IsVJBaseSNPC_Human then
-				newOwner.Weapon_OriginalFiringDistanceFar = newOwner.Weapon_OriginalFiringDistanceFar or newOwner.Weapon_FiringDistanceFar
+				newOwner.Weapon_OriginalFiringDistanceFar = newOwner.Weapon_OriginalFiringDistanceFar or newOwner.Weapon_MaxDistance
 				if self.IsMeleeWeapon then
-					newOwner.Weapon_FiringDistanceFar = self.MeleeWeaponDistance
+					newOwner.Weapon_MaxDistance = self.MeleeWeaponDistance
 				else
-					newOwner.Weapon_FiringDistanceFar = math.Clamp(newOwner.Weapon_OriginalFiringDistanceFar * self.NPC_FiringDistanceScale, newOwner.Weapon_FiringDistanceClose, self.NPC_FiringDistanceMax)
+					newOwner.Weapon_MaxDistance = math.Clamp(newOwner.Weapon_OriginalFiringDistanceFar * self.NPC_FiringDistanceScale, newOwner.Weapon_MinDistance, self.NPC_FiringDistanceMax)
 				end
 			end
 		else -- For non-VJ NPCs
