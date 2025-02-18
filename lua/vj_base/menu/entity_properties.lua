@@ -33,7 +33,7 @@ properties.Add("vj_pr_npc_control",{
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		if !ply:Alive() then return end -- Keep the player from becoming a zombie =)
-		if ply.VJ_IsControllingNPC then ply:ChatPrint("Can't control "..ent:GetName().." because you are already controlling another NPC!") return end
+		if ply.VJ_IsControllingNPC then ply:ChatPrint("Can't control " .. ent:GetName() .. " because you are already controlling another NPC!") return end
 		if !ent.VJ_IsBeingControlled then
 			if ent:Health() > 0 then
 				local obj = ents.Create("obj_vj_controller")
@@ -42,10 +42,10 @@ properties.Add("vj_pr_npc_control",{
 				obj:Spawn()
 				obj:StartControlling()
 			else
-				ply:ChatPrint("Can't control "..ent:GetName().." its health is 0 or below.")
+				ply:ChatPrint("Can't control " .. ent:GetName() .. " its health is 0 or below.")
 			end
 		else
-			ply:ChatPrint("Can't control "..ent:GetName().." it's already being controlled.")
+			ply:ChatPrint("Can't control " .. ent:GetName() .. " it's already being controlled.")
 		end
 	end
 })
@@ -76,15 +76,17 @@ properties.Add("vj_pr_npc_guard",{
 		if (!self:Filter(ent, ply)) then return end
 		if !ent.VJ_IsBeingControlled then
 			if ent.IsGuard then
-				ply:ChatPrint("Disabled Guarding for "..ent:GetName()..".")
+				ply:ChatPrint("Disabled Guarding for " .. ent:GetName() .. ".")
 				ent.IsGuard = false
+				ent.GuardData = false
 			else
-				ply:ChatPrint("Enabled Guarding for "..ent:GetName()..".")
+				ply:ChatPrint("Enabled Guarding for " .. ent:GetName() .. ".")
 				ent:StopMoving()
 				ent.IsGuard = true
+				ent.GuardData = false
 			end
 		else
-			ply:ChatPrint("Unable to change setting for "..ent:GetName()..".")
+			ply:ChatPrint("Unable to change setting for " .. ent:GetName() .. ".")
 		end
 	end
 })
@@ -93,7 +95,7 @@ properties.Add("vj_pr_npc_guard",{
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_wander",{
 	MenuLabel = "#vjbase.menu.context.wander",
-	MenuIcon = "icon16/arrow_rotate_clockwise.png",
+	MenuIcon = "icon16/arrow_inout.png",
 	Order = 50002,
 
 	Filter = function(self, ent, ply) -- decide whether this property should be shown for an entity (Client)
@@ -114,15 +116,15 @@ properties.Add("vj_pr_npc_wander",{
 		if (!self:Filter(ent, ply)) then return end
 		if !ent.VJ_IsBeingControlled then
 			if ent.DisableWandering then
-				ply:ChatPrint("Enabled Wandering for "..ent:GetName()..".")
+				ply:ChatPrint("Enabled Wandering for " .. ent:GetName() .. ".")
 				ent.DisableWandering = false
 			else
-				ply:ChatPrint("Disabled Wandering for "..ent:GetName()..".")
+				ply:ChatPrint("Disabled Wandering for " .. ent:GetName() .. ".")
 				ent:StopMoving()
 				ent.DisableWandering = true
 			end
 		else
-			ply:ChatPrint("Unable to change setting for "..ent:GetName()..".")
+			ply:ChatPrint("Unable to change setting for " .. ent:GetName() .. ".")
 		end
 	end
 })
@@ -151,10 +153,10 @@ properties.Add("vj_pr_npc_medic",{
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		if ent.IsMedic then
-			ply:ChatPrint(ent:GetName().." Is no longer a medic.")
+			ply:ChatPrint(ent:GetName() .. " Is no longer a medic.")
 			ent.IsMedic = false
 		else
-			ply:ChatPrint(ent:GetName().." Is now a medic.")
+			ply:ChatPrint(ent:GetName() .. " Is now a medic.")
 			ent.IsMedic = true
 		end
 	end
@@ -184,7 +186,7 @@ properties.Add("vj_pr_npc_allyme",{
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		ent:SetRelationshipMemory(ply, VJ.MEM_OVERRIDE_DISPOSITION, D_LI)
-		ply:ChatPrint(ent:GetName().." Became an ally to you.")
+		ply:ChatPrint(ent:GetName() .. " Became an ally to you.")
 	end
 })
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -212,7 +214,7 @@ properties.Add("vj_pr_npc_hostileme",{
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		ent:SetRelationshipMemory(ply, VJ.MEM_OVERRIDE_DISPOSITION, D_HT)
-		ply:ChatPrint(ent:GetName().." Became hostile to you.")
+		ply:ChatPrint(ent:GetName() .. " Became hostile to you.")
 	end
 })
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -241,7 +243,7 @@ properties.Add("vj_pr_npc_slay",{
 		if (!self:Filter(ent, ply)) then return end
 		ent:SetHealth(0)
 		ent:TakeDamage(ent:Health() + 99999,ply,ply)
-		ply:ChatPrint("Slayed "..ent:GetName()..".")
+		ply:ChatPrint("Slayed " .. ent:GetName() .. ".")
 	end
 })
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -275,7 +277,7 @@ properties.Add("vj_pr_npc_gib",{
 		dmg:SetAttacker(ply)
 		dmg:SetInflictor(ply)
 		ent:TakeDamageInfo(dmg)
-		ply:ChatPrint("Gibbed " .. ent:GetName() .. ".")
+		ply:ChatPrint("Gibbed "  ..  ent:GetName()  ..  ".")
 	end
 })
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -303,10 +305,10 @@ properties.Add("vj_pr_npc_devmode",{
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		if ent.VJ_DEBUG then
-			ply:ChatPrint("Disabled Developer Mode for "..ent:GetName()..".")
+			ply:ChatPrint("Disabled Developer Mode for " .. ent:GetName() .. ".")
 			ent.VJ_DEBUG = false
 		else
-			ply:ChatPrint("Enabled Developer Mode for "..ent:GetName()..". Navigate to the NPC developer menu to toggle items you want.")
+			ply:ChatPrint("Enabled Developer Mode for " .. ent:GetName() .. ". Navigate to the NPC developer menu to toggle items you want.")
 			ent.VJ_DEBUG = true
 		end
 	end

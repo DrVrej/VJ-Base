@@ -43,10 +43,9 @@ function SWEP:OnPrimaryAttack(status, statusData)
 		
 		local phys = projectile:GetPhysicsObject()
 		if owner.IsVJBaseSNPC then
-			spawnPos = spawnPos + Vector(math.Rand(-30,30), math.Rand(-30,30), math.Rand(-30,30))
-			phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetAimPosition(owner:GetEnemy(), spawnPos, 1, 4000), 4000))
+			phys:SetVelocity(VJ.CalculateTrajectory(owner, owner:GetEnemy(), "Line", spawnPos + Vector(math.Rand(-30, 30), math.Rand(-30, 30), math.Rand(-30, 30)), 1, 4000))
 		else
-			phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetEnemy():GetPos() + owner:GetEnemy():OBBCenter(), 4000))
+			phys:SetVelocity(VJ.CalculateTrajectory(owner, owner:GetEnemy(), "Line", spawnPos, owner:GetEnemy():GetPos() + owner:GetEnemy():OBBCenter(), 4000))
 		end
 		projectile:SetAngles(projectile:GetVelocity():GetNormal():Angle())
 	end

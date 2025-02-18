@@ -495,11 +495,9 @@ ENT.DamageByPlayerSoundLevel = 75
 ENT.DeathSoundLevel = 80
 	-- ====== Sound Pitch ====== --
 	-- Range: 0 - 255 | Lower pitch < x > Higher pitch
-ENT.GeneralSoundPitchStatic = true -- Should it decide a number when it spawns and use it for all sounds pitches set to false?
-	-- It picks the number between these two variables below:
-ENT.GeneralSoundPitch1 = 90
-ENT.GeneralSoundPitch2 = 100
---
+ENT.MainSoundPitch = VJ.SET(90, 100) -- Can be a number or VJ.SET
+ENT.MainSoundPitchStatic = true -- Should it decide a number on spawn and use it as the main pitch?
+-- false = Use main pitch | number = Use a specific pitch | VJ.SET = Pick randomly between numbers every time it plays
 ENT.FootstepSoundPitch = VJ.SET(80, 100)
 ENT.BreathSoundPitch = 100
 ENT.IdleSoundPitch = false
@@ -1544,7 +1542,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local defPos = Vector(0, 0, 0)
 
-local StopSound = VJ.STOPSOUND
+local StopSD = VJ.STOPSOUND
 local CurTime = CurTime
 local IsValid = IsValid
 local GetConVar = GetConVar
@@ -1816,7 +1814,8 @@ local function ApplyBackwardsCompatibility(self)
 	if self.CallForBackUpOnDamage != nil then self.DamageAllyResponse = self.CallForBackUpOnDamage end
 	if self.NextCallForBackUpOnDamageTime then self.DamageAllyResponse_Cooldown = self.NextCallForBackUpOnDamageTime end
 	if self.CallForBackUpOnDamageAnimation then self.AnimTbl_DamageAllyResponse = self.CallForBackUpOnDamageAnimation end
-	if self.UseTheSameGeneralSoundPitch != nil then self.GeneralSoundPitchStatic = self.UseTheSameGeneralSoundPitch end
+	if self.UseTheSameGeneralSoundPitch != nil then self.MainSoundPitchStatic = self.UseTheSameGeneralSoundPitch end
+	if self.GeneralSoundPitch1 or self.GeneralSoundPitch2 then self.MainSoundPitch = VJ.SET(self.GeneralSoundPitch1 or 90, self.GeneralSoundPitch2 or 100) end
 	if self.AlertedToIdleTime then self.AlertTimeout = self.AlertedToIdleTime end
 	if self.SoundTbl_MoveOutOfPlayersWay then self.SoundTbl_YieldToAlliedPlayer = self.SoundTbl_MoveOutOfPlayersWay end
 	if self.MaxJumpLegalDistance then self.JumpParams.MaxRise = self.MaxJumpLegalDistance.a; self.JumpParams.MaxDrop = self.MaxJumpLegalDistance.b end
@@ -1996,8 +1995,8 @@ function ENT:Initialize()
 	if !self.RelationshipMemory then self.RelationshipMemory = {} end
 	self.AnimationTranslations = {}
 	self.WeaponInventory = {}
-	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3, 6)
-	self.GeneralSoundPitchValue = (self.GeneralSoundPitchStatic and math.random(self.GeneralSoundPitch1, self.GeneralSoundPitch2)) or 0
+	self.NextIdleSoundT_Reg = CurTime() + math.random(0.3, 6)
+	self.MainSoundPitchValue = (self.MainSoundPitchStatic and (istable(self.MainSoundPitch) and math.random(self.MainSoundPitch.a, self.MainSoundPitch.b) or self.MainSoundPitch)) or 0
 	local sightConvar = vj_npc_sight_distance:GetInt(); if sightConvar > 0 then self.SightDistance = sightConvar end
 	
 	-- Capabilities & Movement
@@ -2453,7 +2452,7 @@ function ENT:Think()
 			local pickedSD = PICK(self.SoundTbl_Breath)
 			local dur = 10 -- Make the default value large so we don't check it too much!
 			if pickedSD then
-				StopSound(self.CurrentBreathSound)
+				StopSD(self.CurrentBreathSound)
 				dur = (self.NextSoundTime_Breath == false and SoundDuration(pickedSD)) or math.Rand(self.NextSoundTime_Breath.a, self.NextSoundTime_Breath.b)
 				self.CurrentBreathSound = VJ.CreateSound(self, pickedSD, self.BreathSoundLevel, self:GetSoundPitch(self.BreathSoundPitch))
 			end
@@ -2813,25 +2812,32 @@ function ENT:Think()
 				eneData.TimeSinceAcquired = 0
 			end
 			
-			-- Guarding Position
+			-- Guarding Behavior
 			if self.IsGuard && !self.IsFollowing then
-				if !self.GuardingPosition then -- If it hasn't been set then set the guard position to its current position
-					self.GuardingPosition = myPos
-					self.GuardingDirection = myPos + self:GetForward()*51
+				local guardData = self.GuardData
+				if !guardData then -- If it hasn't set the data, then set it!
+					guardData = {
+						Position = myPos,
+						Direction = myPos + self:GetForward()*51
+					}
+					self.GuardData = guardData
 				end
 				-- If it's far from the guarding position, then go there!
 				if !self:IsMoving() && !self:IsBusy("Activities") then
-					local dist = myPos:Distance(self.GuardingPosition) -- Distance to the guard position
+					local dist = myPos:Distance(guardData.Position) -- Distance to the guard position
 					if dist > 50 then
-						self:SetLastPosition(self.GuardingPosition)
+						self:SetLastPosition(guardData.Position)
 						self:SCHEDULE_GOTO_POSITION(dist <= 800 and "TASK_WALK_PATH" or "TASK_RUN_PATH", function(x)
 							x.CanShootWhenMoving = true
 							x.TurnData = {Type = VJ.FACE_ENEMY}
 							x.RunCode_OnFinish = function()
 								timer.Simple(0.01, function()
-									if IsValid(self) && !self:IsMoving() && !self:IsBusy("Activities") && self.GuardingDirection then
-										self:SetLastPosition(self.GuardingDirection)
-										self:SCHEDULE_FACE("TASK_FACE_LASTPOSITION")
+									if IsValid(self) && !self:IsMoving() && !self:IsBusy("Activities") && self.IsGuard then
+										guardData = self.GuardData
+										if guardData then
+											self:SetLastPosition(guardData.Position)
+											self:SCHEDULE_FACE("TASK_FACE_LASTPOSITION")
+										end
 									end
 								end)
 							end
@@ -3220,16 +3226,17 @@ function ENT:CheckForDangers()
 	local regDangerDetected = false -- A regular non-grenade danger has been found (This is done to make sure grenades take priority over other dangers!)
 	for _, ent in ipairs(ents.FindInSphere(self:GetPos(), self.DangerDetectionDistance)) do
 		if (ent.VJ_ID_Danger or ent.VJ_ID_Grenade) && self:Visible(ent) then
-			local vOwner = ent:GetOwner()
-			if !(IsValid(vOwner) && vOwner.IsVJBaseSNPC && ((self:GetClass() == vOwner:GetClass()) or (self:Disposition(vOwner) == D_LI))) then
+			local owner = ent:GetOwner()
+			if !(IsValid(owner) && owner.IsVJBaseSNPC && ((self:GetClass() == owner:GetClass()) or (self:Disposition(owner) == D_LI))) then
 				if ent.VJ_ID_Danger then regDangerDetected = ent continue end -- If it's a regular danger then just skip it for now
 				local funcCustom = self.OnDangerDetected; if funcCustom then funcCustom(self, VJ.DANGER_TYPE_GRENADE, ent) end
+				local curTime = CurTime()
 				self:PlaySoundSystem("OnGrenadeSight")
-				self.NextDangerDetectionT = CurTime() + 4
-				self.TakingCoverT = CurTime() + 4
+				self.NextDangerDetectionT = curTime + 4
+				self.TakingCoverT = curTime + 4
 				-- If has the ability to throw it back, then throw the grenade!
 				if self.CanRedirectGrenades && self.HasGrenadeAttack && ent.VJ_ID_Grabbable && !ent.VJ_ST_Grabbed && ent:GetVelocity():Length() < 400 && VJ.GetNearestDistance(self, ent) < 100 && self:GrenadeAttack(ent, true) then
-					self.NextGrenadeAttackSoundT = CurTime() + 3
+					self.NextGrenadeAttackSoundT = curTime + 3
 					return
 				end
 				-- Was not able to throw back the grenade, so take cover instead!
@@ -3251,8 +3258,9 @@ function ENT:CheckForDangers()
 			end
 		end
 		self:PlaySoundSystem("OnDangerSight")
-		self.NextDangerDetectionT = CurTime() + 4
-		self.TakingCoverT = CurTime() + 4
+		local curTime = CurTime()
+		self.NextDangerDetectionT = curTime + 4
+		self.TakingCoverT = curTime + 4
 		self:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH", function(x)
 			x.CanShootWhenMoving = true
 			x.TurnData = {Type = VJ.FACE_ENEMY}
@@ -3534,7 +3542,7 @@ function ENT:SelectSchedule()
 								local moveCheck = PICK(VJ.TraceDirections(self, "Quick", 50, true, false, 4, true, true))
 								if moveCheck then
 									self:StopMoving()
-									if self.IsGuard then self.GuardingPosition = moveCheck end -- Set the guard position to this new position that avoids friendly fire
+									if self.IsGuard then self.GuardData = {Position = moveCheck, Direction = moveCheck + self:GetForward()*51} end -- Set the guard position to this new position that avoids friendly fire
 									self:SetLastPosition(moveCheck)
 									self.NextChaseTime = curTime + 1
 									self:SCHEDULE_GOTO_POSITION("TASK_WALK_PATH", function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.TurnData = {Type = VJ.FACE_ENEMY} end)
@@ -3557,8 +3565,8 @@ function ENT:SelectSchedule()
 										nearestPos, nearestEntPos = self:NearestPoint(inCoverTrace.HitPos), inCoverTrace.HitPos
 									end
 									nearestEntPos = nearestEntPos - self:GetForward()*15
-									if nearestPos:Distance(nearestEntPos) <= (self.IsGuard and 60 or 1000) then
-										if self.IsGuard then self.GuardingPosition = nearestEntPos end -- Set the guard position to this new position that provides cover
+									if nearestPos:Distance(nearestEntPos) <= (self.IsGuard and 100 or 1000) then
+										if self.IsGuard then self.GuardData = {Position = nearestEntPos, Direction = nearestEntPos + self:GetForward()*51} end -- Set the guard position to this new position that provides cover
 										self:SetLastPosition(nearestEntPos)
 										//VJ.DEBUG_TempEnt(nearestEntPos, self:GetAngles(), Color(0,255,255))
 										local schedule = vj_ai_schedule.New("SCHEDULE_GOTO_POSITION")
