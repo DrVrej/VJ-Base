@@ -2,8 +2,6 @@ SWEP.Base = "weapon_vj_base"
 SWEP.PrintName = "K-3"
 SWEP.Author = "DrVrej"
 SWEP.Contact = "http://steamcommunity.com/groups/vrejgaming"
-SWEP.Purpose = "This weapon is made for Players and NPCs"
-SWEP.Instructions = "Controls are like a regular weapon."
 SWEP.Category = "VJ Base"
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.MadeForNPCsOnly = true -- Is this weapon meant to be for NPCs only?

@@ -319,8 +319,8 @@ local function VJ_NPCPLY_DEATH(ent, attacker, inflictor)
 		local wasLast = (!IsValid(attacker:GetEnemy()) or (attacker.EnemyData.VisibleCount <= 1))
 		attacker:OnKilledEnemy(ent, inflictor, wasLast)
 		-- If its the last enemy then --> (If there no valid enemy) OR (The number of enemies is 1 or less)
-		if (attacker.OnKilledEnemy_OnlyLast == false) or (attacker.OnKilledEnemy_OnlyLast == true && wasLast) then
-			attacker:PlaySoundSystem("OnKilledEnemy")
+		if (!attacker.KilledEnemySoundLast) or (wasLast && attacker.KilledEnemySoundLast) then
+			attacker:PlaySoundSystem("KilledEnemy")
 		end
 		attacker:MaintainRelationships()
 	end

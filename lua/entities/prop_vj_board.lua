@@ -10,8 +10,7 @@ ENT.Type 			= "anim"
 ENT.PrintName 		= "Wooden Board"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Purpose 		= "Used for defending a certain area from enemies, SNPCs will attack it when close."
-ENT.Instructions 	= "Don't change anything."
+ENT.Information 	= "Physics entity that VJ NPCs can attack.\nUseful for barricading an area."
 ENT.Category		= "VJ Base"
 
 ENT.Spawnable = true
@@ -19,9 +18,11 @@ ENT.AdminOnly = false
 
 ENT.PhysicsSounds = true
 ENT.VJ_ID_Attackable = true
+
+scripted_ents.Alias("sent_vj_board", "prop_vj_board") -- !! Backwards Compatibility !!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	VJ.AddKillIcon("sent_vj_board", ENT.PrintName, VJ.KILLICON_TYPE_ALIAS, "prop_physics")
+	VJ.AddKillIcon("prop_vj_board", ENT.PrintName, VJ.KILLICON_TYPE_ALIAS, "prop_physics")
 	
 	function ENT:Draw()
 		self:DrawModel()
@@ -37,7 +38,6 @@ function ENT:Initialize()
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetSolid(SOLID_VPHYSICS)
-	//self:SetCollisionGroup(COLLISION_GROUP_NONE)
 	self:SetUseType(SIMPLE_USE)
 	self:SetMaxHealth(self.StartHealth)
 	self:SetHealth(self.StartHealth)
@@ -57,12 +57,10 @@ end
 function ENT:OnTakeDamage(dmginfo)
 	self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() * 0.05)
 	self:SetHealth(self:Health() - dmginfo:GetDamage())
-	if self:Health() <= 0 then self:DoDeath() end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoDeath()
-	local effectData = EffectData()
-	effectData:SetOrigin(self:GetPos())
-	util.Effect("VJ_Dust_Small", effectData)
-	self:Remove()
+	if self:Health() <= 0 then
+		local effectData = EffectData()
+		effectData:SetOrigin(self:GetPos())
+		util.Effect("VJ_Dust_Small", effectData)
+		self:Remove()
+	end
 end

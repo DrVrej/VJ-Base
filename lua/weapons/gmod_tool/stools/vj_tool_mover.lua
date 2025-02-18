@@ -225,7 +225,7 @@ else -- If SERVER
 					v:StopMoving()
 					v:SetLastPosition(svvector)
 					if v.IsVJBaseSNPC == true then
-						if k == 1 or math.random(1, 5) == 1 then v:PlaySoundSystem("OnReceiveOrder") end
+						if k == 1 or math.random(1, 5) == 1 then v:PlaySoundSystem("ReceiveOrder") end
 						v:SCHEDULE_GOTO_POSITION(type_task, function(schedule)
 							//if IsValid(v:GetEnemy()) && v:Visible(v:GetEnemy()) then
 								//schedule:EngTask("TASK_FACE_ENEMY", 0)

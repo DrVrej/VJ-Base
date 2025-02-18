@@ -10,8 +10,7 @@ ENT.Type 			= "anim"
 ENT.PrintName 		= "Flag"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Purpose 		= "Used for flags."
-ENT.Instructions 	= "Don't change anything."
+ENT.Information 	= "Extremely based Armenian flag!"
 ENT.Category		= "VJ Base"
 
 ENT.PhysicsSounds = true

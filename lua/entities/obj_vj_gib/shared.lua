@@ -3,7 +3,6 @@ ENT.Type 			= "anim"
 ENT.PrintName		= "Gib Base"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Information		= "Gibs for SNPCs"
 ENT.Category		= "VJ Base"
 
 ENT.Spawnable		= false

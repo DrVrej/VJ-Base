@@ -236,7 +236,7 @@ ENT.DeathCorpseApplyForce = true -- Should the force of the damage be applied to
 ENT.DeathCorpseSubMaterials = nil -- Apply a table of indexes that correspond to a sub material index, this will cause the base to copy the NPC's sub material to the corpse.
 	-- ====== Dismemberment / Gib ====== --
 ENT.CanGib = true -- Can it dismember? | Makes "CreateGibEntity" fail and overrides "CanGibOnDeath" to false
-ENT.CanGibOnDeath = true -- Is it allowed to gib on death?
+ENT.CanGibOnDeath = true -- Can it dismember on death?
 ENT.GibOnDeathFilter = true -- Should it only gib and call "self:HandleGibOnDeath" when it's killed by a specific damage types? | false = Call "self:HandleGibOnDeath" from any damage type
 ENT.HasGibOnDeathSounds = true -- Does it have gib sounds? | Mostly used for the settings menu
 ENT.HasGibOnDeathEffects = true -- Does it spawn particles on death or when it gibs? | Mostly used for the settings menu
@@ -277,7 +277,7 @@ ENT.MeleeAttackBleedEnemyDamage = 1 -- How much damage per repetition
 ENT.MeleeAttackBleedEnemyTime = 1 -- How much time until the next repetition?
 ENT.MeleeAttackBleedEnemyReps = 4 -- How many repetitions?
 	-- ====== Player Speed Modifier ====== --
-ENT.MeleeAttackPlayerSpeed = false -- Should it modify the movement speed of players that got hit?
+ENT.MeleeAttackPlayerSpeed = false -- Should it modify the movement speed of players that got damaged?
 ENT.MeleeAttackPlayerSpeedWalk = 100
 ENT.MeleeAttackPlayerSpeedRun = 100
 ENT.MeleeAttackPlayerSpeedTime = 5 -- How much time until player's speed resets back to normal
@@ -335,18 +335,16 @@ ENT.LeapAttackStopOnHit = true -- Should it stop executing the leap attack after
 ------ Sound ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasSounds = true -- Can it play sounds? | false = Disable ALL sounds
-ENT.OnKilledEnemy_OnlyLast = true -- Should it only play the "OnKilledEnemy" sounds if there is no enemies left?
 ENT.DamageByPlayerDispositionLevel = 1 -- When should it play "DamageByPlayer" sounds? | 0 = Always | 1 = ONLY when friendly to player | 2 = ONLY when enemy to player
-ENT.MeleeAttackSlowPlayerSoundFadeOutTime = 1 -- 0 = Fade out instantly
 	-- ====== Footstep Sound ====== --
 ENT.HasFootstepSounds = true -- Can it play footstep sounds?
 ENT.DisableFootStepSoundTimer = false -- Disables the timer system, allowing to utilize model events
-ENT.FootstepTimerWalk = 1 -- Delay between footstep sounds while it is walking | false = Disable while walking
-ENT.FootstepTimerRun = 0.5 -- Delay between footstep sounds while it is running | false = Disable while running
+ENT.FootstepSoundTimerWalk = 1 -- Delay between footstep sounds while it is walking | false = Disable while walking
+ENT.FootstepSoundTimerRun = 0.5 -- Delay between footstep sounds while it is running | false = Disable while running
 	-- ====== Idle Sound ====== --
 ENT.HasIdleSounds = true -- Can it play idle sounds? | Controls "self.SoundTbl_Idle", "self.SoundTbl_IdleDialogue", "self.SoundTbl_CombatIdle"
-ENT.IdleSounds_PlayOnAttacks = false -- It will be able to continue and play idle sounds when it performs an attack
-ENT.IdleSounds_NoRegularIdleOnAlerted = false -- Should it disable playing regular idle sounds when combat idle sound is empty?
+ENT.IdleSoundsWhileAttacking = false -- Can it play idle sounds while performing an attack?
+ENT.IdleSoundsRegWhileAlert = false -- Should it disable playing regular idle sounds when combat idle sound is empty?
 	-- ====== Idle Dialogue Sound ====== --
 	-- When an allied NPC or player is within range, it will play these sounds rather than regular idle sounds
 	-- If the ally is a VJ NPC and has dialogue answer sounds, it will respond back
@@ -354,16 +352,19 @@ ENT.HasIdleDialogueSounds = true -- Can it play idle dialogue sounds?
 ENT.HasIdleDialogueAnswerSounds = true -- Can it play idle dialogue answer sounds?
 ENT.IdleDialogueDistance = 400 -- How close should an ally be for it to initiate a dialogue
 ENT.IdleDialogueCanTurn = true -- Should it turn to to face its dialogue target?
+	-- ====== On Killed Enemy ====== --
+ENT.HasKilledEnemySounds = true -- Can it play sounds when it kills an enemy?
+ENT.KilledEnemySoundLast = true -- Should it only play "self.SoundTbl_KilledEnemy" if there is no enemies left?
 	-- ====== Sound Track ====== --
 ENT.HasSoundTrack = false -- Can it play sound tracks?
 ENT.SoundTrackVolume = 1 -- Volume of the sound track | 1 = Normal | 2 = 200% | 0.5 = 50%
 ENT.SoundTrackPlaybackRate = 1 -- Playback speed of sound tracks | 1 = Normal | 2 = Twice the speed | 0.5 = Half the speed
 	-- ====== Other Sound Controls ====== --
 ENT.HasBreathSound = true -- Can it play breathing sounds?
-ENT.HasOnReceiveOrderSounds = true -- Can it play sounds when it receives an order?
+ENT.HasReceiveOrderSounds = true -- Can it play sounds when it receives an order?
 ENT.HasFollowPlayerSounds = true -- Can it play follow and unfollow player sounds? | Controls "self.SoundTbl_FollowPlayer", "self.SoundTbl_UnFollowPlayer"
-ENT.HasYieldToAlliedPlayerSounds = true -- Can it play sounds when it yields to an allied player?
-ENT.HasMedicSounds = true -- Can it play medic sounds? | Controls "self.SoundTbl_MedicBeforeHeal", "self.SoundTbl_MedicAfterHeal", "self.SoundTbl_MedicReceiveHeal"
+ENT.HasYieldToPlayerSounds = true -- Can it play sounds when it yields to an allied player?
+ENT.HasMedicSounds = true -- Can it play medic sounds? | Controls "self.SoundTbl_MedicBeforeHeal", "self.SoundTbl_MedicOnHeal", "self.SoundTbl_MedicReceiveHeal"
 ENT.HasOnPlayerSightSounds = true -- Can it play sounds when it sees a player?
 ENT.HasInvestigateSounds = true -- Can it play sounds when it investigates something?
 ENT.HasLostEnemySounds = true -- Can it play sounds when it looses its enemy?
@@ -373,34 +374,33 @@ ENT.HasBecomeEnemyToPlayerSounds = true -- Can it play sounds when it becomes ho
 ENT.HasMeleeAttackSounds = true -- Can it play melee attack sounds? | Controls "self.SoundTbl_BeforeMeleeAttack", "self.SoundTbl_MeleeAttack", "self.SoundTbl_MeleeAttackExtra"
 ENT.HasExtraMeleeAttackSounds = false -- Can it play extra melee attack sound effects?
 ENT.HasMeleeAttackMissSounds = true -- Can it play melee attack miss sounds?
-ENT.HasMeleeAttackSlowPlayerSound = true -- Does it have a sound when it slows down the player?
+ENT.HasMeleeAttackPlayerSpeedSounds = true -- Does it have a sound when it slows down the player?
 ENT.HasRangeAttackSounds = true -- Can it play range attack sounds? | Controls "self.SoundTbl_BeforeRangeAttack", "self.SoundTbl_RangeAttack"
 ENT.HasBeforeLeapAttackSounds = true -- Can it play leap attack before jump sounds?
 ENT.HasLeapAttackJumpSounds = true -- Can it play leap attack jump sounds?
 ENT.HasLeapAttackDamageSounds = true -- Can it play leap attack damage sounds?
 ENT.HasLeapAttackDamageMissSounds = true -- Can it play leap attack miss sounds?
-ENT.HasOnKilledEnemySounds = true -- Can it play sounds when it kills an enemy?
 ENT.HasAllyDeathSounds = true -- Can it play sounds when an ally dies?
 ENT.HasPainSounds = true -- Can it play pain sounds?
 ENT.HasImpactSounds = true -- Can it play impact sound effects?
 ENT.HasDamageByPlayerSounds = true -- Can it play sounds when it's damaged by a player?
 ENT.HasDeathSounds = true -- Can it play death sounds?
 	-- ====== Sound Paths ====== --
-	-- There are 2 types of sounds: "Speech" and "Effect" | Most sound tables are "Speech" unless stated
-		-- Speech : Mostly play speech sounds | Will stop when another speech sound is played
-		-- Effect : Mostly play sound effects | EX: Movement sound, impact sound, attack swipe sound, etc.
-ENT.SoundTbl_FootStep = false -- Effect
-ENT.SoundTbl_Breath = false -- Effect
+	-- There are 2 types of sounds: "SPEECH" and "EFFECT" | Most sound tables are "SPEECH" unless stated
+		-- SPEECH : Mostly play speech sounds | Will stop when another speech sound is played
+		-- EFFECT : Mostly play sound effects | EX: Movement sound, impact sound, attack swipe sound, etc.
+ENT.SoundTbl_FootStep = false -- EFFECT
+ENT.SoundTbl_Breath = false -- EFFECT
 ENT.SoundTbl_Idle = false
 ENT.SoundTbl_IdleDialogue = false
 ENT.SoundTbl_IdleDialogueAnswer = false
 ENT.SoundTbl_CombatIdle = false
-ENT.SoundTbl_OnReceiveOrder = false
+ENT.SoundTbl_ReceiveOrder = false
 ENT.SoundTbl_FollowPlayer = false
 ENT.SoundTbl_UnFollowPlayer = false
-ENT.SoundTbl_YieldToAlliedPlayer = false
+ENT.SoundTbl_YieldToPlayer = false
 ENT.SoundTbl_MedicBeforeHeal = false
-ENT.SoundTbl_MedicAfterHeal = false -- Effect
+ENT.SoundTbl_MedicOnHeal = "items/smallmedkit1.wav" -- EFFECT
 ENT.SoundTbl_MedicReceiveHeal = false
 ENT.SoundTbl_OnPlayerSight = false
 ENT.SoundTbl_Investigate = false
@@ -410,19 +410,19 @@ ENT.SoundTbl_CallForHelp = false
 ENT.SoundTbl_BecomeEnemyToPlayer = false
 ENT.SoundTbl_BeforeMeleeAttack = false
 ENT.SoundTbl_MeleeAttack = false
-ENT.SoundTbl_MeleeAttackExtra = "Zombie.AttackHit" -- Effect
-ENT.SoundTbl_MeleeAttackMiss = false -- Effect
-ENT.SoundTbl_MeleeAttackSlowPlayer = "vj_base/player/heartbeat_loop.wav"
+ENT.SoundTbl_MeleeAttackExtra = "Zombie.AttackHit" -- EFFECT
+ENT.SoundTbl_MeleeAttackMiss = false -- EFFECT
+ENT.SoundTbl_MeleeAttackPlayerSpeed = "vj_base/player/heartbeat_loop.wav"
 ENT.SoundTbl_BeforeRangeAttack = false
 ENT.SoundTbl_RangeAttack = false
 ENT.SoundTbl_BeforeLeapAttack = false
 ENT.SoundTbl_LeapAttackJump = false
-ENT.SoundTbl_LeapAttackDamage = false -- Effect
-ENT.SoundTbl_LeapAttackDamageMiss = false -- Effect
-ENT.SoundTbl_OnKilledEnemy = false
+ENT.SoundTbl_LeapAttackDamage = false -- EFFECT
+ENT.SoundTbl_LeapAttackDamageMiss = false -- EFFECT
+ENT.SoundTbl_KilledEnemy = false
 ENT.SoundTbl_AllyDeath = false
 ENT.SoundTbl_Pain = false
-ENT.SoundTbl_Impact = "VJ.Impact.Flesh_Alien" -- Effect
+ENT.SoundTbl_Impact = "VJ.Impact.Flesh_Alien" -- EFFECT
 ENT.SoundTbl_DamageByPlayer = false
 ENT.SoundTbl_Death = false
 ENT.SoundTbl_SoundTrack = false
@@ -431,11 +431,11 @@ ENT.SoundTbl_SoundTrack = false
 ENT.IdleSoundChance = 2
 ENT.IdleDialogueAnswerSoundChance = 1
 ENT.CombatIdleSoundChance = 1
-ENT.OnReceiveOrderSoundChance = 1
-ENT.FollowPlayerSoundChance = 1 -- Controls "self.SoundTbl_FollowPlayer" and "self.SoundTbl_UnFollowPlayer"
-ENT.YieldToAlliedPlayerSoundChance = 2
+ENT.ReceiveOrderSoundChance = 1
+ENT.FollowPlayerSoundChance = 1 -- Controls "self.SoundTbl_FollowPlayer", "self.SoundTbl_UnFollowPlayer"
+ENT.YieldToPlayerSoundChance = 2
 ENT.MedicBeforeHealSoundChance = 1
-ENT.MedicAfterHealSoundChance = 1
+ENT.MedicOnHealSoundChance = 1
 ENT.MedicReceiveHealSoundChance = 1
 ENT.OnPlayerSightSoundChance = 1
 ENT.InvestigateSoundChance = 1
@@ -453,7 +453,7 @@ ENT.BeforeLeapAttackSoundChance = 1
 ENT.LeapAttackJumpSoundChance = 1
 ENT.LeapAttackDamageSoundChance = 1
 ENT.LeapAttackDamageMissSoundChance = 1
-ENT.OnKilledEnemySoundChance = 1
+ENT.KilledEnemySoundChance = 1
 ENT.AllyDeathSoundChance = 4
 ENT.PainSoundChance = 1
 ENT.ImpactSoundChance = 1
@@ -468,7 +468,7 @@ ENT.NextSoundTime_Idle = VJ.SET(4, 11)
 ENT.NextSoundTime_Investigate = VJ.SET(5, 5)
 ENT.NextSoundTime_LostEnemy = VJ.SET(5, 6)
 ENT.NextSoundTime_Alert = VJ.SET(2, 3)
-ENT.NextSoundTime_OnKilledEnemy = VJ.SET(3, 5)
+ENT.NextSoundTime_KilledEnemy = VJ.SET(3, 5)
 ENT.NextSoundTime_AllyDeath = VJ.SET(3, 5)
 	-- ====== Sound Level ====== --
 	-- The proper number are usually range from 0 to 180, though it can go as high as 511
@@ -476,13 +476,13 @@ ENT.NextSoundTime_AllyDeath = VJ.SET(3, 5)
 ENT.FootstepSoundLevel = 70
 ENT.BreathSoundLevel = 60
 ENT.IdleSoundLevel = 75
-ENT.IdleDialogueSoundLevel = 75 -- Controls "self.SoundTbl_IdleDialogue" and "self.SoundTbl_IdleDialogueAnswer"
+ENT.IdleDialogueSoundLevel = 75 -- Controls "self.SoundTbl_IdleDialogue", "self.SoundTbl_IdleDialogueAnswer"
 ENT.CombatIdleSoundLevel = 80
-ENT.OnReceiveOrderSoundLevel = 80
-ENT.FollowPlayerSoundLevel = 75 -- Controls "self.SoundTbl_FollowPlayer" and "self.SoundTbl_UnFollowPlayer"
-ENT.YieldToAlliedPlayerSoundLevel = 75
-ENT.BeforeHealSoundLevel = 75
-ENT.AfterHealSoundLevel = 75
+ENT.ReceiveOrderSoundLevel = 80
+ENT.FollowPlayerSoundLevel = 75 -- Controls "self.SoundTbl_FollowPlayer", "self.SoundTbl_UnFollowPlayer"
+ENT.YieldToPlayerSoundLevel = 75
+ENT.MedicBeforeHealSoundLevel = 75
+ENT.MedicOnHealSoundLevel = 75
 ENT.MedicReceiveHealSoundLevel = 75
 ENT.OnPlayerSightSoundLevel = 75
 ENT.InvestigateSoundLevel = 80
@@ -494,14 +494,14 @@ ENT.BeforeMeleeAttackSoundLevel = 75
 ENT.MeleeAttackSoundLevel = 75
 ENT.ExtraMeleeAttackSoundLevel = 75
 ENT.MeleeAttackMissSoundLevel = 75
-ENT.MeleeAttackSlowPlayerSoundLevel = 100
+ENT.MeleeAttackPlayerSpeedSoundLevel = 100
 ENT.BeforeRangeAttackSoundLevel = 75
 ENT.RangeAttackSoundLevel = 75
 ENT.BeforeLeapAttackSoundLevel = 75
 ENT.LeapAttackJumpSoundLevel = 75
 ENT.LeapAttackDamageSoundLevel = 75
 ENT.LeapAttackDamageMissSoundLevel = 75
-ENT.OnKilledEnemySoundLevel = 80
+ENT.KilledEnemySoundLevel = 80
 ENT.AllyDeathSoundLevel = 80
 ENT.PainSoundLevel = 80
 ENT.ImpactSoundLevel = 60
@@ -515,13 +515,13 @@ ENT.MainSoundPitchStatic = true -- Should it decide a number on spawn and use it
 ENT.FootstepSoundPitch = VJ.SET(80, 100)
 ENT.BreathSoundPitch = 100
 ENT.IdleSoundPitch = false
-ENT.IdleDialogueSoundPitch = false -- Controls "self.SoundTbl_IdleDialogue" and "self.SoundTbl_IdleDialogueAnswer"
+ENT.IdleDialogueSoundPitch = false -- Controls "self.SoundTbl_IdleDialogue", "self.SoundTbl_IdleDialogueAnswer"
 ENT.CombatIdleSoundPitch = false
-ENT.OnReceiveOrderSoundPitch = false
-ENT.FollowPlayerPitch = false -- Controls "self.SoundTbl_FollowPlayer" and "self.SoundTbl_UnFollowPlayer"
-ENT.YieldToAlliedPlayerSoundPitch = false
-ENT.BeforeHealSoundPitch = false
-ENT.AfterHealSoundPitch = 100
+ENT.ReceiveOrderSoundPitch = false
+ENT.FollowPlayerPitch = false -- Controls "self.SoundTbl_FollowPlayer", "self.SoundTbl_UnFollowPlayer"
+ENT.YieldToPlayerSoundPitch = false
+ENT.MedicBeforeHealSoundPitch = false
+ENT.MedicOnHealSoundPitch = 100
 ENT.MedicReceiveHealSoundPitch = false
 ENT.OnPlayerSightSoundPitch = false
 ENT.InvestigateSoundPitch = false
@@ -539,7 +539,7 @@ ENT.BeforeLeapAttackSoundPitch = false
 ENT.LeapAttackJumpSoundPitch = false
 ENT.LeapAttackDamageSoundPitch = false
 ENT.LeapAttackDamageMissSoundPitch = false
-ENT.OnKilledEnemySoundPitch = false
+ENT.KilledEnemySoundPitch = false
 ENT.AllyDeathSoundPitch = false
 ENT.PainSoundPitch = false
 ENT.ImpactSoundPitch = VJ.SET(80, 100)
@@ -993,7 +993,7 @@ local function InitConvars(self)
 	if vj_npc_snd_breath:GetInt() == 0 then self.HasBreathSound = false end
 	if vj_npc_snd_alert:GetInt() == 0 then self.HasAlertSounds = false end
 	if vj_npc_snd_melee:GetInt() == 0 then self.HasMeleeAttackSounds = false self.HasExtraMeleeAttackSounds = false self.HasMeleeAttackMissSounds = false end
-	if vj_npc_snd_plyslow:GetInt() == 0 then self.HasMeleeAttackSlowPlayerSound = false end
+	if vj_npc_snd_plyslow:GetInt() == 0 then self.HasMeleeAttackPlayerSpeedSounds = false end
 	if vj_npc_snd_range:GetInt() == 0 then self.HasRangeAttackSounds = false end
 	if vj_npc_snd_leap:GetInt() == 0 then self.HasBeforeLeapAttackSounds = false self.HasLeapAttackJumpSounds = false self.HasLeapAttackDamageSounds = false self.HasLeapAttackDamageMissSounds = false end
 	if vj_npc_snd_pain:GetInt() == 0 then self.HasPainSounds = false end
@@ -1004,7 +1004,7 @@ local function InitConvars(self)
 	if vj_npc_snd_plysight:GetInt() == 0 then self.HasOnPlayerSightSounds = false end
 	if vj_npc_snd_medic:GetInt() == 0 then self.HasMedicSounds = false end
 	if vj_npc_snd_callhelp:GetInt() == 0 then self.HasCallForHelpSounds = false end
-	if vj_npc_snd_receiveorder:GetInt() == 0 then self.HasOnReceiveOrderSounds = false end
+	if vj_npc_snd_receiveorder:GetInt() == 0 then self.HasReceiveOrderSounds = false end
 	if vj_npc_creature_opendoor:GetInt() == 0 then self.CanOpenDoors = false end
 	local propAPType = vj_npc_melee_propint:GetInt()
 	if propAPType != 1 then
@@ -1073,8 +1073,8 @@ local function ApplyBackwardsCompatibility(self)
 	if self.HasFootStepSound then self.HasFootstepSounds = self.HasFootStepSound end
 	if self.FootStepPitch then self.FootstepSoundPitch = self.FootStepPitch end
 	if self.FootStepSoundLevel then self.FootstepSoundLevel = self.FootStepSoundLevel end
-	if self.FootStepTimeWalk then self.FootstepTimerWalk = self.FootStepTimeWalk end
-	if self.FootStepTimeRun then self.FootstepTimerRun = self.FootStepTimeRun end
+	if self.FootStepTimeWalk then self.FootstepSoundTimerWalk = self.FootStepTimeWalk end
+	if self.FootStepTimeRun then self.FootstepSoundTimerRun = self.FootStepTimeRun end
 	if self.HitGroupFlinching_Values then self.FlinchHitGroupMap = self.HitGroupFlinching_Values end
 	if self.HitGroupFlinching_DefaultWhenNotHit != nil then self.FlinchHitGroupPlayDefault = self.HitGroupFlinching_DefaultWhenNotHit end
 	if self.NextFlinchTime != nil then self.FlinchCooldown = self.NextFlinchTime end
@@ -1082,11 +1082,33 @@ local function ApplyBackwardsCompatibility(self)
 	if self.CallForHelpAnimationFaceEnemy != nil then self.CallForHelpAnimFaceEnemy = self.CallForHelpAnimationFaceEnemy end
 	if self.NextCallForHelpAnimationTime != nil then self.CallForHelpAnimCooldown = self.NextCallForHelpAnimationTime end
 	if self.InvestigateSoundDistance != nil then self.InvestigateSoundMultiplier = self.InvestigateSoundDistance end
+	if self.SoundTbl_OnKilledEnemy != nil then self.SoundTbl_KilledEnemy = self.SoundTbl_OnKilledEnemy end
+	if self.HasOnKilledEnemySounds != nil then self.HasKilledEnemySounds = self.HasOnKilledEnemySounds end
+	if self.OnKilledEnemySoundChance then self.OnKilledEnemySoundChance = self.OnKilledEnemySoundChance end
+	if self.NextSoundTime_OnKilledEnemy then self.NextSoundTime_KilledEnemy = self.NextSoundTime_OnKilledEnemy end
+	if self.OnKilledEnemySoundLevel then self.KilledEnemySoundLevel = self.OnKilledEnemySoundLevel end
+	if self.OnKilledEnemySoundPitch != nil then self.KilledEnemySoundPitch = self.OnKilledEnemySoundPitch end
+	if self.IdleSounds_PlayOnAttacks != nil then self.IdleSoundsWhileAttacking = self.IdleSounds_PlayOnAttacks end
+	if self.IdleSounds_NoRegularIdleOnAlerted != nil then self.IdleSoundsRegWhileAlert = self.IdleSounds_NoRegularIdleOnAlerted end
+	if self.HasOnReceiveOrderSounds != nil then self.HasReceiveOrderSounds = self.HasOnReceiveOrderSounds end
+	if self.SoundTbl_OnReceiveOrder != nil then self.SoundTbl_ReceiveOrder = self.SoundTbl_OnReceiveOrder end
+	if self.OnReceiveOrderSoundChance != nil then self.ReceiveOrderSoundChance = self.OnReceiveOrderSoundChance end
+	if self.OnReceiveOrderSoundLevel != nil then self.ReceiveOrderSoundLevel = self.OnReceiveOrderSoundLevel end
+	if self.OnReceiveOrderSoundPitch != nil then self.ReceiveOrderSoundPitch = self.OnReceiveOrderSoundPitch end
+	if self.SoundTbl_MedicAfterHeal != nil then self.SoundTbl_MedicOnHeal = self.SoundTbl_MedicAfterHeal end
+	if self.MedicAfterHealSoundChance != nil then self.MedicOnHealSoundChance = self.MedicAfterHealSoundChance end
+	if self.BeforeHealSoundLevel != nil then self.MedicBeforeHealSoundLevel = self.BeforeHealSoundLevel end
+	if self.AfterHealSoundLevel != nil then self.MedicOnHealSoundLevel = self.AfterHealSoundLevel end
+	if self.BeforeHealSoundPitch != nil then self.MedicBeforeHealSoundPitch = self.BeforeHealSoundPitch end
+	if self.AfterHealSoundPitch != nil then self.MedicOnHealSoundPitch = self.AfterHealSoundPitch end
 	if self.Immune_Physics then self:SetPhysicsDamageScale(0) end
 	if self.SlowPlayerOnMeleeAttack then self.MeleeAttackPlayerSpeed = true end
 	if self.SlowPlayerOnMeleeAttack_WalkSpeed then self.MeleeAttackPlayerSpeedWalk = self.SlowPlayerOnMeleeAttack_WalkSpeed end
 	if self.SlowPlayerOnMeleeAttack_RunSpeed then self.MeleeAttackPlayerSpeedRun = self.SlowPlayerOnMeleeAttack_RunSpeed end
 	if self.SlowPlayerOnMeleeAttackTime then self.MeleeAttackPlayerSpeedTime = self.SlowPlayerOnMeleeAttackTime end
+	if self.HasMeleeAttackSlowPlayerSound != nil then self.HasMeleeAttackPlayerSpeedSounds = self.HasMeleeAttackSlowPlayerSound end
+	if self.SoundTbl_MeleeAttackSlowPlayer != nil then self.SoundTbl_MeleeAttackPlayerSpeed = self.SoundTbl_MeleeAttackSlowPlayer end
+	if self.MeleeAttackSlowPlayerSoundLevel != nil then self.MeleeAttackPlayerSpeedSoundLevel = self.MeleeAttackSlowPlayerSoundLevel end
 	if self.StopMeleeAttackAfterFirstHit != nil then self.MeleeAttackStopOnHit = self.StopMeleeAttackAfterFirstHit end
 	if self.StopLeapAttackAfterFirstHit != nil then self.LeapAttackStopOnHit = self.StopLeapAttackAfterFirstHit end
 	if self.NextLeapAttackTime_DoRand then self.NextLeapAttackTime = VJ.SET(self.NextLeapAttackTime, self.NextLeapAttackTime_DoRand) end
@@ -1148,7 +1170,7 @@ local function ApplyBackwardsCompatibility(self)
 		end
 	end
 	if self.AlertedToIdleTime then self.AlertTimeout = self.AlertedToIdleTime end
-	if self.SoundTbl_MoveOutOfPlayersWay then self.SoundTbl_YieldToAlliedPlayer = self.SoundTbl_MoveOutOfPlayersWay end
+	if self.SoundTbl_MoveOutOfPlayersWay then self.SoundTbl_YieldToPlayer = self.SoundTbl_MoveOutOfPlayersWay end
 	if self.MaxJumpLegalDistance then self.JumpParams.MaxRise = self.MaxJumpLegalDistance.a; self.JumpParams.MaxDrop = self.MaxJumpLegalDistance.b end
 	if self.VJ_IsHugeMonster then self.VJ_ID_Boss = self.VJ_IsHugeMonster end
 	if self.Medic_HealthAmount then self.Medic_HealAmount = self.Medic_HealthAmount end
@@ -1163,9 +1185,9 @@ local function ApplyBackwardsCompatibility(self)
 	if self.ItemDropsOnDeathChance != nil then self.DeathLootChance = self.ItemDropsOnDeathChance end
 	if self.ItemDropsOnDeath_EntityList != nil then self.DeathLoot = self.ItemDropsOnDeath_EntityList end
 	if self.AllowMovementJumping != nil then self.JumpParams.Enabled = self.AllowMovementJumping end
-	if self.OnlyDoKillEnemyWhenClear != nil then self.OnKilledEnemy_OnlyLast = self.OnlyDoKillEnemyWhenClear end
-	if self.DisableFootStepOnWalk then self.FootstepTimerWalk = false end
-	if self.DisableFootStepOnRun then self.FootstepTimerRun = false end
+	if self.OnlyDoKillEnemyWhenClear != nil then self.KilledEnemySoundLast = self.OnlyDoKillEnemyWhenClear end
+	if self.DisableFootStepOnWalk then self.FootstepSoundTimerWalk = false end
+	if self.DisableFootStepOnRun then self.FootstepSoundTimerRun = false end
 	if self.FindEnemy_UseSphere then self.SightAngle = 360 end
 	if self.IsMedicSNPC then self.IsMedic = self.IsMedicSNPC end
 	if self.BecomeEnemyToPlayer == true then self.BecomeEnemyToPlayer = self.BecomeEnemyToPlayerLevel or 2 end
@@ -1195,7 +1217,7 @@ local function ApplyBackwardsCompatibility(self)
 	end
 	if self.CustomOnDoKilledEnemy then
 		self.OnKilledEnemy = function(_, ent, inflictor, wasLast)
-			if (self.OnKilledEnemy_OnlyLast == false) or (self.OnKilledEnemy_OnlyLast == true && wasLast) then
+			if (self.KilledEnemySoundLast == false) or (self.KilledEnemySoundLast == true && wasLast) then
 				self:CustomOnDoKilledEnemy(ent, self, inflictor)
 			end
 		end
@@ -1712,7 +1734,7 @@ function ENT:Think()
 				if moveType == VJ_MOVETYPE_AQUATIC && self:WaterLevel() <= 2 then
 					self:AA_IdleWander()
 				end
-				if self.AA_CurrentMoveAnimation != -1 then
+				if self.AA_CurrentMoveAnim != -1 then
 					self:AA_MoveAnimation()
 				end
 			-- Not moving, reset its move time!
@@ -2382,7 +2404,7 @@ function ENT:ExecuteMeleeAttack(isPropAttack)
 				ent:ViewPunch(Angle(math.random(-1, 1) * self.MeleeAttackDamage, math.random(-1, 1) * self.MeleeAttackDamage, math.random(-1, 1) * self.MeleeAttackDamage))
 				-- Slow Player
 				if self.MeleeAttackPlayerSpeed then
-					self:VJ_DoSlowPlayer(ent, self.MeleeAttackPlayerSpeedWalk, self.MeleeAttackPlayerSpeedRun, self.MeleeAttackPlayerSpeedTime, {PlaySound=self.HasMeleeAttackSlowPlayerSound, SoundTable=self.SoundTbl_MeleeAttackSlowPlayer, SoundLevel=self.MeleeAttackSlowPlayerSoundLevel, FadeOutTime=self.MeleeAttackSlowPlayerSoundFadeOutTime})
+					self:DoMeleeAttackPlayerSpeed(ent, self.MeleeAttackPlayerSpeedWalk, self.MeleeAttackPlayerSpeedRun, self.MeleeAttackPlayerSpeedTime, {PlaySound = self.HasMeleeAttackPlayerSpeedSounds, SoundTable = self.SoundTbl_MeleeAttackPlayerSpeed, SoundLevel = self.MeleeAttackPlayerSpeedSoundLevel, FadeOutTime = 1})
 				end
 			end
 			if !isProp then -- Only for non-props...
@@ -2402,53 +2424,51 @@ function ENT:ExecuteMeleeAttack(isPropAttack)
 		self.AttackState = VJ.ATTACK_STATE_EXECUTED_HIT
 	else
 		self:CustomOnMeleeAttack_Miss()
-		self:PlaySoundSystem("MeleeAttackMiss", nil, VJ.EmitSound)
+		self:PlaySoundSystem("MeleeAttackMiss")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_DoSlowPlayer(ent, WalkSpeed, RunSpeed, SlowTime, sdData, ExtraFeatures, customFunc)
-	WalkSpeed = WalkSpeed or 50
-	RunSpeed = RunSpeed or 50
-	SlowTime = SlowTime or 5
+function ENT:DoMeleeAttackPlayerSpeed(ent, walkSpeed, runSpeed, speedTime, sdData, extraOptions, customFunc)
+	speedTime = speedTime or 5
 	sdData = sdData or {}
 		local vSD_PlaySound = sdData.PlaySound or false -- Should it play a sound?
 		local vSD_SoundTable = sdData.SoundTable or {} -- Sounds it should play (Picks randomly)
 		local vSD_SoundLevel = sdData.SoundLevel or 100 -- How loud should the sound play?
 		local vSD_FadeOutTime = sdData.FadeOutTime or 1 -- How long until it the sound fully fades out?
-	ExtraFeatures = ExtraFeatures or {}
-		local vEF_NoInterrupt = ExtraFeatures.NoInterrupt or false -- If set to true, the player's speed won't change by another instance of this code
+	extraOptions = extraOptions or {}
+		local vEF_NoInterrupt = extraOptions.NoInterrupt or false -- If set to true, the player's speed won't change by another instance of this code
 	local walkspeed_before = ent:GetWalkSpeed()
 	local runspeed_before = ent:GetRunSpeed()
-	if ent.VJ_HasAlreadyBeenSlowedDown && ent.VJ_HasAlreadyBeenSlowedDown_NoInterrupt then return end
-	if (!ent.VJ_HasAlreadyBeenSlowedDown) then
-		ent.VJ_HasAlreadyBeenSlowedDown = true
-		if vEF_NoInterrupt then ent.VJ_HasAlreadyBeenSlowedDown_NoInterrupt = true end
+	if ent.VJ_SpeedModified && ent.VJ_SpeedModified_NoInterrupt then return end
+	if (!ent.VJ_SpeedModified) then
+		ent.VJ_SpeedModified = true
+		if vEF_NoInterrupt then ent.VJ_SpeedModified_NoInterrupt = true end
 		ent.VJ_SlowDownPlayerWalkSpeed = walkspeed_before
 		ent.VJ_SlowDownPlayerRunSpeed = runspeed_before
 	end
-	ent:SetWalkSpeed(WalkSpeed)
-	ent:SetRunSpeed(RunSpeed)
+	ent:SetWalkSpeed(walkSpeed or 50)
+	ent:SetRunSpeed(runSpeed or 50)
 	if (customFunc) then customFunc() end
 	if self.HasSounds && vSD_PlaySound then
-		self.CurrentSlowPlayerSound = CreateSound(ent, PICK(vSD_SoundTable))
-		self.CurrentSlowPlayerSound:Play()
-		self.CurrentSlowPlayerSound:SetSoundLevel(vSD_SoundLevel)
-		if !ent:Alive() && self.CurrentSlowPlayerSound then self.CurrentSlowPlayerSound:FadeOut(vSD_FadeOutTime) end
+		self.CurrentMeleeAttackPlayerSpeedSound = CreateSound(ent, PICK(vSD_SoundTable))
+		self.CurrentMeleeAttackPlayerSpeedSound:Play()
+		self.CurrentMeleeAttackPlayerSpeedSound:SetSoundLevel(vSD_SoundLevel)
+		if !ent:Alive() && self.CurrentMeleeAttackPlayerSpeedSound then self.CurrentMeleeAttackPlayerSpeedSound:FadeOut(vSD_FadeOutTime) end
 	end
-	local slowplysd = self.CurrentSlowPlayerSound
-	local slowplysd_fade = vSD_FadeOutTime
-	local timername = "timer_melee_slowply"..ent:EntIndex()
+	local pickedSD = self.CurrentMeleeAttackPlayerSpeedSound
+	local sdFadeTime = vSD_FadeOutTime
+	local timerName = "timer_melee_slowply"..ent:EntIndex()
 	
-	if timer.Exists(timername) && timer.TimeLeft(timername) > SlowTime then
+	if timer.Exists(timerName) && timer.TimeLeft(timerName) > speedTime then
 		return
 	end
-	timer.Create(timername, SlowTime, 1, function()
+	timer.Create(timerName, speedTime, 1, function()
 		ent:SetWalkSpeed(ent.VJ_SlowDownPlayerWalkSpeed)
 		ent:SetRunSpeed(ent.VJ_SlowDownPlayerRunSpeed)
-		ent.VJ_HasAlreadyBeenSlowedDown = false
-		ent.VJ_HasAlreadyBeenSlowedDown_NoInterrupt = false
-		if slowplysd then slowplysd:FadeOut(slowplysd_fade) end
-		if !IsValid(ent) then timer.Remove(timername) end
+		ent.VJ_SpeedModified = false
+		ent.VJ_SpeedModified_NoInterrupt = false
+		if pickedSD then pickedSD:FadeOut(sdFadeTime) end
+		if !IsValid(ent) then timer.Remove(timerName) end
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2528,11 +2548,11 @@ function ENT:ExecuteLeapAttack()
 		end
 	end
 	if hitRegistered then
-		self:PlaySoundSystem("LeapAttackDamage", nil, VJ.EmitSound)
+		self:PlaySoundSystem("LeapAttackDamage")
 		self.AttackState = VJ.ATTACK_STATE_EXECUTED_HIT
 	else
 		self:CustomOnLeapAttack_Miss()
-		self:PlaySoundSystem("LeapAttackDamageMiss", nil, VJ.EmitSound)
+		self:PlaySoundSystem("LeapAttackDamageMiss")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2625,7 +2645,7 @@ function ENT:SelectSchedule()
 	
 	-- Handle move away behavior
 	if hasCond(self, COND_PLAYER_PUSHING) && curTime > self.TakingCoverT && !self:IsBusy("Activities") then
-		self:PlaySoundSystem("YieldToAlliedPlayer")
+		self:PlaySoundSystem("YieldToPlayer")
 		if eneValid then -- Face current enemy
 			schedule_player_move.TurnData.Type = VJ.FACE_ENEMY_VISIBLE
 			schedule_player_move.TurnData.Target = nil
@@ -2684,7 +2704,7 @@ function ENT:SelectSchedule()
 					//sched:EngTask("TASK_FACE_SAVEPOSITION", 0)
 					//self:StartSchedule(sched)
 					self:OnInvestigate(sdOwner)
-					self:PlaySoundSystem("InvestigateSound")
+					self:PlaySoundSystem("Investigate")
 					self.TakingCoverT = curTime + 1
 				end
 			end
@@ -2814,7 +2834,7 @@ function ENT:OnTakeDamage(dmginfo)
 			-- Spawn the blood particle only if it's not caused by the default fire entity [Causes the damage position to be at Vector(0, 0, 0)]
 			if self.HasBloodParticle && !isFireEnt then self:SpawnBloodParticles(dmginfo, hitgroup) end
 			if self.HasBloodDecal then self:SpawnBloodDecals(dmginfo, hitgroup) end
-			self:PlaySoundSystem("Impact", nil, VJ.EmitSound)
+			self:PlaySoundSystem("Impact")
 		end
 	end
 	if self.Dead then DoBleed() return 0 end -- If dead then just bleed but take no damage

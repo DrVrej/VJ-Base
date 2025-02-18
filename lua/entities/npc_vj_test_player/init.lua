@@ -28,8 +28,8 @@ ENT.AnimTbl_CallForHelp = {"vjges_gesture_signal_group", "vjges_gesture_signal_f
 ENT.AnimTbl_DamageAllyResponse = "vjges_gesture_signal_halt"
 ENT.Weapon_OcclusionDelay = false
 
-ENT.FootstepTimerRun = 0.3
-ENT.FootstepTimerWalk = 0.5
+ENT.FootstepSoundTimerRun = 0.3
+ENT.FootstepSoundTimerWalk = 0.5
 
 ENT.CanFlinch = true
 ENT.FlinchCooldown = 1

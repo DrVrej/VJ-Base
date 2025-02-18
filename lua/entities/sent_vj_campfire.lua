@@ -10,8 +10,7 @@ ENT.Type 			= "anim"
 ENT.PrintName 		= "Campfire"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Purpose 		= "Gives a warm feeling, especially in snowy maps."
-ENT.Instructions 	= "Don't change anything."
+ENT.Information 	= "Gives a warm feeling, especially in cold maps."
 ENT.Category		= "VJ Base"
 
 ENT.Spawnable = true

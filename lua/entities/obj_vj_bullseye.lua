@@ -10,8 +10,7 @@ ENT.Type 			= "ai"
 ENT.PrintName 		= "Bullseye"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Purpose 		= "Target for VJ Base NPCs"
-ENT.Instructions 	= "Don't change anything."
+ENT.Information 	= "Target for VJ NPCs."
 ENT.Category		= "VJ Base"
 
 ENT.Spawnable 		= false

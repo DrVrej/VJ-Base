@@ -3,16 +3,14 @@ ENT.Type 			= "ai"
 ENT.PrintName 		= "VJ Base Creature"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Purpose 		= "To make SNPCs."
-ENT.Instructions 	= "Don't change anything."
 ENT.Category		= "VJ Base"
 
 ENT.Spawnable = false
 ENT.AdminSpawnable = false
 ENT.AutomaticFrameAdvance = false
 
-ENT.IsVJBaseSNPC = true -- Is it a VJ Base SNPC?
-ENT.IsVJBaseSNPC_Creature = true -- Is it a VJ Base creature?
+ENT.IsVJBaseSNPC = true
+ENT.IsVJBaseSNPC_Creature = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetAutomaticFrameAdvance(val)
 	self.AutomaticFrameAdvance = val

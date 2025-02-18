@@ -10,7 +10,7 @@ ENT.Base 			= "base_anim"
 ENT.PrintName		= "Flare Round"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Information		= "Projectile, usually used for NPCs & Weapons"
+ENT.Information 	= "Flare that will burn for 1 minute.\nIgnites anything it touches."
 ENT.Category		= "VJ Base"
 
 ENT.Spawnable = true

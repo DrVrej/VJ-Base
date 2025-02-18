@@ -10,8 +10,7 @@ ENT.Type 			= "anim"
 ENT.PrintName 		= "Admin Health Kit"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Purpose 		= "Gives a lot of health when taken."
-ENT.Instructions 	= "Don't change anything."
+ENT.Information 	= "Gives players 1000000 health when picked up."
 ENT.Category		= "VJ Base"
 
 ENT.Spawnable = true

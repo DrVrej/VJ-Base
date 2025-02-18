@@ -6,15 +6,15 @@
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- AERIAL & AQUATIC BASE --
 // MOVETYPE_FLY | MOVETYPE_FLYGRAVITY
-ENT.AA_CurrentMoveAnimation = false -- false = No animation set | -1 = Don't play an animation
-ENT.AA_NextMovementAnimTime = 0
-ENT.AA_CurrentMoveAnimationType = "Calm" -- "Calm" | "Alert"
+ENT.AA_NextMoveAnimTime = 0
+ENT.AA_CurrentMoveAnim = false -- false = No animation set | -1 = Don't play an animation
+ENT.AA_CurrentMoveAnimType = "Calm" -- "Calm" | "Alert"
 ENT.AA_CurrentMoveMaxSpeed = 0
 ENT.AA_CurrentMoveTime = 0
 ENT.AA_CurrentMoveType = 0 -- 0 = Undefined | 1 = Wander | 2 = Regular Move-to | 3 = Chase Enemy Move-to
 ENT.AA_CurrentMovePos = nil
 ENT.AA_CurrentMovePosDir = nil
-ENT.AA_CurrentMoveDist = -1 -- Used to make sure we are making progress, in case something blocks its path
+ENT.AA_CurrentMoveDist = -1 -- Used to make sure we are making progress in case something blocks its path
 ENT.AA_LastChasePos = nil
 ENT.AA_DoingLastChasePos = false
 
@@ -242,12 +242,12 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	
 	-- Animations
 	if playAnim != false then
-		if self.AA_CurrentMoveAnimationType != moveType then
-			self.AA_CurrentMoveAnimation = false
-			self.AA_CurrentMoveAnimationType = moveType
+		if self.AA_CurrentMoveAnimType != moveType then
+			self.AA_CurrentMoveAnim = false
+			self.AA_CurrentMoveAnimType = moveType
 		end
 	else
-		self.AA_CurrentMoveAnimation = -1
+		self.AA_CurrentMoveAnim = -1
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -337,12 +337,12 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 	
 	-- Animations
 	if playAnim != false then
-		if self.AA_CurrentMoveAnimationType != moveType then
-			self.AA_CurrentMoveAnimation = false
-			self.AA_CurrentMoveAnimationType = moveType
+		if self.AA_CurrentMoveAnimType != moveType then
+			self.AA_CurrentMoveAnim = false
+			self.AA_CurrentMoveAnimType = moveType
 		end
 	else
-		self.AA_CurrentMoveAnimation = -1
+		self.AA_CurrentMoveAnim = -1
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -364,19 +364,19 @@ local badACTs = {[ACT_WALK] = true, [ACT_WALK_AIM] = true, [ACT_RUN] = true, [AC
 --
 function ENT:AA_MoveAnimation()
 	-- NOTE: Unique condition used for directional flying animations in TranslateActivity:
-		--  if "self.AA_CurrentMoveAnimation" is current sequence AND current activity is not a sequence AND translated activity does not equal current sequence's activity
+		--  if "self.AA_CurrentMoveAnim" is current sequence AND current activity is not a sequence AND translated activity does not equal current sequence's activity
 	local curSeq = self:GetSequence()
 	local curACT = self:GetActivity()
-	if ((CurTime() > self.AA_NextMovementAnimTime) or (curSeq != self.AA_CurrentMoveAnimation or (curACT != ACT_DO_NOT_DISTURB && self:GetSequenceActivity(curSeq) != self:TranslateActivity(curACT)))) && !self:IsBusy("Activities") then
+	if ((CurTime() > self.AA_NextMoveAnimTime) or (curSeq != self.AA_CurrentMoveAnim or (curACT != ACT_DO_NOT_DISTURB && self:GetSequenceActivity(curSeq) != self:TranslateActivity(curACT)))) && !self:IsBusy("Activities") then
 		local chosenAnim = false
-		if self.AA_CurrentMoveAnimationType == "Calm" then
+		if self.AA_CurrentMoveAnimType == "Calm" then
 			chosenAnim = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Calm) or self.Aerial_AnimTbl_Calm
-		elseif self.AA_CurrentMoveAnimationType == "Alert" then
+		elseif self.AA_CurrentMoveAnimType == "Alert" then
 			chosenAnim = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Alerted) or self.Aerial_AnimTbl_Alerted
 		end
 		chosenAnim = VJ.PICK(chosenAnim)
 		local _, animDur = self:PlayAnim(chosenAnim, false, 0, false, 0, {AlwaysUseSequence = badACTs[chosenAnim] or false})
-		self.AA_CurrentMoveAnimation = self:GetActivity() == ACT_DO_NOT_DISTURB and self:GetSequence() or self:GetIdealSequence() -- In case we played a non-sequence
-		self.AA_NextMovementAnimTime = CurTime() + animDur -- animDur will always be accurate
+		self.AA_CurrentMoveAnim = self:GetActivity() == ACT_DO_NOT_DISTURB and self:GetSequence() or self:GetIdealSequence() -- In case we played a non-sequence
+		self.AA_NextMoveAnimTime = CurTime() + animDur -- animDur will always be accurate
 	end
 end

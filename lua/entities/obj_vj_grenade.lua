@@ -10,7 +10,7 @@ ENT.Base 			= "obj_vj_projectile_base"
 ENT.PrintName		= "Grenade"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Information		= "Projectile, usually used for NPCs & Weapons"
+ENT.Information 	= "Default VJ grenade, will explode after 3 seconds."
 ENT.Category		= "VJ Base"
 
 ENT.Spawnable = true

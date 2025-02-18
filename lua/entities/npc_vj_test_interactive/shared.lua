@@ -3,8 +3,6 @@ ENT.Type 			= "ai"
 ENT.PrintName 		= "Interactive NPC"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Purpose 		= "Just a testing NPC."
-ENT.Instructions 	= "Don't change anything."
 ENT.Category		= "VJ Base"
 
 ENT.VJ_ID_Civilian = true

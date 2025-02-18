@@ -10,8 +10,7 @@ ENT.Type 			= "anim"
 ENT.PrintName 		= "Player Spawnpoint"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Purpose 		= "Sets the spawnpoint for all the players in the map!"
-ENT.Instructions 	= "Don't change anything."
+ENT.Information 	= "Sets an spawn point for all the players.\nPress USE to toggle it."
 ENT.Category		= "VJ Base"
 
 ENT.Spawnable = true
@@ -25,7 +24,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.Active = true -- Is this spawnpoint active?
+ENT.Active = true -- Is this spawn point active?
 
 local colorGreen = Color(0, 255, 0)
 local colorRed = Color(255, 0, 0)
@@ -39,7 +38,7 @@ function ENT:Initialize()
 	self:SetUseType(SIMPLE_USE)
 
 	local phys = self:GetPhysicsObject()
-	if phys and IsValid(phys) then
+	if phys && IsValid(phys) then
 		phys:Wake()
 	end
 

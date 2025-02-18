@@ -1,10 +1,10 @@
-SWEP.Base 						= "weapon_vj_base"
-SWEP.PrintName					= "NPC Controller"
-SWEP.Author 					= "DrVrej"
-SWEP.Contact					= "http://steamcommunity.com/groups/vrejgaming"
-SWEP.Purpose					= "This weapon is made to control NPCs. Mostly VJ SNPCs"
-SWEP.Instructions				= "Press Fire to control the NPC you are looking at."
-SWEP.Category					= "VJ Base"
+SWEP.Base = "weapon_vj_base"
+SWEP.PrintName = "NPC Controller"
+SWEP.Author = "DrVrej"
+SWEP.Contact = "http://steamcommunity.com/groups/vrejgaming"
+SWEP.Purpose = "Made to control VJ NPCs."
+SWEP.Instructions = "Press PRIMARY FIRE to control the NPC you are looking at."
+SWEP.Category = "VJ Base"
 	-- Client Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	SWEP.Slot = 5 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 6) 
