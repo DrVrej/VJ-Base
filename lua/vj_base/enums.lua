@@ -98,6 +98,7 @@ VJ.MEM_OVERRIDE_PRIORITY			= "override_priority" -- Override the disposition pri
 VJ.MEM_HOSTILITY_LEVEL				= "hostility" -- Use to keep track of the hostility level towards a friendly entity | number
 VJ.MEM_CACHE_CLASSES				= "cache_classes" -- Cached "self.VJ_NPC_Class" | table | WARNING: Avoid editing, used internally
 VJ.MEM_CACHE_DISPOSITION			= "cache_disposition" -- Cached disposition, used alongside VJ.MEM_CACHE_CLASSES | D_* enums | WARNING: Avoid editing, used internally
+VJ.MEM_CACHE_ENT_TYPE				= "cache_ent_type" -- Cached value that holds the type of entity it is | 0 = Other, 1 = NPC, 2 = Player, 3 = NextBot
 
 -- Animation type
 VJ.ANIM_TYPE_NONE					= false -- No type detected including fail cases and resets | DEFAULT

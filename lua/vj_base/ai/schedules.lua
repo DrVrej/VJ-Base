@@ -5,57 +5,58 @@ require("vj_ai_schedule")
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SCHEDULE_FACE(faceType, customFunc)
+function ENT:SCHEDULE_FACE(faceTask, customFunc)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
 	if self.MovementType == VJ_MOVETYPE_STATIONARY && !self.CanTurnWhileStationary then return end
 	local schedule = vj_ai_schedule.New("SCHEDULE_FACE")
-	schedule:EngTask(faceType or "TASK_FACE_TARGET", 0)
+	schedule:EngTask(faceTask or "TASK_FACE_TARGET", 0)
 	if (customFunc) then customFunc(schedule) end
 	self:StartSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SCHEDULE_GOTO_POSITION(moveType, customFunc)
-	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-		self:AA_MoveTo(self:GetLastPosition(), true, (moveType == "TASK_RUN_PATH" and "Alert") or "Calm")
+function ENT:SCHEDULE_GOTO_POSITION(moveTask, customFunc)
+	local moveType = self.MovementType
+	if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then
+		self:AA_MoveTo(self:GetLastPosition(), true, (moveTask == "TASK_RUN_PATH" and "Alert") or "Calm")
 		return
 	end
 	local schedule = vj_ai_schedule.New("SCHEDULE_GOTO_POSITION")
 	//schedule:EngTask("TASK_SET_TOLERANCE_DISTANCE", 48) -- Will cause the NPC not move at all in many cases!
 	//schedule:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 3)
 	schedule:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-	schedule:EngTask(moveType or "TASK_RUN_PATH", 0)
+	schedule:EngTask(moveTask or "TASK_RUN_PATH", 0)
 	schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	if (customFunc) then customFunc(schedule) end
 	self:StartSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SCHEDULE_GOTO_TARGET(moveType, customFunc)
-	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-		self:AA_MoveTo(self:GetTarget(), true, (moveType == "TASK_RUN_PATH" and "Alert") or "Calm")
+function ENT:SCHEDULE_GOTO_TARGET(moveTask, customFunc)
+	local moveType = self.MovementType
+	if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then
+		self:AA_MoveTo(self:GetTarget(), true, (moveTask == "TASK_RUN_PATH" and "Alert") or "Calm")
 		return
 	end
 	local schedule = vj_ai_schedule.New("SCHEDULE_GOTO_TARGET")
 	schedule:EngTask("TASK_GET_PATH_TO_TARGET", 0)
-	schedule:EngTask(moveType or "TASK_RUN_PATH", 0)
+	schedule:EngTask(moveTask or "TASK_RUN_PATH", 0)
 	schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	schedule:EngTask("TASK_FACE_TARGET", 1)
 	if (customFunc) then customFunc(schedule) end
 	self:StartSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SCHEDULE_COVER_ENEMY(moveType, customFunc)
-	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
-	moveType = moveType or "TASK_RUN_PATH"
+function ENT:SCHEDULE_COVER_ENEMY(moveTask, customFunc)
+	local moveType = self.MovementType; if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	local schedule = vj_ai_schedule.New("SCHEDULE_COVER_ENEMY")
 	schedule:EngTask("TASK_FIND_COVER_FROM_ORIGIN", 0)
-	schedule:EngTask(moveType or "TASK_RUN_PATH", 0)
+	schedule:EngTask(moveTask or "TASK_RUN_PATH", 0)
 	schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	schedule.RunCode_OnFail = function()
 		//VJ.DEBUG_Print(self, "SCHEDULE_COVER_ENEMY", "warn", "Failed to find cover!")
 		local schedFail = vj_ai_schedule.New("SCHEDULE_COVER_ENEMY_FAIL")
 		schedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
 		schedFail:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
-		schedFail:EngTask(moveType or "TASK_RUN_PATH", 0)
+		schedFail:EngTask(moveTask or "TASK_RUN_PATH", 0)
 		schedFail:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 		if (customFunc) then customFunc(schedFail) end
 		self:StartSchedule(schedFail)
@@ -64,18 +65,17 @@ function ENT:SCHEDULE_COVER_ENEMY(moveType, customFunc)
 	self:StartSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SCHEDULE_COVER_ORIGIN(moveType, customFunc)
-	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
-	moveType = moveType or "TASK_RUN_PATH"
+function ENT:SCHEDULE_COVER_ORIGIN(moveTask, customFunc)
+	local moveType = self.MovementType; if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	local schedule = vj_ai_schedule.New("SCHEDULE_COVER_ORIGIN")
 	schedule:EngTask("TASK_FIND_COVER_FROM_ORIGIN", 0)
-	schedule:EngTask(moveType or "TASK_RUN_PATH", 0)
+	schedule:EngTask(moveTask or "TASK_RUN_PATH", 0)
 	schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	schedule.RunCode_OnFail = function()
 		local schedFail = vj_ai_schedule.New("SCHEDULE_COVER_ORIGIN_FAIL")
 		schedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
 		schedFail:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
-		schedFail:EngTask(moveType or "TASK_RUN_PATH", 0)
+		schedFail:EngTask(moveTask or "TASK_RUN_PATH", 0)
 		schedFail:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 		if (customFunc) then customFunc(schedFail) end
 		self:StartSchedule(schedFail)
@@ -94,13 +94,14 @@ local schedule_wander = vj_ai_schedule.New("SCHEDULE_IDLE_WANDER")
 	schedule_wander.CanBeInterrupted = true
 --
 function ENT:SCHEDULE_IDLE_WANDER()
-	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
+	local moveType = self.MovementType; if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	self:StartSchedule(schedule_wander)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SCHEDULE_IDLE_STAND()
-	if self:IsMoving() or (self.NextIdleTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
-	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && (self.AA_CurrentMoveTime > CurTime() or self:IsBusy("Activities")) then return end // self:GetVelocity():Length() > 0
+	if self:IsMoving() or self.NextIdleTime > CurTime() then return end
+	local navType = self:GetNavType(); if navType == NAV_JUMP or navType == NAV_CLIMB then return end
+	local moveType = self.MovementType; if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) && (self.AA_CurrentMoveTime > CurTime() or self:IsBusy("Activities")) then return end // self:GetVelocity():Length() > 0
 	self:MaintainIdleAnimation(self:GetIdealActivity() != ACT_IDLE)
 	return true
 end
@@ -159,7 +160,7 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 	local isMoving = self:IsMoving()
 	
 	-- Apply walk frames to both activities and sequences
-	-- Parts of it replicate TASK_PLAY_SEQUENCE - https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc_schedule.cpp#L3312
+	-- Parts of it replicate TASK_PLAY_SEQUENCE - https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc_schedule.cpp#L3312
 	if !isMoving && self:GetSequenceMoveDist(self:GetSequence()) > 0 && !self:IsSequenceFinished() && ((self:GetSequence() == self:GetIdealSequence()) or (self:GetActivity() == ACT_DO_NOT_DISTURB)) && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then
 		self:AutoMovement(self:GetAnimTimeInterval())
 	end
@@ -266,12 +267,12 @@ function ENT:TranslateNavGoal(ent, goal)
 	//VJ.DEBUG_Print(self, "TranslateNavGoal", ent, goal)
 	//VJ.DEBUG_TempEnt(goal)
 	-- For "GOALTYPE_ENEMY" only
-		-- Called every 0.1 seconds from here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L5790
+		-- Called every 0.1 seconds from here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L5790
 		-- Use "GetPos", otherwise it will use "GetEnemyLastKnownPos", which is often incorrect location especially when sight is blocked!
 	if self:GetCurGoalType() == 2 then
-		//if self.LatestEnemyDistance < 500 then // 120 for "SetArrivalDistance"
+		//if self.EnemyData.Distance < 500 then // 120 for "SetArrivalDistance"
 			-- Disabled for now as it causes movement stuttering when near the enemy
-				-- Makes "GetGoalRepathTolerance" return 0 as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L5756
+				-- Makes "GetGoalRepathTolerance" return 0 as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L5756
 				-- Otherwise it will go to the enemy only if certain tolerance is passed!
 			//self:SetArrivalDistance((self:GetPos() - goal):Length())
 			//return ent:GetPos() + ent:GetVelocity() -- Causes NPCs to move backwards when the enemy is moving towards them head on

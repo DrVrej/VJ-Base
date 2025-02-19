@@ -92,7 +92,7 @@ end*/
 function ENT:OnGrenadeAttack(status, grenade, customEnt, landDir, landingPos)
 	if status == "Throw" then
 		if !IsValid(customEnt) then
-			-- Glow and trail are both based on the original: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/hl2/grenade_frag.cpp#L158
+			-- Glow and trail are both based on the original: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/hl2/grenade_frag.cpp#L158
 			local redGlow = ents.Create("env_sprite")
 			redGlow:SetKeyValue("model", "sprites/redglow1.vmt")
 			redGlow:SetKeyValue("scale", "0.2")

@@ -27,7 +27,7 @@ Nodegraph.NODE_TYPE_WATER = 5
 	
 	Based on the following:
 	- https://developer.valvesoftware.com/wiki/.ain
-	- https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_networkmanager.cpp#L475
+	- https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_networkmanager.cpp#L475
 -----------------------------------------------------------]]
 local z32768 = Vector(0, 0, 32768)
 local AINET_VERSION_NUMBER = 37

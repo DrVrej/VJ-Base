@@ -359,7 +359,7 @@ end
 --[[---------------------------------------------------------
 	Internal function, handles the movement animations
 -----------------------------------------------------------]]
--- Activities that should be played as sequences otherwise the engine will override it and set it back to idle | Issue: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L3050
+-- Activities that should be played as sequences otherwise the engine will override it and set it back to idle | Issue: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L3050
 local badACTs = {[ACT_WALK] = true, [ACT_WALK_AIM] = true, [ACT_RUN] = true, [ACT_RUN_AIM] = true}
 --
 function ENT:AA_MoveAnimation()

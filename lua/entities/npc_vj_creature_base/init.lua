@@ -548,8 +548,8 @@ ENT.DeathSoundPitch = false
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Use the functions below to customize parts of the base or add new systems without overridng major parts of the base
--- Some base functions don't have a extra function because you can simply override the base function and call "self.BaseClass.FuncName(self)" to run the base code as well
+-- Use the functions below to customize parts of the NPC or add new systems without overriding parts of the base
+-- Some base functions don't have a hook because you can simply override them | Call "self.BaseClass.FuncName(self)" or "baseclass.Get(baseName)" to run the base code as well
 --
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PreInit() end
@@ -1516,11 +1516,9 @@ local schedule_alert_chase = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE")
 --
 function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 	self:ClearCondition(COND_ENEMY_UNREACHABLE)
-	local moveType = self.MovementType
-	if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then self:AA_ChaseEnemy() return end
+	local moveType = self.MovementType; if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then self:AA_ChaseEnemy() return end
 	if self.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" then return end // && (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12)
-	local navType = self:GetNavType()
-	if navType == NAV_JUMP or navType == NAV_CLIMB then return end
+	local navType = self:GetNavType(); if navType == NAV_JUMP or navType == NAV_CLIMB then return end
 	if doLOSChase then
 		schedule_alert_chaseLOS.RunCode_OnFinish = function()
 			local ene = self:GetEnemy()
@@ -1544,7 +1542,8 @@ function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to alw
 	if !IsValid(ene) or self.TakingCoverT > curTime or (self.AttackAnimTime > curTime && moveType != VJ_MOVETYPE_AERIAL && moveType != VJ_MOVETYPE_AQUATIC) then return end
 	
 	-- Not melee attacking yet but it is in range, so don't chase the enemy!
-	if self.HasMeleeAttack && self.NearestPointToEnemyDistance < self.MeleeAttackDistance && self.EnemyData.IsVisible && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius))) then
+	local eneData = self.EnemyData
+	if self.HasMeleeAttack && eneData.DistanceNearest < self.MeleeAttackDistance && eneData.Visible && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius))) then
 		if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then
 			self:AA_StopMoving()
 		end
@@ -1585,7 +1584,7 @@ function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to alw
 	
 	-- Set the next chase time
 	if self.NextChaseTime > curTime then return end -- Don't set it if it's already set!
-	self.NextChaseTime = curTime + (((self.LatestEnemyDistance > 2000) and 1) or 0.1) -- If the enemy is far, increase the delay!
+	self.NextChaseTime = curTime + (((eneData.Distance > 2000) and 1) or 0.1) -- If the enemy is far, increase the delay!
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1985,9 +1984,9 @@ function ENT:Think()
 				-- Set latest enemy information
 				self:UpdateEnemyMemory(ene, enePos)
 				eneData.Reset = false
-				eneData.IsVisible = eneIsVisible
-				self.LatestEnemyDistance = eneDist
-				self.NearestPointToEnemyDistance = eneDistNear
+				eneData.Visible = eneIsVisible
+				eneData.Distance = eneDist
+				eneData.DistanceNearest = eneDistNear
 				if eneIsVisible && self:IsInViewCone(enePos) && (eneDist < self:GetMaxLookDistance()) then
 					eneData.LastVisibleTime = curTime
 					-- Why 2 vars? Because the last "Visible" tick is usually not updated in time, causing the engine to give false positive, thinking the enemy IS visible
@@ -2019,8 +2018,8 @@ function ENT:Think()
 				if limitChase && eneIsVisible && ((limitChase == true) or (limitChase == "OnlyRange" && self.HasRangeAttack)) then
 					local minDist = self.LimitChaseDistance_Min
 					local maxDist = self.LimitChaseDistance_Max
-					if maxDist == "UseRangeDistance" then maxDist = self.RangeAttackMaxDistance end
 					if minDist == "UseRangeDistance" then minDist = self.RangeAttackMinDistance end
+					if maxDist == "UseRangeDistance" then maxDist = self.RangeAttackMaxDistance end
 					if (eneDist < maxDist) && (eneDist > minDist) then
 						-- If the self.NextChaseTime is about to expire, then give it 0.5 delay so it does NOT chase!
 						if (self.NextChaseTime - curTime) < 0.1 then
@@ -2074,9 +2073,9 @@ function ENT:Think()
 							end
 							if atkType && self:CustomAttackCheck_MeleeAttack() == true then
 								local seed = curTime; self.AttackSeed = seed
+								self.IsAbleToMeleeAttack = false
 								self.AttackType = VJ.ATTACK_TYPE_MELEE
 								self.AttackState = VJ.ATTACK_STATE_STARTED
-								self.IsAbleToMeleeAttack = false
 								self.AttackAnim = ACT_INVALID
 								self.AttackAnimDuration = 0
 								self.AttackAnimTime = 0
@@ -2099,9 +2098,9 @@ function ENT:Think()
 										end
 									end
 								end
-								if self.TimeUntilMeleeAttackDamage == false then
+								if !self.TimeUntilMeleeAttackDamage then
 									finishAttack[VJ.ATTACK_TYPE_MELEE](self)
-								else -- If it's not event based...
+								else -- NOT event based...
 									timer.Create("attack_melee_start" .. self:EntIndex(), self.TimeUntilMeleeAttackDamage / self.AnimPlaybackRate, self.MeleeAttackReps, function() if self.AttackSeed == seed then self:ExecuteMeleeAttack(atkType == 2) end end)
 									if self.MeleeAttackExtraTimers then
 										for k, t in ipairs(self.MeleeAttackExtraTimers) do
@@ -2114,13 +2113,13 @@ function ENT:Think()
 						end
 
 						-- Range Attack
-						if self.HasRangeAttack && self.IsAbleToRangeAttack && eneIsVisible && !self.AttackType then
+						if eneIsVisible && self.HasRangeAttack && self.IsAbleToRangeAttack && !self.AttackType then
 							self:MultipleRangeAttacks()
 							if self:CustomAttackCheck_RangeAttack() == true && ((plyControlled && self.VJ_TheController:KeyDown(IN_ATTACK2)) or (!plyControlled && (eneDist < self.RangeAttackMaxDistance) && (eneDist > self.RangeAttackMinDistance) && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(self.RangeAttackAngleRadius))))) then
 								local seed = curTime; self.AttackSeed = seed
+								self.IsAbleToRangeAttack = false
 								self.AttackType = VJ.ATTACK_TYPE_RANGE
 								self.AttackState = VJ.ATTACK_STATE_STARTED
-								self.IsAbleToRangeAttack = false
 								self.AttackAnim = ACT_INVALID
 								self.AttackAnimDuration = 0
 								self.AttackAnimTime = 0
@@ -2135,9 +2134,9 @@ function ENT:Think()
 										self.AttackAnimTime = curTime + self.AttackAnimDuration
 									end
 								end
-								if self.TimeUntilRangeAttackProjectileRelease == false then
+								if !self.TimeUntilRangeAttackProjectileRelease then
 									finishAttack[VJ.ATTACK_TYPE_RANGE](self)
-								else -- If it's not event based...
+								else -- NOT event based...
 									timer.Create("attack_range_start" .. self:EntIndex(), self.TimeUntilRangeAttackProjectileRelease / self.AnimPlaybackRate, self.RangeAttackReps, function() if self.AttackSeed == seed then self:ExecuteRangeAttack() end end)
 									if self.RangeAttackExtraTimers then
 										for k, t in ipairs(self.RangeAttackExtraTimers) do
@@ -2150,15 +2149,14 @@ function ENT:Think()
 						end
 
 						-- Leap Attack
-						if self.HasLeapAttack && self.IsAbleToLeapAttack && eneIsVisible && !self.AttackType then
+						if eneIsVisible && self.HasLeapAttack && self.IsAbleToLeapAttack && !self.AttackType then
 							self:MultipleLeapAttacks()
 							if self:CustomAttackCheck_LeapAttack() == true && ((plyControlled && self.VJ_TheController:KeyDown(IN_JUMP)) or (!plyControlled && (self:IsOnGround() && eneDist < self.LeapAttackMaxDistance) && (eneDist > self.LeapAttackMinDistance) && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(self.LeapAttackAngleRadius))))) then
 								local seed = curTime; self.AttackSeed = seed
-								self.AttackType = VJ.ATTACK_TYPE_LEAP
-								self.AttackState = VJ.ATTACK_STATE_STARTED
 								self.IsAbleToLeapAttack = false
 								self.LeapAttackHasJumped = false
-								//self.JumpLegalLandingTime = 0
+								self.AttackType = VJ.ATTACK_TYPE_LEAP
+								self.AttackState = VJ.ATTACK_STATE_STARTED
 								self.AttackAnim = ACT_INVALID
 								self.AttackAnimDuration = 0
 								self.AttackAnimTime = 0
@@ -2173,9 +2171,9 @@ function ENT:Think()
 										self.AttackAnimTime = curTime + self.AttackAnimDuration
 									end
 								end
-								if self.TimeUntilLeapAttackDamage == false then
+								if !self.TimeUntilLeapAttackDamage then
 									finishAttack[VJ.ATTACK_TYPE_LEAP](self)
-								else -- If it's not event based...
+								else -- NOT event based...
 									timer.Create("attack_leap_start" .. self:EntIndex(), self.TimeUntilLeapAttackDamage / self.AnimPlaybackRate, self.LeapAttackReps, function() if self.AttackSeed == seed then self:ExecuteLeapAttack() end end)
 									if self.LeapAttackExtraTimers then
 										for k, t in ipairs(self.LeapAttackExtraTimers) do
@@ -2198,11 +2196,11 @@ function ENT:Think()
 					self:UpdatePoseParamTracking(true)
 					//self:ClearPoseParameters()
 				end
-				eneData.TimeSinceAcquired = 0
+				eneData.TimeAcquired = 0
 			end
 			
 			if moveTypeAA then
-				if eneValid && self.AttackAnimTime > curTime && self.NearestPointToEnemyDistance < self.MeleeAttackDistance then
+				if eneValid && self.AttackAnimTime > curTime && eneData.DistanceNearest < self.MeleeAttackDistance then
 					self:AA_StopMoving()
 				else
 					self:SelectSchedule()
@@ -2483,7 +2481,7 @@ function ENT:ExecuteRangeAttack()
 		self:PlaySoundSystem("RangeAttack")
 		-- Default projectile code
 		if !self.DisableDefaultRangeAttackCode then
-			local projectile = ents.Create(PICK(self.RangeAttackProjectiles))
+			local projectile = ents.Create(PICK(self.RangeAttackEntityToSpawn) or PICK(self.RangeAttackEntityToSpawn))
 			projectile:SetPos(self:RangeAttackProjPos(projectile))
 			projectile:SetAngles((ene:GetPos() - projectile:GetPos()):Angle())
 			self:CustomRangeAttackCode_BeforeProjectileSpawn(projectile)

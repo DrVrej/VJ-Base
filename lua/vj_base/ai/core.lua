@@ -55,6 +55,7 @@ local ANIM_TYPE_GESTURE = VJ.ANIM_TYPE_GESTURE
 local MEM_OVERRIDE_DISPOSITION = VJ.MEM_OVERRIDE_DISPOSITION
 local MEM_CACHE_CLASSES = VJ.MEM_CACHE_CLASSES
 local MEM_CACHE_DISPOSITION = VJ.MEM_CACHE_DISPOSITION
+local MEM_CACHE_ENT_TYPE = VJ.MEM_CACHE_ENT_TYPE
 
 local vj_npc_gib_collision = GetConVar("vj_npc_gib_collision")
 local vj_npc_gib_fade = GetConVar("vj_npc_gib_fade")
@@ -77,16 +78,16 @@ ENT.Medic_PropEnt = NULL
 ENT.Medic_NextHealT = 0
 ENT.IsFollowing = false
 ENT.FollowData = {Ent = NULL, MinDist = 0, Moving = false, StopAct = false, NextUpdateT = 0}
-ENT.LatestEnemyDistance = 0
-ENT.NearestPointToEnemyDistance = 0
 ENT.EnemyData = {
+	Distance = 0, -- Distance to the enemy
+	DistanceNearest = 0, -- Nearest position distance to the enemy
 	TimeSet = 0, -- Last time an enemy was set | Updated whenever "ForceSetEnemy" is ran successfully
-	TimeSinceAcquired = 0, -- Time since it acquired an enemy (Switching enemies does NOT reset this!)
-	IsVisible = false, -- Is the enemy visible? | Updated every "Think" run!
+	TimeAcquired = 0, -- Time since it acquired an enemy (Switching enemies does NOT reset this!)
+	Visible = false, -- Is the enemy visible? | Updated every "Think" run!
+	VisibleCount = 0, -- Number of visible enemies
 	LastVisibleTime = 0, -- Last time it saw the enemy
 	LastVisiblePos = Vector(0, 0, 0), -- Last visible position of the enemy, based on "EyePos", for origin call "self:GetEnemyLastSeenPos()"
 	LastVisiblePosReal = Vector(0, 0, 0), -- Last calculated visible position of the enemy, it's often wrong! | WARNING: Avoid using this, it's mostly used internally by the base!
-	VisibleCount = 0, -- Number of visible enemies
 	Reset = true, -- Enemy has reset | Mostly a backend variable
 }
 ENT.TurnData = {Type = VJ.FACE_NONE, Target = nil, StopOnFace = false, IsSchedule = false, LastYaw = 0}
@@ -467,7 +468,7 @@ end
 		- force = Forcibly apply the idle animation without checking if it's already playing ACT_IDLE
 -----------------------------------------------------------]]
 function ENT:MaintainIdleAnimation(force)
-	-- Animation cycle needs to be set to 0 to make sure engine does NOT attempt to switch sequence multiple times in this code: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
+	-- Animation cycle needs to be set to 0 to make sure engine does NOT attempt to switch sequence multiple times in this code: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L2987
 	-- "self:IsSequenceFinished()" should NOT be used as it's broken, it returns "true" even though the animation hasn't finished, especially for non-looped animations
 	//bit.band(self:GetSequenceInfo(self:GetSequence()).flags, 1) == 0 -- Checks if animation is none-looping
 	//print(self:GetIdealActivity(), self:GetActivity(), self:GetSequenceName(self:GetIdealSequence()), self:GetSequenceName(self:GetSequence()), self:IsSequenceFinished(), self:GetInternalVariable("m_bSequenceLoops"), self:GetCycle())
@@ -475,7 +476,7 @@ function ENT:MaintainIdleAnimation(force)
 		//VJ.DEBUG_Print(self, "MaintainIdleAnimation", "force")
 		self.LastAnimSeed = 0
 		self:ResetIdealActivity(ACT_IDLE)
-		self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
+		self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L2987
 		self:SetSaveValue("m_bSequenceLoops", false) -- Otherwise it will stutter and play an idle sequence at 999x playback speed for 0.001 second when changing from one idle to another!
 	elseif self:GetIdealActivity() == ACT_IDLE && self:GetActivity() == ACT_IDLE then -- Check both ideal and current to make sure we are 100% playing an idle, otherwise transitions, certain movements, and animations will break!
 		-- If animation has finished OR idle animation has changed then play a new idle!
@@ -483,7 +484,7 @@ function ENT:MaintainIdleAnimation(force)
 			//VJ.DEBUG_Print(self, "MaintainIdleAnimation", "auto")
 			self.LastAnimSeed = 0
 			self:ResetIdealActivity(ACT_IDLE)
-			self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
+			self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L2987
 			self:SetSaveValue("m_bSequenceLoops", false) -- Otherwise it will stutter and play an idle sequence at 999x playback speed for 0.001 second when changing from one idle to another!
 		else
 			self:SetSaveValue("m_bSequenceLoops", true) -- "m_bSequenceLoops" has to be true because non-looped animations tend to cut off near the end, usually after the cycle passes 0.8
@@ -811,7 +812,7 @@ end
 		- checkType = Type of busy check should it do | DEFAULT = false (all)
 			-- "Behaviors" = Behaviors only such as following a player or moving to heal an ally
 			-- "Activities" = Activities only such playing an animation that shouldn't be interrupted OR playing an attack animation!
-				--- NAV_JUMP & NAV_CLIMB is based on "IsInterruptable" from engine: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_navigator.h#L397
+				--- NAV_JUMP & NAV_CLIMB is based on "IsInterruptable" from engine: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_navigator.h#L397
 	Returns
 		- false, NPC is NOT busy
 		- true, NPC is Busy
@@ -1039,7 +1040,7 @@ function ENT:DeltaIdealYaw()
     return math_angDif(self:GetIdealYaw(), flCurrentYaw)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local function UTIL_VecToYaw(vec) -- Based on: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/shared/util_shared.cpp#L44
+local function UTIL_VecToYaw(vec) -- Based on: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/shared/util_shared.cpp#L44
 	if vec.y == 0 && vec.x == 0 then return 0 end
 	local yaw = math_deg(math_atan2(vec.y, vec.x))
 	return yaw < 0 and yaw + 360 or yaw;
@@ -1057,7 +1058,7 @@ function ENT:OverrideMoveFacing(flInterval, move)
 		self:UpdateYaw() -- Use "UpdateYaw" instead of "SetIdealYawAndUpdate" to avoid pose parameter glitches!
 		self:SetPoseParameter("move_yaw", math_angDif(UTIL_VecToYaw( move.dir ), self:GetLocalAngles().y))
 		-- Need to set the yaw pose parameter, otherwise when face moving, certain directions will look broken (such as Combine soldier facing forward while moving backwards)
-		-- Based on: "CAI_Motor::MoveFacing( const AILocalMoveGoal_t &move )" | Link: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_motor.cpp#L631
+		-- Based on: "CAI_Motor::MoveFacing( const AILocalMoveGoal_t &move )" | Link: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_motor.cpp#L631
 		didTurn = true
 		return true -- Disable engine move facing
 	end
@@ -1687,9 +1688,10 @@ function ENT:MaintainMedicBehavior()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainConstantlyFaceEnemy()
-	if self.LatestEnemyDistance < self.ConstantlyFaceEnemy_MinDistance then
+	local eneData = self.EnemyData
+	if eneData.Distance < self.ConstantlyFaceEnemy_MinDistance then
 		-- Handle "IfVisible" and "IfAttacking" cases
-		if (self.ConstantlyFaceEnemy_IfVisible && !self.EnemyData.IsVisible) or (!self.ConstantlyFaceEnemy_IfAttacking && self.AttackType) then return end
+		if (self.ConstantlyFaceEnemy_IfVisible && !eneData.Visible) or (!self.ConstantlyFaceEnemy_IfAttacking && self.AttackType) then return end
 		local postures = self.ConstantlyFaceEnemy_Postures
 		if (postures == "Both") or (postures == "Moving" && self:IsMoving()) or (postures == "Standing" && !self:IsMoving()) then
 			self:SetTurnTarget("Enemy")
@@ -1747,8 +1749,8 @@ function ENT:PlaySequence(animation)
 	//self.VJ_PlayingSequence = true -- No longer needed as it is handled by ACT_DO_NOT_DISTURB
 	self:SetActivity(ACT_DO_NOT_DISTURB) -- So `self:GetActivity()` will return the current result (alongside other immediate calls after `PlaySequence`)
 	self:SetIdealActivity(ACT_DO_NOT_DISTURB) -- Avoids the engine from progressing to an ideal activity that was set very recently | EX: Fixes melee attack anims breaking when called right after `self:SCHEDULE_IDLE_STAND()`
-		-- Keeps MaintainActivity from overriding sequences as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L6331
-		-- If `m_IdealActivity` is set to ACT_DO_NOT_DISTURB, the engine will understand it's a sequence and will avoid messing with it, described here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/shared/ai_activity.h#L215
+		-- Keeps MaintainActivity from overriding sequences as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L6331
+		-- If `m_IdealActivity` is set to ACT_DO_NOT_DISTURB, the engine will understand it's a sequence and will avoid messing with it, described here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/shared/ai_activity.h#L215
 	local seqID = isstring(animation) and self:LookupSequence(animation) or animation
 	self:ResetSequence(seqID)
 	self:ResetSequenceInfo()
@@ -1812,16 +1814,16 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoEnemyAlert(ent)
 	//VJ.DEBUG_Print(self, "DoEnemyAlert", ent, self:GetEnemy(), self.Alerted)
-	self.LatestEnemyDistance = self:GetPos():Distance(ent:GetPos())
+	local eneData = self.EnemyData
+	eneData.Distance = self:GetPos():Distance(ent:GetPos())
 	if self.Alerted == ALERT_STATE_ENEMY then return end
 	local curTime = CurTime()
-	local eneData = self.EnemyData
 	self.Alerted = ALERT_STATE_ENEMY
 	-- Fixes the NPC switching from combat to alert to combat after it sees an enemy because `DoEnemyAlert` is called after NPC_STATE_COMBAT is set
 	if self:GetNPCState() != NPC_STATE_COMBAT then
 		self:SetNPCState(NPC_STATE_ALERT)
 	end
-	eneData.TimeSinceAcquired = curTime
+	eneData.TimeAcquired = curTime
 	eneData.LastVisibleTime = curTime
 	self:OnAlert(ent)
 	if curTime > self.NextAlertSoundT then
@@ -1857,6 +1859,10 @@ function ENT:CheckRelationship(ent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local cosRad20 = math_cos(math_rad(20))
+local ENT_TYPE_OTHER = 0
+local ENT_TYPE_NPC = 1
+local ENT_TYPE_PLAYER = 2
+local ENT_TYPE_NEXTBOT = 3
 --
 -- Returns whether or not it found an enemy
 function ENT:MaintainRelationships()
@@ -1918,10 +1924,26 @@ function ENT:MaintainRelationships()
 				continue
 			end
 			local calculatedDisp = entMemory[MEM_OVERRIDE_DISPOSITION] or false
-			local entIsNPC = ent:IsNPC()
-			local entIsPLY = ent:IsPlayer()
+			local entType = entMemory[MEM_CACHE_ENT_TYPE]
 			
-			//if !entIsPLY then
+			-- Handle entity type caching
+			if !entType then
+				if ent:IsNPC() then
+					entType = ENT_TYPE_NPC
+					self:SetRelationshipMemory(ent, MEM_CACHE_ENT_TYPE, ENT_TYPE_NPC)
+				elseif ent:IsPlayer() then
+					entType = ENT_TYPE_PLAYER
+					self:SetRelationshipMemory(ent, MEM_CACHE_ENT_TYPE, ENT_TYPE_PLAYER)
+				elseif ent:IsNextBot() then
+					entType = ENT_TYPE_PLAYER
+					self:SetRelationshipMemory(ent, MEM_CACHE_ENT_TYPE, ENT_TYPE_NEXTBOT)
+				else -- Other
+					entType = 0
+					self:SetRelationshipMemory(ent, MEM_CACHE_ENT_TYPE, ENT_TYPE_OTHER)
+				end
+			end
+			
+			//if entType != ENT_TYPE_PLAYER then
 			//	print(ent:GetFOV())
 			//	ent:SetSaveValue("m_debugOverlays", bit.bor(0x00000001, 0x00000002, 0x00000004, 0x00000008, 0x00000010, 0x00000020, 0x00000040, 0x00000080, 0x00000100, 0x00000200, 0x00001000, 0x00002000, 0x00004000, 0x00008000, 0x00020000, 0x00040000, 0x00080000, 0x00100000, 0x00200000, 0x00400000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000))
 			//end
@@ -1936,7 +1958,7 @@ function ENT:MaintainRelationships()
 					for _, friClass in ipairs(myClasses) do
 						//if friClass == "CLASS_PLAYER_ALLY" && !self.PlayerFriendly then self.PlayerFriendly = true end -- If player ally then set the PlayerFriendly to true
 						if entClasses && VJ.HasValue(entClasses, friClass) then
-							if entIsPLY then
+							if entType == ENT_TYPE_PLAYER then
 								calculatedDisp = D_LI
 							else
 								-- Since we both have "CLASS_PLAYER_ALLY" then we need to do a special check if we both also have "self.AlliedWithPlayerAllies"
@@ -1953,7 +1975,7 @@ function ENT:MaintainRelationships()
 					end
 					
 					-- Handle "self.PlayerFriendly" AND "self.AlliedWithPlayerAllies" (As a backup in case the NPC doesn't have the "CLASS_PLAYER_ALLY" class)
-					//if !calculatedDisp && self.PlayerFriendly && (entIsPLY or (entIsNPC && myFriPlyAllies && ent.PlayerFriendly && ent.AlliedWithPlayerAllies)) then
+					//if !calculatedDisp && self.PlayerFriendly && (entType == ENT_TYPE_PLAYER or (entType == ENT_TYPE_NPC && myFriPlyAllies && ent.PlayerFriendly && ent.AlliedWithPlayerAllies)) then
 						//calculatedDisp = D_LI
 					//end
 					
@@ -2001,7 +2023,7 @@ function ENT:MaintainRelationships()
 				self:AddEntityRelationship(ent, D_LI, 0)
 				
 				-- Handle how non-VJ NPCs feel towards us
-				if entIsNPC && !ent.IsVJBaseSNPC then
+				if entType == ENT_TYPE_NPC && !ent.IsVJBaseSNPC then
 					-- This is here to make sure non VJ NPCs will respect how entities should feel towards this NPC in case it's overridden
 					if myHandlePerceived then
 						local result = myHandlePerceived(self, ent, distanceToEnt, true)
@@ -2016,9 +2038,9 @@ function ENT:MaintainRelationships()
 				end
 				
 				-- YieldToAlliedPlayers system, Based on:
-					-- "CNPC_PlayerCompanion::PredictPlayerPush"	--> https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/hl2/npc_playercompanion.cpp#L548
-					-- "CAI_BaseNPC::TestPlayerPushing"				--> https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L12676
-				if entIsPLY && self.YieldToAlliedPlayers && !self.IsGuard && ent:GetMoveType() != MOVETYPE_NOCLIP then // && !self:IsBusy("Activities")
+					-- "CNPC_PlayerCompanion::PredictPlayerPush"	--> https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/hl2/npc_playercompanion.cpp#L548
+					-- "CAI_BaseNPC::TestPlayerPushing"				--> https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L12676
+				if entType == ENT_TYPE_PLAYER && self.YieldToAlliedPlayers && !self.IsGuard && ent:GetMoveType() != MOVETYPE_NOCLIP then // && !self:IsBusy("Activities")
 					local plyVel = ent:GetInternalVariable("m_vecSmoothedVelocity")
 					if plyVel:LengthSqr() >= 19600 then -- 140 * 140 = 19600
 						local delta = self:WorldSpaceCenter() - (ent:WorldSpaceCenter() + plyVel * 0.4);
@@ -2037,7 +2059,7 @@ function ENT:MaintainRelationships()
 				end
 			else
 				-- Handle how non-VJ NPCs feel towards us
-				if entIsNPC && !ent.IsVJBaseSNPC then
+				if entType == ENT_TYPE_NPC && !ent.IsVJBaseSNPC then
 					-- This is here to make sure non VJ NPCs will respect how entities should feel towards this NPC in case it's overridden
 					if myHandlePerceived then
 						local result = myHandlePerceived(self, ent, distanceToEnt, false)
@@ -2062,7 +2084,7 @@ function ENT:MaintainRelationships()
 						self:AddEntityRelationship(ent, D_VJ_INTEREST, 0)
 						calculatedDisp = D_VJ_INTEREST
 					else
-						-- FindEnemy: In order - Can find enemy + Not neutral or alerted + Is visible + In sight cone
+						-- SetEnemy: In order - Can find enemy + Not neutral or alerted + Is visible + In sight cone
 						if self.EnemyDetection && (notIsNeutral or self.Alerted == ALERT_STATE_ENEMY) && (self.EnemyXRayDetection or self:Visible(ent)) && self:IsInViewCone(entPos) then
 							//print("MaintainRelationships 2 - set enemy")
 							eneVisCount = eneVisCount + 1
@@ -2108,8 +2130,7 @@ function ENT:MaintainRelationships()
 						self:OnInvestigate(ent)
 						self:PlaySoundSystem("Investigate")
 					-- Investigation: Player shining flashlight onto the NPC
-					elseif entIsPLY && distanceToEnt < 350 && ent:FlashlightIsOn() && (ent:GetForward():Dot((myPos - entPos):GetNormalized()) > cosRad20) then
-						//			   Asiga hos-er ^ (!ent:Crouching() && ent:GetVelocity():Length() > 0 && ent:GetMoveType() != MOVETYPE_NOCLIP && ((!ent:KeyDown(IN_WALK) && (ent:KeyDown(IN_FORWARD) or ent:KeyDown(IN_BACK) or ent:KeyDown(IN_MOVELEFT) or ent:KeyDown(IN_MOVERIGHT))) or (ent:KeyDown(IN_SPEED) or ent:KeyDown(IN_JUMP)))) or
+					elseif entType == ENT_TYPE_PLAYER && distanceToEnt < 350 && ent:FlashlightIsOn() && (ent:GetForward():Dot((myPos - entPos):GetNormalized()) > cosRad20) then
 						self:StopMoving()
 						self:SetTarget(ent)
 						self:SCHEDULE_FACE("TASK_FACE_TARGET")
@@ -2119,7 +2140,7 @@ function ENT:MaintainRelationships()
 			end
 			
 			-- HasOnPlayerSight system, used to do certain actions when it sees the player
-			if entIsPLY && self.HasOnPlayerSight && CurTime() > self.NextOnPlayerSightT && distanceToEnt < self.OnPlayerSightDistance && self:Visible(ent) && self:IsInViewCone(entPos) then
+			if entType == ENT_TYPE_PLAYER && self.HasOnPlayerSight && CurTime() > self.NextOnPlayerSightT && distanceToEnt < self.OnPlayerSightDistance && self:Visible(ent) && self:IsInViewCone(entPos) then
 				-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 				local disp = self.OnPlayerSightDispositionLevel
 				if (disp == 0) or (disp == 1 && (self:Disposition(ent) == D_LI or self:Disposition(ent) == D_NU)) or (disp == 2 && self:Disposition(ent) != D_LI) then
@@ -3235,6 +3256,8 @@ function ENT:FootStepSoundCode(customSD) self:PlayFootstepSound(customSD) end
 function ENT:MeleeAttackCode(isPropAttack) self:ExecuteMeleeAttack(isPropAttack) end
 function ENT:RangeAttackCode() self:ExecuteRangeAttack() end
 function ENT:LeapDamageCode() self:ExecuteLeapAttack() end
+ENT.LatestEnemyDistance = 0 -- Only here to avoid errors
+ENT.NearestPointToEnemyDistance = 0 -- Only here to avoid errors
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Checks all 4 sides around the NPC
@@ -3301,7 +3324,7 @@ function ENT:DoWeaponAttackMovementCode(override, moveType)
 	if (self.WeaponEntity.IsMeleeWeapon) then
 		self.DoingWeaponAttack = true
 	elseif self.Weapon_CanMoveFire == true then
-		if self.EnemyData.IsVisible && self:CanFireWeapon(true, false) == true && ((self:IsMoving() && (self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true)) or (override == true)) then
+		if self.EnemyData.Visible && self:CanFireWeapon(true, false) == true && ((self:IsMoving() && (self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true)) or (override == true)) then
 			if (override == true && moveType == 0) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 1) then
 				local anim = self:TranslateToWeaponAnim(PICK(self.AnimTbl_ShootWhileMovingRun))
 				if VJ.AnimExists(self,anim) == true then

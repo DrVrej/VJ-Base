@@ -164,7 +164,7 @@ function ENT:OnThinkActive()
 			local heightRatio = (enePos.z - myPos.z) / myPos:Distance(Vector(enePos.x, enePos.y, myPos.z))
 			self.Tank_ProperHeightShoot = math.abs(heightRatio) < 0.15 and true or false -- How high it can fire
 			-- If the enemy is within the barrel firing limit AND not already firing a shell AND its height is is reachable AND the enemy is not extremely close, then FIRE!
-			if math.abs(angDiffuse) < self.Tank_AngleDiffuseFiringLimit && self.Tank_ProperHeightShoot && self.LatestEnemyDistance > self.Tank_Shell_FireMin then
+			if math.abs(angDiffuse) < self.Tank_AngleDiffuseFiringLimit && self.Tank_ProperHeightShoot && self.EnemyData.Distance > self.Tank_Shell_FireMin then
 				self.Tank_FacingTarget = true
 				if self:Visible(ene) && vj_npc_range:GetInt() == 1 then
 					self:Tank_PrepareShell()
@@ -206,7 +206,8 @@ function ENT:SelectSchedule()
 			self.Tank_Status = 0
 		else
 			-- Between these 2 limits it can fire! --
-			if self.LatestEnemyDistance < self.Tank_Shell_FireMax && self.LatestEnemyDistance > self.Tank_Shell_FireMin then
+			local eneData = self.EnemyData
+			if eneData.Distance < self.Tank_Shell_FireMax && eneData.Distance > self.Tank_Shell_FireMin then
 				self.Tank_Status = 0
 			-- Out of range, can't fire!
 			else

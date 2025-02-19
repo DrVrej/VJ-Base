@@ -269,13 +269,14 @@ function ENT:OnThinkActive()
 			local ene = self:GetEnemy()
 			if IsValid(ene) then
 				local enePos = ene:GetPos()
+				local eneData = self.EnemyData
 				local angEne = (enePos - myPos + vec80z):Angle()
 				local angDiffuse = self:Tank_AngleDiffuse(angEne.y, self:GetAngles().y + self.Tank_AngleOffset)
 				local heightRatio = (enePos.z - myPos.z) / myPos:Distance(Vector(enePos.x, enePos.y, myPos.z))
 				-- If the enemy is very high up, then move away from it to help the gunner fire!
 				-- OR
 				-- If the enemy's height isn't very high AND the enemy is ( within run over distance OR far away), then move towards the enemy!
-				if (heightRatio > 0.15) or (heightRatio < 0.15 && ((self.LatestEnemyDistance < self.Tank_RanOverDistance) or (self.LatestEnemyDistance > self.Tank_DriveTowardsDistance))) then
+				if (heightRatio > 0.15) or (heightRatio < 0.15 && ((eneData.Distance < self.Tank_RanOverDistance) or (eneData.Distance > self.Tank_DriveTowardsDistance))) then
 					-- Turning
 					if angDiffuse > 15 then
 						self:SetLocalAngles(self:GetLocalAngles() + Angle(0, self.Tank_TurningSpeed, 0))
@@ -345,7 +346,8 @@ function ENT:SelectSchedule()
 				self.Tank_Status = 1
 			end
 		else
-			if (self.LatestEnemyDistance < self.Tank_DriveTowardsDistance && self.LatestEnemyDistance > self.Tank_DriveAwayDistance) or self.IsGuard then -- If between this two numbers, stay still
+			local eneData = self.EnemyData
+			if (eneData.Distance < self.Tank_DriveTowardsDistance && eneData.Distance > self.Tank_DriveAwayDistance) or self.IsGuard then -- If between this two numbers, stay still
 				self.Tank_Status = 1
 			else
 				self.Tank_Status = 0
