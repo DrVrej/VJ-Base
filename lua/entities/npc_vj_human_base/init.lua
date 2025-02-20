@@ -3303,8 +3303,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function math_angDif(diff)
     diff = diff % 360
-    if diff > 180 then return diff - 360 end
-    return diff
+    return diff > 180 and (diff - 360) or diff
 end
 --
 function ENT:UpdatePoseParamTracking(resetPoses)
@@ -3324,14 +3323,15 @@ function ENT:UpdatePoseParamTracking(resetPoses)
 		if self.PoseParameterLooking_InvertYaw then newYaw = -newYaw end
 		newRoll = math_angDif(eneAng.z - myAng.z)
 		if self.PoseParameterLooking_InvertRoll then newRoll = -newRoll end
-	elseif !self.PoseParameterLooking_CanReset then -- Should it reset its pose parameters if there is no enemies?
-		return
+	elseif !self.PoseParameterLooking_CanReset then
+		return -- Should it reset its pose parameters if there is no enemies?
 	end
 	
 	local funcCustom = self.OnUpdatePoseParamTracking; if funcCustom then funcCustom(self, newPitch, newYaw, newRoll) end
-	local namesPitch = self.PoseParameterLooking_Names.pitch
-	local namesYaw = self.PoseParameterLooking_Names.yaw
-	local namesRoll = self.PoseParameterLooking_Names.roll
+	local names = self.PoseParameterLooking_Names
+	local namesPitch = names.pitch
+	local namesYaw = names.yaw
+	local namesRoll = names.roll
 	local speed = self.PoseParameterLooking_TurningSpeed
 	local getPoseParameter = self.GetPoseParameter
 	local setPoseParameter = self.SetPoseParameter

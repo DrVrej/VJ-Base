@@ -2481,27 +2481,30 @@ function ENT:ExecuteRangeAttack()
 		self:PlaySoundSystem("RangeAttack")
 		-- Default projectile code
 		if !self.DisableDefaultRangeAttackCode then
-			local projectile = ents.Create(PICK(self.RangeAttackEntityToSpawn) or PICK(self.RangeAttackEntityToSpawn))
-			projectile:SetPos(self:RangeAttackProjPos(projectile))
-			projectile:SetAngles((ene:GetPos() - projectile:GetPos()):Angle())
-			self:CustomRangeAttackCode_BeforeProjectileSpawn(projectile)
-			projectile:SetOwner(self)
-			projectile:SetPhysicsAttacker(self)
-			projectile:Spawn()
-			projectile:Activate()
-			//constraint.NoCollide(self, projectile, 0, 0)
-			local phys = projectile:GetPhysicsObject()
-			if IsValid(phys) then
-				phys:Wake()
-				local vel = self:RangeAttackProjVel(projectile)
-				phys:SetVelocity(vel) //ApplyForceCenter
-				projectile:SetAngles(vel:GetNormal():Angle())
-			else
-				local vel = self:RangeAttackProjVel(projectile)
-				projectile:SetVelocity(vel)
-				projectile:SetAngles(vel:GetNormal():Angle())
+			local projectileClass = PICK(self.RangeAttackProjectiles) or PICK(self.RangeAttackEntityToSpawn)
+			if projectileClass then
+				local projectile = ents.Create(projectileClass)
+				projectile:SetPos(self:RangeAttackProjPos(projectile))
+				projectile:SetAngles((ene:GetPos() - projectile:GetPos()):Angle())
+				self:CustomRangeAttackCode_BeforeProjectileSpawn(projectile)
+				projectile:SetOwner(self)
+				projectile:SetPhysicsAttacker(self)
+				projectile:Spawn()
+				projectile:Activate()
+				//constraint.NoCollide(self, projectile, 0, 0)
+				local phys = projectile:GetPhysicsObject()
+				if IsValid(phys) then
+					phys:Wake()
+					local vel = self:RangeAttackProjVel(projectile)
+					phys:SetVelocity(vel) //ApplyForceCenter
+					projectile:SetAngles(vel:GetNormal():Angle())
+				else
+					local vel = self:RangeAttackProjVel(projectile)
+					projectile:SetVelocity(vel)
+					projectile:SetAngles(vel:GetNormal():Angle())
+				end
+				self:CustomRangeAttackCode_AfterProjectileSpawn(projectile)
 			end
-			self:CustomRangeAttackCode_AfterProjectileSpawn(projectile)
 		end
 	end
 	if self.AttackState < VJ.ATTACK_STATE_EXECUTED then
@@ -2580,8 +2583,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function math_angDif(diff)
     diff = diff % 360
-    if diff > 180 then return diff - 360 end
-    return diff
+    return diff > 180 and (diff - 360) or diff
 end
 --
 function ENT:UpdatePoseParamTracking(resetPoses)
@@ -2601,14 +2603,15 @@ function ENT:UpdatePoseParamTracking(resetPoses)
 		if self.PoseParameterLooking_InvertYaw then newYaw = -newYaw end
 		newRoll = math_angDif(eneAng.z - myAng.z)
 		if self.PoseParameterLooking_InvertRoll then newRoll = -newRoll end
-	elseif !self.PoseParameterLooking_CanReset then -- Should it reset its pose parameters if there is no enemies?
-		return
+	elseif !self.PoseParameterLooking_CanReset then
+		return -- Should it reset its pose parameters if there is no enemies?
 	end
 	
 	local funcCustom = self.OnUpdatePoseParamTracking; if funcCustom then funcCustom(self, newPitch, newYaw, newRoll) end
-	local namesPitch = self.PoseParameterLooking_Names.pitch
-	local namesYaw = self.PoseParameterLooking_Names.yaw
-	local namesRoll = self.PoseParameterLooking_Names.roll
+	local names = self.PoseParameterLooking_Names
+	local namesPitch = names.pitch
+	local namesYaw = names.yaw
+	local namesRoll = names.roll
 	local speed = self.PoseParameterLooking_TurningSpeed
 	local getPoseParameter = self.GetPoseParameter
 	local setPoseParameter = self.SetPoseParameter

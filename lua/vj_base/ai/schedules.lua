@@ -190,7 +190,7 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 		end
 		
 		self:DoSchedule(curSchedule)
-		if curSchedule.CanBeInterrupted or (self:IsScheduleFinished(curSchedule)) or (curSchedule.HasMovement && !self:IsMoving()) then
+		if curSchedule.CanBeInterrupted or self:IsScheduleFinished(curSchedule) or (curSchedule.HasMovement && !self:IsMoving()) then
 			self:SelectSchedule()
 		end
 	else
