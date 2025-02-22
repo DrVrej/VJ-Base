@@ -184,7 +184,7 @@ Called whenever the weapon's primary attack is attempted to fire
 
 =-=-=| PARAMETERS |=-=-=
 	1. status [string] : Type of update that is occurring, holds one of the following states:
-		-> "Initial" : Before the weapon fires its primary, this can be used to override the base code
+		-> "Init" : Before the weapon fires its primary, this can be used to override the base code
 				PARAMETERS
 					2. statusData [nil]
 				RETURNS
@@ -312,7 +312,7 @@ function SWEP:Initialize()
 	end
 	if self.CustomOnPrimaryAttack_BeforeShoot or self.CustomOnPrimaryAttack_AfterShoot or self.CustomOnPrimaryAttack_MeleeHit then
 		self.OnPrimaryAttack = function(_, status, statusData)
-			if status == "Initial" && self.CustomOnPrimaryAttack_BeforeShoot then
+			if status == "Init" && self.CustomOnPrimaryAttack_BeforeShoot then
 				return self:CustomOnPrimaryAttack_BeforeShoot()
 			elseif status == "PostFire" && self.CustomOnPrimaryAttack_AfterShoot then
 				self:CustomOnPrimaryAttack_AfterShoot()
@@ -645,7 +645,7 @@ function SWEP:PrimaryAttack(UseAlt)
 		return
 	end
 	if !self:CanPrimaryAttack() then return end
-	if self:OnPrimaryAttack("Initial") == true then return end
+	if self:OnPrimaryAttack("Init") == true then return end
 	
 	if isNPC && owner.IsVJBaseSNPC then
 		timer.Simple(self.NPC_ExtraFireSoundTime, function()

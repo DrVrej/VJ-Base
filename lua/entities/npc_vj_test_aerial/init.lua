@@ -43,7 +43,7 @@ end
 local defAng = Angle(0, 0, 0)
 --
 function ENT:OnDeath(dmginfo, hitgroup, status)
-	if status == "Initial" then
+	if status == "Init" then
 		local myPos = self:GetPos()
 		ParticleEffect("explosion_turret_break", myPos, defAng)
 		util.BlastDamage(self, self, myPos, 80, 20)

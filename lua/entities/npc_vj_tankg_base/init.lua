@@ -67,7 +67,7 @@ Called when the tank is firing its shell
 
 =-=-=| PARAMETERS |=-=-=
 	1. status [string] : Type of update that is occurring, holds one of the following states:
-		-> "Initial" : Before the shell is created, can be used to override the shell entity code
+		-> "Init" : Before the shell is created, can be used to override the shell entity code
 				USAGE EXAMPLES -> Create completely custom shell entity code
 				PARAMETERS
 					5. statusData [nil]
@@ -245,7 +245,7 @@ function ENT:Tank_FireShell()
 	if self:Visible(ene) then
 		self:Tank_PlaySoundSystem("ShellFire")
 		
-		if self:Tank_OnFireShell("Initial") != true then
+		if self:Tank_OnFireShell("Init") != true then
 			local spawnPos = self:LocalToWorld(self.Tank_Shell_SpawnPos)
 			local calculatedVel = (ene:GetPos() + ene:OBBCenter() - spawnPos):GetNormal()*self.Tank_Shell_VelocitySpeed
 			-- If not facing, then just shoot straight ahead

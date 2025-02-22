@@ -599,7 +599,7 @@ function ENT:OnFollow(status, ent) end
 --[[---------------------------------------------------------
 	Called every time a change occurs in the eating system
 		- ent = The entity that it is checking OR speaking with
-		- status = The change that occurred, possible changes:
+		- status = Type of update that is occurring, holds one of the following states:
 			- "CheckEnt"	= Possible friendly entity found, should we speak to it? | return anything other than true to skip and not speak to this entity!
 			- "Speak"		= Everything passed, start speaking
 			- "Answer"		= Another entity has spoken to me, answer back! | return anything other than true to not play an answer back dialogue!
@@ -670,8 +670,13 @@ function ENT:OnAlert(ent) end
 -- "isFirst" = Is this the first ally that received this call? Use this to avoid running certain multiple times when many allies are around!
 function ENT:OnCallForHelp(ally, isFirst) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
--- UNCOMMENT TO USE | Use this to create a completely new attack system!
--- function ENT:CustomAttack(ene, eneVisible) end
+--[[---------------------------------------------------------
+	UNCOMMENT TO USE | Called constantly on think as long as it can attack and has an enemy
+	This can be used to create a completely new attack system OR switch between multiple attacks (such as multiple melee attacks with varying distances)
+		1. isAttacking [boolean] : Whether or not the base has detected that performing an attacking
+		2. enemy [entity] : Current active enemy
+-----------------------------------------------------------]]
+function ENT:OnThinkAttack(isAttacking, enemy) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_BeforeStartTimer(seed) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -752,7 +757,7 @@ function ENT:OnAllyKilled(ent) end
 	1. dmginfo [object] = CTakeDamageInfo object
 	2. hitgroup [number] = The hitgroup that it hit
 	3. status [string] : Type of update that is occurring, holds one of the following states:
-		-> "Initial" : First call on take damage, even before immune checks
+		-> "Init" : First call on take damage, even before immune checks
 		-> "PreDamage" : Right before the damage is applied to the NPC
 		-> "PostDamage" : Right after the damage is applied to the NPC
 --]]
@@ -767,7 +772,7 @@ function ENT:OnBleed(dmginfo, hitgroup) end
 	1. dmginfo [object] = CTakeDamageInfo object
 	2. hitgroup [number] = The hitgroup that it hit
 	3. status [string] : Type of update that is occurring, holds one of the following states:
-		-> "PriorExecution" : Before the animation is played or any values are set
+		-> "Init" : Before the animation is played or any values are set
 				USAGE EXAMPLES -> Disallow flinch | Override the animation | Add a extra check
 				RETURNS
 					-> [nil | bool] : Return true to disallow the flinch from playing
@@ -811,7 +816,7 @@ function ENT:HandleGibOnDeath(dmginfo, hitgroup) return false end
 	1. dmginfo [object] = CTakeDamageInfo object
 	2. hitgroup [number] = The hitgroup that it hit
 	3. status [string] : Type of update that is occurring, holds one of the following states:
-		-> "Initial" : First call when it dies before anything is changed or reset
+		-> "Init" : First call when it dies before anything is changed or reset
 		-> "DeathAnim" : Right before the death animation plays
 		-> "Finish" : Right before the corpse is spawned, the active weapon is dropped and the NPC is removed
 --]]
@@ -1913,7 +1918,7 @@ local function ApplyBackwardsCompatibility(self)
 	end
 	if self.CustomOnTakeDamage_BeforeImmuneChecks or self.CustomOnTakeDamage_BeforeDamage or self.CustomOnTakeDamage_AfterDamage then
 		self.OnDamaged = function(_, dmginfo, hitgroup, status)
-			if status == "Initial" && self.CustomOnTakeDamage_BeforeImmuneChecks then
+			if status == "Init" && self.CustomOnTakeDamage_BeforeImmuneChecks then
 				self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo, hitgroup)
 			elseif status == "PreDamage" && self.CustomOnTakeDamage_BeforeDamage then
 				self:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup)
@@ -1924,7 +1929,7 @@ local function ApplyBackwardsCompatibility(self)
 	end
 	if self.CustomOnFlinch_BeforeFlinch or self.CustomOnFlinch_AfterFlinch then
 		self.OnFlinch = function(_, dmginfo, hitgroup, status)
-			if status == "PriorExecution" then
+			if status == "Init" then
 				if self.CustomOnFlinch_BeforeFlinch then
 					return !self:CustomOnFlinch_BeforeFlinch(dmginfo, hitgroup)
 				end
@@ -1937,7 +1942,7 @@ local function ApplyBackwardsCompatibility(self)
 	end
 	if self.CustomOnInitialKilled or self.CustomOnPriorToKilled or self.CustomDeathAnimationCode or self.CustomOnKilled or self.CustomOnDeath_BeforeCorpseSpawned then
 		self.OnDeath = function(_, dmginfo, hitgroup, status)
-			if status == "Initial" then
+			if status == "Init" then
 				if self.CustomOnInitialKilled then
 					self:CustomOnInitialKilled(dmginfo, hitgroup)
 				end
@@ -1971,6 +1976,11 @@ local function ApplyBackwardsCompatibility(self)
 	if self.CustomOnTouch then
 		self.OnTouch = function(_, ent)
 			self:CustomOnTouch(ent)
+		end
+	end
+	if self.CustomAttack then
+		self.OnThinkAttack = function(_, isAttacking, enemy)
+			if self.CustomAttack then self:CustomAttack(enemy, self.EnemyData.Visible) end
 		end
 	end
 	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -2388,7 +2398,7 @@ function ENT:GetWeaponState()
 	return self.WeaponState
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local finishAttack = {
+local attackTimers = {
 	[VJ.ATTACK_TYPE_MELEE] = function(self, skipStopAttacks)
 		if !skipStopAttacks then
 			timer.Create("attack_melee_reset" .. self:EntIndex(), self:GetAttackTimer(self.NextAnyAttackTime_Melee, self.TimeUntilMeleeAttackDamage, self.AttackAnimDuration), 1, function()
@@ -2758,12 +2768,11 @@ function ENT:Think()
 				
 				self:UpdatePoseParamTracking()
 				
-				if !self.PauseAttacks && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && curTime > self.NextDoAnyAttackT then
+				if !self.PauseAttacks && !self.Flinching && !self.FollowData.StopAct && curTime > self.NextDoAnyAttackT && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE then
 					-- Attack priority in order: Custom --> Melee --> Grenade
-					-- To avoid overlapping situations where 2 attacks can be called at once, check for "self.AttackType == VJ.ATTACK_TYPE_NONE"
-					local funcCustomAtk = self.CustomAttack; if funcCustomAtk then funcCustomAtk(self, ene, eneIsVisible) end
+					local funcThinkAtk = self.OnThinkAttack; if funcThinkAtk then funcThinkAtk(self, !!self.AttackType, ene) end
 					-- Melee Attack
-					if self.HasMeleeAttack && self.IsAbleToMeleeAttack && !self.Flinching && !self.FollowData.StopAct && !self.AttackType && (!IsValid(curWep) or (IsValid(curWep) && (!curWep.IsMeleeWeapon))) && ((plyControlled && self.VJ_TheController:KeyDown(IN_ATTACK)) or (!plyControlled && (eneDistNear < self.MeleeAttackDistance && eneIsVisible) && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
+					if self.HasMeleeAttack && self.IsAbleToMeleeAttack && !self.AttackType && (!IsValid(curWep) or (IsValid(curWep) && (!curWep.IsMeleeWeapon))) && ((plyControlled && self.VJ_TheController:KeyDown(IN_ATTACK)) or (!plyControlled && (eneDistNear < self.MeleeAttackDistance && eneIsVisible) && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
 						local seed = curTime; self.AttackSeed = seed
 						self.IsAbleToMeleeAttack = false
 						self.AttackType = VJ.ATTACK_TYPE_MELEE
@@ -2786,7 +2795,7 @@ function ENT:Think()
 							end
 						end
 						if !self.TimeUntilMeleeAttackDamage then
-							finishAttack[VJ.ATTACK_TYPE_MELEE](self)
+							attackTimers[VJ.ATTACK_TYPE_MELEE](self)
 						else -- NOT event based...
 							timer.Create("attack_melee_start" .. self:EntIndex(), self.TimeUntilMeleeAttackDamage / self.AnimPlaybackRate, self.MeleeAttackReps, function() if self.AttackSeed == seed then self:ExecuteMeleeAttack() end end)
 							if self.MeleeAttackExtraTimers then
@@ -2936,8 +2945,8 @@ function ENT:ExecuteMeleeAttack()
 	end
 	if self.AttackState < VJ.ATTACK_STATE_EXECUTED then
 		self.AttackState = VJ.ATTACK_STATE_EXECUTED
-		if self.TimeUntilMeleeAttackDamage != false then
-			finishAttack[VJ.ATTACK_TYPE_MELEE](self)
+		if self.TimeUntilMeleeAttackDamage then
+			attackTimers[VJ.ATTACK_TYPE_MELEE](self)
 		end
 	end
 	if hitRegistered then
@@ -3061,13 +3070,13 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 	self:PlaySoundSystem("GrenadeAttack")
 	
 	local releaseTime = self.GrenadeAttackThrowTime
-	if releaseTime == false then -- Call this right away for event-based attacks!
-		finishAttack[VJ.ATTACK_TYPE_GRENADE](self)
+	if !releaseTime then -- Call this right away for event-based attacks!
+		attackTimers[VJ.ATTACK_TYPE_GRENADE](self)
 	end
 	-- "attack_grenade_start" is still called on event-based attacks unlike other attacks because we need to retain the data (customEnt, disableOwner, landDir)...
 	-- ...But the timer will be based off of "attack_grenade_reset" to be used as a fail safe in case the animation is cut off!
 	-- Call "timer.Adjust("attack_grenade_start" .. self:EntIndex(), 0)" in the event code to make it throw the grenade
-	timer.Create("attack_grenade_start" .. self:EntIndex(), (releaseTime == false and timer.TimeLeft("attack_grenade_reset" .. self:EntIndex())) or releaseTime / self.AnimPlaybackRate, 1, function()
+	timer.Create("attack_grenade_start" .. self:EntIndex(), (!releaseTime and timer.TimeLeft("attack_grenade_reset" .. self:EntIndex())) or releaseTime / self.AnimPlaybackRate, 1, function()
 		if self.AttackSeed == seed then
 			if isLiveEnt && !IsValid(customEnt) then return end
 			self:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
@@ -3208,8 +3217,8 @@ function ENT:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
 	
 	if self.AttackState < VJ.ATTACK_STATE_EXECUTED then
 		self.AttackState = VJ.ATTACK_STATE_EXECUTED
-		if self.GrenadeAttackThrowTime != false then
-			finishAttack[VJ.ATTACK_TYPE_GRENADE](self)
+		if self.GrenadeAttackThrowTime then
+			attackTimers[VJ.ATTACK_TYPE_GRENADE](self)
 		end
 	end
 	return grenade
@@ -3291,7 +3300,7 @@ function ENT:StopAttacks(checkTimers)
 	if self.VJ_DEBUG && GetConVar("vj_npc_debug_attack"):GetInt() == 1 then VJ.DEBUG_Print(self, "StopAttacks", "Attack type = " .. self.AttackType) end
 	
 	if checkTimers && self.AttackType == VJ.ATTACK_TYPE_MELEE && self.AttackState < VJ.ATTACK_STATE_EXECUTED then
-		finishAttack[VJ.ATTACK_TYPE_MELEE](self, true)
+		attackTimers[VJ.ATTACK_TYPE_MELEE](self, true)
 	end
 	
 	self.AttackType = VJ.ATTACK_TYPE_NONE
@@ -3799,7 +3808,7 @@ function ENT:OnTakeDamage(dmginfo)
 	if dmgInflictor && dmgInflictor:GetClass() == "prop_ragdoll" && dmgInflictor:GetVelocity():Length() <= 100 then return 0 end
 	
 	local hitgroup = self:GetLastDamageHitGroup()
-	self:OnDamaged(dmginfo, hitgroup, "Initial")
+	self:OnDamaged(dmginfo, hitgroup, "Init")
 	if self.GodMode or dmginfo:GetDamage() <= 0 then return 0 end
 	
 	local dmgType = dmginfo:GetDamageType()
@@ -4042,7 +4051,7 @@ local vecZ4 = Vector(0, 0, 4)
 function ENT:BeginDeath(dmginfo, hitgroup)
 	self.Dead = true
 	self:SetSaveValue("m_lifeState", 1) -- LIFE_DYING
-	self:OnDeath(dmginfo, hitgroup, "Initial")
+	self:OnDeath(dmginfo, hitgroup, "Init")
 	if self.Medic_Status then self:ResetMedicBehavior() end
 	if self.IsFollowing then self:ResetFollowBehavior() end
 	local dmgInflictor = dmginfo:GetInflictor()

@@ -365,7 +365,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Called every time a change occurs in the eating system
-		- status = The change that occurred, possible changes:
+		- status = Type of update that is occurring, holds one of the following states:
 			- "CheckFood"		= Possible food found, check if it's good
 			- "StartBehavior"	= Food found, start the eating behavior
 			- "BeginEating"		= Food location reached
@@ -2324,7 +2324,7 @@ function ENT:Flinch(dmginfo, hitgroup)
 	-- DMG_FORCE_FLINCH: Skip secondary checks, flinch chance, and damage types!
 	local customDmgType = dmginfo:GetDamageCustom()
 	if customDmgType == VJ.DMG_FORCE_FLINCH or (customDmgType != VJ.DMG_BLEED && self.TakingCoverT < curTime && math.random(1, self.FlinchChance) == 1 && (flinchType == true or flinchType == 1 or ((flinchType == "DamageTypes" or flinchType == 2) && flinchDamageTypeCheck(self.FlinchDamageTypes, dmginfo:GetDamageType())))) then
-		if self:OnFlinch(dmginfo, hitgroup, "PriorExecution") then return end
+		if self:OnFlinch(dmginfo, hitgroup, "Init") then return end
 		
 		local function executeFlinch(hitgroupAnim)
 			self.Flinching = true

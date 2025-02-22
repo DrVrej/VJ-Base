@@ -45,7 +45,7 @@ SWEP.Reload_TimeUntilAmmoIsSet = 0.8
 SWEP.ReloadSound = "vj_base/weapons/reload_rpg.wav"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnPrimaryAttack(status, statusData)
-	if status == "Initial" then
+	if status == "Init" then
 		if CLIENT then return end
 		local owner = self:GetOwner()
 		local projectile = ents.Create("obj_vj_rocket")

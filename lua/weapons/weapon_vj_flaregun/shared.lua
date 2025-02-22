@@ -35,7 +35,7 @@ SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_SpawnShells = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnPrimaryAttack(status, statusData)
-	if status == "Initial" then
+	if status == "Init" then
 		if CLIENT then return end
 		local owner = self:GetOwner()
 		local projectile = ents.Create("obj_vj_flareround")

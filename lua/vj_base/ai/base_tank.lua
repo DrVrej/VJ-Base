@@ -27,7 +27,7 @@ function ENT:SCHEDULE_FACE(faceType, customFunc) return end -- Tanks can NOT tur
 function ENT:MaintainAlertBehavior(alwaysChase) return end -- Tanks can NOT chase!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnDamaged(dmginfo, hitgroup, status)
-	if status == "Initial" && dmginfo:IsDamageType(DMG_PHYSGUN) then
+	if status == "Init" && dmginfo:IsDamageType(DMG_PHYSGUN) then
 		dmginfo:SetDamage(0)
 	end
 end

@@ -617,7 +617,7 @@ function ENT:OnFollow(status, ent) end
 --[[---------------------------------------------------------
 	Called every time a change occurs in the eating system
 		- ent = The entity that it is checking OR speaking with
-		- status = The change that occurred, possible changes:
+		- status = Type of update that is occurring, holds one of the following states:
 			- "CheckEnt"	= Possible friendly entity found, should we speak to it? | return anything other than true to skip and not speak to this entity!
 			- "Speak"		= Everything passed, start speaking
 			- "Answer"		= Another entity has spoken to me, answer back! | return anything other than true to not play an answer back dialogue!
@@ -680,10 +680,13 @@ function ENT:OnAlert(ent) end
 -- "isFirst" = Is this the first ally that received this call? Use this to avoid running certain multiple times when many allies are around!
 function ENT:OnCallForHelp(ally, isFirst) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
--- UNCOMMENT TO USE | Use this to create a completely new attack system!
--- function ENT:CustomAttack(ene, eneVisible) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MultipleMeleeAttacks() end -- Performance heavy function, consider using "CustomOnMeleeAttack_BeforeStartTimer" whenever possible
+--[[---------------------------------------------------------
+	UNCOMMENT TO USE | Called constantly on think as long as it can attack and has an enemy
+	This can be used to create a completely new attack system OR switch between multiple attacks (such as multiple melee attacks with varying distances)
+		1. isAttacking [boolean] : Whether or not the base has detected that performing an attacking
+		2. enemy [entity] : Current active enemy
+-----------------------------------------------------------]]
+-- function ENT:OnThinkAttack(isAttacking, enemy) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomAttackCheck_MeleeAttack() return true end -- Not returning true will not let the melee attack code run!
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -704,8 +707,6 @@ function ENT:MeleeAttackKnockbackVelocity(hitEnt)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_Miss() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MultipleRangeAttacks() end -- Performance heavy function, consider using "CustomOnRangeAttack_BeforeStartTimer" whenever possible
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomAttackCheck_RangeAttack() return true end -- Not returning true will not let the range attack code run!
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -733,27 +734,52 @@ function ENT:RangeAttackProjVel(projectile)
 	return VJ.CalculateTrajectory(self, self:GetEnemy(), "Line", projectile:GetPos(), 1, 1500)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MultipleLeapAttacks() end -- Performance heavy function, consider using "CustomOnLeapAttack_BeforeStartTimer" whenever possible
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomAttackCheck_LeapAttack() return true end -- Not returning true will not let the leap attack code run!
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnLeapAttack_BeforeStartTimer(seed) end
+--[[
+Called when leap attack is triggered
+
+=-=-=| PARAMETERS |=-=-=
+	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "Init" : When the attack initially starts | Before sound, timers, and animations are set!
+			RETURNS
+				-> [nil]
+		-> "PostSetup" : After the sound, timers, and animations are set!
+			RETURNS
+				-> [nil]
+		-> "Jump" : When the leap velocity is about to apply
+			RETURNS
+				-> [nil | vector] : Return a vector to override the velocity
+	2. enemy [entity] : Enemy that caused the attack to trigger
+
+=-=-=| RETURNS |=-=-=
+	-> [nil | vector] : Depends on `status` value, refer to it for more details
+--]]
+function ENT:OnLeapAttack(status, enemy) end
+
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnLeapAttack_AfterStartTimer(seed) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:GetLeapAttackVelocity()
-	local ene = self:GetEnemy()
-	return VJ.CalculateTrajectory(self, ene, "Curve", self:GetPos() + self:OBBCenter(), ene:GetPos() + ene:OBBCenter(), 1)
-	
-	-- Classic velocity, useful for more straight line type of jumps
-	//return ((ene:GetPos() + ene:OBBCenter()) - (self:GetPos() + self:OBBCenter())):GetNormal() * 400 + self:GetForward() * 200 + self:GetUp() * 100
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnLeapAttack_BeforeChecks() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnLeapAttack_AfterChecks(hitEnt) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnLeapAttack_Miss() end
+--[[
+Called when leap attack is executed
+
+=-=-=| PARAMETERS |=-=-=
+	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "Init" : When the attack initially executed | Before entities are checked and damaged
+			RETURNS
+				-> [nil]
+		-> "Damage" : Right before the damage is applied to an entity
+			PARAMETERS
+				2. statusData [entity] : The entity that is about to be damaged
+			RETURNS
+				-> [nil | boolean] : Return true to skip hitting this entity
+		-> "Miss" : When the attack misses and doesn't hit anything
+			RETURNS
+				-> [nil]
+	2. ent [nil | entity] : Depends on `status` value, refer to it for more details
+
+=-=-=| RETURNS |=-=-=
+	-> [nil | boolean] : Depends on `status` value, refer to it for more details
+--]]
+function ENT:OnLeapAttackExecute(status, ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnKilledEnemy(ent, inflictor, wasLast) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -766,7 +792,7 @@ function ENT:OnAllyKilled(ent) end
 	1. dmginfo [object] = CTakeDamageInfo object
 	2. hitgroup [number] = The hitgroup that it hit
 	3. status [string] : Type of update that is occurring, holds one of the following states:
-		-> "Initial" : First call on take damage, even before immune checks
+		-> "Init" : First call on take damage, even before immune checks
 		-> "PreDamage" : Right before the damage is applied to the NPC
 		-> "PostDamage" : Right after the damage is applied to the NPC
 --]]
@@ -781,7 +807,7 @@ function ENT:OnBleed(dmginfo, hitgroup) end
 	1. dmginfo [object] = CTakeDamageInfo object
 	2. hitgroup [number] = The hitgroup that it hit
 	3. status [string] : Type of update that is occurring, holds one of the following states:
-		-> "PriorExecution" : Before the animation is played or any values are set
+		-> "Init" : Before the animation is played or any values are set
 				USAGE EXAMPLES -> Disallow flinch | Override the animation | Add a extra check
 				RETURNS
 					-> [nil | bool] : Return true to disallow the flinch from playing
@@ -825,7 +851,7 @@ function ENT:HandleGibOnDeath(dmginfo, hitgroup) return false end
 	1. dmginfo [object] = CTakeDamageInfo object
 	2. hitgroup [number] = The hitgroup that it hit
 	3. status [string] : Type of update that is occurring, holds one of the following states:
-		-> "Initial" : First call when it dies before anything is changed or reset
+		-> "Init" : First call when it dies before anything is changed or reset
 		-> "DeathAnim" : Right before the death animation plays
 		-> "Finish" : Right before the corpse is spawned, the active weapon is dropped and the NPC is removed
 --]]
@@ -1235,7 +1261,7 @@ local function ApplyBackwardsCompatibility(self)
 	end
 	if self.CustomOnTakeDamage_BeforeImmuneChecks or self.CustomOnTakeDamage_BeforeDamage or self.CustomOnTakeDamage_AfterDamage then
 		self.OnDamaged = function(_, dmginfo, hitgroup, status)
-			if status == "Initial" && self.CustomOnTakeDamage_BeforeImmuneChecks then
+			if status == "Init" && self.CustomOnTakeDamage_BeforeImmuneChecks then
 				self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo, hitgroup)
 			elseif status == "PreDamage" && self.CustomOnTakeDamage_BeforeDamage then
 				self:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup)
@@ -1246,7 +1272,7 @@ local function ApplyBackwardsCompatibility(self)
 	end
 	if self.CustomOnFlinch_BeforeFlinch or self.CustomOnFlinch_AfterFlinch then
 		self.OnFlinch = function(_, dmginfo, hitgroup, status)
-			if status == "PriorExecution" then
+			if status == "Init" then
 				if self.CustomOnFlinch_BeforeFlinch then
 					return !self:CustomOnFlinch_BeforeFlinch(dmginfo, hitgroup)
 				end
@@ -1259,7 +1285,7 @@ local function ApplyBackwardsCompatibility(self)
 	end
 	if self.CustomOnInitialKilled or self.CustomOnPriorToKilled or self.CustomDeathAnimationCode or self.CustomOnKilled or self.CustomOnDeath_BeforeCorpseSpawned then
 		self.OnDeath = function(_, dmginfo, hitgroup, status)
-			if status == "Initial" then
+			if status == "Init" then
 				if self.CustomOnInitialKilled then
 					self:CustomOnInitialKilled(dmginfo, hitgroup)
 				end
@@ -1322,10 +1348,36 @@ local function ApplyBackwardsCompatibility(self)
 			return self.RangeAttackCode_GetShootPos(self, projectile)
 		end
 	end
-	if self.LeapAttackVelocityForward or self.LeapAttackVelocityUp then
-		self.GetLeapAttackVelocity = function()
-			local ene = self:GetEnemy()
-			return ((ene:GetPos() + ene:OBBCenter()) - (self:GetPos() + self:OBBCenter())):GetNormal()*400 + self:GetForward()*(self.LeapAttackVelocityForward or 2000) + self:GetUp()*(self.LeapAttackVelocityUp or 200)
+	if self.LeapAttackVelocityForward or self.LeapAttackVelocityUp or self.CustomOnLeapAttack_BeforeStartTimer or self.CustomOnLeapAttack_AfterStartTimer then
+		self.OnLeapAttack = function(_, status, enemy)
+			if status == "Init" && self.CustomOnLeapAttack_BeforeStartTimer then
+				self:CustomOnLeapAttack_BeforeStartTimer(self.AttackSeed)
+			elseif status == "PostSetup" && self.CustomOnLeapAttack_AfterStartTimer then
+				self:CustomOnLeapAttack_AfterStartTimer(self.AttackSeed)
+			elseif status == "Jump" && (self.LeapAttackVelocityForward or self.LeapAttackVelocityUp) then
+				local ene = self:GetEnemy()
+				return ((ene:GetPos() + ene:OBBCenter()) - (self:GetPos() + self:OBBCenter())):GetNormal()*400 + self:GetForward()*(self.LeapAttackVelocityForward or 2000) + self:GetUp()*(self.LeapAttackVelocityUp or 200)
+			end
+		end
+	end
+	if self.CustomOnLeapAttack_BeforeChecks or self.CustomOnLeapAttack_AfterChecks or self.CustomOnLeapAttack_Miss then
+		self.OnLeapAttackExecute = function(_, status, ent)
+			if status == "Init" && self.CustomOnLeapAttack_BeforeChecks then
+				self:CustomOnLeapAttack_BeforeChecks()
+			elseif status == "Damage" && self.CustomOnLeapAttack_AfterChecks then
+				self:CustomOnLeapAttack_AfterChecks(ent)
+			elseif status == "Miss" && self.CustomOnLeapAttack_Miss then
+				self:CustomOnLeapAttack_Miss()
+			end
+		end
+	end
+	if self.CustomAttack or self.MultipleMeleeAttacks or self.MultipleRangeAttacks or self.MultipleLeapAttacks then
+		self.OnThinkAttack = function(_, isAttacking, enemy)
+			if self.CustomAttack then self:CustomAttack(enemy, self.EnemyData.Visible) end
+			if isAttacking then return end
+			if self.MultipleMeleeAttacks then self:MultipleMeleeAttacks() end
+			if self.MultipleRangeAttacks then self:MultipleRangeAttacks() end
+			if self.MultipleLeapAttacks then self:MultipleLeapAttacks() end
 		end
 	end
 	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -1614,7 +1666,7 @@ function ENT:TranslateActivity(act)
 	return act
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local finishAttack = {
+local attackTimers = {
 	[VJ.ATTACK_TYPE_MELEE] = function(self, skipStopAttacks)
 		if !skipStopAttacks then
 			timer.Create("attack_melee_reset" .. self:EntIndex(), self:GetAttackTimer(self.NextAnyAttackTime_Melee, self.TimeUntilMeleeAttackDamage, self.AttackAnimDuration), 1, function()
@@ -2043,147 +2095,136 @@ function ENT:Think()
 				self:UpdatePoseParamTracking()
 				
 				-- Attacks
-				if !self.PauseAttacks && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && curTime > self.NextDoAnyAttackT then
+				if !self.PauseAttacks && !self.Flinching && !self.FollowData.StopAct && curTime > self.NextDoAnyAttackT && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE then
 					-- Attack priority in order: Custom --> Melee --> Range --> Leap
-					-- To avoid overlapping situations where 2 attacks can be called at once, check for "self.AttackType == VJ.ATTACK_TYPE_NONE"
-					local funcCustomAtk = self.CustomAttack; if funcCustomAtk then funcCustomAtk(self, ene, eneIsVisible) end
-					if !self.Flinching && !self.FollowData.StopAct && !self.AttackType then
-						
-						-- Melee Attack
-						if self.HasMeleeAttack && self.IsAbleToMeleeAttack then
-							local atkType = false -- false = No attack | 1 = Normal attack | 2 = Prop attack
-							self:MultipleMeleeAttacks()
-							if plyControlled then
-								if self.VJ_TheController:KeyDown(IN_ATTACK) then
-									atkType = 1
+					local funcThinkAtk = self.OnThinkAttack; if funcThinkAtk then funcThinkAtk(self, !!self.AttackType, ene) end
+					-- Melee Attack
+					if self.HasMeleeAttack && self.IsAbleToMeleeAttack && !self.AttackType then
+						local atkType = false -- false = No attack | 1 = Normal attack | 2 = Prop attack
+						if plyControlled then
+							if self.VJ_TheController:KeyDown(IN_ATTACK) then
+								atkType = 1
+							end
+						else
+							-- Regular non-prop attack
+							if eneIsVisible && eneDistNear < self.MeleeAttackDistance && self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius)) then
+								atkType = 1
+							-- Check for possible props that we can attack/push
+							elseif curTime > self.PropInteraction_NextCheckT then
+								local propCheck = self:MaintainPropInteraction()
+								if propCheck then
+									atkType = 2
 								end
+								self.PropInteraction_Found = propCheck
+								self.PropInteraction_NextCheckT = curTime + 0.5
+							end
+						end
+						if atkType && self:CustomAttackCheck_MeleeAttack() == true then
+							local seed = curTime; self.AttackSeed = seed
+							self.IsAbleToMeleeAttack = false
+							self.AttackType = VJ.ATTACK_TYPE_MELEE
+							self.AttackState = VJ.ATTACK_STATE_STARTED
+							self.AttackAnim = ACT_INVALID
+							self.AttackAnimDuration = 0
+							self.AttackAnimTime = 0
+							self.NextAlertSoundT = curTime + 0.4
+							if atkType == 2 then
+								self.MeleeAttack_IsPropAttack = true
 							else
-								-- Regular non-prop attack
-								if eneIsVisible && eneDistNear < self.MeleeAttackDistance && self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius)) then
-									atkType = 1
-								-- Check for possible props that we can attack/push
-								elseif curTime > self.PropInteraction_NextCheckT then
-									local propCheck = self:MaintainPropInteraction()
-									if propCheck then
-										atkType = 2
-									end
-									self.PropInteraction_Found = propCheck
-									self.PropInteraction_NextCheckT = curTime + 0.5
-								end
+								self:SetTurnTarget("Enemy") -- Always turn towards the enemy at the start
+								self.MeleeAttack_IsPropAttack = false
 							end
-							if atkType && self:CustomAttackCheck_MeleeAttack() == true then
-								local seed = curTime; self.AttackSeed = seed
-								self.IsAbleToMeleeAttack = false
-								self.AttackType = VJ.ATTACK_TYPE_MELEE
-								self.AttackState = VJ.ATTACK_STATE_STARTED
-								self.AttackAnim = ACT_INVALID
-								self.AttackAnimDuration = 0
-								self.AttackAnimTime = 0
-								self.NextAlertSoundT = curTime + 0.4
-								if atkType == 2 then
-									self.MeleeAttack_IsPropAttack = true
-								else
-									self:SetTurnTarget("Enemy") -- Always turn towards the enemy at the start
-									self.MeleeAttack_IsPropAttack = false
-								end
-								self:CustomOnMeleeAttack_BeforeStartTimer(seed)
-								self:PlaySoundSystem("BeforeMeleeAttack")
-								if self.AnimTbl_MeleeAttack then
-									local anim, animDur, animType = self:PlayAnim(self.AnimTbl_MeleeAttack, false, 0, false)
-									if anim != ACT_INVALID then
-										self.AttackAnim = anim
-										self.AttackAnimDuration = animDur - (self.MeleeAttackAnimationDecreaseLengthAmount / self.AnimPlaybackRate)
-										if animType != ANIM_TYPE_GESTURE then -- Useful for gesture-based attacks, it allows things like chasing to continue running
-											self.AttackAnimTime = curTime + self.AttackAnimDuration
-										end
-									end
-								end
-								if !self.TimeUntilMeleeAttackDamage then
-									finishAttack[VJ.ATTACK_TYPE_MELEE](self)
-								else -- NOT event based...
-									timer.Create("attack_melee_start" .. self:EntIndex(), self.TimeUntilMeleeAttackDamage / self.AnimPlaybackRate, self.MeleeAttackReps, function() if self.AttackSeed == seed then self:ExecuteMeleeAttack(atkType == 2) end end)
-									if self.MeleeAttackExtraTimers then
-										for k, t in ipairs(self.MeleeAttackExtraTimers) do
-											self:AddExtraAttackTimer("timer_melee_start_"..curTime + k, t, function() if self.AttackSeed == seed then self:ExecuteMeleeAttack(atkType == 2) end end)
-										end
-									end
-								end
-								self:CustomOnMeleeAttack_AfterStartTimer(seed)
-							end
-						end
-
-						-- Range Attack
-						if eneIsVisible && self.HasRangeAttack && self.IsAbleToRangeAttack && !self.AttackType then
-							self:MultipleRangeAttacks()
-							if self:CustomAttackCheck_RangeAttack() == true && ((plyControlled && self.VJ_TheController:KeyDown(IN_ATTACK2)) or (!plyControlled && (eneDist < self.RangeAttackMaxDistance) && (eneDist > self.RangeAttackMinDistance) && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(self.RangeAttackAngleRadius))))) then
-								local seed = curTime; self.AttackSeed = seed
-								self.IsAbleToRangeAttack = false
-								self.AttackType = VJ.ATTACK_TYPE_RANGE
-								self.AttackState = VJ.ATTACK_STATE_STARTED
-								self.AttackAnim = ACT_INVALID
-								self.AttackAnimDuration = 0
-								self.AttackAnimTime = 0
-								if self.RangeAttackAnimationStopMovement then self:StopMoving() end
-								self:CustomOnRangeAttack_BeforeStartTimer(seed)
-								self:PlaySoundSystem("BeforeRangeAttack")
-								if self.AnimTbl_RangeAttack then
-									local anim, animDur = self:PlayAnim(self.AnimTbl_RangeAttack, false, 0, false, self.RangeAttackAnimationDelay)
-									if anim != ACT_INVALID then
-										self.AttackAnim = anim
-										self.AttackAnimDuration = animDur - (self.RangeAttackAnimationDecreaseLengthAmount / self.AnimPlaybackRate)
+							self:CustomOnMeleeAttack_BeforeStartTimer(seed)
+							self:PlaySoundSystem("BeforeMeleeAttack")
+							if self.AnimTbl_MeleeAttack then
+								local anim, animDur, animType = self:PlayAnim(self.AnimTbl_MeleeAttack, false, 0, false)
+								if anim != ACT_INVALID then
+									self.AttackAnim = anim
+									self.AttackAnimDuration = animDur - (self.MeleeAttackAnimationDecreaseLengthAmount / self.AnimPlaybackRate)
+									if animType != ANIM_TYPE_GESTURE then -- Useful for gesture-based attacks, it allows things like chasing to continue running
 										self.AttackAnimTime = curTime + self.AttackAnimDuration
 									end
 								end
-								if !self.TimeUntilRangeAttackProjectileRelease then
-									finishAttack[VJ.ATTACK_TYPE_RANGE](self)
-								else -- NOT event based...
-									timer.Create("attack_range_start" .. self:EntIndex(), self.TimeUntilRangeAttackProjectileRelease / self.AnimPlaybackRate, self.RangeAttackReps, function() if self.AttackSeed == seed then self:ExecuteRangeAttack() end end)
-									if self.RangeAttackExtraTimers then
-										for k, t in ipairs(self.RangeAttackExtraTimers) do
-											self:AddExtraAttackTimer("timer_range_start_"..curTime + k, t, function() if self.AttackSeed == seed then self:ExecuteRangeAttack() end end)
-										end
+							end
+							if !self.TimeUntilMeleeAttackDamage then
+								attackTimers[VJ.ATTACK_TYPE_MELEE](self)
+							else -- NOT event based...
+								timer.Create("attack_melee_start" .. self:EntIndex(), self.TimeUntilMeleeAttackDamage / self.AnimPlaybackRate, self.MeleeAttackReps, function() if self.AttackSeed == seed then self:ExecuteMeleeAttack(atkType == 2) end end)
+								if self.MeleeAttackExtraTimers then
+									for k, t in ipairs(self.MeleeAttackExtraTimers) do
+										self:AddExtraAttackTimer("timer_melee_start_"..curTime + k, t, function() if self.AttackSeed == seed then self:ExecuteMeleeAttack(atkType == 2) end end)
 									end
 								end
-								self:CustomOnRangeAttack_AfterStartTimer(seed)
 							end
+							self:CustomOnMeleeAttack_AfterStartTimer(seed)
 						end
+					end
 
-						-- Leap Attack
-						if eneIsVisible && self.HasLeapAttack && self.IsAbleToLeapAttack && !self.AttackType then
-							self:MultipleLeapAttacks()
-							if self:CustomAttackCheck_LeapAttack() == true && ((plyControlled && self.VJ_TheController:KeyDown(IN_JUMP)) or (!plyControlled && (self:IsOnGround() && eneDist < self.LeapAttackMaxDistance) && (eneDist > self.LeapAttackMinDistance) && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(self.LeapAttackAngleRadius))))) then
-								local seed = curTime; self.AttackSeed = seed
-								self.IsAbleToLeapAttack = false
-								self.LeapAttackHasJumped = false
-								self.AttackType = VJ.ATTACK_TYPE_LEAP
-								self.AttackState = VJ.ATTACK_STATE_STARTED
-								self.AttackAnim = ACT_INVALID
-								self.AttackAnimDuration = 0
-								self.AttackAnimTime = 0
-								self:CustomOnLeapAttack_BeforeStartTimer(seed)
-								self:PlaySoundSystem("BeforeLeapAttack")
-								timer.Create("attack_leap_jump" .. self:EntIndex(), self.TimeUntilLeapAttackVelocity / self.AnimPlaybackRate, 1, function() self:LeapAttackJump() end)
-								if self.AnimTbl_LeapAttack then
-									local anim, animDur = self:PlayAnim(self.AnimTbl_LeapAttack, false, 0, false)
-									if anim != ACT_INVALID then
-										self.AttackAnim = anim
-										self.AttackAnimDuration = animDur - (self.LeapAttackAnimationDecreaseLengthAmount / self.AnimPlaybackRate)
-										self.AttackAnimTime = curTime + self.AttackAnimDuration
-									end
-								end
-								if !self.TimeUntilLeapAttackDamage then
-									finishAttack[VJ.ATTACK_TYPE_LEAP](self)
-								else -- NOT event based...
-									timer.Create("attack_leap_start" .. self:EntIndex(), self.TimeUntilLeapAttackDamage / self.AnimPlaybackRate, self.LeapAttackReps, function() if self.AttackSeed == seed then self:ExecuteLeapAttack() end end)
-									if self.LeapAttackExtraTimers then
-										for k, t in ipairs(self.LeapAttackExtraTimers) do
-											self:AddExtraAttackTimer("timer_leap_start_"..curTime + k, t, function() if self.AttackSeed == seed then self:ExecuteLeapAttack() end end)
-										end
-									end
-								end
-								self:CustomOnLeapAttack_AfterStartTimer(seed)
+					-- Range Attack
+					if eneIsVisible && self.HasRangeAttack && self.IsAbleToRangeAttack && !self.AttackType && self:CustomAttackCheck_RangeAttack() == true && ((plyControlled && self.VJ_TheController:KeyDown(IN_ATTACK2)) or (!plyControlled && (eneDist < self.RangeAttackMaxDistance) && (eneDist > self.RangeAttackMinDistance) && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(self.RangeAttackAngleRadius))))) then
+						local seed = curTime; self.AttackSeed = seed
+						self.IsAbleToRangeAttack = false
+						self.AttackType = VJ.ATTACK_TYPE_RANGE
+						self.AttackState = VJ.ATTACK_STATE_STARTED
+						self.AttackAnim = ACT_INVALID
+						self.AttackAnimDuration = 0
+						self.AttackAnimTime = 0
+						if self.RangeAttackAnimationStopMovement then self:StopMoving() end
+						self:CustomOnRangeAttack_BeforeStartTimer(seed)
+						self:PlaySoundSystem("BeforeRangeAttack")
+						if self.AnimTbl_RangeAttack then
+							local anim, animDur = self:PlayAnim(self.AnimTbl_RangeAttack, false, 0, false, self.RangeAttackAnimationDelay)
+							if anim != ACT_INVALID then
+								self.AttackAnim = anim
+								self.AttackAnimDuration = animDur - (self.RangeAttackAnimationDecreaseLengthAmount / self.AnimPlaybackRate)
+								self.AttackAnimTime = curTime + self.AttackAnimDuration
 							end
 						end
+						if !self.TimeUntilRangeAttackProjectileRelease then
+							attackTimers[VJ.ATTACK_TYPE_RANGE](self)
+						else -- NOT event based...
+							timer.Create("attack_range_start" .. self:EntIndex(), self.TimeUntilRangeAttackProjectileRelease / self.AnimPlaybackRate, self.RangeAttackReps, function() if self.AttackSeed == seed then self:ExecuteRangeAttack() end end)
+							if self.RangeAttackExtraTimers then
+								for k, t in ipairs(self.RangeAttackExtraTimers) do
+									self:AddExtraAttackTimer("timer_range_start_"..curTime + k, t, function() if self.AttackSeed == seed then self:ExecuteRangeAttack() end end)
+								end
+							end
+						end
+						self:CustomOnRangeAttack_AfterStartTimer(seed)
+					end
+
+					-- Leap Attack
+					if eneIsVisible && self.HasLeapAttack && self.IsAbleToLeapAttack && !self.AttackType && self:CustomAttackCheck_LeapAttack() == true && ((plyControlled && self.VJ_TheController:KeyDown(IN_JUMP)) or (!plyControlled && (self:IsOnGround() && eneDist < self.LeapAttackMaxDistance) && (eneDist > self.LeapAttackMinDistance) && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(self.LeapAttackAngleRadius))))) then
+						local seed = curTime; self.AttackSeed = seed
+						self.IsAbleToLeapAttack = false
+						self.LeapAttackHasJumped = false
+						self.AttackType = VJ.ATTACK_TYPE_LEAP
+						self.AttackState = VJ.ATTACK_STATE_STARTED
+						self.AttackAnim = ACT_INVALID
+						self.AttackAnimDuration = 0
+						self.AttackAnimTime = 0
+						self:OnLeapAttack("Init", ene)
+						self:PlaySoundSystem("BeforeLeapAttack")
+						timer.Create("attack_leap_jump" .. self:EntIndex(), self.TimeUntilLeapAttackVelocity / self.AnimPlaybackRate, 1, function() self:LeapAttackJump() end)
+						if self.AnimTbl_LeapAttack then
+							local anim, animDur = self:PlayAnim(self.AnimTbl_LeapAttack, false, 0, false)
+							if anim != ACT_INVALID then
+								self.AttackAnim = anim
+								self.AttackAnimDuration = animDur - (self.LeapAttackAnimationDecreaseLengthAmount / self.AnimPlaybackRate)
+								self.AttackAnimTime = curTime + self.AttackAnimDuration
+							end
+						end
+						if !self.TimeUntilLeapAttackDamage then
+							attackTimers[VJ.ATTACK_TYPE_LEAP](self)
+						else -- NOT event based...
+							timer.Create("attack_leap_start" .. self:EntIndex(), self.TimeUntilLeapAttackDamage / self.AnimPlaybackRate, self.LeapAttackReps, function() if self.AttackSeed == seed then self:ExecuteLeapAttack() end end)
+							if self.LeapAttackExtraTimers then
+								for k, t in ipairs(self.LeapAttackExtraTimers) do
+									self:AddExtraAttackTimer("timer_leap_start_"..curTime + k, t, function() if self.AttackSeed == seed then self:ExecuteLeapAttack() end end)
+								end
+							end
+						end
+						self:OnLeapAttack("PostSetup", ene)
 					end
 				end
 				
@@ -2413,8 +2454,8 @@ function ENT:ExecuteMeleeAttack(isPropAttack)
 	end
 	if self.AttackState < VJ.ATTACK_STATE_EXECUTED then
 		self.AttackState = VJ.ATTACK_STATE_EXECUTED
-		if self.TimeUntilMeleeAttackDamage != false then
-			finishAttack[VJ.ATTACK_TYPE_MELEE](self)
+		if self.TimeUntilMeleeAttackDamage then
+			attackTimers[VJ.ATTACK_TYPE_MELEE](self)
 		end
 	end
 	if hitRegistered then
@@ -2509,22 +2550,22 @@ function ENT:ExecuteRangeAttack()
 	end
 	if self.AttackState < VJ.ATTACK_STATE_EXECUTED then
 		self.AttackState = VJ.ATTACK_STATE_EXECUTED
-		if self.TimeUntilRangeAttackProjectileRelease != false then
-			finishAttack[VJ.ATTACK_TYPE_RANGE](self)
+		if self.TimeUntilRangeAttackProjectileRelease then
+			attackTimers[VJ.ATTACK_TYPE_RANGE](self)
 		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ExecuteLeapAttack()
 	if self.Dead or self.PauseAttacks or self.Flinching or (self.LeapAttackStopOnHit && self.AttackState == VJ.ATTACK_STATE_EXECUTED_HIT) then return end
-	self:CustomOnLeapAttack_BeforeChecks()
+	self:OnLeapAttackExecute("Init")
 	local myClass = self:GetClass()
 	local hitRegistered = false
 	for _,ent in ipairs(ents.FindInSphere(self:GetPos(), self.LeapAttackDamageDistance)) do
 		if ent == self or ent:GetClass() == myClass or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then continue end
 		if ent:IsPlayer() && (ent.VJ_IsControllingNPC or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
 		if (ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible then
-			self:CustomOnLeapAttack_AfterChecks(ent)
+			if self:OnLeapAttackExecute("Damage", ent) == true then continue end
 			-- Damage
 			if !self.DisableDefaultLeapAttackDamageCode then
 				local dmgInfo = DamageInfo()
@@ -2544,24 +2585,27 @@ function ENT:ExecuteLeapAttack()
 	end
 	if self.AttackState < VJ.ATTACK_STATE_EXECUTED then
 		self.AttackState = VJ.ATTACK_STATE_EXECUTED
-		if self.TimeUntilLeapAttackDamage != false then
-			finishAttack[VJ.ATTACK_TYPE_LEAP](self)
+		if self.TimeUntilLeapAttackDamage then
+			attackTimers[VJ.ATTACK_TYPE_LEAP](self)
 		end
 	end
 	if hitRegistered then
 		self:PlaySoundSystem("LeapAttackDamage")
 		self.AttackState = VJ.ATTACK_STATE_EXECUTED_HIT
 	else
-		self:CustomOnLeapAttack_Miss()
+		self:OnLeapAttackExecute("Miss")
 		self:PlaySoundSystem("LeapAttackDamageMiss")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:LeapAttackJump()
-	if !IsValid(self:GetEnemy()) then return end
+	local ene = self:GetEnemy()
+	if !IsValid(ene) then return end
 	self:SetGroundEntity(NULL)
 	self.LeapAttackHasJumped = true
-	self:SetLocalVelocity(self:GetLeapAttackVelocity())
+	-- Classic velocity, useful for more straight line type of jumps
+	//return ((ene:GetPos() + ene:OBBCenter()) - (self:GetPos() + self:OBBCenter())):GetNormal() * 400 + self:GetForward() * 200 + self:GetUp() * 100
+	self:SetLocalVelocity(self:OnLeapAttack("Jump", ene) or VJ.CalculateTrajectory(self, ene, "Curve", self:GetPos() + self:OBBCenter(), ene:GetPos() + ene:OBBCenter(), 1))
 	self:PlaySoundSystem("LeapAttackJump")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2569,8 +2613,8 @@ function ENT:StopAttacks(checkTimers)
 	if !self:Alive() then return end
 	if self.VJ_DEBUG && GetConVar("vj_npc_debug_attack"):GetInt() == 1 then VJ.DEBUG_Print(self, "StopAttacks", "Attack type = " .. self.AttackType) end
 	
-	if checkTimers && finishAttack[self.AttackType] && self.AttackState < VJ.ATTACK_STATE_EXECUTED then
-		finishAttack[self.AttackType](self, true)
+	if checkTimers && attackTimers[self.AttackType] && self.AttackState < VJ.ATTACK_STATE_EXECUTED then
+		attackTimers[self.AttackType](self, true)
 	end
 	
 	self.AttackType = VJ.ATTACK_TYPE_NONE
@@ -2796,7 +2840,7 @@ function ENT:OnTakeDamage(dmginfo)
 	if dmgInflictor && dmgInflictor:GetClass() == "prop_ragdoll" && dmgInflictor:GetVelocity():Length() <= 100 then return 0 end
 	
 	local hitgroup = self:GetLastDamageHitGroup()
-	self:OnDamaged(dmginfo, hitgroup, "Initial")
+	self:OnDamaged(dmginfo, hitgroup, "Init")
 	if self.GodMode or dmginfo:GetDamage() <= 0 then return 0 end
 	
 	local dmgType = dmginfo:GetDamageType()
@@ -3017,7 +3061,7 @@ local vecZ4 = Vector(0, 0, 4)
 function ENT:BeginDeath(dmginfo, hitgroup)
 	self.Dead = true
 	self:SetSaveValue("m_lifeState", 1) -- LIFE_DYING
-	self:OnDeath(dmginfo, hitgroup, "Initial")
+	self:OnDeath(dmginfo, hitgroup, "Init")
 	if self.Medic_Status then self:ResetMedicBehavior() end
 	if self.IsFollowing then self:ResetFollowBehavior() end
 	local dmgInflictor = dmginfo:GetInflictor()

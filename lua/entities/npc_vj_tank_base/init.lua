@@ -369,7 +369,7 @@ function ENT:OnDamaged(dmginfo, hitgroup, status)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnDeath(dmginfo, hitgroup, status)
-	if status == "Initial" then
+	if status == "Init" then
 		if IsValid(self.Gunner) then
 			self.Gunner.Dead = true
 			if self:IsOnFire() then self.Gunner:Ignite(math.Rand(8, 10), 0) end

@@ -117,7 +117,7 @@ function ENT:OnGrenadeAttack(status, grenade, customEnt, landDir, landingPos)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnDeath(dmginfo, hitgroup, status)
-	if status == "Initial" then
+	if status == "Init" then
 		local pos = self:GetPos()
 		local pitch = math.random(95, 105)
 		local function deathSound(time, snd)
