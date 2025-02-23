@@ -2100,7 +2100,7 @@ function ENT:Initialize()
 				if IsValid(wep) then
 					self.WeaponEntity = self:DoChangeWeapon() -- Setup the weapon
 					self.WeaponInventory.Primary = wep
-					if IsValid(self:GetCreator()) && self.CanChatMessage && !wep.IsVJBaseWeapon then
+					if !wep.IsVJBaseWeapon && self.CanChatMessage && IsValid(self:GetCreator()) then
 						self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: "..self:GetName().." requires a VJ Base weapon to work properly!")
 					end
 					local antiArmor = PICK(self.WeaponInventory_AntiArmorList)
@@ -2128,17 +2128,18 @@ function ENT:Initialize()
 			-- This is needed as setting "NextThink" to CurTime will cause performance drops, so we set the idle maintain in a separate hook that runs every tick
 			local thinkHook = hook.GetTable()["Think"]
 			if (thinkHook && !thinkHook[self]) or (!thinkHook) then
+				local idleFunc = self.MaintainIdleAnimation
 				if #self:GetBoneFollowers() > 0 then
 					hook.Add("Think", self, function()
 						if VJ_CVAR_AI_ENABLED then
-							self:MaintainIdleAnimation()
+							idleFunc(self)
 						end
 						self:UpdateBoneFollowers()
 					end)
 				else
 					hook.Add("Think", self, function()
 						if VJ_CVAR_AI_ENABLED then
-							self:MaintainIdleAnimation()
+							idleFunc(self)
 						end
 					end)
 				end
@@ -2226,14 +2227,15 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to always make the NPC chase
 	local curTime = CurTime()
-	if self.NextChaseTime > curTime or self.Dead or self.VJ_IsBeingControlled or self.Flinching or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
+	local myTbl = self:GetTable() -- Only Lua variables that won't change during this call
+	if myTbl.NextChaseTime > curTime or myTbl.Dead or myTbl.VJ_IsBeingControlled or myTbl.Flinching or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
 	local ene = self:GetEnemy()
-	local moveType = self.MovementType
-	if !IsValid(ene) or self.TakingCoverT > curTime or (self.AttackAnimTime > curTime && moveType != VJ_MOVETYPE_AERIAL && moveType != VJ_MOVETYPE_AQUATIC) then return end
+	local moveType = myTbl.MovementType
+	if !IsValid(ene) or myTbl.TakingCoverT > curTime or (myTbl.AttackAnimTime > curTime && moveType != VJ_MOVETYPE_AERIAL && moveType != VJ_MOVETYPE_AQUATIC) then return end
 	
 	-- Not melee attacking yet but it is in range, so don't chase the enemy!
-	local eneData = self.EnemyData
-	if self.HasMeleeAttack && eneData.DistanceNearest < self.MeleeAttackDistance && eneData.Visible && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius))) then
+	local eneData = myTbl.EnemyData
+	if myTbl.HasMeleeAttack && eneData.DistanceNearest < myTbl.MeleeAttackDistance && eneData.Visible && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math_cos(math_rad(myTbl.MeleeAttackAngleRadius))) then
 		if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then
 			self:AA_StopMoving()
 		end
@@ -2242,20 +2244,20 @@ function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to alw
 	end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
-	if moveType == VJ_MOVETYPE_STATIONARY or self.IsFollowing or self.Medic_Status or self:GetState() == VJ_STATE_ONLY_ANIMATION then
+	if moveType == VJ_MOVETYPE_STATIONARY or myTbl.IsFollowing or myTbl.Medic_Status or self:GetState() == VJ_STATE_ONLY_ANIMATION then
 		self:SCHEDULE_IDLE_STAND()
 		return
 	end
 	
 	-- Non-aggressive NPCs
-	local behaviorType = self.Behavior
+	local behaviorType = myTbl.Behavior
 	if behaviorType == VJ_BEHAVIOR_PASSIVE or behaviorType == VJ_BEHAVIOR_PASSIVE_NATURE then
 		self:SCHEDULE_COVER_ENEMY("TASK_RUN_PATH")
 		self.NextChaseTime = curTime + 3
 		return
 	end
 	
-	if !alwaysChase && (self.DisableChasingEnemy or self.IsGuard) then self:SCHEDULE_IDLE_STAND() return end
+	if !alwaysChase && (myTbl.DisableChasingEnemy or myTbl.IsGuard) then self:SCHEDULE_IDLE_STAND() return end
 	
 	-- If the enemy is not reachable
 	if (self:HasCondition(COND_ENEMY_UNREACHABLE) or self:IsUnreachable(ene)) && (IsValid(self:GetActiveWeapon()) && (!self:GetActiveWeapon().IsMeleeWeapon)) then
@@ -2460,28 +2462,29 @@ function ENT:Think()
 	//if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& curSchedule.IsMovingTask*/ then self:DropToFloor() end -- No need, already handled by the engine
 	
 	local curTime = CurTime()
+	local myTbl = self:GetTable() -- Only Lua variables that won't change during this call
 	
 	-- This is here to make sure the initialized process time stays in place...
 	-- otherwise if AI is disabled then reenabled, all the NPCs will now start processing at the same exact CurTime!
-	local doHeavyProcesses = curTime > self.NextProcessT
+	local doHeavyProcesses = curTime > myTbl.NextProcessT
 	if doHeavyProcesses then
-		self.NextProcessT = curTime + self.NextProcessTime
+		self.NextProcessT = curTime + myTbl.NextProcessTime
 	end
 	
-	if !self.Dead then
+	if !myTbl.Dead then
 		-- Detect any weapon change, unless the NPC is dead because the variable is used by self:DeathWeaponDrop()
-		if self.WeaponEntity != self:GetActiveWeapon() then
+		if myTbl.WeaponEntity != self:GetActiveWeapon() then
 			self.WeaponEntity = self:DoChangeWeapon()
 		end
 		
 		-- Breath sound system
-		if self.HasBreathSound && self.HasSounds && curTime > self.NextBreathSoundT then
-			local pickedSD = PICK(self.SoundTbl_Breath)
+		if myTbl.HasBreathSound && myTbl.HasSounds && curTime > myTbl.NextBreathSoundT then
+			local pickedSD = PICK(myTbl.SoundTbl_Breath)
 			local dur = 10 -- Make the default value large so we don't check it too much!
 			if pickedSD then
 				StopSD(self.CurrentBreathSound)
-				dur = (self.NextSoundTime_Breath == false and SoundDuration(pickedSD)) or math.Rand(self.NextSoundTime_Breath.a, self.NextSoundTime_Breath.b)
-				self.CurrentBreathSound = VJ.CreateSound(self, pickedSD, self.BreathSoundLevel, self:GetSoundPitch(self.BreathSoundPitch))
+				dur = (myTbl.NextSoundTime_Breath == false and SoundDuration(pickedSD)) or math.Rand(myTbl.NextSoundTime_Breath.a, myTbl.NextSoundTime_Breath.b)
+				self.CurrentBreathSound = VJ.CreateSound(self, pickedSD, myTbl.BreathSoundLevel, self:GetSoundPitch(myTbl.BreathSoundPitch))
 			end
 			self.NextBreathSoundT = curTime + dur
 		end
@@ -2490,7 +2493,7 @@ function ENT:Think()
 	self:OnThink()
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	if VJ_CVAR_AI_ENABLED && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
-		if self.VJ_DEBUG then
+		if myTbl.VJ_DEBUG then
 			if GetConVar("vj_npc_debug_enemy"):GetInt() == 1 then VJ.DEBUG_Print(self, false, "Enemy -> " .. tostring(self:GetEnemy() or "NULL") .. " | Alerted? " .. tostring(self.Alerted))  end
 			if GetConVar("vj_npc_debug_takingcover"):GetInt() == 1 then if curTime > self.TakingCoverT then VJ.DEBUG_Print(self, false, "NOT taking cover") else VJ.DEBUG_Print(self, false, "Taking cover ("..self.TakingCoverT - curTime..")") end end
 			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - self.EnemyData.LastVisibleTime).." ("..self:GetName()..")") end
@@ -2499,11 +2502,12 @@ function ENT:Think()
 		
 		//self:SetPlaybackRate(self.AnimationPlaybackRate)
 		self:OnThinkActive()
+		myTbl = self:GetTable() -- Update it in case values changed!
 		
 		-- Update follow system's data
 		//print("------------------")
 		//PrintTable(self.FollowData)
-		if self.IsFollowing && self:GetNavType() != NAV_JUMP && self:GetNavType() != NAV_CLIMB then
+		if myTbl.IsFollowing && self:GetNavType() != NAV_JUMP && self:GetNavType() != NAV_CLIMB then
 			local followData = self.FollowData
 			local followEnt = followData.Ent
 			local followIsLiving = followEnt.VJ_ID_Living
@@ -2523,7 +2527,7 @@ function ENT:Think()
 							if isFar then
 								followData.StopAct = true
 							end
-							if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+							if myTbl.MovementType == VJ_MOVETYPE_AERIAL or myTbl.MovementType == VJ_MOVETYPE_AQUATIC then
 								self:AA_MoveTo(self:GetTarget(), true, (distToPly < (followData.MinDist * 1.5) and "Calm") or "Alert", {FaceDestTarget = true})
 							elseif !self:IsMoving() or self:GetCurGoalType() != 1 then
 								//self:NavSetGoalTarget(followEnt) // local goalTarget = -- No longer works, a recent GMod commit broke it
@@ -2576,17 +2580,17 @@ function ENT:Think()
 				local turnTarget = turnData.Target
 				if turnData.Type == VJ.FACE_POSITION or (turnData.Type == VJ.FACE_POSITION_VISIBLE && self:VisibleVec(turnTarget)) then
 					local resultAng = self:GetTurnAngle((turnTarget - self:GetPos()):Angle())
-					if self.TurningUseAllAxis then
+					if myTbl.TurningUseAllAxis then
 						local myAng = self:GetAngles()
-						self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+						self:SetAngles(LerpAngle(FrameTime()*myTbl.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
 					end
 					self:SetIdealYawAndUpdate(resultAng.y)
 					self.TurnData.LastYaw = resultAng.y
 				elseif IsValid(turnTarget) && (turnData.Type == VJ.FACE_ENTITY or (turnData.Type == VJ.FACE_ENTITY_VISIBLE && self:Visible(turnTarget))) then
 					local resultAng = self:GetTurnAngle((turnTarget:GetPos() - self:GetPos()):Angle())
-					if self.TurningUseAllAxis then
+					if myTbl.TurningUseAllAxis then
 						local myAng = self:GetAngles()
-						self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+						self:SetAngles(LerpAngle(FrameTime()*myTbl.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
 					end
 					self:SetIdealYawAndUpdate(resultAng.y)
 					self.TurnData.LastYaw = resultAng.y
@@ -2597,23 +2601,24 @@ function ENT:Think()
 		//print("MAX CLIP: ", self.WeaponEntity:GetMaxClip1())
 		//print("CLIP: ", self.WeaponEntity:Clip1())
 			
-		if !self.Dead then
+		if !myTbl.Dead then
 			-- Health Regeneration System
-			if self.HasHealthRegeneration && curTime > self.HealthRegenerationDelayT then
+			if myTbl.HasHealthRegeneration && curTime > myTbl.HealthRegenerationDelayT then
 				local myHP = self:Health()
-				self:SetHealth(math_min(math_max(myHP + self.HealthRegenerationAmount, myHP), self:GetMaxHealth()))
-				self.HealthRegenerationDelayT = curTime + math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b)
+				self:SetHealth(math_min(math_max(myHP + myTbl.HealthRegenerationAmount, myHP), self:GetMaxHealth()))
+				self.HealthRegenerationDelayT = curTime + math.Rand(myTbl.HealthRegenerationDelay.a, myTbl.HealthRegenerationDelay.b)
 			end
 			
 			-- Run the heavy processes
 			if doHeavyProcesses then
 				self:MaintainRelationships()
 				self:CheckForDangers()
-				if self.IsMedic then self:MaintainMedicBehavior() end
-				//self.NextProcessT = curTime + self.NextProcessTime
+				if myTbl.IsMedic then self:MaintainMedicBehavior() end
+				//self.NextProcessT = curTime + myTbl.NextProcessTime
 			end
 			
-			local plyControlled = self.VJ_IsBeingControlled
+			myTbl = self:GetTable() -- Update it in case values changed!
+			local plyControlled = myTbl.VJ_IsBeingControlled
 			local myPos = self:GetPos()
 			local ene = self:GetEnemy()
 			local eneValid = IsValid(ene)
@@ -2625,7 +2630,7 @@ function ENT:Think()
 					ene = self:GetEnemy()
 					eneValid = IsValid(ene)
 				-- Reset enemy if it has been unseen for a while
-				elseif (curTime - eneData.LastVisibleTime) > ((eneData.Distance < 4000 and self.EnemyTimeout) or (self.EnemyTimeout / 2)) && !self.IsVJBaseSNPC_Tank then
+				elseif (curTime - eneData.LastVisibleTime) > ((eneData.Distance < 4000 and myTbl.EnemyTimeout) or (myTbl.EnemyTimeout / 2)) && !myTbl.IsVJBaseSNPC_Tank then
 					self:PlaySoundSystem("LostEnemy")
 					self:ResetEnemy(true, true)
 					ene = self:GetEnemy()
@@ -2633,7 +2638,7 @@ function ENT:Think()
 				end
 			end
 			
-			local curWep = self.WeaponEntity
+			local curWep = myTbl.WeaponEntity
 			//if self.WeaponAttackState then self:CapabilitiesRemove(CAP_TURN_HEAD) else self:CapabilitiesAdd(CAP_TURN_HEAD) end -- Fixes their heads breaking
 			-- If we have a valid weapon...
 			if IsValid(curWep) && !self:IsBusy("Activities") then
@@ -2641,17 +2646,19 @@ function ENT:Think()
 				if !plyControlled then
 					if eneValid then
 						-- Switch to melee
-						if !self.IsGuard && IsValid(self.WeaponInventory.Melee) && ((eneData.Distance < self.MeleeAttackDistance) or (eneData.Distance < 300 && curWep:Clip1() <= 0)) && (self:Health() > self:GetMaxHealth() * 0.25) && curWep != self.WeaponInventory.Melee then
+						if !myTbl.IsGuard && IsValid(myTbl.WeaponInventory.Melee) && ((eneData.Distance < myTbl.MeleeAttackDistance) or (eneData.Distance < 300 && curWep:Clip1() <= 0)) && (self:Health() > self:GetMaxHealth() * 0.25) && curWep != myTbl.WeaponInventory.Melee then
 							if self:GetWeaponState() == VJ.WEP_STATE_RELOADING then self:SetWeaponState() end -- Since the reloading can be cut off, reset it back to false, or else it can mess up its behavior!
 							//timer.Remove("wep_reload_reset" .. self:EntIndex()) -- No longer needed
 							self.WeaponInventoryStatus = VJ.WEP_INVENTORY_MELEE
 							self:DoChangeWeapon(self.WeaponInventory.Melee, true)
-							curWep = self.WeaponEntity
+							myTbl = self:GetTable() -- Update it in case values changed!
+							curWep = myTbl.WeaponEntity
 						-- Switch to anti-armor
-						elseif self:GetWeaponState() != VJ.WEP_STATE_RELOADING && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank or ene.VJ_ID_Boss) && curWep != self.WeaponInventory.AntiArmor then
+						elseif self:GetWeaponState() != VJ.WEP_STATE_RELOADING && IsValid(myTbl.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank or ene.VJ_ID_Boss) && curWep != myTbl.WeaponInventory.AntiArmor then
 							self.WeaponInventoryStatus = VJ.WEP_INVENTORY_ANTI_ARMOR
 							self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
-							curWep = self.WeaponEntity
+							myTbl = self:GetTable() -- Update it in case values changed!
+							curWep = myTbl.WeaponEntity
 						end
 					end
 					if self:GetWeaponState() != VJ.WEP_STATE_RELOADING then
@@ -2659,18 +2666,20 @@ function ENT:Think()
 						if self.WeaponInventoryStatus == VJ.WEP_INVENTORY_MELEE && (!eneValid or (eneValid && eneData.Distance >= 300)) then
 							self.WeaponInventoryStatus = VJ.WEP_INVENTORY_PRIMARY
 							self:DoChangeWeapon(self.WeaponInventory.Primary, true)
-							curWep = self.WeaponEntity
+							myTbl = self:GetTable() -- Update it in case values changed!
+							curWep = myTbl.WeaponEntity
 						-- Reset weapon status from anti-armor to primary
 						elseif self.WeaponInventoryStatus == VJ.WEP_INVENTORY_ANTI_ARMOR && (!eneValid or (eneValid && !ene.IsVJBaseSNPC_Tank && !ene.VJ_ID_Boss)) then
 							self.WeaponInventoryStatus = VJ.WEP_INVENTORY_PRIMARY
 							self:DoChangeWeapon(self.WeaponInventory.Primary, true)
-							curWep = self.WeaponEntity
+							myTbl = self:GetTable() -- Update it in case values changed!
+							curWep = myTbl.WeaponEntity
 						end
 					end
 				end
 				
 				-- Weapon Reloading
-				if self.Weapon_CanReload && self:GetWeaponState() == VJ.WEP_STATE_READY && (!curWep.IsMeleeWeapon) && !self.AttackType && ((!plyControlled && ((!eneValid && curWep:GetMaxClip1() > curWep:Clip1() && (curTime - eneData.TimeSet) > math.random(3, 8) && !self:IsMoving()) or (eneValid && curWep:Clip1() <= 0))) or (plyControlled && self.VJ_TheController:KeyDown(IN_RELOAD) && curWep:GetMaxClip1() > curWep:Clip1())) then
+				if myTbl.Weapon_CanReload && !myTbl.AttackType && !curWep.IsMeleeWeapon && self:GetWeaponState() == VJ.WEP_STATE_READY && ((!plyControlled && ((!eneValid && curWep:GetMaxClip1() > curWep:Clip1() && (curTime - eneData.TimeSet) > math.random(3, 8) && !self:IsMoving()) or (eneValid && curWep:Clip1() <= 0))) or (plyControlled && myTbl.VJ_TheController:KeyDown(IN_RELOAD) && curWep:GetMaxClip1() > curWep:Clip1())) then
 					self.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 					self.NextChaseTime = curTime + 2
 					if !plyControlled then self:SetWeaponState(VJ.WEP_STATE_RELOADING) end
@@ -2727,6 +2736,7 @@ function ENT:Think()
 				local eneDist = myPos:Distance(enePos)
 				local eneDistNear = VJ.GetNearestDistance(self, ene, true)
 				local eneIsVisible = plyControlled and true or self:Visible(ene)
+				myTbl = self:GetTable() -- Update it in case values changed!
 				
 				-- Set latest enemy information
 				self:UpdateEnemyMemory(ene, enePos)
@@ -2734,7 +2744,7 @@ function ENT:Think()
 				eneData.Visible = eneIsVisible
 				eneData.Distance = eneDist
 				eneData.DistanceNearest = eneDistNear
-				local firingWep = self.WeaponAttackState && self.WeaponAttackState >= VJ.WEP_ATTACK_STATE_FIRE
+				local firingWep = myTbl.WeaponAttackState && myTbl.WeaponAttackState >= VJ.WEP_ATTACK_STATE_FIRE
 				if eneIsVisible then
 					if self:IsInViewCone(enePos) && (eneDist < self:GetMaxLookDistance()) then
 						eneData.LastVisibleTime = curTime
@@ -2748,31 +2758,35 @@ function ENT:Think()
 				end
 				
 				-- Turning / Facing Enemy
-				if self.ConstantlyFaceEnemy then self:MaintainConstantlyFaceEnemy() end
+				if myTbl.ConstantlyFaceEnemy then self:MaintainConstantlyFaceEnemy() end
 				turnData = self.TurnData
 				if turnData.Type == VJ.FACE_ENEMY or (turnData.Type == VJ.FACE_ENEMY_VISIBLE && eneIsVisible) then
 					local resultAng = self:GetTurnAngle((enePos - myPos):Angle())
-					if self.TurningUseAllAxis then
+					if myTbl.TurningUseAllAxis then
 						local myAng = self:GetAngles()
-						self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+						self:SetAngles(LerpAngle(FrameTime()*myTbl.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
 					end
 					self:SetIdealYawAndUpdate(resultAng.y)
 					self.TurnData.LastYaw = resultAng.y
 				end
 
 				-- Call for help
-				if self.CallForHelp && curTime > self.NextCallForHelpT && !self.AttackType then
-					self:Allies_CallHelp(self.CallForHelpDistance)
+				if myTbl.CallForHelp && curTime > myTbl.NextCallForHelpT && !myTbl.AttackType then
+					self:Allies_CallHelp(myTbl.CallForHelpDistance)
 					self.NextCallForHelpT = curTime + self.CallForHelpCooldown
 				end
 				
 				self:UpdatePoseParamTracking()
 				
-				if !self.PauseAttacks && !self.Flinching && !self.FollowData.StopAct && curTime > self.NextDoAnyAttackT && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE then
+				-- Attacks
+				myTbl = self:GetTable() -- Update it in case values changed!
+				if !myTbl.PauseAttacks && !myTbl.Flinching && !myTbl.FollowData.StopAct && curTime > myTbl.NextDoAnyAttackT && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && myTbl.Behavior != VJ_BEHAVIOR_PASSIVE && myTbl.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE then
 					-- Attack priority in order: Custom --> Melee --> Grenade
-					local funcThinkAtk = self.OnThinkAttack; if funcThinkAtk then funcThinkAtk(self, !!self.AttackType, ene) end
+					local funcThinkAtk = self.OnThinkAttack; if funcThinkAtk then funcThinkAtk(self, !!myTbl.AttackType, ene) end
+					
 					-- Melee Attack
-					if self.HasMeleeAttack && self.IsAbleToMeleeAttack && !self.AttackType && (!IsValid(curWep) or (IsValid(curWep) && (!curWep.IsMeleeWeapon))) && ((plyControlled && self.VJ_TheController:KeyDown(IN_ATTACK)) or (!plyControlled && (eneDistNear < self.MeleeAttackDistance && eneIsVisible) && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
+					myTbl = self:GetTable() -- Update it in case values changed!
+					if myTbl.HasMeleeAttack && myTbl.IsAbleToMeleeAttack && !myTbl.AttackType && (!IsValid(curWep) or (IsValid(curWep) && (!curWep.IsMeleeWeapon))) && ((plyControlled && myTbl.VJ_TheController:KeyDown(IN_ATTACK)) or (!plyControlled && (eneDistNear < myTbl.MeleeAttackDistance && eneIsVisible) && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(myTbl.MeleeAttackAngleRadius))))) then
 						local seed = curTime; self.AttackSeed = seed
 						self.IsAbleToMeleeAttack = false
 						self.AttackType = VJ.ATTACK_TYPE_MELEE
@@ -2808,7 +2822,7 @@ function ENT:Think()
 					end
 					
 					-- Grenade attack
-					if self.HasGrenadeAttack && self:GetWeaponState() != VJ.WEP_STATE_RELOADING && !self:IsBusy("Activities") && curTime > self.NextThrowGrenadeT && curTime > self.TakingCoverT then
+					if self.HasGrenadeAttack && curTime > self.NextThrowGrenadeT && curTime > self.TakingCoverT && self:GetWeaponState() != VJ.WEP_STATE_RELOADING && !self:IsBusy("Activities") then
 						if plyControlled then
 							if self.VJ_TheController:KeyDown(IN_JUMP) then
 								self:GrenadeAttack()
@@ -3316,7 +3330,8 @@ local function math_angDif(diff)
 end
 --
 function ENT:UpdatePoseParamTracking(resetPoses)
-	if !self.HasPoseParameterLooking or (!self.VJ_IsBeingControlled && (!self.WeaponAttackState or (!self.EnemyData.Visible && self.WeaponAttackState < VJ.WEP_ATTACK_STATE_FIRE))) then return end
+	local myTbl = self:GetTable() -- Only Lua variables that won't change during this call
+	if !myTbl.HasPoseParameterLooking or (!myTbl.VJ_IsBeingControlled && (!myTbl.WeaponAttackState or (!myTbl.EnemyData.Visible && myTbl.WeaponAttackState < VJ.WEP_ATTACK_STATE_FIRE))) then return end
 	//VJ.GetPoseParameters(self)
 	local ene = self:GetEnemy()
 	local newPitch = 0
@@ -3327,21 +3342,22 @@ function ENT:UpdatePoseParamTracking(resetPoses)
 		local myAng = self:GetAngles()
 		local eneAng = (self:GetAimPosition(ene, myEyePos) - myEyePos):Angle()
 		newPitch = math_angDif(eneAng.p - myAng.p)
-		if self.PoseParameterLooking_InvertPitch then newPitch = -newPitch end
+		if myTbl.PoseParameterLooking_InvertPitch then newPitch = -newPitch end
 		newYaw = math_angDif(eneAng.y - myAng.y)
-		if self.PoseParameterLooking_InvertYaw then newYaw = -newYaw end
+		if myTbl.PoseParameterLooking_InvertYaw then newYaw = -newYaw end
 		newRoll = math_angDif(eneAng.z - myAng.z)
-		if self.PoseParameterLooking_InvertRoll then newRoll = -newRoll end
-	elseif !self.PoseParameterLooking_CanReset then
+		if myTbl.PoseParameterLooking_InvertRoll then newRoll = -newRoll end
+	elseif !myTbl.PoseParameterLooking_CanReset then
 		return -- Should it reset its pose parameters if there is no enemies?
 	end
 	
 	local funcCustom = self.OnUpdatePoseParamTracking; if funcCustom then funcCustom(self, newPitch, newYaw, newRoll) end
-	local names = self.PoseParameterLooking_Names
+	myTbl = self:GetTable() -- Update it in case values changed in the hook above!
+	local names = myTbl.PoseParameterLooking_Names
 	local namesPitch = names.pitch
 	local namesYaw = names.yaw
 	local namesRoll = names.roll
-	local speed = self.PoseParameterLooking_TurningSpeed
+	local speed = myTbl.PoseParameterLooking_TurningSpeed
 	local getPoseParameter = self.GetPoseParameter
 	local setPoseParameter = self.SetPoseParameter
 	for x = 1, #namesPitch do
@@ -3370,33 +3386,34 @@ function ENT:CanFireWeapon(checkDistance, checkDistanceOnly)
 	if self:OnWeaponCanFire() == false then return false end
 	local hasDist = false
 	local hasChecks = false
-	local curWep = self.WeaponEntity
+	local myTbl = self:GetTable() -- Only Lua variables that won't change during this call
+	local curWep = myTbl.WeaponEntity
 	
-	if self.PauseAttacks or !IsValid(curWep) or self:GetWeaponState() != VJ.WEP_STATE_READY then return false end
-	if self.VJ_IsBeingControlled then
+	if myTbl.PauseAttacks or !IsValid(curWep) or self:GetWeaponState() != VJ.WEP_STATE_READY then return false end
+	if myTbl.VJ_IsBeingControlled then
 		checkDistance = false
 	else
-		local enemyDist = self.EnemyData.Distance
-		if checkDistance && CurTime() > self.NextWeaponAttackT && enemyDist < self.Weapon_MaxDistance && ((enemyDist > self.Weapon_MinDistance) or curWep.IsMeleeWeapon) then
+		local enemyDist = myTbl.EnemyData.Distance
+		if checkDistance && CurTime() > myTbl.NextWeaponAttackT && enemyDist < myTbl.Weapon_MaxDistance && ((enemyDist > myTbl.Weapon_MinDistance) or curWep.IsMeleeWeapon) then
 			hasDist = true
 		end
 		if checkDistanceOnly then
 			return hasDist
 		end
 	end
-	if !self.AttackType && !self:IsBusy("Activities") then
+	if !myTbl.AttackType && !self:IsBusy("Activities") then
 		hasChecks = true
 		if !checkDistance then return true end
 	end
 	return hasDist && hasChecks
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local schedule_player_move = vj_ai_schedule.New("SCHEDULE_PLAYER_MOVE")
-	schedule_player_move:EngTask("TASK_MOVE_AWAY_PATH", 120)
-	schedule_player_move:EngTask("TASK_RUN_PATH", 0)
-	schedule_player_move:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	schedule_player_move.CanShootWhenMoving = true
-	schedule_player_move.TurnData = {} -- This is constantly edited!
+local schedule_yield_player = vj_ai_schedule.New("SCHEDULE_YIELD_PLAYER")
+	schedule_yield_player:EngTask("TASK_MOVE_AWAY_PATH", 120)
+	schedule_yield_player:EngTask("TASK_RUN_PATH", 0)
+	schedule_yield_player:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	schedule_yield_player.CanShootWhenMoving = true
+	schedule_yield_player.TurnData = {} -- This is constantly edited!
 --
 function ENT:SelectSchedule()
 	if self.VJ_IsBeingControlled or self.Dead then return end
@@ -3488,7 +3505,6 @@ function ENT:SelectSchedule()
 			local enePos_Eye = ene:EyePos()
 			local myPos = self:GetPos()
 			local myPosCentered = myPos + self:OBBCenter()
-			local canAttack = true
 			
 			-- Retreat from enemy if it's to close
 			if eneData.Distance <= self.Weapon_RetreatDistance && !wep.IsMeleeWeapon && curTime > self.TakingCoverT && curTime > self.NextChaseTime && !self.AttackType && !self.IsFollowing && ene.Behavior != VJ_BEHAVIOR_PASSIVE && !self:DoCoverTrace(myPosCentered, enePos_Eye) then
@@ -3497,12 +3513,12 @@ function ENT:SelectSchedule()
 					self:SetLastPosition(moveCheck)
 					if self:GetWeaponState() == VJ.WEP_STATE_RELOADING then self:SetWeaponState() end
 					self.TakingCoverT = curTime + 2
-					canAttack = false
 					self:SCHEDULE_GOTO_POSITION("TASK_RUN_PATH", function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.TurnData = {Type = VJ.FACE_ENEMY} end)
+					goto goto_conditions
 				end
 			end
 			
-			if canAttack && self:CanFireWeapon(false, false) && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK then
+			if self:CanFireWeapon(false, false) && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK then
 				-- Enemy to far away or not allowed to fire a weapon
 				if eneData.Distance > self.Weapon_MaxDistance or curTime < self.NextWeaponAttackT then
 					self:MaintainAlertBehavior()
@@ -3539,7 +3555,7 @@ function ENT:SelectSchedule()
 						if !self.HasPoseParameterLooking then -- Pose parameter looking is disabled then always face
 							self:SetTurnTarget("Enemy")
 						else
-							local wepDif = 1// self.Weapon_AimTurnDiff or self.Weapon_AimTurnDiff_Def
+							local wepDif = self.Weapon_AimTurnDiff or self.Weapon_AimTurnDiff_Def
 							local los = ene:GetPos() - myPos
 							los.z = 0
 							local facingDir = self:GetAngles():Forward() -- Do NOT use sight dir bec some NPCs use their eyes as the dir, it will trick the system to think the NPC is facing the enemy
@@ -3550,7 +3566,6 @@ function ENT:SelectSchedule()
 								self:UpdatePoseParamTracking(true) -- Reset pose parameters to help with turning snaps
 							end
 						end
-						local canFire = true
 						// self:MaintainAlertBehavior()
 						-- if covered, try to move forward by calculating the distance between the prop and the NPC
 						local inCover, inCoverTrace = self:DoCoverTrace(myPosCentered, enePos_Eye, false, {SetLastHiddenTime = true})
@@ -3580,7 +3595,7 @@ function ENT:SelectSchedule()
 							if inCover then
 								-- Behind cover and I am taking cover, don't fire!
 								if curTime < self.TakingCoverT then
-									canFire = false
+									goto goto_conditions
 								elseif curTime > self.NextMoveOnGunCoveredT && ((inCoverTrace.HitPos:Distance(myPos) > 150 && !inCoverEntLiving) or (wepInCover && !wepInCoverEnt.VJ_ID_Living)) then
 									self.AllowWeaponOcclusionDelay = false
 									local nearestPos;
@@ -3617,7 +3632,7 @@ function ENT:SelectSchedule()
 							end
 						end
 						
-						if canFire && curTime > self.NextWeaponAttackT && curTime > self.NextWeaponAttackT_Base then
+						if curTime > self.NextWeaponAttackT && curTime > self.NextWeaponAttackT_Base then
 							-- Melee weapons
 							if wep.IsMeleeWeapon then
 								self:OnWeaponAttack()
@@ -3705,16 +3720,16 @@ function ENT:SelectSchedule()
 	if hasCond(self, COND_PLAYER_PUSHING) && curTime > self.TakingCoverT && !self:IsBusy("Activities") then
 		self:PlaySoundSystem("YieldToPlayer")
 		if eneValid then -- Face current enemy
-			schedule_player_move.TurnData.Type = VJ.FACE_ENEMY_VISIBLE
-			schedule_player_move.TurnData.Target = nil
+			schedule_yield_player.TurnData.Type = VJ.FACE_ENEMY_VISIBLE
+			schedule_yield_player.TurnData.Target = nil
 		elseif IsValid(self:GetTarget()) then -- Face current target
-			schedule_player_move.TurnData.Type = VJ.FACE_ENTITY_VISIBLE
-			schedule_player_move.TurnData.Target = self:GetTarget()
+			schedule_yield_player.TurnData.Type = VJ.FACE_ENTITY_VISIBLE
+			schedule_yield_player.TurnData.Target = self:GetTarget()
 		else -- Reset if both others fail! (Remember this is a localized table shared between all NPCs!)
-			schedule_player_move.TurnData.Type = nil
-			schedule_player_move.TurnData.Target = nil
+			schedule_yield_player.TurnData.Type = nil
+			schedule_yield_player.TurnData.Target = nil
 		end
-		self:StartSchedule(schedule_player_move)
+		self:StartSchedule(schedule_yield_player)
 		self.TakingCoverT = curTime + 2
 	end
 end

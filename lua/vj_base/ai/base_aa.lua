@@ -364,15 +364,16 @@ local badACTs = {[ACT_WALK] = true, [ACT_WALK_AIM] = true, [ACT_RUN] = true, [AC
 --
 function ENT:AA_MoveAnimation()
 	-- NOTE: Unique condition used for directional flying animations in TranslateActivity:
-		--  if "self.AA_CurrentMoveAnim" is current sequence AND current activity is not a sequence AND translated activity does not equal current sequence's activity
+		--  if "AA_CurrentMoveAnim" is current sequence AND current activity is not a sequence AND translated activity does not equal current sequence's activity
 	local curSeq = self:GetSequence()
 	local curACT = self:GetActivity()
-	if ((CurTime() > self.AA_NextMoveAnimTime) or (curSeq != self.AA_CurrentMoveAnim or (curACT != ACT_DO_NOT_DISTURB && self:GetSequenceActivity(curSeq) != self:TranslateActivity(curACT)))) && !self:IsBusy("Activities") then
+	local myTbl = self:GetTable() -- Only Lua variables that won't change during this call
+	if ((CurTime() > myTbl.AA_NextMoveAnimTime) or (curSeq != myTbl.AA_CurrentMoveAnim or (curACT != ACT_DO_NOT_DISTURB && self:GetSequenceActivity(curSeq) != self:TranslateActivity(curACT)))) && !self:IsBusy("Activities") then
 		local chosenAnim = false
-		if self.AA_CurrentMoveAnimType == "Calm" then
-			chosenAnim = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Calm) or self.Aerial_AnimTbl_Calm
-		elseif self.AA_CurrentMoveAnimType == "Alert" then
-			chosenAnim = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Alerted) or self.Aerial_AnimTbl_Alerted
+		if myTbl.AA_CurrentMoveAnimType == "Calm" then
+			chosenAnim = (myTbl.MovementType == VJ_MOVETYPE_AQUATIC and myTbl.Aquatic_AnimTbl_Calm) or myTbl.Aerial_AnimTbl_Calm
+		elseif myTbl.AA_CurrentMoveAnimType == "Alert" then
+			chosenAnim = (myTbl.MovementType == VJ_MOVETYPE_AQUATIC and myTbl.Aquatic_AnimTbl_Alerted) or myTbl.Aerial_AnimTbl_Alerted
 		end
 		chosenAnim = VJ.PICK(chosenAnim)
 		local _, animDur = self:PlayAnim(chosenAnim, false, 0, false, 0, {AlwaysUseSequence = badACTs[chosenAnim] or false})

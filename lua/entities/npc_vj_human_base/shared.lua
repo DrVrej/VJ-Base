@@ -28,22 +28,6 @@ end
 //end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	//ENT.RenderGroup = RENDERGROUP_BOTH
-	function ENT:Initialize()
-		if GetConVar("vj_npc_ikchains"):GetInt() == 0 then self:SetIK(false) end
-		if GetConVar("vj_npc_forcelowlod"):GetInt() == 1 then self:SetLOD(8) end
-		if self.CustomOnDraw then -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
-			function self:Draw()
-				self:DrawModel()
-				self:CustomOnDraw()
-			end
-		end
-		self:Init()
-	end
-	function ENT:Draw() self:DrawModel() end
-	function ENT:DrawTranslucent() self:Draw() end
-	//function ENT:CalcAbsolutePosition(pos, ang) end
-	-- Custom functions ---------------------------------------------------------------------------------------------------------------------------------------------
 	function ENT:Init() end
 	--[[---------------------------------------------------------
 		UNCOMMENT TO USE | Overrides the camera calculations for the NPC Controller
@@ -66,4 +50,23 @@ if CLIENT then
 			--
 	-----------------------------------------------------------]]
 	-- function ENT:Controller_CalcView(ply, origin, angles, fov, camera, cameraMode) end
+	---------------------------------------------------------------------------------------------------------------------------------------------
+	//ENT.RenderGroup = RENDERGROUP_BOTH
+	local metaEntity = FindMetaTable("Entity")
+	local funcDrawModel = metaEntity.DrawModel
+	
+	function ENT:Initialize()
+		if GetConVar("vj_npc_ikchains"):GetInt() == 0 then self:SetIK(false) end
+		if GetConVar("vj_npc_forcelowlod"):GetInt() == 1 then self:SetLOD(8) end
+		if self.CustomOnDraw then -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
+			function self:Draw()
+				funcDrawModel(self)
+				self:CustomOnDraw()
+			end
+		end
+		self:Init()
+	end
+	function ENT:Draw() funcDrawModel(self) end
+	function ENT:DrawTranslucent() self:Draw() end
+	//function ENT:CalcAbsolutePosition(pos, ang) end
 end

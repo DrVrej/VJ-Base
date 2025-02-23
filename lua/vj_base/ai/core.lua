@@ -12,6 +12,19 @@
 */
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Localized static values
+local metaEntity = FindMetaTable("Entity")
+local funcSetSaveValue = metaEntity.SetSaveValue
+local funcGetCycle = metaEntity.GetCycle
+local funcGetSequenceActivity = metaEntity.GetSequenceActivity
+local funcVisible = metaEntity.Visible
+--
+local metaNPC = FindMetaTable("NPC")
+local funcGetIdealActivity = metaNPC.GetIdealActivity
+local funcGetActivity = metaNPC.GetActivity
+local funcGetIdealSequence = metaNPC.GetIdealSequence
+local funcAddEntityRelationship = metaNPC.AddEntityRelationship
+local funcIsInViewCone = metaNPC.IsInViewCone
+
 local defPos = Vector(0, 0, 0)
 local defAng = Angle(0, 0, 0)
 local CurTime = CurTime
@@ -452,8 +465,8 @@ end
 -----------------------------------------------------------]]
 function ENT:ResolveAnimation(tbl)
 	-- Returns the current animation if it's found in the table and is not done playing it
-	if self:GetCycle() < 0.99 then
-		local curAnim = self:GetSequenceActivity(self:GetIdealSequence())
+	if funcGetCycle(self) < 0.99 then
+		local curAnim = funcGetSequenceActivity(self, funcGetIdealSequence(self))
 		for _, anim in ipairs(tbl) do
 			if curAnim == anim then
 				return anim
@@ -477,17 +490,17 @@ function ENT:MaintainIdleAnimation(force)
 		self.LastAnimSeed = 0
 		self:ResetIdealActivity(ACT_IDLE)
 		self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L2987
-		self:SetSaveValue("m_bSequenceLoops", false) -- Otherwise it will stutter and play an idle sequence at 999x playback speed for 0.001 second when changing from one idle to another!
-	elseif self:GetIdealActivity() == ACT_IDLE && self:GetActivity() == ACT_IDLE then -- Check both ideal and current to make sure we are 100% playing an idle, otherwise transitions, certain movements, and animations will break!
+		funcSetSaveValue(self, "m_bSequenceLoops", false) -- Otherwise it will stutter and play an idle sequence at 999x playback speed for 0.001 second when changing from one idle to another!
+	elseif funcGetIdealActivity(self) == ACT_IDLE && funcGetActivity(self) == ACT_IDLE then -- Check both ideal and current to make sure we are 100% playing an idle, otherwise transitions, certain movements, and animations will break!
 		-- If animation has finished OR idle animation has changed then play a new idle!
-		if (self:GetCycle() >= 0.98) or (self:TranslateActivity(ACT_IDLE) != self:GetSequenceActivity(self:GetIdealSequence())) then
+		if (funcGetCycle(self) >= 0.98) or (self:TranslateActivity(ACT_IDLE) != funcGetSequenceActivity(self, funcGetIdealSequence(self))) then
 			//VJ.DEBUG_Print(self, "MaintainIdleAnimation", "auto")
 			self.LastAnimSeed = 0
 			self:ResetIdealActivity(ACT_IDLE)
 			self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L2987
-			self:SetSaveValue("m_bSequenceLoops", false) -- Otherwise it will stutter and play an idle sequence at 999x playback speed for 0.001 second when changing from one idle to another!
+			funcSetSaveValue(self, "m_bSequenceLoops", false) -- Otherwise it will stutter and play an idle sequence at 999x playback speed for 0.001 second when changing from one idle to another!
 		else
-			self:SetSaveValue("m_bSequenceLoops", true) -- "m_bSequenceLoops" has to be true because non-looped animations tend to cut off near the end, usually after the cycle passes 0.8
+			funcSetSaveValue(self, "m_bSequenceLoops", true) -- "m_bSequenceLoops" has to be true because non-looped animations tend to cut off near the end, usually after the cycle passes 0.8
 		end
 	end
 	
@@ -501,13 +514,14 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainIdleBehavior(idleType) -- idleType: nil = Random | 1 = Wander | 2 = Idle Stand
 	local curTime = CurTime()
-	if self.Dead or self.VJ_IsBeingControlled or (self.AttackAnimTime > curTime) or (self.NextIdleTime > curTime) or (self.AA_CurrentMoveTime > curTime) or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
+	local myTbl = self:GetTable() -- Only Lua variables that won't change during this call
+	if myTbl.Dead or myTbl.VJ_IsBeingControlled or (myTbl.AttackAnimTime > curTime) or (myTbl.NextIdleTime > curTime) or (myTbl.AA_CurrentMoveTime > curTime) or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
-	if self:IsGoalActive() or self.DisableWandering or self.IsGuard or self.MovementType == VJ_MOVETYPE_STATIONARY or !self.LastHiddenZone_CanWander or self.NextWanderTime > curTime or self.IsFollowing or self.Medic_Status then
+	if self:IsGoalActive() or myTbl.DisableWandering or myTbl.IsGuard or myTbl.MovementType == VJ_MOVETYPE_STATIONARY or !myTbl.LastHiddenZone_CanWander or myTbl.NextWanderTime > curTime or myTbl.IsFollowing or myTbl.Medic_Status then
 		self:SCHEDULE_IDLE_STAND()
 		return -- Don't set self.NextWanderTime below
-	elseif !idleType && self.IdleAlwaysWander then
+	elseif !idleType && myTbl.IdleAlwaysWander then
 		idleType = 1
 	end
 	
@@ -631,7 +645,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 		end
 	elseif isString && !isSequence then -- Only for regular & gesture strings
 		-- If it can be played as an activity, then convert it!
-		local result = self:GetSequenceActivity(self:LookupSequence(animation))
+		local result = funcGetSequenceActivity(self, self:LookupSequence(animation))
 		if result == nil or result == -1 then -- Leave it as string
 			isSequence = true
 		else -- Set it as an activity
@@ -819,13 +833,14 @@ end
 -----------------------------------------------------------]]
 function ENT:IsBusy(checkType)
 	local checkAll = !checkType
+	local myTbl = self:GetTable() -- Only Lua variables that won't change during this call
 	if checkAll or checkType == "Behaviors" then
-		return self.FollowData.Moving or self.Medic_Status
+		return myTbl.FollowData.Moving or myTbl.Medic_Status
 	end
 	if checkAll or checkType == "Activities" then
-		if self.PauseAttacks then return true end
+		if myTbl.PauseAttacks then return true end
 		local curTime = CurTime()
-		if self.AnimLockTime > curTime or self.AttackAnimTime > curTime then return true end
+		if myTbl.AnimLockTime > curTime or myTbl.AttackAnimTime > curTime then return true end
 		local navType = self:GetNavType()
 		return navType == NAV_JUMP or navType == NAV_CLIMB
 	end
@@ -1056,7 +1071,7 @@ function ENT:OverrideMoveFacing(flInterval, move)
 	local curTurnData = self.TurnData
 	if curTurnData.Type && curTurnData.LastYaw != 0 then
 		self:UpdateYaw() -- Use "UpdateYaw" instead of "SetIdealYawAndUpdate" to avoid pose parameter glitches!
-		self:SetPoseParameter("move_yaw", math_angDif(UTIL_VecToYaw( move.dir ), self:GetLocalAngles().y))
+		self:SetPoseParameter("move_yaw", math_angDif(UTIL_VecToYaw(move.dir), self:GetLocalAngles().y))
 		-- Need to set the yaw pose parameter, otherwise when face moving, certain directions will look broken (such as Combine soldier facing forward while moving backwards)
 		-- Based on: "CAI_Motor::MoveFacing( const AILocalMoveGoal_t &move )" | Link: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_motor.cpp#L631
 		didTurn = true
@@ -1105,7 +1120,7 @@ end
 -----------------------------------------------------------]]
 function ENT:GetAimPosition(target, aimOrigin, predictionRate, projectileSpeed)
 	local result;
-	if self:Visible(target) then
+	if funcVisible(self, target) then
 		result = target:BodyTarget(aimOrigin)
 		if target:IsPlayer() then -- Decrease player's Z axis as it's placed very high by the engine
 			result.z = result.z - 15
@@ -1301,7 +1316,7 @@ end
 		- EXAMPLES: 0 = Take no physics damage | 0.001 = Take extremely minimum damage (manhack level) | 0.1 = Take little damage | 999999999 = Instant death
 -----------------------------------------------------------]]
 function ENT:SetPhysicsDamageScale(scale)
-	self:SetSaveValue("m_impactEnergyScale", scale)
+	funcSetSaveValue(self, "m_impactEnergyScale", scale)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1605,7 +1620,7 @@ function ENT:MaintainMedicBehavior()
 		if !IsValid(ally) or !ally:Alive() or (ally:Health() > ally:GetMaxHealth() * 0.75) or self:CheckRelationship(ally) != D_LI then self:ResetMedicBehavior() return end
 		
 		-- Heal them!
-		if self:Visible(ally) && VJ.GetNearestDistance(self, ally) <= self.Medic_HealDistance then
+		if funcVisible(self, ally) && VJ.GetNearestDistance(self, ally) <= self.Medic_HealDistance then
 			self.Medic_Status = "Healing"
 			self:OnMedicBehavior("BeforeHeal")
 			self:PlaySoundSystem("MedicBeforeHeal")
@@ -1787,7 +1802,7 @@ function ENT:ForceSetEnemy(ent, stopMoving, maxPerf, hasEnemy)
 	if !maxPerf then
 		if (!IsValid(ent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or !ent:Alive() or (ent:IsPlayer() && VJ_CVAR_IGNOREPLAYERS)) then return end
 		hasEnemy = IsValid(self:GetEnemy())
-		self:AddEntityRelationship(ent, D_HT, 0)
+		funcAddEntityRelationship(self, ent, D_HT, 0)
 	end
 	self:SetEnemy(ent)
 	self:UpdateEnemyMemory(ent, ent:GetPos())
@@ -1866,7 +1881,8 @@ local ENT_TYPE_NEXTBOT = 3
 --
 -- Returns whether or not it found an enemy
 function ENT:MaintainRelationships()
-	local myBehavior = self.Behavior
+	local myTbl = self:GetTable() -- Only Lua variables that won't change during this call
+	local myBehavior = myTbl.Behavior
 	if myBehavior == VJ_BEHAVIOR_PASSIVE_NATURE then return false end
 	local entities = self.RelationshipEnts
 	if !entities then return false end
@@ -1875,7 +1891,7 @@ function ENT:MaintainRelationships()
 	//VJ.DEBUG_Print(self, "MaintainRelationships")
 	//PrintTable(entities)
 	//print("----------")
-	local myClasses = self.VJ_NPC_Class
+	local myClasses = myTbl.VJ_NPC_Class
 	local myClassesChanged = false
 	if self.CacheRelationshipClasses != myClasses then
 		myClassesChanged = true
@@ -1886,8 +1902,8 @@ function ENT:MaintainRelationships()
 	local myPos = self:GetPos()
 	local mySightDist = self:GetMaxLookDistance()
 	local myHandlePerceived = self.HandlePerceivedRelationship
-	local myCanAlly = self.CanAlly
-	local myFriPlyAllies = self.AlliedWithPlayerAllies
+	local myCanAlly = myTbl.CanAlly
+	local myFriPlyAllies = myTbl.AlliedWithPlayerAllies
 	local notIsNeutral = myBehavior != VJ_BEHAVIOR_NEUTRAL
 	local customFunc = self.OnMaintainRelationships
 	local nearestDist = false
@@ -1909,7 +1925,7 @@ function ENT:MaintainRelationships()
 				if self:GetEnemy() == ent then
 					self:ResetEnemy(true, false)
 				end
-				self:AddEntityRelationship(ent, D_NU, 0)
+				funcAddEntityRelationship(self, ent, D_NU, 0)
 				continue
 			end
 			
@@ -2005,7 +2021,7 @@ function ENT:MaintainRelationships()
                 -- Return false to let rest of the function run otherwise return a disposition to override
 				local result = entHandlePerceived(ent, self, distanceToEnt, calculatedDisp == D_LI)
                 if result then
-                    self:AddEntityRelationship(ent, result, 0)
+                    funcAddEntityRelationship(self, ent, result, 0)
 					calculatedDisp = result
                     //continue
                 end
@@ -2020,7 +2036,7 @@ function ENT:MaintainRelationships()
 				end
 				
 				//ent:AddEntityRelationship(self, D_LI, 0)
-				self:AddEntityRelationship(ent, D_LI, 0)
+				funcAddEntityRelationship(self, ent, D_LI, 0)
 				
 				-- Handle how non-VJ NPCs feel towards us
 				if entType == ENT_TYPE_NPC && !ent.IsVJBaseSNPC then
@@ -2081,14 +2097,14 @@ function ENT:MaintainRelationships()
 					local entCanEngage = ent.CanBeEngaged
 					if entCanEngage && !entCanEngage(ent, self, distanceToEnt) && (!eneValid or ene != ent) then
 						//print("MaintainRelationships 2 - entCanEngage")
-						self:AddEntityRelationship(ent, D_VJ_INTEREST, 0)
+						funcAddEntityRelationship(self, ent, D_VJ_INTEREST, 0)
 						calculatedDisp = D_VJ_INTEREST
 					else
 						-- SetEnemy: In order - Can find enemy + Not neutral or alerted + Is visible + In sight cone
-						if self.EnemyDetection && (notIsNeutral or self.Alerted == ALERT_STATE_ENEMY) && (self.EnemyXRayDetection or self:Visible(ent)) && self:IsInViewCone(entPos) then
+						if myTbl.EnemyDetection && (notIsNeutral or self.Alerted == ALERT_STATE_ENEMY) && (myTbl.EnemyXRayDetection or funcVisible(self, ent)) && funcIsInViewCone(self, entPos) then
 							//print("MaintainRelationships 2 - set enemy")
 							eneVisCount = eneVisCount + 1
-							self:AddEntityRelationship(ent, D_HT, 0)
+							funcAddEntityRelationship(self, ent, D_HT, 0)
 							calculatedDisp = D_HT
 							-- If the detected enemy is closer than the previous enemies, the set this as the enemy!
 							if !nearestDist or (distanceToEnt < nearestDist) then
@@ -2098,7 +2114,7 @@ function ENT:MaintainRelationships()
 						-- If all else failed then check if we hate this entity, if not then set it as an interest
 						elseif self:Disposition(ent) != D_HT then
 							//print("MaintainRelationships 2 - regular D_VJ_INTEREST")
-							self:AddEntityRelationship(ent, D_VJ_INTEREST, 0)
+							funcAddEntityRelationship(self, ent, D_VJ_INTEREST, 0)
 							calculatedDisp = D_VJ_INTEREST
 						end
 					end
@@ -2111,7 +2127,7 @@ function ENT:MaintainRelationships()
 					-- Investigation: Sound detection
 					if ent.VJ_SD_InvestLevel && distanceToEnt < (self.InvestigateSoundMultiplier * ent.VJ_SD_InvestLevel) && ((CurTime() - ent.VJ_SD_InvestTime) <= 1) then
 						self:DoReadyAlert()
-						if self:Visible(ent) then
+						if funcVisible(self, ent) then
 							self:StopMoving()
 							self:SetTarget(ent)
 							self:SCHEDULE_FACE("TASK_FACE_TARGET")
@@ -2140,7 +2156,7 @@ function ENT:MaintainRelationships()
 			end
 			
 			-- HasOnPlayerSight system, used to do certain actions when it sees the player
-			if entType == ENT_TYPE_PLAYER && self.HasOnPlayerSight && CurTime() > self.NextOnPlayerSightT && distanceToEnt < self.OnPlayerSightDistance && self:Visible(ent) && self:IsInViewCone(entPos) then
+			if entType == ENT_TYPE_PLAYER && self.HasOnPlayerSight && CurTime() > self.NextOnPlayerSightT && distanceToEnt < self.OnPlayerSightDistance && funcVisible(self, ent) && funcIsInViewCone(self, entPos) then
 				-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 				local disp = self.OnPlayerSightDispositionLevel
 				if (disp == 0) or (disp == 1 && (self:Disposition(ent) == D_LI or self:Disposition(ent) == D_NU)) or (disp == 2 && self:Disposition(ent) != D_LI) then
@@ -2528,24 +2544,25 @@ function ENT:SpawnBloodPool(dmginfo, hitgroup, corpse)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlayFootstepSound(customSD)
-	if self.HasSounds && self.HasFootstepSounds && self.MovementType != VJ_MOVETYPE_STATIONARY && self:IsOnGround() then
-		if self.DisableFootStepSoundTimer then
+	local myTbl = self:GetTable() -- Only Lua variables that won't change during this call
+	if myTbl.HasSounds && myTbl.HasFootstepSounds && myTbl.MovementType != VJ_MOVETYPE_STATIONARY && self:IsOnGround() then
+		if myTbl.DisableFootStepSoundTimer then
 			-- Use custom table if available, if none found then use the footstep sound table
-			local pickedSD = customSD and PICK(customSD) or PICK(self.SoundTbl_FootStep)
+			local pickedSD = customSD and PICK(customSD) or PICK(myTbl.SoundTbl_FootStep)
 			if pickedSD then
-				VJ.EmitSound(self, pickedSD, self.FootstepSoundLevel, self:GetSoundPitch(self.FootstepSoundPitch))
+				VJ.EmitSound(self, pickedSD, myTbl.FootstepSoundLevel, self:GetSoundPitch(myTbl.FootstepSoundPitch))
 				local funcCustom = self.OnFootstepSound; if funcCustom then funcCustom(self, "Event", pickedSD) end
 			end
-		elseif self:IsMoving() && CurTime() > self.NextFootstepSoundT && self:GetMoveDelay() <= 0 then
+		elseif self:IsMoving() && CurTime() > myTbl.NextFootstepSoundT && self:GetMoveDelay() <= 0 then
 			-- Use custom table if available, if none found then use the footstep sound table
-			local pickedSD = customSD and PICK(customSD) or PICK(self.SoundTbl_FootStep)
+			local pickedSD = customSD and PICK(customSD) or PICK(myTbl.SoundTbl_FootStep)
 			if pickedSD then
-				if self.FootstepSoundTimerRun && self:GetMovementActivity() == ACT_RUN then
-					VJ.EmitSound(self, pickedSD, self.FootstepSoundLevel, self:GetSoundPitch(self.FootstepSoundPitch))
+				if myTbl.FootstepSoundTimerRun && self:GetMovementActivity() == ACT_RUN then
+					VJ.EmitSound(self, pickedSD, myTbl.FootstepSoundLevel, self:GetSoundPitch(myTbl.FootstepSoundPitch))
 					local funcCustom = self.OnFootstepSound; if funcCustom then funcCustom(self, "Run", pickedSD) end
 					self.NextFootstepSoundT = CurTime() + self.FootstepSoundTimerRun
-				elseif self.FootstepSoundTimerWalk && self:GetMovementActivity() == ACT_WALK then
-					VJ.EmitSound(self, pickedSD, self.FootstepSoundLevel, self:GetSoundPitch(self.FootstepSoundPitch))
+				elseif myTbl.FootstepSoundTimerWalk && self:GetMovementActivity() == ACT_WALK then
+					VJ.EmitSound(self, pickedSD, myTbl.FootstepSoundLevel, self:GetSoundPitch(myTbl.FootstepSoundPitch))
 					local funcCustom = self.OnFootstepSound; if funcCustom then funcCustom(self, "Walk", pickedSD) end
 					self.NextFootstepSoundT = CurTime() + self.FootstepSoundTimerWalk
 				end
@@ -2556,37 +2573,38 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- combatIdle = Play combat idle if possible
 function ENT:PlayIdleSound(customSD, sdType, combatIdle)
-	if !self.HasSounds or !self.HasIdleSounds then return end
+	local myTbl = self:GetTable() -- Only Lua variables that won't change during this call
+	if !myTbl.HasSounds or !myTbl.HasIdleSounds then return end
 	
 	local curTime = CurTime()
-	if self.NextIdleSoundT_Reg < curTime && self.NextIdleSoundT < curTime then
+	if myTbl.NextIdleSoundT_Reg < curTime && myTbl.NextIdleSoundT < curTime then
 		local setTimer = true
 		if customSD then
 			customSD = PICK(customSD)
 		end
 		
 		-- Yete CombatIdle tsayn chouni YEV gerna barz tsayn hanel, ere vor barz tsayn han e
-		if combatIdle && !PICK(self.SoundTbl_CombatIdle) && !self.IdleSoundsRegWhileAlert then
+		if combatIdle && !PICK(myTbl.SoundTbl_CombatIdle) && !myTbl.IdleSoundsRegWhileAlert then
 			combatIdle = false
 		end
 		
 		if combatIdle then
-			local pickedSD = PICK(self.SoundTbl_CombatIdle)
-			if (math.random(1,self.CombatIdleSoundChance) == 1 && pickedSD) or customSD then
+			local pickedSD = PICK(myTbl.SoundTbl_CombatIdle)
+			if (math.random(1, myTbl.CombatIdleSoundChance) == 1 && pickedSD) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(self.CurrentIdleSound)
-				self.CurrentIdleSound = (sdType or VJ.CreateSound)(self, pickedSD, self.CombatIdleSoundLevel, self:GetSoundPitch(self.CombatIdleSoundPitch))
+				self.CurrentIdleSound = (sdType or VJ.CreateSound)(self, pickedSD, myTbl.CombatIdleSoundLevel, self:GetSoundPitch(myTbl.CombatIdleSoundPitch))
 			end
-		elseif math.random(1, self.IdleSoundChance) == 1 or customSD then
-			local pickedSD = PICK(self.SoundTbl_Idle)
-			local pickedDialogueSD = PICK(self.SoundTbl_IdleDialogue)
+		elseif math.random(1, myTbl.IdleSoundChance) == 1 or customSD then
+			local pickedSD = PICK(myTbl.SoundTbl_Idle)
+			local pickedDialogueSD = PICK(myTbl.SoundTbl_IdleDialogue)
 			local playRegular = true
-			if pickedDialogueSD && self.HasIdleDialogueSounds && math.random(1, 2) == 1 then
+			if pickedDialogueSD && myTbl.HasIdleDialogueSounds && math.random(1, 2) == 1 then
 				local foundEnt;
 				local canAnswer = false
 				-- Don't break the loop unless we hit a VJ NPC that can answer break
 				-- If above failed, then simply return the last checked ally
-				for _, ent in ipairs(ents.FindInSphere(self:GetPos(), self.IdleDialogueDistance)) do
+				for _, ent in ipairs(ents.FindInSphere(self:GetPos(), myTbl.IdleDialogueDistance)) do
 					if ent != self then
 						if ent:IsPlayer() then
 							if self:CheckRelationship(ent) == D_LI && !self:OnIdleDialogue(ent, "CheckEnt", false) then
@@ -2653,7 +2671,7 @@ function ENT:PlayIdleSound(customSD, sdType, combatIdle)
 			if playRegular && (pickedSD or customSD) then
 				if customSD then pickedSD = customSD end
 				StopSD(self.CurrentIdleSound)
-				self.CurrentIdleSound = (sdType or VJ.CreateSound)(self, pickedSD, self.IdleSoundLevel, self:GetSoundPitch(self.IdleSoundPitch))
+				self.CurrentIdleSound = (sdType or VJ.CreateSound)(self, pickedSD, myTbl.IdleSoundLevel, self:GetSoundPitch(myTbl.IdleSoundPitch))
 			end
 		end
 		if setTimer then
