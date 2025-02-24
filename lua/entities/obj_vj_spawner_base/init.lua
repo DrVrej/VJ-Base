@@ -184,25 +184,26 @@ end
 function ENT:Think()
 	//print("-----------------------------------------------------------")
 	//PrintTable(self.CurrentEntities)
+	local selfData = self:GetTable()
 	self:OnThink()
 	
 	-- Idle sound
-	local sdTbl = self.SoundTbl_Idle
-	if sdTbl && CurTime() > self.NextIdleSoundT then
-		if math.random(1, self.IdleSoundChance) == 1 then
-			VJ.STOPSOUND(self.CurrentIdleSound)
-			self.CurrentIdleSound = VJ.CreateSound(self, sdTbl, self.IdleSoundLevel, math.random(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
+	local sdTbl = selfData.SoundTbl_Idle
+	if sdTbl && CurTime() > selfData.NextIdleSoundT then
+		if math.random(1, selfData.IdleSoundChance) == 1 then
+			VJ.STOPSOUND(selfData.CurrentIdleSound)
+			selfData.CurrentIdleSound = VJ.CreateSound(self, sdTbl, selfData.IdleSoundLevel, math.random(selfData.IdleSoundPitch.a, selfData.IdleSoundPitch.b))
 		end
-		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle.a, self.NextSoundTime_Idle.b)
+		selfData.NextIdleSoundT = CurTime() + math.Rand(selfData.NextSoundTime_Idle.a, selfData.NextSoundTime_Idle.b)
 	end
 	
 	-- If it's a continuous spawner then make sure to respawn any entity that has been removed
-	if !self.VJBaseSpawnerDisabled && !self.SingleSpawner then
-		for spawnKey, spawnTbl in ipairs(self.CurrentEntities) do
+	if !selfData.VJBaseSpawnerDisabled && !selfData.SingleSpawner then
+		for spawnKey, spawnTbl in ipairs(selfData.CurrentEntities) do
 			-- If entity is removed AND we are NOT already respawning it, then respawn!
 			if !IsValid(spawnTbl.Ent) && !spawnTbl.Dead then
 				spawnTbl.Dead = true -- To make sure we do NOT respawn it more than once!
-				timer.Simple(self.TimedSpawn_Time, function()
+				timer.Simple(selfData.TimedSpawn_Time, function()
 					if IsValid(self) then
 						self:SpawnEntity(spawnKey, spawnTbl, false)
 					end

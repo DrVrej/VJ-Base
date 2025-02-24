@@ -154,18 +154,19 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RunAI() -- Called from the engine every 0.1 seconds
 	if self:GetState() == VJ_STATE_FREEZE or self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then self:MaintainActivity() return end
-	if self:IsRunningBehavior() or self.bDoingEngineSchedule then return true end -- true = Run "MaintainSchedule" in engine
+	local selfData = self:GetTable()
+	if self:IsRunningBehavior() or selfData.bDoingEngineSchedule then return true end -- true = Run "MaintainSchedule" in engine
 	//self:SetArrivalActivity(ACT_COWER)
 	//self:SetArrivalSpeed(1000)
 	local isMoving = self:IsMoving()
 	
 	-- Apply walk frames to both activities and sequences
 	-- Parts of it replicate TASK_PLAY_SEQUENCE - https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc_schedule.cpp#L3312
-	if !isMoving && self:GetSequenceMoveDist(self:GetSequence()) > 0 && !self:IsSequenceFinished() && ((self:GetSequence() == self:GetIdealSequence()) or (self:GetActivity() == ACT_DO_NOT_DISTURB)) && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then
+	if !isMoving && self:GetSequenceMoveDist(self:GetSequence()) > 0 && !self:IsSequenceFinished() && ((self:GetSequence() == self:GetIdealSequence()) or (self:GetActivity() == ACT_DO_NOT_DISTURB)) && selfData.MovementType != VJ_MOVETYPE_AERIAL && selfData.MovementType != VJ_MOVETYPE_AQUATIC then
 		self:AutoMovement(self:GetAnimTimeInterval())
 	end
 	
-	local curSchedule = self.CurrentSchedule
+	local curSchedule = selfData.CurrentSchedule
 	
 	-- If we are currently running a schedule then run it otherwise call SelectSchedule to decide what to do next
 	if curSchedule then
@@ -197,7 +198,7 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 		self:SelectSchedule()
 	end
 	
-	//if !self.VJ_PlayingSequence then -- No longer needed for sequences as it is handled by ACT_DO_NOT_DISTURB
+	//if !selfData.VJ_PlayingSequence then -- No longer needed for sequences as it is handled by ACT_DO_NOT_DISTURB
 	self:MaintainActivity()
 	//end
 end
@@ -283,20 +284,21 @@ function ENT:TranslateNavGoal(ent, goal)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSchedule(schedule)
-	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.HasMovement then return end -- It's stationary therefore it should not move!
+	local selfData = self:GetTable()
+	if selfData.MovementType == VJ_MOVETYPE_STATIONARY && schedule.HasMovement then return end -- It's stationary therefore it should not move!
 	-- Certain states should ONLY do animation schedules!
 	if !schedule.IsPlayActivity then
 		local curState = self:GetState()
 		if curState >= VJ_STATE_ONLY_ANIMATION then return end
 	end
-	local curSchedule = self.CurrentSchedule
+	local curSchedule = selfData.CurrentSchedule
 	if curSchedule then
 		-- If it's the same task AND it's opening a door OR doing a move wait then cancel the new schedule!
 		if schedule.Name == curSchedule.Name && (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetMoveDelay() > 0) then
 			return
 		end
 		-- Clean up any schedule it may have been doing
-		if !self.Dead then
+		if !selfData.Dead then
 			self:ScheduleFinished(curSchedule)
 		end
 	end
@@ -318,16 +320,16 @@ function ENT:StartSchedule(schedule)
 			maxs = self:OBBMaxs() + tr_addVec,
 			filter = self
 		})
-		if IsValid(tr.Entity) && tr.Entity:IsNPC() && !VJ.HasValue(self.EntitiesToNoCollide, tr.Entity:GetClass()) then
+		if IsValid(tr.Entity) && tr.Entity:IsNPC() && !VJ.HasValue(selfData.EntitiesToNoCollide, tr.Entity:GetClass()) then
 			self:DoRunCode_OnFail(schedule)
 			return
 		end
 	end*/
 	
 	-- No longer needed, `TranslateActivity` handles it now
-	//if schedule.CanShootWhenMoving && self.WeaponAttackAnim != nil && IsValid(self:GetEnemy()) then
+	//if schedule.CanShootWhenMoving && selfData.WeaponAttackAnim != nil && IsValid(self:GetEnemy()) then
 		//self:DoWeaponAttackMovementCode(true, (schedule.MoveType == 0 and 1) or 0) -- Send 1 if the current task is walking!
-		//self:SetArrivalActivity(self.WeaponAttackAnim)
+		//self:SetArrivalActivity(selfData.WeaponAttackAnim)
 	//end
 	
 	-- Handle facing data sent by schedule's "TurnData"
@@ -335,15 +337,15 @@ function ENT:StartSchedule(schedule)
 	local turnData = schedule.TurnData
 	if turnData then
 		local faceType = turnData.Type
-		if !self.CanTurnWhileMoving or !faceType then
+		if !selfData.CanTurnWhileMoving or !faceType then
 			turnData = nil
 		else
 			local turnTarget = turnData.Target
 			self:ResetTurnTarget()
-			self.TurnData.Type = faceType
-			self.TurnData.Target = isvector(turnTarget) and self:GetTurnAngle((turnTarget - self:GetPos()):Angle()) or turnTarget
-			self.TurnData.IsSchedule = true
-			self.TurnData.LastYaw = 1 -- So it doesn't face movement direction between move schedules, but should it be kept??
+			selfData.TurnData.Type = faceType
+			selfData.TurnData.Target = isvector(turnTarget) and self:GetTurnAngle((turnTarget - self:GetPos()):Angle()) or turnTarget
+			selfData.TurnData.IsSchedule = true
+			selfData.TurnData.LastYaw = 1 -- So it doesn't face movement direction between move schedules, but should it be kept??
 		end
 	end
 	
@@ -355,20 +357,20 @@ function ENT:StartSchedule(schedule)
 	
 	-- Clear certain systems that should be notified that we have moved
 	if schedule.HasMovement then
-		self.LastHiddenZoneT = 0
-		if !schedule.CanShootWhenMoving or self.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND then // self.WeaponAttackState && self.WeaponAttackState >= VJ.WEP_ATTACK_STATE_FIRE
-			self.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
+		selfData.LastHiddenZoneT = 0
+		if !schedule.CanShootWhenMoving or selfData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND then // selfData.WeaponAttackState && selfData.WeaponAttackState >= VJ.WEP_ATTACK_STATE_FIRE
+			selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 		end
 		-- Movements shouldn't interrupt gestures
-		if self.LastAnimType != VJ.ANIM_TYPE_GESTURE then
-			self.LastAnimSeed = 0
+		if selfData.LastAnimType != VJ.ANIM_TYPE_GESTURE then
+			selfData.LastAnimSeed = 0
 		end
 	end
 	
-	//if self.VJ_DEBUG then PrintTable(schedule) end
-	self.CurrentSchedule = schedule
-	self.CurrentScheduleName = schedule.Name
-	self.CurrentTaskID = 1
+	//if selfData.VJ_DEBUG then PrintTable(schedule) end
+	selfData.CurrentSchedule = schedule
+	selfData.CurrentScheduleName = schedule.Name
+	selfData.CurrentTaskID = 1
 	self:SetTask(schedule:GetTask(1))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -395,6 +397,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ScheduleFinished(schedule)
 	//VJ.DEBUG_Print(self, "ScheduleFinished", schedule)
+	local selfData = self:GetTable()
 	if schedule then
 		-- Handle "RunCode_OnFinish"
 		if !schedule.AlreadyRanCode_OnFinish && schedule.RunCode_OnFinish != nil then
@@ -406,7 +409,7 @@ function ENT:ScheduleFinished(schedule)
 			self:ClearCondition(COND_TASK_FAILED)
 		end
 		-- Reset facing data if its based on a schedule!
-		if self.TurnData.IsSchedule then
+		if selfData.TurnData.IsSchedule then
 			self:ResetTurnTarget()
 		end
 		-- Clear ignored conditions from this schedule
@@ -414,17 +417,18 @@ function ENT:ScheduleFinished(schedule)
 			self:RemoveIgnoreConditions(schedule.IgnoreConditions)
 		end
 	end
-	self.CurrentSchedule = nil
-	self.CurrentScheduleName = nil
-	self.CurrentTask = nil
-	self.CurrentTaskID = nil
+	selfData.CurrentSchedule = nil
+	selfData.CurrentScheduleName = nil
+	selfData.CurrentTask = nil
+	selfData.CurrentTaskID = nil
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetTask(task)
-	self.CurrentTask = task
-	self.CurrentTaskComplete = false
-	self.TaskStartTime = CurTime()
-	self:StartTask(self.CurrentTask)
+	local selfData = self:GetTable()
+	selfData.CurrentTask = task
+	selfData.CurrentTaskComplete = false
+	selfData.TaskStartTime = CurTime()
+	self:StartTask(selfData.CurrentTask)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:NextTask(schedule)
@@ -462,7 +466,8 @@ end
 		- boolean, true = Schedule is finished
 -----------------------------------------------------------]]
 function ENT:IsScheduleFinished(schedule)
-	return self.CurrentTaskComplete && (!self.CurrentTaskID or self.CurrentTaskID >= schedule:NumTasks())
+	local selfData = self:GetTable()
+	return selfData.CurrentTaskComplete && (!selfData.CurrentTaskID or selfData.CurrentTaskID >= schedule:NumTasks())
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartTask(task) task:Start(self) end

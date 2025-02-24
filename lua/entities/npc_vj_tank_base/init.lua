@@ -210,27 +210,28 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThink()
 	if self:Tank_OnThink() != true && vj_npc_reduce_vfx:GetInt() == 0 then
-		if self.Tank_NextIdleParticles < CurTime() then
+		local selfData = self:GetTable()
+		if selfData.Tank_NextIdleParticles < CurTime() then
 			self:UpdateIdleParticles()
-			self.Tank_NextIdleParticles = CurTime() + 0.1
+			selfData.Tank_NextIdleParticles = CurTime() + 0.1
 		end
 	
-		if self:Health() < (self.StartHealth * 0.30) && CurTime() > self.Tank_NextLowHealthSparkT then
+		if self:Health() < (selfData.StartHealth * 0.30) && CurTime() > selfData.Tank_NextLowHealthSparkT then
 			//ParticleEffectAttach("vj_rocket_idle2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 
-			self.Spark1 = ents.Create("env_spark")
-			self.Spark1:SetKeyValue("MaxDelay",0.01)
-			self.Spark1:SetKeyValue("Magnitude","8")
-			self.Spark1:SetKeyValue("Spark Trail Length","3")
+			selfData.Spark1 = ents.Create("env_spark")
+			selfData.Spark1:SetKeyValue("MaxDelay",0.01)
+			selfData.Spark1:SetKeyValue("Magnitude","8")
+			selfData.Spark1:SetKeyValue("Spark Trail Length","3")
 			self:GetNearDeathSparkPositions()
-			self.Spark1:SetAngles(self:GetAngles())
-			//self.Spark1:Fire("LightColor", "255 255 255")
-			self.Spark1:SetParent(self)
-			self.Spark1:Spawn()
-			self.Spark1:Activate()
-			self.Spark1:Fire("StartSpark", "", 0)
-			self.Spark1:Fire("kill", "", 0.1)
-			self:DeleteOnRemove(self.Spark1)
+			selfData.Spark1:SetAngles(self:GetAngles())
+			//selfData.Spark1:Fire("LightColor", "255 255 255")
+			selfData.Spark1:SetParent(self)
+			selfData.Spark1:Spawn()
+			selfData.Spark1:Activate()
+			selfData.Spark1:Fire("StartSpark", "", 0)
+			selfData.Spark1:Fire("kill", "", 0.1)
+			self:DeleteOnRemove(selfData.Spark1)
 
 			/*local effectData = EffectData()
 			effectData:SetOrigin(self:GetPos() +self:GetUp()*60 +self:GetForward()*100)
@@ -239,7 +240,7 @@ function ENT:OnThink()
 			effectData:SetScale(0.1)
 			effectData:SetRadius(10)
 			util.Effect("Sparks",effectData)*/
-			self.Tank_NextLowHealthSparkT = CurTime() + math.random(4, 6)
+			selfData.Tank_NextLowHealthSparkT = CurTime() + math.random(4, 6)
 		end
 	end
 end
@@ -248,49 +249,50 @@ local vec80z = Vector(0, 0, 80)
 local FACE_NONE = VJ.FACE_NONE
 --
 function ENT:OnThinkActive()
-	if self.Dead then return end
-	self.TurnData.Type = FACE_NONE -- This effectively makes it never face anything through Lua
+	local selfData = self:GetTable()
+	if selfData.Dead then return end
+	selfData.TurnData.Type = FACE_NONE -- This effectively makes it never face anything through Lua
 	self:Tank_OnThinkActive()
 	self:SelectSchedule()
 
 	local hasMoved = false
 	local myPos = self:GetPos()
 	local tr = util.TraceLine({start = myPos + self:GetUp() * 20, endpos = myPos + self:GetUp() * -50, filter = self})
-	if self.VJ_DEBUG then
+	if selfData.VJ_DEBUG then
 		debugoverlay.Cross(tr.StartPos, 4, 2, VJ.COLOR_GREEN, true)
 		debugoverlay.Cross(myPos + self:GetUp() * -50, 4, 2, VJ.COLOR_YELLOW, true)
 		debugoverlay.Cross(tr.HitPos, 4, 2, VJ.COLOR_RED, true)
 		debugoverlay.Line(tr.StartPos, tr.HitPos, 2, nil, true)
-		VJ.DEBUG_Print(self, false, "Tank Status = ", self.Tank_Status, " | Trace HitNormal = ", tr.HitNormal)
+		VJ.DEBUG_Print(self, false, "Tank Status = ", selfData.Tank_Status, " | Trace HitNormal = ", tr.HitNormal)
 	end
-	if tr.Hit && self.Tank_Status == 0 then
+	if tr.Hit && selfData.Tank_Status == 0 then
 		local phys = self:GetPhysicsObject()
 		if IsValid(phys) && #phys:GetFrictionSnapshot() > 0 then
 			local ene = self:GetEnemy()
 			if IsValid(ene) then
 				local enePos = ene:GetPos()
-				local eneData = self.EnemyData
+				local eneData = selfData.EnemyData
 				local angEne = (enePos - myPos + vec80z):Angle()
-				local angDiffuse = self:Tank_AngleDiffuse(angEne.y, self:GetAngles().y + self.Tank_AngleOffset)
+				local angDiffuse = self:Tank_AngleDiffuse(angEne.y, self:GetAngles().y + selfData.Tank_AngleOffset)
 				local heightRatio = (enePos.z - myPos.z) / myPos:Distance(Vector(enePos.x, enePos.y, myPos.z))
 				-- If the enemy is very high up, then move away from it to help the gunner fire!
 				-- OR
 				-- If the enemy's height isn't very high AND the enemy is ( within run over distance OR far away), then move towards the enemy!
-				if (heightRatio > 0.15) or (heightRatio < 0.15 && ((eneData.Distance < self.Tank_RanOverDistance) or (eneData.Distance > self.Tank_DriveTowardsDistance))) then
+				if (heightRatio > 0.15) or (heightRatio < 0.15 && ((eneData.Distance < selfData.Tank_RanOverDistance) or (eneData.Distance > selfData.Tank_DriveTowardsDistance))) then
 					-- Turning
 					if angDiffuse > 15 then
-						self:SetLocalAngles(self:GetLocalAngles() + Angle(0, self.Tank_TurningSpeed, 0))
+						self:SetLocalAngles(self:GetLocalAngles() + Angle(0, selfData.Tank_TurningSpeed, 0))
 						phys:SetAngles(self:GetAngles())
 					elseif angDiffuse < -15 then
-						self:SetLocalAngles(self:GetLocalAngles() + Angle(0, -self.Tank_TurningSpeed, 0))
+						self:SetLocalAngles(self:GetLocalAngles() + Angle(0, -selfData.Tank_TurningSpeed, 0))
 						phys:SetAngles(self:GetAngles())
 					end
 					
 					-- Movement : Have a little grace zone so it doesn't constantly switch between forward and backwards driving
 					if heightRatio > 0.15 or heightRatio < 0.1490 then
-						local driveSpeed = self.Tank_DrivingSpeed
+						local driveSpeed = selfData.Tank_DrivingSpeed
 						local moveVel = self:GetForward()
-						moveVel:Rotate(Angle(0, self.Tank_AngleOffset, 0))
+						moveVel:Rotate(Angle(0, selfData.Tank_AngleOffset, 0))
 						
 						-- Increase speed based on how steep the slope is
 						local slopeFactor = tr.HitNormal.z
@@ -303,7 +305,7 @@ function ENT:OnThinkActive()
 							driveSpeed = -driveSpeed
 						end
 						
-						if self.VJ_DEBUG then VJ.DEBUG_Print(self, false, "Driving Speed = ", driveSpeed) end
+						if selfData.VJ_DEBUG then VJ.DEBUG_Print(self, false, "Driving Speed = ", driveSpeed) end
 						phys:SetVelocity(moveVel:GetNormal() * driveSpeed)
 						hasMoved = true
 					end
@@ -312,7 +314,7 @@ function ENT:OnThinkActive()
 			
 			if hasMoved or phys:GetVelocity():Length() > 10 then
 				hasMoved = true
-				self.Tank_IsMoving = true
+				selfData.Tank_IsMoving = true
 				self:Tank_PlaySoundSystem("Movement")
 				self:UpdateMoveParticles()
 			end
@@ -321,9 +323,9 @@ function ENT:OnThinkActive()
 	
 	-- Not moving
 	if !hasMoved then
-		VJ.STOPSOUND(self.CurrentTankMovingSound)
-		VJ.STOPSOUND(self.CurrentTankTrackSound)
-		self.Tank_IsMoving = false
+		VJ.STOPSOUND(selfData.CurrentTankMovingSound)
+		VJ.STOPSOUND(selfData.CurrentTankTrackSound)
+		selfData.Tank_IsMoving = false
 	end
 	
 	for _, v in ipairs(ents.FindInSphere(myPos, 100)) do
@@ -332,29 +334,30 @@ function ENT:OnThinkActive()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule()
-	if self.Dead then return end
+	local selfData = self:GetTable()
+	if selfData.Dead then return end
 
 	local eneValid = IsValid(self:GetEnemy())
 	self:PlayIdleSound(nil, nil, eneValid)
 	self:MaintainIdleBehavior()
 	
 	if eneValid then
-		if self.VJ_IsBeingControlled then
-			if self.VJ_TheController:KeyDown(IN_FORWARD) then
-				self.Tank_Status = 0
+		if selfData.VJ_IsBeingControlled then
+			if selfData.VJ_TheController:KeyDown(IN_FORWARD) then
+				selfData.Tank_Status = 0
 			else
-				self.Tank_Status = 1
+				selfData.Tank_Status = 1
 			end
 		else
-			local eneData = self.EnemyData
-			if (eneData.Distance < self.Tank_DriveTowardsDistance && eneData.Distance > self.Tank_DriveAwayDistance) or self.IsGuard then -- If between this two numbers, stay still
-				self.Tank_Status = 1
+			local eneData = selfData.EnemyData
+			if (eneData.Distance < selfData.Tank_DriveTowardsDistance && eneData.Distance > selfData.Tank_DriveAwayDistance) or selfData.IsGuard then -- If between this two numbers, stay still
+				selfData.Tank_Status = 1
 			else
-				self.Tank_Status = 0
+				selfData.Tank_Status = 0
 			end
 		end
 	else
-		self.Tank_Status = 1
+		selfData.Tank_Status = 1
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -450,26 +453,27 @@ function ENT:CustomOnRemove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_PlaySoundSystem(sdSet)
-	if !self.HasSounds or !sdSet then return end
+	local selfData = self:GetTable()
+	if !selfData.HasSounds or !sdSet then return end
 	if sdSet == "Movement" then
-		if self.HasMoveSound then
+		if selfData.HasMoveSound then
 			-- Movement sound
-			local curMoveSD = self.CurrentTankMovingSound
+			local curMoveSD = selfData.CurrentTankMovingSound
 			if !curMoveSD or (curMoveSD && !curMoveSD:IsPlaying()) then
 				VJ.STOPSOUND(curMoveSD)
-				self.CurrentTankMovingSound = VJ.CreateSound(self, VJ.PICK(self.Tank_SoundTbl_DrivingEngine) or "vj_base/vehicles/armored/engine_drive.wav", 80, 100)
+				selfData.CurrentTankMovingSound = VJ.CreateSound(self, VJ.PICK(selfData.Tank_SoundTbl_DrivingEngine) or "vj_base/vehicles/armored/engine_drive.wav", 80, 100)
 			end
 			-- Track sound
-			local curTrackSD = self.CurrentTankTrackSound
+			local curTrackSD = selfData.CurrentTankTrackSound
 			if !curTrackSD or (curTrackSD && !curTrackSD:IsPlaying()) then
 				VJ.STOPSOUND(curTrackSD)
-				self.CurrentTankTrackSound = VJ.CreateSound(self, VJ.PICK(self.Tank_SoundTbl_Track) or "vj_base/vehicles/armored/chassis_tracks.wav", 70, 100)
+				selfData.CurrentTankTrackSound = VJ.CreateSound(self, VJ.PICK(selfData.Tank_SoundTbl_Track) or "vj_base/vehicles/armored/chassis_tracks.wav", 70, 100)
 			end
 		end
 	elseif sdSet == "RunOver" then
-		if self.HasRunOverSound && CurTime() > self.Tank_NextRunOverSoundT then
-			self:EmitSound(VJ.PICK(self.Tank_SoundTbl_RunOver) or "VJ.Gib.Bone_Snap", 80, math.random(80, 100))
-			self.Tank_NextRunOverSoundT = CurTime() + 0.2
+		if selfData.HasRunOverSound && CurTime() > selfData.Tank_NextRunOverSoundT then
+			self:EmitSound(VJ.PICK(selfData.Tank_SoundTbl_RunOver) or "VJ.Gib.Bone_Snap", 80, math.random(80, 100))
+			selfData.Tank_NextRunOverSoundT = CurTime() + 0.2
 		end
 	end
 end

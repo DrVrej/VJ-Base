@@ -72,24 +72,28 @@ function ENT:Initialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
+	local selfData = self:GetTable()
+	
 	-- Stinky gib! yuck!
-	if self.IsStinky && self.NextStinkyTime < CurTime() then
+	if selfData.IsStinky && selfData.NextStinkyTime < CurTime() then
 		sound.EmitHint(SOUND_CARCASS, self:GetPos(), 400, 0.15, self) // SOUND_MEAT = Do NOT use this because we would need to call "GetLoudestSoundHint" twice for each sound type!
-		self.NextStinkyTime = CurTime() + 2
+		selfData.NextStinkyTime = CurTime() + 2
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, phys)
+	local selfData = self:GetTable()
+	
 	-- Collision Sound
 	local velSpeed = phys:GetVelocity():Length()
-	local collideSD = VJ.PICK(self.CollisionSound)
+	local collideSD = VJ.PICK(selfData.CollisionSound)
 	if collideSD && velSpeed > 18 then
-		self:EmitSound(collideSD, self.CollisionSoundLevel, math.random(self.CollisionSoundPitch.a, self.CollisionSoundPitch.b))
+		self:EmitSound(collideSD, selfData.CollisionSoundLevel, math.random(selfData.CollisionSoundPitch.a, selfData.CollisionSoundPitch.b))
 	end
 
 	-- Collision Decal
-	local collideDecal = VJ.PICK(self.CollisionDecal)
-	if collideDecal && velSpeed > 18 && !data.Entity && math.random(1, self.CollisionDecalChance) == 1 then
+	local collideDecal = VJ.PICK(selfData.CollisionDecal)
+	if collideDecal && velSpeed > 18 && !data.Entity && math.random(1, selfData.CollisionDecalChance) == 1 then
 		local myPos = self:GetPos()
 		self:SetLocalPos(myPos + self:GetUp() * 4) -- Because the entity is too close to the ground
 		local tr = util.TraceLine({

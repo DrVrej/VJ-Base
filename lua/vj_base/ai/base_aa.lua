@@ -26,12 +26,13 @@ local defAng = Angle(0, 0, 0)
 -----------------------------------------------------------]]
 function ENT:AA_StopMoving()
 	if self:GetVelocity():Length() > 0 then
-		self.AA_CurrentMoveMaxSpeed = 0
-		self.AA_CurrentMoveTime = 0
-		self.AA_CurrentMoveType = 0
-		self.AA_CurrentMovePos = nil
-		self.AA_CurrentMovePosDir = nil
-		self.AA_CurrentMoveDist = -1
+		local selfData = self:GetTable()
+		selfData.AA_CurrentMoveMaxSpeed = 0
+		selfData.AA_CurrentMoveTime = 0
+		selfData.AA_CurrentMoveType = 0
+		selfData.AA_CurrentMovePos = nil
+		selfData.AA_CurrentMovePosDir = nil
+		selfData.AA_CurrentMoveDist = -1
 		self:SetLocalVelocity(defPos)
 	end
 end
@@ -52,19 +53,20 @@ local vecEnd = Vector(0, 0, 40)
 --
 function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	local destVec = isvector(dest) and dest
-	if self.Dead or (!destVec && !IsValid(dest)) then return end
+	local selfData = self:GetTable()
+	if selfData.Dead or (!destVec && !IsValid(dest)) then return end
 	moveType = moveType or "Calm" -- "Calm" | "Alert"
 	extraOptions = extraOptions or {}
 		local addPos = extraOptions.AddPos or defPos -- This will be added to the given entity's position
 		local chaseEnemy = extraOptions.ChaseEnemy or false -- Used internally by ChaseEnemy, enables code that's used only for that
-	local moveSpeed = (moveType == "Calm" and self.Aerial_FlyingSpeed_Calm) or self.Aerial_FlyingSpeed_Alerted
-	local debug = self.VJ_DEBUG
+	local moveSpeed = (moveType == "Calm" and selfData.Aerial_FlyingSpeed_Calm) or selfData.Aerial_FlyingSpeed_Alerted
+	local debug = selfData.VJ_DEBUG
 	local myPos = self:GetPos()
 	local trFilter = {self, isentity(dest) and dest or NULL, "phys_bone_follower"} -- Pass in NULL when "dest" is not an entity otherwise filter will ignore everything after it!
 	
 	-- Initial checks for aquatic NPCs
-	if self.MovementType == VJ_MOVETYPE_AQUATIC then
-		moveSpeed = (moveType == "Calm" and self.Aquatic_SwimmingSpeed_Calm) or self.Aquatic_SwimmingSpeed_Alerted
+	if selfData.MovementType == VJ_MOVETYPE_AQUATIC then
+		moveSpeed = (moveType == "Calm" and selfData.Aquatic_SwimmingSpeed_Calm) or selfData.Aquatic_SwimmingSpeed_Alerted
 		if debug then
 			print("----------------")
 			print("[MoveTo] My WaterLevel: "..self:WaterLevel())
@@ -117,9 +119,9 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	-- Preform ground check if:
 		-- It's an aerial NPC AND it is not ignoring ground AND-
 		-- It's NOT a chase enemy OR it is but the NPC doesn't have a melee attack
-	if self.MovementType == VJ_MOVETYPE_AERIAL && extraOptions.IgnoreGround != true && ((!chaseEnemy) or (chaseEnemy && !self.HasMeleeAttack)) then
-		local tr_check1 = util.TraceLine({start = startPos, endpos = startPos + Vector(0, 0, -self.AA_GroundLimit), filter = trFilter})
-		local tr_check2 = util.TraceLine({start = trHitPos, endpos = trHitPos + Vector(0, 0, -self.AA_GroundLimit), filter = trFilter})
+	if selfData.MovementType == VJ_MOVETYPE_AERIAL && extraOptions.IgnoreGround != true && ((!chaseEnemy) or (chaseEnemy && !selfData.HasMeleeAttack)) then
+		local tr_check1 = util.TraceLine({start = startPos, endpos = startPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
+		local tr_check2 = util.TraceLine({start = trHitPos, endpos = trHitPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
 		if debug then
 			print("[MoveTo] checking...")
 			debugoverlay.Box(startPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(145, 255, 0))
@@ -129,7 +131,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 		if tr_check1.Hit == true or (tr_check2.Hit == true && !tr_check2.Entity:IsNPC()) then
 			if debug then print("[MoveTo] Ground Hit!", tr_check1.HitPos:Distance(startPos)) end
 			//groundLimited = true
-			endPos.z = (tr_check1.Hit and myPos.z or endPos.z) + self.AA_GroundLimit
+			endPos.z = (tr_check1.Hit and myPos.z or endPos.z) + selfData.AA_GroundLimit
 			tr = util.TraceHull({
 				start = startPos,
 				endpos = endPos,
@@ -146,30 +148,30 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 		if tr.HitWorld then
 			if debug then print("[MoveTo] hitworld") end
 			-- If we are already going to the last destination...
-			if self.AA_DoingLastChasePos then
+			if selfData.AA_DoingLastChasePos then
 				-- Its movement is finished, therefore it's not moving there anymore!
-				if self.AA_CurrentMoveTime < CurTime() then
-					self.AA_DoingLastChasePos = false
-					self.AA_LastChasePos = nil
+				if selfData.AA_CurrentMoveTime < CurTime() then
+					selfData.AA_DoingLastChasePos = false
+					selfData.AA_LastChasePos = nil
 				-- It's moving there, don't interrupt!
 				else
 					return
 				end
 			-- If we have a last destination then move there!
-			elseif self.AA_LastChasePos != nil then
-				if debug then debugoverlay.Box(self.AA_LastChasePos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(0, 68, 255)) end
-				self.AA_DoingLastChasePos = true
+			elseif selfData.AA_LastChasePos != nil then
+				if debug then debugoverlay.Box(selfData.AA_LastChasePos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(0, 68, 255)) end
+				selfData.AA_DoingLastChasePos = true
 				tr = util.TraceHull({
 					start = startPos,
-					endpos = self.AA_LastChasePos,
+					endpos = selfData.AA_LastChasePos,
 					filter = trFilter,
 					mins = self:OBBMins(),
 					maxs = self:OBBMaxs()
 				})
 			end
 		else
-			self.AA_DoingLastChasePos = false
-			self.AA_LastChasePos = trHitPos
+			selfData.AA_DoingLastChasePos = false
+			selfData.AA_LastChasePos = trHitPos
 		end
 	end
 	trHitPos = tr.HitPos
@@ -185,13 +187,13 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 		finalPos = endPos
 		-- Make sure the trace actually went somewhere...
 		if tr.Fraction > 0 then
-			self.AA_LastChasePos = endPos
+			selfData.AA_LastChasePos = endPos
 		end
 	end
 	if destVec then
 		finalPos = finalPos + addPos
 	-- If the enemy is a bit above water, try to go for its GetPos, which is usually at its feet
-	elseif self.MovementType == VJ_MOVETYPE_AQUATIC && dest:WaterLevel() < 3 then
+	elseif selfData.MovementType == VJ_MOVETYPE_AQUATIC && dest:WaterLevel() < 3 then
 		finalPos = dest:GetPos() + dest:GetForward()*addPos.x + dest:GetRight()*addPos.y + dest:GetUp()*addPos.z
 	else
 		finalPos = finalPos + dest:GetForward()*addPos.x + dest:GetRight()*addPos.y + dest:GetUp()*addPos.z
@@ -212,42 +214,42 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 		end
 	end*/
 	
-	self.AA_CurrentMoveMaxSpeed = moveSpeed
-	if self.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime()*2, self:GetVelocity():Length(), moveSpeed) end
+	selfData.AA_CurrentMoveMaxSpeed = moveSpeed
+	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime()*2, self:GetVelocity():Length(), moveSpeed) end
 	
 	-- Set the velocity
 	local velPos = (finalPos - startPos):GetNormal()*moveSpeed //+ self:GetUp()*velUp + self:GetForward()
 	local velTime = finalPos:Distance(startPos) / velPos:Length()
 	local velTimeCur = CurTime() + velTime
 	if velTimeCur == velTimeCur then -- Check for NaN
-		self.AA_CurrentMoveTime = velTimeCur
-		//self.NextIdleTime = velTimeCur
+		selfData.AA_CurrentMoveTime = velTimeCur
+		//selfData.NextIdleTime = velTimeCur
 	end
 	if extraOptions.FaceDest != false then
 		if extraOptions.FaceDestTarget == true then
-			self:SetTurnTarget((chaseEnemy && self.CanTurnWhileMoving) and "Enemy" or dest, velTime)
+			self:SetTurnTarget((chaseEnemy && selfData.CanTurnWhileMoving) and "Enemy" or dest, velTime)
 		else
 			-- Offset the arrival position so it does NOT turn 180 degrees back from where it traveled from
-			local offsetFacing = finalPos + (finalPos - self:GetPos()):GetNormalized() * (self.AA_CurrentMoveMaxSpeed / 50)
+			local offsetFacing = finalPos + (finalPos - self:GetPos()):GetNormalized() * (selfData.AA_CurrentMoveMaxSpeed / 50)
 			offsetFacing.z = finalPos.z
 			self:SetTurnTarget(offsetFacing, velTime)
 		end
-		//self.AA_CurrentTurnAng = chaseEnemy and false or self:GetTurnAngle(self:GetTurnAngle((velPos):Angle()))
+		//selfData.AA_CurrentTurnAng = chaseEnemy and false or self:GetTurnAngle(self:GetTurnAngle((velPos):Angle()))
 	end
-	self.AA_CurrentMoveType = chaseEnemy and 3 or 2
-	self.AA_CurrentMovePos = finalPos
-	self.AA_CurrentMovePosDir = finalPos - startPos
-	self.AA_CurrentMoveDist = -1
+	selfData.AA_CurrentMoveType = chaseEnemy and 3 or 2
+	selfData.AA_CurrentMovePos = finalPos
+	selfData.AA_CurrentMovePosDir = finalPos - startPos
+	selfData.AA_CurrentMoveDist = -1
 	self:SetLocalVelocity(velPos)
 	
 	-- Animations
 	if playAnim != false then
-		if self.AA_CurrentMoveAnimType != moveType then
-			self.AA_CurrentMoveAnim = false
-			self.AA_CurrentMoveAnimType = moveType
+		if selfData.AA_CurrentMoveAnimType != moveType then
+			selfData.AA_CurrentMoveAnim = false
+			selfData.AA_CurrentMoveAnimType = moveType
 		end
 	else
-		self.AA_CurrentMoveAnim = -1
+		selfData.AA_CurrentMoveAnim = -1
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -260,10 +262,11 @@ end
 			- IgnoreGround = If true, it will not do any ground checks | DEFAULT: false
 -----------------------------------------------------------]]
 function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
+	local selfData = self:GetTable()
 	moveType = moveType or "Calm" -- "Calm" | "Alert"
-	local moveSpeed = (moveType == "Calm" and self.Aerial_FlyingSpeed_Calm) or self.Aerial_FlyingSpeed_Alerted
+	local moveSpeed = (moveType == "Calm" and selfData.Aerial_FlyingSpeed_Calm) or selfData.Aerial_FlyingSpeed_Alerted
 	local moveDown = false -- Used by aquatic NPCs only, forces them to move down
-	if self.MovementType == VJ_MOVETYPE_AQUATIC then
+	if selfData.MovementType == VJ_MOVETYPE_AQUATIC then
 		-- If NOT Completely submerged
 		if self:WaterLevel() < 3 then
 			self:AA_StopMoving()
@@ -272,16 +275,16 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 				return
 			end
 		end
-		moveSpeed = (moveType == "Calm" and self.Aquatic_SwimmingSpeed_Calm) or self.Aquatic_SwimmingSpeed_Alerted
+		moveSpeed = (moveType == "Calm" and selfData.Aquatic_SwimmingSpeed_Calm) or selfData.Aquatic_SwimmingSpeed_Alerted
 	end
 	
-	local debug = self.VJ_DEBUG
+	local debug = selfData.VJ_DEBUG
 	extraOptions = extraOptions or {}
 	
 	-- Movement Calculations
 	local myPos = self:GetPos()
 	local myMaxs = self:OBBMaxs():Length()
-	local minDist = math.random(self.AA_MinWanderDist, self.AA_MinWanderDist + 150)
+	local minDist = math.random(selfData.AA_MinWanderDist, selfData.AA_MinWanderDist + 150)
 	local tr_endpos = myPos + self:GetForward()*((myMaxs + minDist)*(math.random(1, 2) == 1 and -1 or 1)) + self:GetRight()*((myMaxs + minDist)*(math.random(1, 2) == 1 and -1 or 1)) + self:GetUp()*((myMaxs + minDist)*(math.random(1, 2) == 1 and -1 or 1))
 	if moveDown == true then
 		tr_endpos = myPos + self:GetUp()*((myMaxs + math.random(100, 150))*-1)
@@ -291,8 +294,8 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 	local finalPos = tr.HitPos
 	//PrintTable(tr)
 	-- If we aren't being forced to move down, then make sure we limit how close we get to the ground!
-	if extraOptions.IgnoreGround != true && !moveDown && self.MovementType == VJ_MOVETYPE_AERIAL then
-		local tr_check = util.TraceLine({start = finalPos, endpos = finalPos + Vector(0, 0, -self.AA_GroundLimit), filter = trFilter})
+	if extraOptions.IgnoreGround != true && !moveDown && selfData.MovementType == VJ_MOVETYPE_AERIAL then
+		local tr_check = util.TraceLine({start = finalPos, endpos = finalPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
 		if debug then
 			print("[IdleWander] checking...")
 			debugoverlay.Box(finalPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(255, 255, 255))
@@ -301,7 +304,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 		-- If it hit the world, then we are too close to the ground, replace "tr" with a new position!
 		if tr_check.HitWorld == true then
 			if debug then print("[IdleWander] Ground Hit!", tr_check.HitPos:Distance(finalPos)) end
-			tr_endpos.z = myPos.z + self.AA_GroundLimit
+			tr_endpos.z = myPos.z + selfData.AA_GroundLimit
 			tr = util.TraceLine({start = myPos, endpos = tr_endpos, filter = trFilter})
 			finalPos = tr.HitPos
 		end
@@ -313,36 +316,36 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 		debugoverlay.Box(finalPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(0, 255, 255))
 	end
 	
-	self.AA_CurrentMoveMaxSpeed = moveSpeed
-	if self.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime()*2, self:GetVelocity():Length(), moveSpeed) end
+	selfData.AA_CurrentMoveMaxSpeed = moveSpeed
+	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime()*2, self:GetVelocity():Length(), moveSpeed) end
 	
 	-- Set the velocity
 	local velPos = (finalPos - myPos):GetNormal()*moveSpeed
 	local velTime = finalPos:Distance(myPos) / velPos:Length()
 	local velTimeCur = CurTime() + velTime
 	if velTimeCur == velTimeCur then -- Check for NaN
-		self.AA_CurrentMoveTime = velTimeCur
-		//self.NextIdleTime = velTimeCur
+		selfData.AA_CurrentMoveTime = velTimeCur
+		//selfData.NextIdleTime = velTimeCur
 	end
 	if extraOptions.FaceDest != false then
 		self:SetTurnTarget(finalPos, velTime)
-		//self.AA_CurrentTurnAng = self:GetTurnAngle((finalPos - tr.StartPos):Angle())
+		//selfData.AA_CurrentTurnAng = self:GetTurnAngle((finalPos - tr.StartPos):Angle())
 		//self:SetLocalAngularVelocity(self:GetTurnAngle((finalPos-tr.StartPos):Angle()))
 	end
-	self.AA_CurrentMoveType = 1
-	self.AA_CurrentMovePos = finalPos
-	self.AA_CurrentMovePosDir = finalPos - myPos
-	self.AA_CurrentMoveDist = -1
+	selfData.AA_CurrentMoveType = 1
+	selfData.AA_CurrentMovePos = finalPos
+	selfData.AA_CurrentMovePosDir = finalPos - myPos
+	selfData.AA_CurrentMoveDist = -1
 	self:SetLocalVelocity(velPos)
 	
 	-- Animations
 	if playAnim != false then
-		if self.AA_CurrentMoveAnimType != moveType then
-			self.AA_CurrentMoveAnim = false
-			self.AA_CurrentMoveAnimType = moveType
+		if selfData.AA_CurrentMoveAnimType != moveType then
+			selfData.AA_CurrentMoveAnim = false
+			selfData.AA_CurrentMoveAnimType = moveType
 		end
 	else
-		self.AA_CurrentMoveAnim = -1
+		selfData.AA_CurrentMoveAnim = -1
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -365,19 +368,19 @@ local badACTs = {[ACT_WALK] = true, [ACT_WALK_AIM] = true, [ACT_RUN] = true, [AC
 function ENT:AA_MoveAnimation()
 	-- NOTE: Unique condition used for directional flying animations in TranslateActivity:
 		--  if "AA_CurrentMoveAnim" is current sequence AND current activity is not a sequence AND translated activity does not equal current sequence's activity
+	local selfData = self:GetTable()
 	local curSeq = self:GetSequence()
 	local curACT = self:GetActivity()
-	local myTbl = self:GetTable() -- Only Lua variables that won't change during this call
-	if ((CurTime() > myTbl.AA_NextMoveAnimTime) or (curSeq != myTbl.AA_CurrentMoveAnim or (curACT != ACT_DO_NOT_DISTURB && self:GetSequenceActivity(curSeq) != self:TranslateActivity(curACT)))) && !self:IsBusy("Activities") then
+	if ((CurTime() > selfData.AA_NextMoveAnimTime) or (curSeq != selfData.AA_CurrentMoveAnim or (curACT != ACT_DO_NOT_DISTURB && self:GetSequenceActivity(curSeq) != self:TranslateActivity(curACT)))) && !self:IsBusy("Activities") then
 		local chosenAnim = false
-		if myTbl.AA_CurrentMoveAnimType == "Calm" then
-			chosenAnim = (myTbl.MovementType == VJ_MOVETYPE_AQUATIC and myTbl.Aquatic_AnimTbl_Calm) or myTbl.Aerial_AnimTbl_Calm
-		elseif myTbl.AA_CurrentMoveAnimType == "Alert" then
-			chosenAnim = (myTbl.MovementType == VJ_MOVETYPE_AQUATIC and myTbl.Aquatic_AnimTbl_Alerted) or myTbl.Aerial_AnimTbl_Alerted
+		if selfData.AA_CurrentMoveAnimType == "Calm" then
+			chosenAnim = (selfData.MovementType == VJ_MOVETYPE_AQUATIC and selfData.Aquatic_AnimTbl_Calm) or selfData.Aerial_AnimTbl_Calm
+		elseif selfData.AA_CurrentMoveAnimType == "Alert" then
+			chosenAnim = (selfData.MovementType == VJ_MOVETYPE_AQUATIC and selfData.Aquatic_AnimTbl_Alerted) or selfData.Aerial_AnimTbl_Alerted
 		end
 		chosenAnim = VJ.PICK(chosenAnim)
 		local _, animDur = self:PlayAnim(chosenAnim, false, 0, false, 0, {AlwaysUseSequence = badACTs[chosenAnim] or false})
-		self.AA_CurrentMoveAnim = self:GetActivity() == ACT_DO_NOT_DISTURB and self:GetSequence() or self:GetIdealSequence() -- In case we played a non-sequence
-		self.AA_NextMoveAnimTime = CurTime() + animDur -- animDur will always be accurate
+		selfData.AA_CurrentMoveAnim = self:GetActivity() == ACT_DO_NOT_DISTURB and self:GetSequence() or self:GetIdealSequence() -- In case we played a non-sequence
+		selfData.AA_NextMoveAnimTime = CurTime() + animDur -- animDur will always be accurate
 	end
 end

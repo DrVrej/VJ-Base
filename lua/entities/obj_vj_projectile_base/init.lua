@@ -180,20 +180,21 @@ function ENT:DealDamage(data, phys)
 	local hitEnts = false -- Entities that have been damaged (direct or radius)
 	local dmgPos = (data and data.HitPos) or self:GetPos()
 	if IsValid(dataEnt) && ((dataEnt.IsVJBaseBullseye && dataEnt.VJ_IsBeingControlled) or dataEnt.VJ_IsControllingNPC) then return end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
+	local selfData = self:GetTable()
 	
-	if self.DoesRadiusDamage then
+	if selfData.DoesRadiusDamage then
 		local attackEnt = ownerValid and owner or self -- The entity that will be set as the attacker
 		-- If the projectile is picked up (Such as a grenade picked up by a human NPC), then the damage position is the parent's position
-		if self.VJ_ST_Grabbed then
+		if selfData.VJ_ST_Grabbed then
 			local parent = self:GetParent()
 			if IsValid(parent) && parent:IsNPC() then
 				dmgPos = parent:GetPos()
 			end
 		end
-		hitEnts = VJ.ApplyRadiusDamage(attackEnt, attackEnt, dmgPos, self.RadiusDamageRadius, self.RadiusDamage, self.RadiusDamageType, ownerValid && !owner:IsPlayer(), self.RadiusDamageUseRealisticRadius, {DisableVisibilityCheck=self.RadiusDamageDisableVisibilityCheck, Force=self.RadiusDamageForce, UpForce=self.RadiusDamageForce_Up, DamageAttacker=owner:IsPlayer()})
+		hitEnts = VJ.ApplyRadiusDamage(attackEnt, attackEnt, dmgPos, selfData.RadiusDamageRadius, selfData.RadiusDamage, selfData.RadiusDamageType, ownerValid && !owner:IsPlayer(), selfData.RadiusDamageUseRealisticRadius, {DisableVisibilityCheck=selfData.RadiusDamageDisableVisibilityCheck, Force=selfData.RadiusDamageForce, UpForce=selfData.RadiusDamageForce_Up, DamageAttacker=owner:IsPlayer()})
 	end
 	
-	if self.DoesDirectDamage then
+	if selfData.DoesDirectDamage then
 		if ownerValid then
 			-- Accepts one of the 3 cases:
 			-- Entity is not NPC/player
@@ -206,8 +207,8 @@ function ENT:DealDamage(data, phys)
 					hitEnts = {dataEnt}
 				end
 				local dmgInfo = DamageInfo()
-				dmgInfo:SetDamage(self.DirectDamage)
-				dmgInfo:SetDamageType(self.DirectDamageType)
+				dmgInfo:SetDamage(selfData.DirectDamage)
+				dmgInfo:SetDamageType(selfData.DirectDamageType)
 				dmgInfo:SetAttacker(owner)
 				dmgInfo:SetInflictor(self)
 				dmgInfo:SetDamagePosition(dmgPos)
@@ -221,8 +222,8 @@ function ENT:DealDamage(data, phys)
 				hitEnts = {dataEnt}
 			end
 			local dmgInfo = DamageInfo()
-			dmgInfo:SetDamage(self.DirectDamage)
-			dmgInfo:SetDamageType(self.DirectDamageType)
+			dmgInfo:SetDamage(selfData.DirectDamage)
+			dmgInfo:SetDamageType(selfData.DirectDamageType)
 			dmgInfo:SetAttacker(self)
 			dmgInfo:SetInflictor(self)
 			dmgInfo:SetDamagePosition(dmgPos)
@@ -287,31 +288,33 @@ function ENT:StartTouch(ent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, phys)
-	if self.Dead then return end
+	local selfData = self:GetTable()
+	if selfData.Dead then return end
+	
 	if !self:OnCollision(data, phys) then
-		local colBehavior = self.CollisionBehavior
+		local colBehavior = selfData.CollisionBehavior
 		if !colBehavior then return end
 		if colBehavior == VJ.PROJ_COLLISION_REMOVE then
-			self.Dead = true
+			selfData.Dead = true
 			self:DealDamage(data, phys)
 			self:PlaySound("OnCollide")
-			if !self.PaintedFinalDecal then
-				local decals = VJ.PICK(self.CollisionDecal)
+			if !selfData.PaintedFinalDecal then
+				local decals = VJ.PICK(selfData.CollisionDecal)
 				if decals then
-					self.PaintedFinalDecal = true
+					selfData.PaintedFinalDecal = true
 					util.Decal(decals, data.HitPos + data.HitNormal * -15, data.HitPos - data.HitNormal * -2)
 				end
 			end
 			
 			-- Remove the entity
-			if self.ShakeWorldOnDeath then util.ScreenShake(data.HitPos, self.ShakeWorldOnDeathAmplitude or 16, self.ShakeWorldOnDeathFrequency or 200, self.ShakeWorldOnDeathDuration or 1, self.ShakeWorldOnDeathRadius or 3000) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
+			if selfData.ShakeWorldOnDeath then util.ScreenShake(data.HitPos, selfData.ShakeWorldOnDeathAmplitude or 16, selfData.ShakeWorldOnDeathFrequency or 200, selfData.ShakeWorldOnDeathDuration or 1, selfData.ShakeWorldOnDeathRadius or 3000) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 			self:Destroy(data, phys)
 		elseif colBehavior == VJ.PROJ_COLLISION_PERSIST then
-			if CurTime() < self.NextPersistCollisionT then return end
+			if CurTime() < selfData.NextPersistCollisionT then return end
 			self:DealDamage(data, phys)
 			self:PlaySound("OnCollide")
-			if !self.PaintedFinalDecal then
-				local decals = VJ.PICK(self.CollisionDecal)
+			if !selfData.PaintedFinalDecal then
+				local decals = VJ.PICK(selfData.CollisionDecal)
 				if decals then
 					util.Decal(decals, data.HitPos + data.HitNormal * -15, data.HitPos - data.HitNormal * -2)
 				end
@@ -322,7 +325,7 @@ function ENT:PhysicsCollide(data, phys)
 					self:OnCollisionPersist(data, phys)
 				end
 			end)
-			self.NextPersistCollisionT = CurTime() + 1 -- Add a delay so we don't spam it!
+			selfData.NextPersistCollisionT = CurTime() + 1 -- Add a delay so we don't spam it!
 		end
 	end
 end
@@ -367,26 +370,27 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlaySound(sdSet)
 	if !sdSet then return end
+	local selfData = self:GetTable()
 	if sdSet == "Startup" then
-		if self.HasStartupSounds && math.random(1, self.StartupSoundChance) == 1 then
-			VJ.EmitSound(self, self.SoundTbl_Startup, self.StartupSoundLevel, math.random(self.StartupSoundPitch.a, self.StartupSoundPitch.b))
+		if selfData.HasStartupSounds && math.random(1, selfData.StartupSoundChance) == 1 then
+			VJ.EmitSound(self, selfData.SoundTbl_Startup, selfData.StartupSoundLevel, math.random(selfData.StartupSoundPitch.a, selfData.StartupSoundPitch.b))
 		end
 	elseif sdSet == "Idle" then
-		local curIdleSD = self.CurrentIdleSound
-		if self.HasIdleSounds && (!curIdleSD or (curIdleSD && !curIdleSD:IsPlaying())) && CurTime() > self.NextIdleSoundT then
-			if math.random(1, self.IdleSoundChance) == 1 then
-				VJ.STOPSOUND(self.CurrentIdleSound)
-				self.CurrentIdleSound = VJ.CreateSound(self, self.SoundTbl_Idle, self.IdleSoundLevel, math.random(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
+		local curIdleSD = selfData.CurrentIdleSound
+		if selfData.HasIdleSounds && (!curIdleSD or (curIdleSD && !curIdleSD:IsPlaying())) && CurTime() > selfData.NextIdleSoundT then
+			if math.random(1, selfData.IdleSoundChance) == 1 then
+				VJ.STOPSOUND(selfData.CurrentIdleSound)
+				selfData.CurrentIdleSound = VJ.CreateSound(self, selfData.SoundTbl_Idle, selfData.IdleSoundLevel, math.random(selfData.IdleSoundPitch.a, selfData.IdleSoundPitch.b))
 			end
-			self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle.a ,self.NextSoundTime_Idle.b)
+			selfData.NextIdleSoundT = CurTime() + math.Rand(selfData.NextSoundTime_Idle.a ,selfData.NextSoundTime_Idle.b)
 		end
 	elseif sdSet == "OnCollide" then
-		if self.HasOnCollideSounds && math.random(1, self.OnCollideSoundChance) == 1 then
-			VJ.EmitSound(self, self.SoundTbl_OnCollide, self.OnCollideSoundLevel, math.random(self.OnCollideSoundPitch.a, self.OnCollideSoundPitch.b))
+		if selfData.HasOnCollideSounds && math.random(1, selfData.OnCollideSoundChance) == 1 then
+			VJ.EmitSound(self, selfData.SoundTbl_OnCollide, selfData.OnCollideSoundLevel, math.random(selfData.OnCollideSoundPitch.a, selfData.OnCollideSoundPitch.b))
 		end
 	elseif sdSet == "OnRemove" then
-		if self.HasOnRemoveSounds && math.random(1, self.OnRemoveSoundChance) == 1 then
-			VJ.EmitSound(self, self.SoundTbl_OnRemove, self.OnRemoveSoundLevel, math.random(self.OnRemoveSoundPitch.a, self.OnRemoveSoundPitch.b))
+		if selfData.HasOnRemoveSounds && math.random(1, selfData.OnRemoveSoundChance) == 1 then
+			VJ.EmitSound(self, selfData.SoundTbl_OnRemove, selfData.OnRemoveSoundLevel, math.random(selfData.OnRemoveSoundPitch.a, selfData.OnRemoveSoundPitch.b))
 		end
 	end
 end

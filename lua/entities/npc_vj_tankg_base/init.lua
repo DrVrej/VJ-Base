@@ -148,53 +148,55 @@ function ENT:OnThink()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThinkActive()
-	if self.Dead then return end
+	local selfData = self:GetTable()
+	if selfData.Dead then return end
 	self:SetEnemy(self:GetParent():GetEnemy())
 	self:Tank_OnThinkActive()
 	self:SelectSchedule()
 	
-	if self.Tank_Status == 0 then
+	if selfData.Tank_Status == 0 then
 		local ene = self:GetEnemy()
 		if IsValid(ene) then
-			self.Tank_GunnerIsTurning = false
+			selfData.Tank_GunnerIsTurning = false
 			local myPos = self:GetPos()
 			local enePos = ene:GetPos()
 			local angEne = (enePos - myPos):Angle()
-			local angDiffuse = self:Tank_AngleDiffuse(angEne.y, self:GetAngles().y + self.Tank_AngleOffset) -- Cannon looking direction
+			local angDiffuse = self:Tank_AngleDiffuse(angEne.y, self:GetAngles().y + selfData.Tank_AngleOffset) -- Cannon looking direction
 			local heightRatio = (enePos.z - myPos.z) / myPos:Distance(Vector(enePos.x, enePos.y, myPos.z))
-			self.Tank_ProperHeightShoot = math.abs(heightRatio) < 0.15 and true or false -- How high it can fire
+			selfData.Tank_ProperHeightShoot = math.abs(heightRatio) < 0.15 and true or false -- How high it can fire
 			-- If the enemy is within the barrel firing limit AND not already firing a shell AND its height is is reachable AND the enemy is not extremely close, then FIRE!
-			if math.abs(angDiffuse) < self.Tank_AngleDiffuseFiringLimit && self.Tank_ProperHeightShoot && self.EnemyData.Distance > self.Tank_Shell_FireMin then
-				self.Tank_FacingTarget = true
+			if math.abs(angDiffuse) < selfData.Tank_AngleDiffuseFiringLimit && selfData.Tank_ProperHeightShoot && selfData.EnemyData.Distance > selfData.Tank_Shell_FireMin then
+				selfData.Tank_FacingTarget = true
 				if self:Visible(ene) && vj_npc_range:GetInt() == 1 then
 					self:Tank_PrepareShell()
 				end
 			-- Turn Left
-			elseif angDiffuse > self.Tank_AngleDiffuseFiringLimit then
-				if self.Tank_TurningLerp == nil then self.Tank_TurningLerp = self:GetLocalAngles() end
-				self.Tank_TurningLerp = LerpAngle(1, self.Tank_TurningLerp, self.Tank_TurningLerp + Angle(0, math.Clamp(angDiffuse, 0, self.Tank_TurningSpeed), 0))
-				self:SetLocalAngles(self.Tank_TurningLerp)
-				self.Tank_GunnerIsTurning = true
-				self.Tank_FacingTarget = false
+			elseif angDiffuse > selfData.Tank_AngleDiffuseFiringLimit then
+				if selfData.Tank_TurningLerp == nil then selfData.Tank_TurningLerp = self:GetLocalAngles() end
+				selfData.Tank_TurningLerp = LerpAngle(1, selfData.Tank_TurningLerp, selfData.Tank_TurningLerp + Angle(0, math.Clamp(angDiffuse, 0, selfData.Tank_TurningSpeed), 0))
+				self:SetLocalAngles(selfData.Tank_TurningLerp)
+				selfData.Tank_GunnerIsTurning = true
+				selfData.Tank_FacingTarget = false
 			-- Turn Right
-			elseif angDiffuse < -self.Tank_AngleDiffuseFiringLimit then
-				if self.Tank_TurningLerp == nil then self.Tank_TurningLerp = self:GetLocalAngles() end
-				self.Tank_TurningLerp = LerpAngle(1, self.Tank_TurningLerp, self.Tank_TurningLerp + Angle(0, -math.Clamp(math.abs(angDiffuse), 0, self.Tank_TurningSpeed), 0))
-				self:SetLocalAngles(self.Tank_TurningLerp)
-				self.Tank_GunnerIsTurning = true
-				self.Tank_FacingTarget = false
+			elseif angDiffuse < -selfData.Tank_AngleDiffuseFiringLimit then
+				if selfData.Tank_TurningLerp == nil then selfData.Tank_TurningLerp = self:GetLocalAngles() end
+				selfData.Tank_TurningLerp = LerpAngle(1, selfData.Tank_TurningLerp, selfData.Tank_TurningLerp + Angle(0, -math.Clamp(math.abs(angDiffuse), 0, selfData.Tank_TurningSpeed), 0))
+				self:SetLocalAngles(selfData.Tank_TurningLerp)
+				selfData.Tank_GunnerIsTurning = true
+				selfData.Tank_FacingTarget = false
 			end
 		else
-			self.Tank_Status = 1
-			self.Tank_GunnerIsTurning = false
+			selfData.Tank_Status = 1
+			selfData.Tank_GunnerIsTurning = false
 		end
 	end
 	
-	if self.Tank_GunnerIsTurning then self:Tank_PlaySoundSystem("Movement") else VJ.STOPSOUND(self.CurrentTankMovingSound) end
+	if selfData.Tank_GunnerIsTurning then self:Tank_PlaySoundSystem("Movement") else VJ.STOPSOUND(selfData.CurrentTankMovingSound) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule()
-	if self.Dead then return end
+	local selfData = self:GetTable()
+	if selfData.Dead then return end
 	
 	local eneValid = IsValid(self:GetEnemy())
 	self:PlayIdleSound(nil, nil, eneValid)
@@ -203,15 +205,15 @@ function ENT:SelectSchedule()
 	if eneValid then
 		-- Can always fire when being controlled
 		if self:GetParent().VJ_IsBeingControlled then
-			self.Tank_Status = 0
+			selfData.Tank_Status = 0
 		else
 			-- Between these 2 limits it can fire! --
-			local eneData = self.EnemyData
-			if eneData.Distance < self.Tank_Shell_FireMax && eneData.Distance > self.Tank_Shell_FireMin then
-				self.Tank_Status = 0
+			local eneData = selfData.EnemyData
+			if eneData.Distance < selfData.Tank_Shell_FireMax && eneData.Distance > selfData.Tank_Shell_FireMin then
+				selfData.Tank_Status = 0
 			-- Out of range, can't fire!
 			else
-				self.Tank_Status = 1
+				selfData.Tank_Status = 1
 			end
 		end
 	end
@@ -240,21 +242,22 @@ function ENT:Tank_PrepareShell()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_FireShell()
+	local selfData = self:GetTable()
 	local ene = self:GetEnemy()
-	if !VJ_CVAR_AI_ENABLED or self.Dead or !self.Tank_ProperHeightShoot or !self.Tank_FacingTarget or !IsValid(ene) then return end // self.Tank_FacingTarget != true
+	if !VJ_CVAR_AI_ENABLED or selfData.Dead or !selfData.Tank_ProperHeightShoot or !selfData.Tank_FacingTarget or !IsValid(ene) then return end // selfData.Tank_FacingTarget != true
 	if self:Visible(ene) then
 		self:Tank_PlaySoundSystem("ShellFire")
 		
 		if self:Tank_OnFireShell("Init") != true then
-			local spawnPos = self:LocalToWorld(self.Tank_Shell_SpawnPos)
-			local calculatedVel = (ene:GetPos() + ene:OBBCenter() - spawnPos):GetNormal()*self.Tank_Shell_VelocitySpeed
+			local spawnPos = self:LocalToWorld(selfData.Tank_Shell_SpawnPos)
+			local calculatedVel = (ene:GetPos() + ene:OBBCenter() - spawnPos):GetNormal()*selfData.Tank_Shell_VelocitySpeed
 			-- If not facing, then just shoot straight ahead
-			if !self.Tank_FacingTarget then
+			if !selfData.Tank_FacingTarget then
 				calculatedVel = self:GetForward()
-				calculatedVel:Rotate(Angle(0, self.Tank_AngleOffset, 0))
-				calculatedVel = calculatedVel*self.Tank_Shell_VelocitySpeed
+				calculatedVel:Rotate(Angle(0, selfData.Tank_AngleOffset, 0))
+				calculatedVel = calculatedVel*selfData.Tank_Shell_VelocitySpeed
 			end
-			local shell = ents.Create(self.Tank_Shell_Entity)
+			local shell = ents.Create(selfData.Tank_Shell_Entity)
 			shell:SetPos(spawnPos)
 			shell:SetAngles(calculatedVel:Angle())
 			self:Tank_OnFireShell("OnCreate", shell)
@@ -264,17 +267,17 @@ function ENT:Tank_FireShell()
 			if self:Tank_OnFireShell("OnSpawn", shell) != true then
 				local phys = shell:GetPhysicsObject()
 				if IsValid(phys) then
-					phys:SetVelocity(Vector(calculatedVel.x, calculatedVel.y, math.Clamp(calculatedVel.z, self.Tank_Shell_SpawnPos.z - 735, self.Tank_Shell_SpawnPos.z + 335)))
+					phys:SetVelocity(Vector(calculatedVel.x, calculatedVel.y, math.Clamp(calculatedVel.z, selfData.Tank_Shell_SpawnPos.z - 735, selfData.Tank_Shell_SpawnPos.z + 335)))
 				end
 			end
 		end
 		if self:Tank_OnFireShell("Effects") != true then
 			local myAng = self:GetAngles()
-			local myAngForward = myAng + Angle(0, self.Tank_AngleOffset, 0)
+			local myAngForward = myAng + Angle(0, selfData.Tank_AngleOffset, 0)
 			util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
 			
 			-- Muzzle flash
-			local muzzleFlashPos = self:LocalToWorld(self.Tank_Shell_MuzzleFlashPos)
+			local muzzleFlashPos = self:LocalToWorld(selfData.Tank_Shell_MuzzleFlashPos)
 			local muzzleFlash = ents.Create("env_muzzleflash")
 			muzzleFlash:SetPos(muzzleFlashPos)
 			muzzleFlash:SetAngles(myAngForward)
@@ -294,7 +297,7 @@ function ENT:Tank_FireShell()
 			self:DeleteOnRemove(lightFire)
 			
 			-- Smoke effect
-			local smokePos = self:LocalToWorld(self.Tank_Shell_ParticlePos)
+			local smokePos = self:LocalToWorld(selfData.Tank_Shell_ParticlePos)
 			local smokeWhite = ents.Create("info_particle_system")
 			smokeWhite:SetKeyValue("effect_name", "vj_smoke_white_medium")
 			smokeWhite:SetPos(smokePos)
@@ -312,7 +315,7 @@ function ENT:Tank_FireShell()
 			util.Effect("ThumperDust", dust)
 			
 			//local smoke = ents.Create("env_smoketrail")
-			//smoke:SetPos(self:LocalToWorld(self.Tank_Shell_ParticlePos))
+			//smoke:SetPos(self:LocalToWorld(selfData.Tank_Shell_ParticlePos))
 			//smoke:SetAngles(myAngForward)
 			//smoke:SetKeyValue("opacity", "1")
 			//smoke:SetKeyValue("spawnrate", "15")
@@ -331,10 +334,10 @@ function ENT:Tank_FireShell()
 			//smoke:Activate()
 			//smoke:Fire("Kill", 0, 4)
 		end
-		self.Tank_Shell_Status = TANK_SHELL_STATUS_EMPTY
-		self.Tank_Shell_NextFireT = CurTime() + self.Tank_Shell_NextFireTime
+		selfData.Tank_Shell_Status = TANK_SHELL_STATUS_EMPTY
+		selfData.Tank_Shell_NextFireT = CurTime() + selfData.Tank_Shell_NextFireTime
 	else -- Not visible
-		self.Tank_FacingTarget = false
+		selfData.Tank_FacingTarget = false
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -352,22 +355,23 @@ function ENT:CustomOnRemove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_PlaySoundSystem(sdSet)
-	if !self.HasSounds or !sdSet then return end
+	local selfData = self:GetTable()
+	if !selfData.HasSounds or !sdSet then return end
 	if sdSet == "Movement" then
-		if self.HasMoveSound then
-			local curMoveSD = self.CurrentTankMovingSound
+		if selfData.HasMoveSound then
+			local curMoveSD = selfData.CurrentTankMovingSound
 			if !curMoveSD or (curMoveSD && !curMoveSD:IsPlaying()) then
 				VJ.STOPSOUND(curMoveSD)
-				self.CurrentTankMovingSound = VJ.CreateSound(self, VJ.PICK(self.Tank_SoundTbl_Turning) or "vj_base/vehicles/armored/gun_move2.wav", self.Tank_TurningSoundLevel, math.random(self.Tank_TurningSoundPitch.a, self.Tank_TurningSoundPitch.b))
+				selfData.CurrentTankMovingSound = VJ.CreateSound(self, VJ.PICK(selfData.Tank_SoundTbl_Turning) or "vj_base/vehicles/armored/gun_move2.wav", selfData.Tank_TurningSoundLevel, math.random(selfData.Tank_TurningSoundPitch.a, selfData.Tank_TurningSoundPitch.b))
 			end
 		end
 	elseif sdSet == "ShellFire" then
-		if self.HasFireShellSound then
-			VJ.EmitSound(self, VJ.PICK(self.Tank_SoundTbl_FireShell) or "VJ.NPC_Tank.Fire", self.Tank_FireShellSoundLevel, math.random(self.Tank_FireShellSoundPitch.a, self.Tank_FireShellSoundPitch.b))
+		if selfData.HasFireShellSound then
+			VJ.EmitSound(self, VJ.PICK(selfData.Tank_SoundTbl_FireShell) or "VJ.NPC_Tank.Fire", selfData.Tank_FireShellSoundLevel, math.random(selfData.Tank_FireShellSoundPitch.a, selfData.Tank_FireShellSoundPitch.b))
 		end
 	elseif sdSet == "ShellReload" then
-		if self.HasReloadShellSound then
-			VJ.EmitSound(self, VJ.PICK(self.Tank_SoundTbl_ReloadShell) or "vj_base/vehicles/armored/gun_reload.wav", self.Tank_ReloadShellSoundLevel, math.random(self.Tank_ReloadShellSoundPitch.a, self.Tank_ReloadShellSoundPitch.b))
+		if selfData.HasReloadShellSound then
+			VJ.EmitSound(self, VJ.PICK(selfData.Tank_SoundTbl_ReloadShell) or "vj_base/vehicles/armored/gun_reload.wav", selfData.Tank_ReloadShellSoundLevel, math.random(selfData.Tank_ReloadShellSoundPitch.a, selfData.Tank_ReloadShellSoundPitch.b))
 		end
 	end
 end
