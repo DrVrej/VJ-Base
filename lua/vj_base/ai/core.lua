@@ -834,9 +834,15 @@ end
 function ENT:IsBusy(checkType)
 	local checkAll = !checkType
 	local myTbl = self:GetTable() -- Only Lua variables that won't change during this call
-	if checkAll or checkType == "Behaviors" then
+	
+	-- Check behaviors
+	if checkAll then
+		if myTbl.FollowData.Moving or myTbl.Medic_Status then return true end
+	elseif checkType == "Behaviors" then
 		return myTbl.FollowData.Moving or myTbl.Medic_Status
 	end
+	
+	-- Check activities
 	if checkAll or checkType == "Activities" then
 		if myTbl.PauseAttacks then return true end
 		local curTime = CurTime()
@@ -1532,7 +1538,7 @@ function ENT:Follow(ent, stopIfFollowing)
 	local isLiving = ent.VJ_ID_Living
 	if (!isLiving) or (ent:Alive() && ((isPly && !VJ_CVAR_IGNOREPLAYERS) or (!isPly))) then
 		local followData = self.FollowData
-		-- Refusal messages
+		-- Refusals
 		if isLiving && self:GetClass() != ent:GetClass() && (self:Disposition(ent) == D_HT or self:Disposition(ent) == D_NU) then -- Check for enemy/neutral
 			if isPly && self.CanChatMessage then
 				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." isn't friendly so it won't follow you.")
