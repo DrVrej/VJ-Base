@@ -897,6 +897,13 @@ local VJ_MOVETYPE_STATIONARY = VJ_MOVETYPE_STATIONARY
 local VJ_MOVETYPE_PHYSICS = VJ_MOVETYPE_PHYSICS
 local ANIM_TYPE_GESTURE = VJ.ANIM_TYPE_GESTURE
 
+local metaEntity = FindMetaTable("Entity")
+local funcGetPoseParameter = metaEntity.GetPoseParameter
+local funcSetPoseParameter = metaEntity.SetPoseParameter
+--
+local metaNPC = FindMetaTable("NPC")
+local funcHasCondition = metaNPC.HasCondition
+
 ENT.MeleeAttack_IsPropAttack = false
 ENT.PropInteraction_Found = false
 ENT.PropInteraction_NextCheckT = 0
@@ -1986,7 +1993,7 @@ function ENT:Think()
 								end
 							end
 						end
-					elseif self:HasCondition(COND_SMELL) && !self:IsMoving() && !self:IsBusy() then
+					elseif funcHasCondition(self, COND_SMELL) && !self:IsMoving() && !self:IsBusy() then
 						local hint = sound.GetLoudestSoundHint(SOUND_CARCASS, myPos)
 						if hint then
 							local food = hint.owner
@@ -2280,11 +2287,11 @@ function ENT:Think()
 		if selfData.UsePoseParameterMovement && moveType == VJ_MOVETYPE_GROUND then
 			local moveDir = VJ.GetMoveDirection(self, true)
 			if moveDir then
-				self:SetPoseParameter("move_x", moveDir.x)
-				self:SetPoseParameter("move_y", moveDir.y)
+				funcSetPoseParameter(self, "move_x", moveDir.x)
+				funcSetPoseParameter(self, "move_y", moveDir.y)
 			else -- I am not moving, reset the pose parameters, otherwise I will run in place!
-				self:SetPoseParameter("move_x", 0)
-				self:SetPoseParameter("move_y", 0)
+				funcSetPoseParameter(self, "move_x", 0)
+				funcSetPoseParameter(self, "move_y", 0)
 			end
 		end
 	else -- AI Not enabled
@@ -2366,6 +2373,7 @@ function ENT:ExecuteMeleeAttack(isPropAttack)
 			local applyDmg = true
 			local isProp = ent.VJ_ID_Attackable
 			if self:CustomOnMeleeAttack_AfterChecks(ent, isProp) == true then continue end
+			local dmgAmount = self:ScaleByDifficulty(selfData.MeleeAttackDamage)
 			-- Handle prop interaction
 			local propBehavior = selfData.PropInteraction
 			if isProp then
@@ -2401,7 +2409,7 @@ function ENT:ExecuteMeleeAttack(isPropAttack)
 				-- Apply damage
 				if !selfData.DisableDefaultMeleeAttackDamageCode then
 					local dmgInfo = DamageInfo()
-					dmgInfo:SetDamage(self:ScaleByDifficulty(selfData.MeleeAttackDamage))
+					dmgInfo:SetDamage(self:ScaleByDifficulty(dmgAmount))
 					dmgInfo:SetDamageType(selfData.MeleeAttackDamageType)
 					if ent.VJ_ID_Living then dmgInfo:SetDamageForce(self:GetForward() * ((dmgInfo:GetDamage() + 100) * 70)) end
 					dmgInfo:SetInflictor(self)
@@ -2431,12 +2439,12 @@ function ENT:ExecuteMeleeAttack(isPropAttack)
 				end
 			end
 			if ent:IsPlayer() then
+				ent:ViewPunch(Angle(math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount))
 				-- Apply DSP
-				if selfData.MeleeAttackDSP && ((!selfData.MeleeAttackDSPLimit) or (selfData.MeleeAttackDamage >= selfData.MeleeAttackDSPLimit)) then
+				if selfData.MeleeAttackDSP && ((!selfData.MeleeAttackDSPLimit) or (dmgAmount >= selfData.MeleeAttackDSPLimit)) then
 					ent:SetDSP(selfData.MeleeAttackDSP, false)
 				end
-				ent:ViewPunch(Angle(math.random(-1, 1) * selfData.MeleeAttackDamage, math.random(-1, 1) * selfData.MeleeAttackDamage, math.random(-1, 1) * selfData.MeleeAttackDamage))
-				-- Slow Player
+				-- Speed modifier
 				if selfData.MeleeAttackPlayerSpeed then
 					self:DoMeleeAttackPlayerSpeed(ent, selfData.MeleeAttackPlayerSpeedWalk, selfData.MeleeAttackPlayerSpeedRun, selfData.MeleeAttackPlayerSpeedTime, {PlaySound = selfData.HasMeleeAttackPlayerSpeedSounds, SoundTable = selfData.SoundTbl_MeleeAttackPlayerSpeed, SoundLevel = selfData.MeleeAttackPlayerSpeedSoundLevel, FadeOutTime = 1})
 				end
@@ -2563,10 +2571,11 @@ function ENT:ExecuteLeapAttack()
 		if ent:IsPlayer() && (ent.VJ_IsControllingNPC or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
 		if (ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible then
 			if self:OnLeapAttackExecute("PreDamage", ent) == true then continue end
+			local dmgAmount = self:ScaleByDifficulty(selfData.LeapAttackDamage)
 			-- Damage
 			if !selfData.DisableDefaultLeapAttackDamageCode then
 				local dmgInfo = DamageInfo()
-				dmgInfo:SetDamage(self:ScaleByDifficulty(selfData.LeapAttackDamage))
+				dmgInfo:SetDamage(dmgAmount)
 				dmgInfo:SetInflictor(self)
 				dmgInfo:SetDamageType(selfData.LeapAttackDamageType)
 				dmgInfo:SetAttacker(self)
@@ -2574,7 +2583,7 @@ function ENT:ExecuteLeapAttack()
 				ent:TakeDamageInfo(dmgInfo, self)
 			end
 			if ent:IsPlayer() then
-				ent:ViewPunch(Angle(math.random(-1, 1) * selfData.LeapAttackDamage, math.random(-1, 1) * selfData.LeapAttackDamage, math.random(-1, 1) * selfData.LeapAttackDamage))
+				ent:ViewPunch(Angle(math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount))
 			end
 			hitRegistered = true
 			if selfData.LeapAttackStopOnHit then break end
@@ -2651,24 +2660,22 @@ function ENT:UpdatePoseParamTracking(resetPoses)
 	end
 	
 	local funcCustom = self.OnUpdatePoseParamTracking; if funcCustom then funcCustom(self, newPitch, newYaw, newRoll) end
+	local speed = selfData.PoseParameterLooking_TurningSpeed
 	local names = selfData.PoseParameterLooking_Names
 	local namesPitch = names.pitch
 	local namesYaw = names.yaw
 	local namesRoll = names.roll
-	local speed = selfData.PoseParameterLooking_TurningSpeed
-	local getPoseParameter = self.GetPoseParameter
-	local setPoseParameter = self.SetPoseParameter
 	for x = 1, #namesPitch do
 		local pose = namesPitch[x]
-		setPoseParameter(self, pose, math_angApproach(getPoseParameter(self, pose), newPitch, speed))
+		funcSetPoseParameter(self, pose, math_angApproach(funcGetPoseParameter(self, pose), newPitch, speed))
 	end
 	for x = 1, #namesYaw do
 		local pose = namesYaw[x]
-		setPoseParameter(self, pose, math_angApproach(getPoseParameter(self, pose), newYaw, speed))
+		funcSetPoseParameter(self, pose, math_angApproach(funcGetPoseParameter(self, pose), newYaw, speed))
 	end
 	for x = 1, #namesRoll do
 		local pose = namesRoll[x]
-		setPoseParameter(self, pose, math_angApproach(getPoseParameter(self, pose), newRoll, speed))
+		funcSetPoseParameter(self, pose, math_angApproach(funcGetPoseParameter(self, pose), newRoll, speed))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2678,18 +2685,18 @@ local schedule_yield_player = vj_ai_schedule.New("SCHEDULE_YIELD_PLAYER")
 	schedule_yield_player:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	schedule_yield_player.CanShootWhenMoving = true
 	schedule_yield_player.TurnData = {} -- This is constantly edited!
+local bitsDanger = bit.bor(SOUND_BULLET_IMPACT, SOUND_COMBAT, SOUND_WORLD, SOUND_DANGER) // SOUND_PLAYER, SOUND_PLAYER_VEHICLE
 --
 function ENT:SelectSchedule()
 	local selfData = self:GetTable()
 	if selfData.VJ_IsBeingControlled or selfData.Dead then return end
 	
-	local hasCond = self.HasCondition
 	local curTime = CurTime()
 	local eneValid = IsValid(self:GetEnemy())
 	self:PlayIdleSound(nil, nil, eneValid)
 	
 	-- Handle move away behavior
-	if hasCond(self, COND_PLAYER_PUSHING) && curTime > selfData.TakingCoverT && !self:IsBusy("Activities") then
+	if funcHasCondition(self, COND_PLAYER_PUSHING) && curTime > selfData.TakingCoverT && !self:IsBusy("Activities") then
 		self:PlaySoundSystem("YieldToPlayer")
 		if eneValid then -- Face current enemy
 			schedule_yield_player.TurnData.Type = VJ.FACE_ENEMY_VISIBLE
@@ -2715,9 +2722,9 @@ function ENT:SelectSchedule()
 			selfData.TakingCoverT = 0
 		end
 		
-		-- Investigation: Conditions // hasCond(self, COND_HEAR_PLAYER)
-		if selfData.CanInvestigate && (hasCond(self, COND_HEAR_BULLET_IMPACT) or hasCond(self, COND_HEAR_COMBAT) or hasCond(self, COND_HEAR_WORLD) or hasCond(self, COND_HEAR_DANGER)) && selfData.NextInvestigationMove < curTime && selfData.TakingCoverT < curTime && !self:IsBusy() then
-			local sdSrc = self:GetBestSoundHint(bit.bor(SOUND_BULLET_IMPACT, SOUND_COMBAT, SOUND_WORLD, SOUND_DANGER)) // SOUND_PLAYER, SOUND_PLAYER_VEHICLE
+		-- Investigation: Conditions // funcHasCondition(self, COND_HEAR_PLAYER)
+		if selfData.CanInvestigate && (funcHasCondition(self, COND_HEAR_BULLET_IMPACT) or funcHasCondition(self, COND_HEAR_COMBAT) or funcHasCondition(self, COND_HEAR_WORLD) or funcHasCondition(self, COND_HEAR_DANGER)) && selfData.NextInvestigationMove < curTime && selfData.TakingCoverT < curTime && !self:IsBusy() then
+			local sdSrc = self:GetBestSoundHint(bitsDanger)
 			if sdSrc then
 				//PrintTable(sdSrc)
 				local allowed = true

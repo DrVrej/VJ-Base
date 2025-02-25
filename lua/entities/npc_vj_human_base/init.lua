@@ -1566,6 +1566,13 @@ local VJ_MOVETYPE_STATIONARY = VJ_MOVETYPE_STATIONARY
 local VJ_MOVETYPE_PHYSICS = VJ_MOVETYPE_PHYSICS
 local ANIM_TYPE_GESTURE = VJ.ANIM_TYPE_GESTURE
 
+local metaEntity = FindMetaTable("Entity")
+local funcGetPoseParameter = metaEntity.GetPoseParameter
+local funcSetPoseParameter = metaEntity.SetPoseParameter
+--
+local metaNPC = FindMetaTable("NPC")
+local funcHasCondition = metaNPC.HasCondition
+
 ENT.UpdatedPoseParam = false
 ENT.Weapon_UnarmedBehavior_Active = false
 ENT.WeaponEntity = NULL
@@ -2260,7 +2267,7 @@ function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to alw
 	if !alwaysChase && (selfData.DisableChasingEnemy or selfData.IsGuard) then self:SCHEDULE_IDLE_STAND() return end
 	
 	-- If the enemy is not reachable
-	if (self:HasCondition(COND_ENEMY_UNREACHABLE) or self:IsUnreachable(ene)) && (IsValid(self:GetActiveWeapon()) && (!self:GetActiveWeapon().IsMeleeWeapon)) then
+	if (funcHasCondition(self, COND_ENEMY_UNREACHABLE) or self:IsUnreachable(ene)) && (IsValid(self:GetActiveWeapon()) && (!self:GetActiveWeapon().IsMeleeWeapon)) then
 		self:SCHEDULE_ALERT_CHASE(true)
 		self:RememberUnreachable(ene, 2)
 	else -- Is reachable, so chase the enemy!
@@ -2881,11 +2888,11 @@ function ENT:Think()
 		if selfData.UsePoseParameterMovement && selfData.MovementType == VJ_MOVETYPE_GROUND then
 			local moveDir = VJ.GetMoveDirection(self, true)
 			if moveDir then
-				self:SetPoseParameter("move_x", moveDir.x)
-				self:SetPoseParameter("move_y", moveDir.y)
+				funcSetPoseParameter(self, "move_x", moveDir.x)
+				funcSetPoseParameter(self, "move_y", moveDir.y)
 			else -- I am not moving, reset the pose parameters, otherwise I will run in place!
-				self:SetPoseParameter("move_x", 0)
-				self:SetPoseParameter("move_y", 0)
+				funcSetPoseParameter(self, "move_x", 0)
+				funcSetPoseParameter(self, "move_y", 0)
 			end
 		end
 	else -- AI Not enabled
@@ -2924,6 +2931,7 @@ function ENT:ExecuteMeleeAttack()
 		if ((ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible) && self:GetInternalVariable("m_latchedHeadDirection"):Dot((Vector(ent:GetPos().x, ent:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackDamageAngleRadius)) then
 			local isProp = ent.VJ_ID_Attackable
 			if self:CustomOnMeleeAttack_AfterChecks(ent, isProp) == true then continue end
+			local dmgAmount = self:ScaleByDifficulty(selfData.MeleeAttackDamage)
 			-- Knockback (Don't push things like doors, trains, elevators as it will make them fly when activated)
 			if selfData.HasMeleeAttackKnockBack && ent:GetMoveType() != MOVETYPE_PUSH && ent.MovementType != VJ_MOVETYPE_STATIONARY && (!ent.VJ_ID_Boss or ent.IsVJBaseSNPC_Tank) then
 				ent:SetGroundEntity(NULL)
@@ -2932,7 +2940,7 @@ function ENT:ExecuteMeleeAttack()
 			-- Apply actual damage
 			if !selfData.DisableDefaultMeleeAttackDamageCode then
 				local applyDmg = DamageInfo()
-				applyDmg:SetDamage(self:ScaleByDifficulty(selfData.MeleeAttackDamage))
+				applyDmg:SetDamage(dmgAmount)
 				applyDmg:SetDamageType(selfData.MeleeAttackDamageType)
 				if ent.VJ_ID_Living then applyDmg:SetDamageForce(self:GetForward() * ((applyDmg:GetDamage() + 100) * 70)) end
 				applyDmg:SetInflictor(self)
@@ -2941,7 +2949,7 @@ function ENT:ExecuteMeleeAttack()
 				ent:TakeDamageInfo(applyDmg, self)
 			end
 			if ent:IsPlayer() then
-				ent:ViewPunch(Angle(math.random(-1, 1) * selfData.MeleeAttackDamage, math.random(-1, 1) * selfData.MeleeAttackDamage, math.random(-1, 1) * selfData.MeleeAttackDamage))
+				ent:ViewPunch(Angle(math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount))
 			end
 			if !isProp then -- Only for non-props...
 				hitRegistered = true
@@ -3281,7 +3289,7 @@ function ENT:CheckForDangers()
 			end
 		end
 	end
-	if regDangerDetected or self:HasCondition(COND_HEAR_DANGER) or self:HasCondition(COND_HEAR_PHYSICS_DANGER) or self:HasCondition(COND_HEAR_MOVE_AWAY) then
+	if regDangerDetected or funcHasCondition(self, COND_HEAR_DANGER) or funcHasCondition(self, COND_HEAR_PHYSICS_DANGER) or funcHasCondition(self, COND_HEAR_MOVE_AWAY) then
 		local funcCustom = self.OnDangerDetected
 		if funcCustom then
 			if regDangerDetected then
@@ -3351,19 +3359,17 @@ function ENT:UpdatePoseParamTracking(resetPoses)
 	local namesYaw = names.yaw
 	local namesRoll = names.roll
 	local speed = selfData.PoseParameterLooking_TurningSpeed
-	local getPoseParameter = self.GetPoseParameter
-	local setPoseParameter = self.SetPoseParameter
 	for x = 1, #namesPitch do
 		local pose = namesPitch[x]
-		setPoseParameter(self, pose, math_angApproach(getPoseParameter(self, pose), newPitch, speed))
+		funcSetPoseParameter(self, pose, math_angApproach(funcGetPoseParameter(self, pose), newPitch, speed))
 	end
 	for x = 1, #namesYaw do
 		local pose = namesYaw[x]
-		setPoseParameter(self, pose, math_angApproach(getPoseParameter(self, pose), newYaw, speed))
+		funcSetPoseParameter(self, pose, math_angApproach(funcGetPoseParameter(self, pose), newYaw, speed))
 	end
 	for x = 1, #namesRoll do
 		local pose = namesRoll[x]
-		setPoseParameter(self, pose, math_angApproach(getPoseParameter(self, pose), newRoll, speed))
+		funcSetPoseParameter(self, pose, math_angApproach(funcGetPoseParameter(self, pose), newRoll, speed))
 	end
 	selfData.UpdatedPoseParam = true
 end
@@ -3407,12 +3413,12 @@ local schedule_yield_player = vj_ai_schedule.New("SCHEDULE_YIELD_PLAYER")
 	schedule_yield_player:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	schedule_yield_player.CanShootWhenMoving = true
 	schedule_yield_player.TurnData = {} -- This is constantly edited!
+local bitsDanger = bit.bor(SOUND_BULLET_IMPACT, SOUND_COMBAT, SOUND_WORLD, SOUND_DANGER) // SOUND_PLAYER, SOUND_PLAYER_VEHICLE
 --
 function ENT:SelectSchedule()
 	local selfData = self:GetTable()
 	if selfData.VJ_IsBeingControlled or selfData.Dead then return end
 	
-	local hasCond = self.HasCondition
 	local curTime = CurTime()
 	local ene = self:GetEnemy()
 	local eneValid = IsValid(ene)
@@ -3428,9 +3434,9 @@ function ENT:SelectSchedule()
 		end
 		selfData.Weapon_UnarmedBehavior_Active = false
 		
-		-- Investigation: Conditions // hasCond(self, COND_HEAR_PLAYER)
-		if selfData.CanInvestigate && (hasCond(self, COND_HEAR_BULLET_IMPACT) or hasCond(self, COND_HEAR_COMBAT) or hasCond(self, COND_HEAR_WORLD) or hasCond(self, COND_HEAR_DANGER)) && selfData.NextInvestigationMove < curTime && selfData.TakingCoverT < curTime && !self:IsBusy() then
-			local sdSrc = self:GetBestSoundHint(bit.bor(SOUND_BULLET_IMPACT, SOUND_COMBAT, SOUND_WORLD, SOUND_DANGER)) // SOUND_PLAYER, SOUND_PLAYER_VEHICLE
+		-- Investigation: Conditions // funcHasCondition(self, COND_HEAR_PLAYER)
+		if selfData.CanInvestigate && (funcHasCondition(self, COND_HEAR_BULLET_IMPACT) or funcHasCondition(self, COND_HEAR_COMBAT) or funcHasCondition(self, COND_HEAR_WORLD) or funcHasCondition(self, COND_HEAR_DANGER)) && selfData.NextInvestigationMove < curTime && selfData.TakingCoverT < curTime && !self:IsBusy() then
+			local sdSrc = self:GetBestSoundHint(bitsDanger)
 			if sdSrc then
 				//PrintTable(sdSrc)
 				local allowed = true
@@ -3711,7 +3717,7 @@ function ENT:SelectSchedule()
 	
 	::goto_conditions::
 	-- Handle move away behavior
-	if hasCond(self, COND_PLAYER_PUSHING) && curTime > selfData.TakingCoverT && !self:IsBusy("Activities") then
+	if funcHasCondition(self, COND_PLAYER_PUSHING) && curTime > selfData.TakingCoverT && !self:IsBusy("Activities") then
 		self:PlaySoundSystem("YieldToPlayer")
 		if eneValid then -- Face current enemy
 			schedule_yield_player.TurnData.Type = VJ.FACE_ENEMY_VISIBLE
