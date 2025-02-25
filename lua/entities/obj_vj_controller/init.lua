@@ -272,7 +272,7 @@ function ENT:SetControlledNPC(npc)
 		if npc.NextDoAnyAttackT < CurTime() then
 			npc.NextDoAnyAttackT = CurTime() + 0.5
 		end
-		if npc.Medic_Status then npc:ResetMedicBehavior() end
+		if npc.MedicData.Status then npc:ResetMedicBehavior() end
 		if npc.VJ_ST_Eating then
 			npc:OnEat("StopEating", "Unspecified") -- So it plays the get up animation
 			npc:ResetEatingBehavior("Unspecified")

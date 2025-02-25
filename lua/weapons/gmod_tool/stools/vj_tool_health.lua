@@ -82,10 +82,11 @@ function TOOL:LeftClick(tr)
 				Ply:ChatPrint("Set "..trent:GetClass().."'s health to "..self:GetClientNumber("health"))
 				if trent:IsNPC() then
 					if self:GetClientNumber("godmode") == 1 then trent.GodMode = true else trent.GodMode = false end
-					if trent.IsVJBaseSNPC == true && self:GetClientNumber("healthregen") == 1 then
-						trent.HasHealthRegeneration = true
-						trent.HealthRegenerationAmount = self:GetClientNumber("healthregen_amt")
-						trent.HealthRegenerationDelay = VJ.SET(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
+					if trent.IsVJBaseSNPC && self:GetClientNumber("healthregen") == 1 then
+						local healthRegen = trent.HealthRegenParams
+						healthRegen.Enabled = true
+						healthRegen.Amount = self:GetClientNumber("healthregen_amt")
+						healthRegen.Delay = VJ.SET(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
 					end
 				end
 				return true
@@ -110,10 +111,11 @@ function TOOL:RightClick(tr)
 				Ply:ChatPrint("Set "..trent:GetClass().."'s health and max health to "..self:GetClientNumber("health"))
 				if trent:IsNPC() then
 					if self:GetClientNumber("godmode") == 1 then trent.GodMode = true else trent.GodMode = false end
-					if trent.IsVJBaseSNPC == true && self:GetClientNumber("healthregen") == 1 then
-						trent.HasHealthRegeneration = true
-						trent.HealthRegenerationAmount = self:GetClientNumber("healthregen_amt")
-						trent.HealthRegenerationDelay = VJ.SET(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
+					if trent.IsVJBaseSNPC && self:GetClientNumber("healthregen") == 1 then
+						local healthRegen = trent.HealthRegenParams
+						healthRegen.Enabled = true
+						healthRegen.Amount = self:GetClientNumber("healthregen_amt")
+						healthRegen.Delay = VJ.SET(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
 					end
 				end
 				return true

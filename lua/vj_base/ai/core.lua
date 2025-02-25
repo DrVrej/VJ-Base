@@ -76,6 +76,7 @@ local vj_npc_gib_fadetime = GetConVar("vj_npc_gib_fadetime")
 
 ENT.VJ_ID_Healable = true
 
+-- Data & control variables
 ENT.VJ_DEBUG = false
 ENT.VJ_IsBeingControlled = false
 ENT.VJ_IsBeingControlled_Tool = false
@@ -85,12 +86,20 @@ ENT.VJ_TheControllerBullseye = NULL
 ENT.SelectedDifficulty = 1
 ENT.AIState = VJ_STATE_NONE
 ENT.NextProcessT = 0
-ENT.Medic_Status = false -- false = Not active | "Active" = Attempting to heal ally (Going after etc.) | "Healing" = Has reached ally and is healing it
-ENT.Medic_Target = NULL
-ENT.Medic_PropEnt = NULL
-ENT.Medic_NextHealT = 0
+ENT.MedicData = {
+	Status = false, -- false = Not active | "Active" = Attempting to heal ally (Going after etc.) | "Healing" = Has reached ally and is healing it
+	Target = NULL, -- Entity that it's healing
+	Prop = NULL, -- Prop that it spawned while healing
+	Cooldown = 0 -- Next time it can heal an ally again
+}
 ENT.IsFollowing = false
-ENT.FollowData = {Ent = NULL, MinDist = 0, Moving = false, StopAct = false, NextUpdateT = 0}
+ENT.FollowData = {
+	Target = NULL, -- Target that it's following
+	MinDist = 0,
+	Moving = false,
+	StopAct = false,
+	NextUpdateT = 0
+}
 ENT.EnemyData = {
 	Distance = 0, -- Distance to the enemy
 	DistanceNearest = 0, -- Nearest position distance to the enemy
@@ -98,15 +107,22 @@ ENT.EnemyData = {
 	TimeAcquired = 0, -- Time since it acquired an enemy (Switching enemies does NOT reset this!)
 	Visible = false, -- Is the enemy visible? | Updated every "Think" run!
 	VisibleCount = 0, -- Number of visible enemies
-	LastVisibleTime = 0, -- Last time it saw the enemy
-	LastVisiblePos = Vector(0, 0, 0), -- Last visible position of the enemy, based on "EyePos", for origin call "self:GetEnemyLastSeenPos()"
-	LastVisiblePosReal = Vector(0, 0, 0), -- Last calculated visible position of the enemy, it's often wrong! | WARNING: Avoid using this, it's mostly used internally by the base!
-	Reset = true, -- Enemy has reset | Mostly a backend variable
+	VisibleTime = 0, -- Last time the enemy was visible (CurTime)
+	VisiblePos = Vector(0, 0, 0), -- Last visible position of the enemy, based on "EyePos", for origin call "self:GetEnemyLastSeenPos()"
+	VisiblePosReal = Vector(0, 0, 0), -- Last calculated visible position of the enemy, it's often wrong! | Mostly a backend variable
+	Reset = true -- Enemy has reset | Mostly a backend variable
 }
-ENT.TurnData = {Type = VJ.FACE_NONE, Target = nil, StopOnFace = false, IsSchedule = false, LastYaw = 0}
-ENT.GuardData = false
-	-- Position = Position that it's set to guard
-	-- Direction = Direction that it's set to guard
+ENT.TurnData = {
+	Type = VJ.FACE_NONE,
+	Target = nil,
+	StopOnFace = false,
+	IsSchedule = false,
+	LastYaw = 0
+}
+ENT.GuardData = {
+	Position = false, -- Position that it's set to guard
+	Direction = false -- Direction to face while guarding
+}
 ENT.PauseAttacks = false
 ENT.AnimLockTime = 0
 ENT.AnimPlaybackRate = 1
@@ -127,7 +143,7 @@ ENT.NextChaseTime = 0
 ENT.Alerted = false
 ENT.Flinching = false
 ENT.NextFlinchT = 0
-ENT.HealthRegenerationDelayT = 0
+ENT.HealthRegenDelayT = 0
 ENT.NextCombineBallDmgT = 0
 ENT.Dead = false
 ENT.GibbedOnDeath = false
@@ -359,7 +375,7 @@ function ENT:ResetEatingBehavior(statusData)
 	self:OnEat("StopEating", statusData)
 	self.VJ_ST_Eating = false
 	self.AnimationTranslations[ACT_IDLE] = eatingData.OrgIdle -- Reset the idle animation table in case it changed!
-	local food = eatingData.Ent
+	local food = eatingData.Target
 	if IsValid(food) then
 		local foodData = food.FoodData
 		-- if we are the last person eating, then reset the food data!
@@ -372,7 +388,7 @@ function ENT:ResetEatingBehavior(statusData)
 			foodData.SizeRemaining = foodData.SizeRemaining + self:OBBMaxs():Distance(self:OBBMins())
 		end
 	end
-	self.EatingData = {Ent = NULL, NextCheck = eatingData.NextCheck, AnimStatus = "None", OrgIdle = nil}
+	self.EatingData = {Target = NULL, NextCheck = eatingData.NextCheck, AnimStatus = "None", OrgIdle = nil}
 	-- AnimStatus: "None" = Not prepared (Probably moving to food location) | "Prepared" = Prepared (Ex: Played crouch down anim) | "Eating" = Prepared and is actively eating
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -410,7 +426,7 @@ function ENT:OnEat(status, statusData)
 	elseif status == "Eat" then
 		VJ.EmitSound(self, "barnacle/bcl_chew" .. math.random(1, 3) .. ".wav", 55)
 		-- Health changes
-		local food = self.EatingData.Ent
+		local food = self.EatingData.Target
 		local damage = 15 -- How much damage food will receive
 		local foodHP = food:Health() -- Food's health
 		local myHP = self:Health() -- NPC's current health
@@ -518,7 +534,7 @@ function ENT:MaintainIdleBehavior(idleType) -- idleType: nil = Random | 1 = Wand
 	if selfData.Dead or selfData.VJ_IsBeingControlled or (selfData.AttackAnimTime > curTime) or (selfData.NextIdleTime > curTime) or (selfData.AA_CurrentMoveTime > curTime) or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
-	if self:IsGoalActive() or selfData.DisableWandering or selfData.IsGuard or selfData.MovementType == VJ_MOVETYPE_STATIONARY or !selfData.LastHiddenZone_CanWander or selfData.NextWanderTime > curTime or selfData.IsFollowing or selfData.Medic_Status then
+	if self:IsGoalActive() or selfData.DisableWandering or selfData.IsGuard or selfData.MovementType == VJ_MOVETYPE_STATIONARY or !selfData.LastHiddenZone_CanWander or selfData.NextWanderTime > curTime or selfData.IsFollowing or selfData.MedicData.Status then
 		self:SCHEDULE_IDLE_STAND()
 		return -- Don't set NextWanderTime below
 	elseif !idleType && selfData.IdleAlwaysWander then
@@ -837,9 +853,9 @@ function ENT:IsBusy(checkType)
 	
 	-- Check behaviors
 	if checkAll then
-		if selfData.FollowData.Moving or selfData.Medic_Status then return true end
+		if selfData.FollowData.Moving or selfData.MedicData.Status then return true end
 	elseif checkType == "Behaviors" then
-		return selfData.FollowData.Moving or selfData.Medic_Status
+		return selfData.FollowData.Moving or selfData.MedicData.Status
 	end
 	
 	-- Check activities
@@ -1136,7 +1152,7 @@ function ENT:GetAimPosition(target, aimOrigin, predictionRate, projectileSpeed)
 			result = target:HeadTarget(aimOrigin) or target:EyePos() -- Certain non player/NPC targets will return nil, so just use "EyePos"
 		end
 	else -- If not visible, use the last known position!
-		result = self.EnemyData.LastVisiblePos
+		result = self.EnemyData.VisiblePos
 		predictionRate = 0 -- Enemy is not visible, do NOT predict!
 	end
 	if (predictionRate or 0) > 0 then -- If prediction is enabled
@@ -1503,7 +1519,7 @@ end
 -----------------------------------------------------------]]
 function ENT:ResetFollowBehavior()
 	local followData = self.FollowData
-	local followEnt = followData.Ent
+	local followEnt = followData.Target
 	if IsValid(followEnt) && followEnt:IsPlayer() && self.CanChatMessage then
 		if self.Dead then
 			followEnt:PrintMessage(HUD_PRINTTALK, self:GetName().." has been killed.")
@@ -1512,7 +1528,7 @@ function ENT:ResetFollowBehavior()
 		end
 	end
 	self.IsFollowing = false
-	followData.Ent = NULL -- Need to recall it here because localized can't update the table
+	followData.Target = NULL -- Need to recall it here because localized can't update the table
 	followData.MinDist = 0
 	followData.Moving = false
 	followData.StopAct = false
@@ -1546,7 +1562,7 @@ function ENT:Follow(ent, stopIfFollowing)
 				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." isn't friendly so it won't follow you.")
 			end
 			return false, 3
-		elseif self.IsFollowing && ent != followData.Ent then -- Already following another entity
+		elseif self.IsFollowing && ent != followData.Target then -- Already following another entity
 			if isPly && self.CanChatMessage then
 				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is following another entity so it won't follow you.")
 			end
@@ -1563,10 +1579,12 @@ function ENT:Follow(ent, stopIfFollowing)
 				if self.CanChatMessage then
 					ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is now following you.")
 				end
-				self.GuardData = false -- Reset the guarding data
 				self:PlaySoundSystem("FollowPlayer")
+				-- Reset the guarding data
+				self.GuardData.Position = false
+				self.GuardData.Direction = false
 			end
-			followData.Ent = ent
+			followData.Target = ent
 			followData.MinDist = self.FollowMinDistance + self:OBBMaxs().y + ent:OBBMaxs().y
 			self.IsFollowing = true
 			self:SetTarget(ent)
@@ -1574,8 +1592,8 @@ function ENT:Follow(ent, stopIfFollowing)
 				self:StopMoving()
 				self:SCHEDULE_FACE("TASK_FACE_TARGET", function(x)
 					x.RunCode_OnFinish = function()
-						if IsValid(self.FollowData.Ent) then
-							self:SCHEDULE_GOTO_TARGET(((self:GetPos():Distance(self.FollowData.Ent:GetPos()) < (followData.MinDist * 1.5)) and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(y) y.CanShootWhenMoving = true y.TurnData = {Type = VJ.FACE_ENEMY} end)
+						if IsValid(self.FollowData.Target) then
+							self:SCHEDULE_GOTO_TARGET(((self:GetPos():Distance(self.FollowData.Target:GetPos()) < (followData.MinDist * 1.5)) and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(y) y.CanShootWhenMoving = true y.TurnData = {Type = VJ.FACE_ENEMY} end)
 						end
 					end
 				end)
@@ -1600,37 +1618,39 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetMedicBehavior()
 	self:OnMedicBehavior("OnReset", "End")
-	if IsValid(self.Medic_Target) then self.Medic_Target.VJ_ST_Healing = false end
-	if IsValid(self.Medic_PropEnt) then self.Medic_PropEnt:Remove() end
-	self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime.a, self.Medic_NextHealTime.b)
-	self.Medic_Status = false
-	self.Medic_Target = NULL
+	local medicData = self.MedicData
+	if IsValid(medicData.Target) then medicData.Target.VJ_ST_Healing = false end
+	if IsValid(medicData.Prop) then medicData.Prop:Remove() end
+	medicData.Status = false
+	medicData.Target = NULL
+	medicData.Cooldown = CurTime() + math.Rand(self.Medic_NextHealTime.a, self.Medic_NextHealTime.b)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainMedicBehavior()
 	local selfData = self:GetTable()
 	if selfData.Weapon_UnarmedBehavior_Active then return end -- Do NOT heal if playing scared animations!
+	local medicData = selfData.MedicData
 	
 	-- Not healing anyone, check around for allies
-	if !selfData.Medic_Status then
-		if CurTime() < selfData.Medic_NextHealT then return end
+	if !medicData.Status then
+		if CurTime() < medicData.Cooldown then return end
 		for _, ent in ipairs(ents.FindInSphere(self:GetPos(), selfData.Medic_CheckDistance)) do
 			if ent != self && (ent.IsVJBaseSNPC or ent:IsPlayer()) && ent.VJ_ID_Healable && !ent.VJ_ST_Healing && !ent.VJ_ID_Vehicle && ent:Health() <= (ent:GetMaxHealth() * 0.75) && ((ent:IsNPC() && !IsValid(self:GetEnemy()) && (!IsValid(ent:GetEnemy()) or ent.VJ_IsBeingControlled)) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(ent) == D_LI then
-				selfData.Medic_Target = ent
-				selfData.Medic_Status = "Active"
+				medicData.Target = ent
+				medicData.Status = "Active"
 				ent.VJ_ST_Healing = true
 				self:StopMoving()
 				self:MaintainMedicBehavior()
 				return
 			end
 		end
-	elseif selfData.Medic_Status != "Healing" then
-		local ally = selfData.Medic_Target
+	elseif medicData.Status != "Healing" then
+		local ally = medicData.Target
 		if !IsValid(ally) or !ally:Alive() or (ally:Health() > ally:GetMaxHealth() * 0.75) or self:CheckRelationship(ally) != D_LI then self:ResetMedicBehavior() return end
 		
 		-- Heal them!
 		if funcVisible(self, ally) && VJ.GetNearestDistance(self, ally) <= selfData.Medic_HealDistance then
-			selfData.Medic_Status = "Healing"
+			medicData.Status = "Healing"
 			self:OnMedicBehavior("BeforeHeal")
 			self:PlaySoundSystem("MedicBeforeHeal")
 			
@@ -1649,7 +1669,7 @@ function ENT:MaintainMedicBehavior()
 				//prop:AddEffects(EF_BONEMERGE)
 				prop:SetRenderMode(RENDERMODE_TRANSALPHA)
 				self:DeleteOnRemove(prop)
-				selfData.Medic_PropEnt = prop
+				medicData.Prop = prop
 			end
 			
 			-- Handle the heal time and animation
@@ -1679,10 +1699,10 @@ function ENT:MaintainMedicBehavior()
 						self:ResetMedicBehavior()
 					else -- If it exists...
 						if self:CheckRelationship(ally) != D_LI then self:ResetMedicBehavior() return end -- I no longer like them, stop healing them!
-						if VJ.GetNearestDistance(self, ally) <= (self.Medic_HealDistance + 20) then -- Are we still in healing distance?
+						if VJ.GetNearestDistance(self, ally) <= (selfData.Medic_HealDistance + 20) then -- Are we still in healing distance?
 							if self:OnMedicBehavior("OnHeal", ally) != false then
 								local friCurHP = ally:Health()
-								ally:SetHealth(math_min(math_max(friCurHP + self.Medic_HealAmount, friCurHP), ally:GetMaxHealth()))
+								ally:SetHealth(math_min(math_max(friCurHP + selfData.Medic_HealAmount, friCurHP), ally:GetMaxHealth()))
 								timer.Remove("timer_melee_bleed"..ally:EntIndex())
 								timer.Adjust("timer_melee_slowply"..ally:EntIndex(), 0)
 								ally.VJ_SpeedEffectT = 0
@@ -1694,8 +1714,8 @@ function ENT:MaintainMedicBehavior()
 							end
 							self:ResetMedicBehavior()
 						else -- If we are no longer in healing distance, go after the ally again
-							self.Medic_Status = "Active"
-							if IsValid(self.Medic_PropEnt) then self.Medic_PropEnt:Remove() end
+							medicData.Status = "Active"
+							if IsValid(medicData.Prop) then medicData.Prop:Remove() end
 							self:OnMedicBehavior("OnReset", "Retry")
 						end
 					end
@@ -1850,7 +1870,7 @@ function ENT:DoEnemyAlert(ent)
 		self:SetNPCState(NPC_STATE_ALERT)
 	end
 	eneData.TimeAcquired = curTime
-	eneData.LastVisibleTime = curTime
+	eneData.VisibleTime = curTime
 	self:OnAlert(ent)
 	if curTime > selfData.NextAlertSoundT then
 		self:PlaySoundSystem("Alert")
@@ -3250,7 +3270,7 @@ function ENT:OnRemove()
 	self:CustomOnRemove()
 	hook.Remove("Think", self)
 	self.Dead = true
-	if self.Medic_Status then self:ResetMedicBehavior() end
+	if self.MedicData.Status then self:ResetMedicBehavior() end
 	if self.VJ_ST_Eating then self:ResetEatingBehavior("Dead") end
 	self:RemoveTimers()
 	self:StopAllSounds()

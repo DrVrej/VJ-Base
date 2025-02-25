@@ -18,10 +18,12 @@ ENT.Model = false -- Model(s) to spawn with | Picks a random one if it's a table
 ENT.CanChatMessage = true -- Is it allowed to post in a player's chat? | Example: "Blank no longer likes you."
 	-- ====== Health ====== --
 ENT.StartHealth = 50
-ENT.HasHealthRegeneration = false -- Can it regenerate its health?
-ENT.HealthRegenerationAmount = 4 -- How much should the health increase after every delay?
-ENT.HealthRegenerationDelay = VJ.SET(2, 4) -- How much time until the health increases
-ENT.HealthRegenerationResetOnDmg = true -- Should the delay reset when it receives damage?
+ENT.HealthRegenParams = {
+	Enabled = false, -- Can it regenerate its health?
+	Amount = 4, -- How much should the health increase after every delay?
+	Delay = VJ.SET(2, 4), -- How much time until the health increases
+	ResetOnDmg = true, -- Should the delay reset when it receives damage?
+}
 	-- ====== Collision ====== --
 ENT.HullType = HULL_HUMAN -- List of Hull types: https://wiki.facepunch.com/gmod/Enums/HULL
 ENT.EntitiesToNoCollide = false -- Set to a table of entity class names for it to not collide with otherwise leave it to false
@@ -389,6 +391,7 @@ ENT.HasDeathSounds = true -- Can it play death sounds?
 	-- There are 2 types of sounds: "SPEECH" and "EFFECT" | Most sound tables are "SPEECH" unless stated
 		-- SPEECH : Mostly play speech sounds | Will stop when another speech sound is played
 		-- EFFECT : Mostly play sound effects | EX: Movement sound, impact sound, attack swipe sound, etc.
+ENT.SoundTbl_SoundTrack = false
 ENT.SoundTbl_FootStep = false -- EFFECT
 ENT.SoundTbl_Breath = false -- EFFECT
 ENT.SoundTbl_Idle = false
@@ -425,7 +428,6 @@ ENT.SoundTbl_Pain = false
 ENT.SoundTbl_Impact = "VJ.Impact.Flesh_Alien" -- EFFECT
 ENT.SoundTbl_DamageByPlayer = false
 ENT.SoundTbl_Death = false
-ENT.SoundTbl_SoundTrack = false
 	-- ====== Sound Chance ====== --
 	-- Higher number = less chance of playing | 1 = Always play
 ENT.IdleSoundChance = 2
@@ -1095,6 +1097,10 @@ local function ApplyBackwardsCompatibility(self)
 	if self.CustomOnAcceptInput then self.OnInput = function(_, key, activator, caller, data) self:CustomOnAcceptInput(key, activator, caller, data) end end
 	if self.CustomOnHandleAnimEvent then self.OnAnimEvent = function(_, ev, evTime, evCycle, evType, evOptions) self:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions) end end
 	if self.CustomOnDeath_AfterCorpseSpawned then self.OnCreateDeathCorpse = function(_, dmginfo, hitgroup, corpseEnt) self:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) end end
+	if self.HasHealthRegeneration then self.HealthRegenParams.Enabled = true end
+	if self.HealthRegenerationAmount then self.HealthRegenParams.Amount = self.HealthRegenerationAmount end
+	if self.HealthRegenerationDelay then self.HealthRegenParams.Delay = self.HealthRegenerationDelay end
+	if self.HealthRegenerationResetOnDmg then self.HealthRegenParams.ResetOnDmg = self.HealthRegenerationResetOnDmg end
 	if self.FriendsWithAllPlayerAllies != nil then self.AlliedWithPlayerAllies = self.FriendsWithAllPlayerAllies end
 	if self.Medic_CanBeHealed == false then self.VJ_ID_Healable = false end
 	if self.Immune_AcidPoisonRadiation != nil then self.Immune_Toxic = self.Immune_AcidPoisonRadiation end
@@ -1612,7 +1618,7 @@ function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to alw
 	end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
-	if moveType == VJ_MOVETYPE_STATIONARY or selfData.IsFollowing or selfData.Medic_Status or self:GetState() == VJ_STATE_ONLY_ANIMATION then
+	if moveType == VJ_MOVETYPE_STATIONARY or selfData.IsFollowing or selfData.MedicData.Status or self:GetState() == VJ_STATE_ONLY_ANIMATION then
 		self:SCHEDULE_IDLE_STAND()
 		return
 	end
@@ -1757,7 +1763,7 @@ function ENT:Think()
 		if selfData.VJ_DEBUG then
 			if GetConVar("vj_npc_debug_enemy"):GetInt() == 1 then VJ.DEBUG_Print(self, false, "Enemy -> " .. tostring(self:GetEnemy() or "NULL") .. " | Alerted? " .. tostring(selfData.Alerted))  end
 			if GetConVar("vj_npc_debug_takingcover"):GetInt() == 1 then if curTime > selfData.TakingCoverT then VJ.DEBUG_Print(self, false, "NOT taking cover") else VJ.DEBUG_Print(self, false, "Taking cover ("..selfData.TakingCoverT - curTime..")") end end
-			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - selfData.EnemyData.LastVisibleTime).." ("..self:GetName()..")") end
+			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - selfData.EnemyData.VisibleTime).." ("..self:GetName()..")") end
 		end
 		
 		//self:SetPlaybackRate(self.AnimationPlaybackRate)
@@ -1808,7 +1814,7 @@ function ENT:Think()
 		//PrintTable(selfData.FollowData)
 		if selfData.IsFollowing && self:GetNavType() != NAV_JUMP && self:GetNavType() != NAV_CLIMB then
 			local followData = selfData.FollowData
-			local followEnt = followData.Ent
+			local followEnt = followData.Target
 			local followIsLiving = followEnt.VJ_ID_Living
 			//print(self:GetTarget())
 			if IsValid(followEnt) && (!followIsLiving or (followIsLiving && (self:Disposition(followEnt) == D_LI or self:GetClass() == followEnt:GetClass()) && followEnt:Alive())) then
@@ -1899,10 +1905,11 @@ function ENT:Think()
 		
 		if !selfData.Dead then
 			-- Health Regeneration System
-			if selfData.HasHealthRegeneration && curTime > selfData.HealthRegenerationDelayT then
+			local healthRegen = selfData.HealthRegenParams
+			if healthRegen.Enabled && curTime > selfData.HealthRegenDelayT then
 				local myHP = self:Health()
-				self:SetHealth(math_min(math_max(myHP + selfData.HealthRegenerationAmount, myHP), self:GetMaxHealth()))
-				selfData.HealthRegenerationDelayT = curTime + math.Rand(selfData.HealthRegenerationDelay.a, selfData.HealthRegenerationDelay.b)
+				self:SetHealth(math_min(math_max(myHP + healthRegen.Amount, myHP), self:GetMaxHealth()))
+				selfData.HealthRegenDelayT = curTime + math.Rand(healthRegen.Delay.a, healthRegen.Delay.b)
 			end
 			
 			-- Run the heavy processes
@@ -1924,7 +1931,7 @@ function ENT:Think()
 					ene = self:GetEnemy()
 					eneValid = IsValid(ene)
 				-- Reset enemy if it has been unseen for a while
-				elseif (curTime - eneData.LastVisibleTime) > selfData.EnemyTimeout && !selfData.IsVJBaseSNPC_Tank then
+				elseif (curTime - eneData.VisibleTime) > selfData.EnemyTimeout && !selfData.IsVJBaseSNPC_Tank then
 					self:PlaySoundSystem("LostEnemy")
 					self:ResetEnemy(true, true)
 					ene = self:GetEnemy()
@@ -1936,7 +1943,7 @@ function ENT:Think()
 			if selfData.CanEat then
 				local eatingData = selfData.EatingData
 				if !eatingData then -- Eating data has NOT been initialized, so initialize it!
-					self.EatingData = {Ent = NULL, NextCheck = 0, AnimStatus = "None", OrgIdle = nil}
+					self.EatingData = {Target = NULL, NextCheck = 0, AnimStatus = "None", OrgIdle = nil}
 						-- AnimStatus: "None" = Not prepared (Probably moving to food location) | "Prepared" = Prepared (Ex: Played crouch down anim) | "Eating" = Prepared and is actively eating
 					eatingData = self.EatingData
 				end
@@ -1947,7 +1954,7 @@ function ENT:Think()
 					end
 				elseif curTime > eatingData.NextCheck then
 					if selfData.VJ_ST_Eating then
-						local food = eatingData.Ent
+						local food = eatingData.Target
 						if !IsValid(food) then -- Food no longer exists, reset!
 							eatingData.NextCheck = curTime + 10
 							self:ResetEatingBehavior("Unspecified")
@@ -2015,7 +2022,7 @@ function ENT:Think()
 									selfData.VJ_ST_Eating = true
 									food.VJ_ST_BeingEaten = true
 									selfData.EatingData.OrgIdle = selfData.AnimationTranslations[ACT_IDLE] -- Save the current idle anim table in case we gonna change it while eating!
-									eatingData.Ent = food
+									eatingData.Target = food
 									self:OnEat("StartBehavior")
 									self:SetState(VJ_STATE_ONLY_ANIMATION_NOATTACK)
 									selfData.NextWanderTime = curTime + math.Rand(3, 5)
@@ -2041,10 +2048,10 @@ function ENT:Think()
 				eneData.Distance = eneDist
 				eneData.DistanceNearest = eneDistNear
 				if eneIsVisible && self:IsInViewCone(enePos) && (eneDist < self:GetMaxLookDistance()) then
-					eneData.LastVisibleTime = curTime
+					eneData.VisibleTime = curTime
 					-- Why 2 vars? Because the last "Visible" tick is usually not updated in time, causing the engine to give false positive, thinking the enemy IS visible
-					eneData.LastVisiblePos = eneData.LastVisiblePosReal
-					eneData.LastVisiblePosReal = ene:EyePos() -- Use EyePos because "Visible" uses it to run the trace in the engine! | For origin, use "self:GetEnemyLastSeenPos()"
+					eneData.VisiblePos = eneData.VisiblePosReal
+					eneData.VisiblePosReal = ene:EyePos() -- Use EyePos because "Visible" uses it to run the trace in the engine! | For origin, use "self:GetEnemyLastSeenPos()"
 				end
 				
 				-- Turning / Facing Enemy
@@ -2252,12 +2259,9 @@ function ENT:Think()
 			-- Guarding Behavior
 			if selfData.IsGuard && !selfData.IsFollowing then
 				local guardData = selfData.GuardData
-				if !guardData then -- If it hasn't set the data, then set it!
-					guardData = {
-						Position = myPos,
-						Direction = myPos + self:GetForward()*51
-					}
-					selfData.GuardData = guardData
+				if !guardData.Position then -- If we don't have a position, then set it!
+					guardData.Position = myPos
+					guardData.Direction = myPos + self:GetForward() * 51
 				end
 				-- If it's far from the guarding position, then go there!
 				if !self:IsMoving() && !self:IsBusy("Activities") then
@@ -2269,12 +2273,9 @@ function ENT:Think()
 							x.TurnData = {Type = VJ.FACE_ENEMY}
 							x.RunCode_OnFinish = function()
 								timer.Simple(0.01, function()
-									if IsValid(self) && !self:IsMoving() && !self:IsBusy("Activities") && selfData.IsGuard then
-										guardData = selfData.GuardData
-										if guardData then
-											self:SetLastPosition(guardData.Position)
-											self:SCHEDULE_FACE("TASK_FACE_LASTPOSITION")
-										end
+									if IsValid(self) && !self:IsMoving() && !self:IsBusy("Activities") && selfData.IsGuard && guardData.Position then
+										self:SetLastPosition(guardData.Direction)
+										self:SCHEDULE_FACE("TASK_FACE_LASTPOSITION")
 									end
 								end)
 							end
@@ -2777,7 +2778,7 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 		if getAllies != false then
 			for _, ally in ipairs(getAllies) do
 				local allyEne = ally:GetEnemy()
-				if IsValid(allyEne) && (CurTime() - ally.EnemyData.LastVisibleTime) < selfData.EnemyTimeout && allyEne:Alive() && self:CheckRelationship(allyEne) == D_HT then
+				if IsValid(allyEne) && (CurTime() - ally.EnemyData.VisibleTime) < selfData.EnemyTimeout && allyEne:Alive() && self:CheckRelationship(allyEne) == D_HT then
 					self:ForceSetEnemy(allyEne, false)
 					eneData.Reset = false
 					return false
@@ -2909,8 +2910,9 @@ function ENT:OnTakeDamage(dmginfo)
 	}
 	self:SetHealth(self:Health() - dmginfo:GetDamage())
 	if selfData.VJ_DEBUG && GetConVar("vj_npc_debug_damage"):GetInt() == 1 then VJ.DEBUG_Print(self, "OnTakeDamage", "Amount = ", dmginfo:GetDamage(), " | Attacker = ", dmgAttacker, " | Inflictor = ", dmgInflictor) end
-	if selfData.HasHealthRegeneration && selfData.HealthRegenerationResetOnDmg then
-		selfData.HealthRegenerationDelayT = curTime + (math.Rand(selfData.HealthRegenerationDelay.a, selfData.HealthRegenerationDelay.b) * 1.5)
+	local healthRegen = selfData.HealthRegenParams
+	if healthRegen.Enabled && healthRegen.ResetOnDmg then
+		selfData.HealthRegenDelayT = curTime + (math.Rand(healthRegen.Delay.a, healthRegen.Delay.b) * 1.5)
 	end
 	self:SetSaveValue("m_iDamageCount", self:GetTotalDamageCount() + 1)
 	self:SetSaveValue("m_flLastDamageTime", curTime)
@@ -2943,7 +2945,7 @@ function ENT:OnTakeDamage(dmginfo)
 					self:SetRelationshipMemory(dmgAttacker, VJ.MEM_HOSTILITY_LEVEL, relationMemory[VJ.MEM_HOSTILITY_LEVEL] and relationMemory[VJ.MEM_HOSTILITY_LEVEL] + 1 or 1)
 					if relationMemory[VJ.MEM_HOSTILITY_LEVEL] > selfData.BecomeEnemyToPlayer && self:Disposition(dmgAttacker) != D_HT then
 						self:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
-						if selfData.IsFollowing && selfData.FollowData.Ent == dmgAttacker then self:ResetFollowBehavior() end
+						if selfData.IsFollowing && selfData.FollowData.Target == dmgAttacker then self:ResetFollowBehavior() end
 						self:SetRelationshipMemory(dmgAttacker, VJ.MEM_OVERRIDE_DISPOSITION, D_HT)
 						self:AddEntityRelationship(dmgAttacker, D_HT, 2)
 						selfData.TakingCoverT = curTime + 2
@@ -3071,7 +3073,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 	self.Dead = true
 	self:SetSaveValue("m_lifeState", 1) -- LIFE_DYING
 	self:OnDeath(dmginfo, hitgroup, "Init")
-	if self.Medic_Status then self:ResetMedicBehavior() end
+	if self.MedicData.Status then self:ResetMedicBehavior() end
 	if self.IsFollowing then self:ResetFollowBehavior() end
 	local dmgInflictor = dmginfo:GetInflictor()
 	local dmgAttacker = dmginfo:GetAttacker()
@@ -3115,7 +3117,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 					if relationMemory[VJ.MEM_HOSTILITY_LEVEL] > ally.BecomeEnemyToPlayer then
 						if ally:Disposition(dmgAttacker) != D_HT then
 							ally:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
-							if ally.IsFollowing && ally.FollowData.Ent == dmgAttacker then ally:ResetFollowBehavior() end
+							if ally.IsFollowing && ally.FollowData.Target == dmgAttacker then ally:ResetFollowBehavior() end
 							ally:SetRelationshipMemory(dmgAttacker, VJ.MEM_OVERRIDE_DISPOSITION, D_HT)
 							ally:AddEntityRelationship(dmgAttacker, D_HT, 2)
 							if ally.CanChatMessage then
