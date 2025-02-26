@@ -7,38 +7,14 @@ TOOL.Information = {
 	{name = "reload"},
 }
 
--- Just to make it easier to reset everything to default
-local DefaultConVars = {}
-for k,v in pairs(TOOL.ClientConVar) do
-	DefaultConVars["vj_tool_mover_"..k] = v
-end
+local defaultConvars = TOOL:BuildConVarList()
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local function DoBuildCPanel_Mover(Panel)
+	local function ControlPanel(Panel)
 		VJ_MOVE_TblCurrentValues = VJ_MOVE_TblCurrentValues or {}
 		VJ_MOVE_TblCurrentLines = VJ_MOVE_TblCurrentLines or {}
 		
-		local reset = vgui.Create("DButton")
-		reset:SetFont("DermaDefaultBold")
-		reset:SetText("#vjbase.menu.general.reset.everything")
-		reset:SetSize(150,25)
-		reset:SetColor(VJ.COLOR_BLACK)
-		reset.DoClick = function()
-			for k,v in pairs(DefaultConVars) do
-				if v == "" then
-				LocalPlayer():ConCommand(k.." ".."None")
-			else
-				LocalPlayer():ConCommand(k.." "..v) end
-				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vj_tool_mover")
-					GetPanel:ClearControls()
-					DoBuildCPanel_Mover(GetPanel)
-				end)
-			end
-		end
-		Panel:AddPanel(reset)
-		
-		Panel:AddControl("Label", {Text = "#tool.vjstool.menu.label.recommendation"})
+		Panel:AddControl("Label", {Text = "#vjbase.tool.general.note.recommend"})
 		local CheckList = vgui.Create("DListView")
 			CheckList:SetTooltip(false)
 			//CheckList:Center() -- No need since Size does it already
@@ -121,9 +97,9 @@ if CLIENT then
 				table.insert(VJ_MOVE_TblCurrentValues,sventity)
 			end
 			-- Refresh the tool menu
-			local GetPanel = controlpanel.Get("vj_tool_mover")
-			GetPanel:ClearControls()
-			DoBuildCPanel_Mover(GetPanel)
+			local getPanel = controlpanel.Get("vj_tool_mover")
+			getPanel:Clear()
+			ControlPanel(getPanel)
 			net.Start("vj_npcmover_sv_create")
 			net.WriteEntity(sventity)
 			net.WriteBit(changetype)
@@ -143,9 +119,9 @@ if CLIENT then
 			for k,v in ipairs(VJ_MOVE_TblCurrentValues) do
 				if !IsValid(v) then -- Remove any NPCs that no longer exist!
 					table.remove(VJ_MOVE_TblCurrentValues,k)
-					local GetPanel = controlpanel.Get("vj_tool_mover")
-					GetPanel:ClearControls()
-					DoBuildCPanel_Mover(GetPanel)
+					local getPanel = controlpanel.Get("vj_tool_mover")
+					getPanel:Clear()
+					ControlPanel(getPanel)
 				end
 			end
 			net.Start("vj_npcmover_sv_startmove")
@@ -157,7 +133,7 @@ if CLIENT then
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)
-		DoBuildCPanel_Mover(Panel)
+		ControlPanel(Panel)
 	end
 else -- If SERVER
 	util.AddNetworkString("vj_npcmover_cl_create")
@@ -273,10 +249,10 @@ function TOOL:Reload(tr)
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function TOOL:Holster()
-	/*if CLIENT then return end
+/*function TOOL:Holster()
+	if CLIENT then return end
 	self.TblCurrentNPCs = self.TblCurrentNPCs or {}
 	for k,v in pairs(self.TblCurrentNPCs) do
 		self:RemoveNPC(v)
-	end*/
-end
+	end
+end*/

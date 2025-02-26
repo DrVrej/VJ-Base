@@ -12,7 +12,7 @@ local function VJ_NPC_SETTINGS_AI(panel)
 	end
 
 	panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
-	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.warnfuture"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.note.future"})
 	panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_sight_distance 0\n vj_npc_sight_xray 0\n vj_npc_wander 1\n vj_npc_chase 1\n vj_npc_flinch 1\n vj_npc_investigate 1\n vj_npc_callhelp 1\n vj_npc_ply_follow 1\n vj_npc_medic 1\n vj_npc_eat 1\n vj_npc_dangerdetection 1\n vj_npc_human_jump 1\n vj_npc_creature_opendoor 1\n vj_npc_allies 1\n vj_npc_ply_betray 1\n vj_npc_fri_base 0\n vj_npc_fri_player 0\n vj_npc_fri_zombie 0\n vj_npc_fri_antlion 0\n vj_npc_fri_combine 0"})
 	
 	panel:AddControl("TextBox", {Label = "#vjbase.menu.npc.settings.ai.sightdistance", Command = "vj_npc_sight_distance", WaitForEnter = "0"})
@@ -51,7 +51,7 @@ local function VJ_NPC_SETTINGS_ATTACKS(panel)
 	end
 
 	panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
-	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.warnfuture"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.note.future"})
 	panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_wep_ply_pickup 1\n vj_npc_wep_drop 1\n vj_npc_wep_reload 1\n vj_npc_wep 1\n vj_npc_grenade 1\n vj_npc_melee_ply_dsp 1\n vj_npc_melee_propint 1\n vj_npc_melee_bleed 1\n vj_npc_melee_ply_speed 1\n vj_npc_melee 1\n vj_npc_range 1\n vj_npc_leap 1"})
 	
 	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.atk.range", Command = "vj_npc_range"})
@@ -83,7 +83,7 @@ local function VJ_NPC_SETTINGS_GENERAL(panel)
 	end
 
 	panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
-	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.warnfuture"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.note.future"})
 	panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_corpse 1\n vj_npc_corpse_limit 32\n vj_npc_corpse_collision 0\n vj_npc_corpse_fade 0\n vj_npc_corpse_fadetime 10\n vj_npc_corpse_undo 0\n vj_npc_gib 1\n vj_npc_gib_vfx 1\n vj_npc_gib_collision 0\n vj_npc_gib_fade 1\n vj_npc_gib_fadetime 90\n vj_npc_god 0\n vj_npc_health 0\n vj_npc_blood 1\n vj_npc_blood_pool 1\n vj_npc_blood_gmod 0\n vj_npc_anim_death 1\n vj_npc_loot 1\n vj_npc_difficulty 0\n vj_npc_ply_frag 1\n vj_npc_ply_chat 1"})
 	
 	local vj_difficulty = {Options = {}, CVars = {}, Label = "#vjbase.menu.npc.settings.gen.difficulty.header", MenuButton = "0"}
@@ -151,7 +151,7 @@ local function VJ_NPC_SETTINGS_SOUND(panel)
 	end
 	
 	panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
-	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.warnfuture"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.note.future"})
 	panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_snd 1\n vj_npc_snd_idle 1\n vj_npc_snd_alert 1\n vj_npc_snd_pain 1\n vj_npc_snd_death 1\n vj_npc_snd_footstep 1\n vj_npc_snd_track 1\n vj_npc_snd_melee 1\n vj_npc_snd_range 1\n vj_npc_snd_leap 1\n vj_npc_snd_danger 1\n vj_npc_snd_plysight 1\n vj_npc_snd_plydamage 1\n vj_npc_snd_plyslow 1\n vj_npc_snd_gib 1\n vj_npc_snd_breath 1\n vj_npc_snd_plyfollow 1\n vj_npc_snd_plybetrayal 1\n vj_npc_snd_medic 1\n vj_npc_snd_wep_reload 1\n vj_npc_snd_grenade 1\n vj_npc_snd_wep_suppressing 1\n vj_npc_snd_callhelp 1\n vj_npc_snd_receiveorder 1"})
 	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglesounds", Command = "vj_npc_snd"})
 	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglesoundtrack", Command = "vj_npc_snd_track"})
@@ -175,12 +175,12 @@ local function VJ_NPC_SETTINGS_SOUND(panel)
 	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.toggledmgbyplayer", Command = "vj_npc_snd_plydamage"})
 	panel:ControlHelp("#vjbase.menu.npc.settings.snd.toggledmgbyplayer.label")
 	
-	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.creaturesettings"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.creature"})
 	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.toggleleap", Command = "vj_npc_snd_leap"})
 	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.toggleslowedplayer", Command = "vj_npc_snd_plyslow"})
 	panel:ControlHelp("#vjbase.menu.npc.settings.snd.toggleslowedplayer.label")
 	
-	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.humansettings"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.human"})
 	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglegrenade", Command = "vj_npc_snd_grenade"})
 	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.toggledangersight", Command = "vj_npc_snd_danger"})
 	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglesuppressing", Command = "vj_npc_snd_wep_suppressing"})
@@ -269,7 +269,7 @@ local function VJ_NPC_SETTINGS_PERFORMANCE(panel)
 	end
 	
 	panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
-	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.warnfuture"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.note.future"})
 	panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.perf.header.main"})
 	panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_shadows 1\n vj_npc_poseparams 1\n vj_npc_ikchains 1\nvj_npc_processtime 1\n vj_npc_forcelowlod 0\n vj_npc_reduce_vfx 0"})
 	

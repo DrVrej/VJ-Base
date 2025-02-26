@@ -7,16 +7,10 @@ TOOL.Information = {
 	{name = "reload"},
 }
 
--- Just to make it easier to reset everything to default
-local DefaultConVars = {}
-for k,v in pairs(TOOL.ClientConVar) do
-	DefaultConVars["vj_tool_follower_"..k] = v
-end
-
 local strNoSelection = "No NPC selected"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local function DoBuildCPanel_NPCFollower(Panel, curEntName)
+	local function ControlPanel(Panel, curEntName)
 		curEntName = curEntName or strNoSelection
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
@@ -24,22 +18,15 @@ if CLIENT then
 		reset:SetSize(150, 25)
 		reset:SetColor(VJ.COLOR_BLACK)
 		reset.DoClick = function()
-			for k, v in pairs(DefaultConVars) do
-				if v == "" then
-					LocalPlayer():ConCommand(k.." ".."None")
-				else
-					LocalPlayer():ConCommand(k.." "..v)
-				end
-				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vj_tool_follower")
-					GetPanel:ClearControls()
-					DoBuildCPanel_NPCFollower(GetPanel)
-				end)
-			end
+			timer.Simple(0.05, function() -- Otherwise it will not update the values in time
+				local getPanel = controlpanel.Get("vj_tool_follower")
+				getPanel:Clear()
+				ControlPanel(getPanel)
+			end)
 		end
 		Panel:AddPanel(reset)
 		
-		Panel:AddControl("Label", {Text = "#tool.vjstool.menu.label.recommendation"})
+		Panel:AddControl("Label", {Text = "#vjbase.tool.general.note.recommend"})
 		Panel:AddControl("Label", {Text = "Selected NPC: " .. curEntName})
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -47,14 +34,14 @@ if CLIENT then
 		local wep = LocalPlayer():GetActiveWeapon()
 		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_follower" then
 			local entName = net.ReadString()
-			local GetPanel = controlpanel.Get("vj_tool_follower")
-			GetPanel:ClearControls()
-			DoBuildCPanel_NPCFollower(GetPanel, entName)
+			local getPanel = controlpanel.Get("vj_tool_follower")
+			getPanel:Clear()
+			ControlPanel(getPanel, entName)
 		end
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)
-		DoBuildCPanel_NPCFollower(Panel)
+		ControlPanel(Panel)
 	end
 else -- If SERVER
 	util.AddNetworkString("vj_npcfollower_cl_update")

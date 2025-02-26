@@ -7,12 +7,8 @@ TOOL.Information = {
 }
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local function DoBuildCPanel_NoTarget(Panel)
-		Panel:AddControl("Label", {Text = "#tool.vj_tool_notarget.label"})
-	end
----------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)
-		DoBuildCPanel_NoTarget(Panel)
+		Panel:AddControl("Label", {Text = "#tool.vj_tool_notarget.label"})
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -46,9 +42,4 @@ function TOOL:RightClick(tr)
 		Ent:RemoveFlags(FL_NOTARGET)
 		return true
 	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function TOOL:Reload(tr)
-	if CLIENT then return true end
-	return false
 end

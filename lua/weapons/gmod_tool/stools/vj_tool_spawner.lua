@@ -19,35 +19,29 @@ TOOL.ClientConVar = {
 	nextspawntime = 3
 }
 
--- Just to make it easier to reset everything to default
-local DefaultConVars = {}
-for k,v in pairs(TOOL.ClientConVar) do
-	DefaultConVars["vj_tool_spawner_"..k] = v
-end
+local defaultConvars = TOOL:BuildConVarList()
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local function DoBuildCPanel_Spawner(Panel)
+	local function ControlPanel(Panel)
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150,25)
 		reset:SetColor(VJ.COLOR_BLACK)
 		reset.DoClick = function()
-			for k,v in pairs(DefaultConVars) do
+			for k, v in pairs(defaultConvars) do
 				-- Ignore "vj_tool_spawner_spawnnpclass" because we don't want it set to "None", we need it to stay ""
 				if k == "vj_tool_spawner_spawnnpclass" then
 					LocalPlayer():ConCommand("vj_tool_spawner_spawnnpclass \"\"")
-				elseif v == "" then
-					LocalPlayer():ConCommand(k.." ".."None")
 				else
-					LocalPlayer():ConCommand(k.." "..v)
+					LocalPlayer():ConCommand(k .. " " .. v)
 				end
-				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vj_tool_spawner")
-					GetPanel:ClearControls()
-					DoBuildCPanel_Spawner(GetPanel)
-				end)
 			end
+			timer.Simple(0.05, function() -- Otherwise it will not update the values in time
+				local getPanel = controlpanel.Get("vj_tool_spawner")
+				getPanel:Clear()
+				ControlPanel(getPanel)
+			end)
 		end
 		Panel:AddPanel(reset)
 		
@@ -65,7 +59,7 @@ if CLIENT then
 		VJ_NPCSPAWNER_TblCurrentLines = VJ_NPCSPAWNER_TblCurrentLines or {}
 		VJ_NPCSPAWNER_TblCurrentLinesUsable = VJ_NPCSPAWNER_TblCurrentLinesUsable or {}
 		
-		Panel:AddControl("Label", {Text = "#tool.vjstool.menu.label.recommendation"})
+		Panel:AddControl("Label", {Text = "#vjbase.tool.general.note.recommend"})
 		local selectnpc = vgui.Create("DTextEntry")
 			selectnpc:SetEditable(false)
 			selectnpc:SetText(language.GetPhrase("#tool.vj_tool_spawner.selectednpc")..": "..GetConVarString("vj_tool_spawner_spawnentname").." ["..GetConVarString("vj_tool_spawner_spawnent").."]")
@@ -150,10 +144,10 @@ if CLIENT then
 				LocalPlayer():ConCommand("vj_tool_spawner_spawnentname "..line:GetValue(1))
 				LocalPlayer():ConCommand("vj_tool_spawner_spawnent "..line:GetValue(2))
 				MenuFrame:Close()
-				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vj_tool_spawner")
-					GetPanel:ClearControls()
-					DoBuildCPanel_Spawner(GetPanel)
+				timer.Simple(0.05, function() -- Otherwise it will not update the values in time
+					local getPanel = controlpanel.Get("vj_tool_spawner")
+					getPanel:Clear()
+					ControlPanel(getPanel)
 				end)
 			end
 		//MenuFrame:AddItem(CheckList)
@@ -193,10 +187,10 @@ if CLIENT then
 				LocalPlayer():ConCommand("vj_tool_spawner_weaponequipname "..line:GetValue(1))
 				LocalPlayer():ConCommand("vj_tool_spawner_weaponequip "..line:GetValue(2))
 				MenuFrame:Close()
-				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vj_tool_spawner")
-					GetPanel:ClearControls()
-					DoBuildCPanel_Spawner(GetPanel)
+				timer.Simple(0.05, function() -- Otherwise it will not update the values in time
+					local getPanel = controlpanel.Get("vj_tool_spawner")
+					getPanel:Clear()
+					ControlPanel(getPanel)
 				end)
 			end
 		//MenuFrame:AddItem(CheckList)
@@ -219,9 +213,9 @@ if CLIENT then
 		local spawnfritoplyallies = GetConVarString("vj_tool_spawner_fritoplyallies")
 		local spawnequip = string.lower(GetConVarString("vj_tool_spawner_weaponequip"))
 		table.insert(VJ_NPCSPAWNER_TblCurrentValues,{EntityName=spawnentname, Entities=spawnent, SpawnPosition=Vector(spawnposfor, spawnposright, spawnposup), WeaponsList=spawnequip, Relationship={Class = spawnnpclass, FriToPlyAllies = spawnfritoplyallies}})
-		local GetPanel = controlpanel.Get("vj_tool_spawner")
-		GetPanel:ClearControls()
-		DoBuildCPanel_Spawner(GetPanel)
+		local getPanel = controlpanel.Get("vj_tool_spawner")
+		getPanel:Clear()
+		ControlPanel(getPanel)
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcspawner_cl_create", function(len, ply)
@@ -230,7 +224,7 @@ if CLIENT then
 			local svpos = net.ReadVector()
 			local svclicktype = net.ReadString()
 			local convartbl = {}
-			for k,_ in pairs(DefaultConVars) do
+			for k,_ in pairs(defaultConvars) do
 				convartbl[k] = GetConVarNumber(k)
 			end
 			net.Start("vj_npcspawner_sv_create")
@@ -243,7 +237,7 @@ if CLIENT then
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)
-		DoBuildCPanel_Spawner(Panel)
+		ControlPanel(Panel)
 	end
 else -- If SERVER
 	util.AddNetworkString("vj_npcspawner_cl_create")
@@ -315,8 +309,4 @@ function TOOL:RightClick(tr)
 	net.WriteString("RightClick")
 	net.Send(self:GetOwner())
 	return true
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function TOOL:Reload(tr)
-	if CLIENT then return true end
 end

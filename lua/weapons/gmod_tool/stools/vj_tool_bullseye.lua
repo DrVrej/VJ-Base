@@ -11,31 +11,24 @@ TOOL.ClientConVar = {
 	startactivate = 1
 }
 
--- Just to make it easier to reset everything to default
-local DefaultConVars = {}
-for k,v in pairs(TOOL.ClientConVar) do
-	DefaultConVars["vj_tool_bullseye_"..k] = v
-end
+local defaultConvars = TOOL:BuildConVarList()
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local function DoBuildCPanel_VJ_BullseyeSpawner(Panel)
+	local function ControlPanel(Panel)
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150,25)
 		reset:SetColor(VJ.COLOR_BLACK)
 		reset.DoClick = function()
-			for k,v in pairs(DefaultConVars) do
-				if v == "" then
-				LocalPlayer():ConCommand(k.." ".."None")
-			else
-				LocalPlayer():ConCommand(k.." "..v) end
-				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vj_tool_bullseye")
-					GetPanel:ClearControls()
-					DoBuildCPanel_VJ_BullseyeSpawner(GetPanel)
-				end)
+			for k, v in pairs(defaultConvars) do
+				LocalPlayer():ConCommand(k .. " " .. v)
 			end
+			timer.Simple(0.05, function() -- Otherwise it will not update the values in time
+				local getPanel = controlpanel.Get("vj_tool_bullseye")
+				getPanel:Clear()
+				ControlPanel(getPanel)
+			end)
 		end
 		Panel:AddPanel(reset)
 		
@@ -49,7 +42,7 @@ if CLIENT then
 		end
 		Panel:AddPanel(tutorial)
 		
-		Panel:AddControl("Label", {Text = "#tool.vjstool.menu.label.recommendation"})
+		Panel:AddControl("Label", {Text = "#vjbase.tool.general.note.recommend"})
 		Panel:ControlHelp("- "..language.GetPhrase("#tool.vj_tool_bullseye.menu.help1"))
 		Panel:ControlHelp("- "..language.GetPhrase("#tool.vj_tool_bullseye.menu.help2"))
 		Panel:AddControl("Label", {Text = language.GetPhrase("#tool.vj_tool_bullseye.menu.label1")..":"})
@@ -73,7 +66,7 @@ if CLIENT then
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)
-		DoBuildCPanel_VJ_BullseyeSpawner(Panel)
+		ControlPanel(Panel)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -93,12 +86,4 @@ function TOOL:LeftClick(tr)
 		undo.SetPlayer(self:GetOwner())
 		undo.Finish()
 	return true
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function TOOL:RightClick(tr)
-	if CLIENT then return true end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function TOOL:Reload(tr)
-	if CLIENT then return true end
 end

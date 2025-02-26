@@ -2,7 +2,7 @@
 {
 	"$basetexture" "vj_base/decals/splat_acid4"
 	"$decal" 1
-	"$decalscale" 0.20
+	"$decalscale" 0.18
 	"$additive" 1
 	"$selfillum" 1
 

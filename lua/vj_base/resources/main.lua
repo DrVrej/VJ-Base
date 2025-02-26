@@ -16,6 +16,16 @@ game.AddDecal("VJ_Blood_Purple", {"vj_base/decals/blood/purple1", "vj_base/decal
 game.AddDecal("VJ_Blood_White", {"vj_base/decals/blood/white1", "vj_base/decals/blood/white2", "vj_base/decals/blood/white3", "vj_base/decals/blood/white4", "vj_base/decals/blood/white5", "vj_base/decals/blood/white6"})
 game.AddDecal("VJ_Blood_Oil", {"vj_base/decals/blood/oil1", "vj_base/decals/blood/oil2", "vj_base/decals/blood/oil3", "vj_base/decals/blood/oil4", "vj_base/decals/blood/oil5", "vj_base/decals/blood/oil6"})
 
+-- Add to paint tool
+list.Add("PaintMaterials", "VJ_Splat_Acid")
+list.Add("PaintMaterials", "VJ_Blood_Red")
+list.Add("PaintMaterials", "VJ_Blood_Yellow")
+list.Add("PaintMaterials", "VJ_Blood_Green")
+list.Add("PaintMaterials", "VJ_Blood_Orange")
+list.Add("PaintMaterials", "VJ_Blood_Blue")
+list.Add("PaintMaterials", "VJ_Blood_Purple")
+list.Add("PaintMaterials", "VJ_Blood_White")
+list.Add("PaintMaterials", "VJ_Blood_Oil")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Model Precaching ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

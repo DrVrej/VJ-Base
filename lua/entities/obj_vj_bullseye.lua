@@ -82,7 +82,7 @@ function ENT:Think()
 	local selfData = self:GetTable()
 	if selfData.ForceEntAsEnemy then return end
 	if selfData.UseActivationSystem then
-		if selfData.Activated == false then
+		if !selfData.Activated then
 			self:AddFlags(FL_NOTARGET)
 			if selfData.ActivationSystemStatusColors then self:SetColor(Color(255, 0, 0)) end
 		elseif selfData.Activated then

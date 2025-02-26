@@ -5,19 +5,10 @@ TOOL.Information = {
 	{name = "left"},
 }
 
--- Just to make it easier to reset everything to default
-local DefaultConVars = {}
-for k,v in pairs(TOOL.ClientConVar) do
-	DefaultConVars["vj_tool_scanner_"..k] = v
-end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local function DoBuildCPanel_EntityScanner(Panel)
-		Panel:AddControl("Label", {Text = "#tool.vj_tool_scanner.label"})
-	end
----------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)
-		DoBuildCPanel_EntityScanner(Panel)
+		Panel:AddControl("Label", {Text = "#tool.vj_tool_scanner.label"})
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -41,14 +32,4 @@ function TOOL:LeftClick(tr)
 	PrintMessage(HUD_PRINTCONSOLE,"COLOR: Color("..Ent:GetColor().r..", "..Ent:GetColor().g..", "..Ent:GetColor().b..", "..Ent:GetColor().a..") ||| Red = "..Ent:GetColor().r.." , Green = "..Ent:GetColor().g.." , Blue = "..Ent:GetColor().b.." , Alpha = "..Ent:GetColor().a)
 	PrintMessage(HUD_PRINTCONSOLE,"-----------------------------------------------------------------------------------------------")
 	return true
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function TOOL:RightClick(tr)
-	if CLIENT then return true end
-	return false
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function TOOL:Reload(tr)
-	if CLIENT then return true end
-	return false
 end

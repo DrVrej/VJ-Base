@@ -10,31 +10,24 @@ TOOL.ClientConVar = {
 	allytoplyallies = 1
 }
 
--- Just to make it easier to reset everything to default
-local DefaultConVars = {}
-for k,v in pairs(TOOL.ClientConVar) do
-	DefaultConVars["vj_tool_relationship_"..k] = v
-end
+local defaultConvars = TOOL:BuildConVarList()
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local function DoBuildCPanel_Relationship(Panel)
+	local function ControlPanel(Panel)
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150,25)
 		reset:SetColor(VJ.COLOR_BLACK)
 		reset.DoClick = function()
-			for k,v in pairs(DefaultConVars) do
-				if v == "" then
-				LocalPlayer():ConCommand(k.." ".."None")
-			else
-				LocalPlayer():ConCommand(k.." "..v) end
-				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vj_tool_relationship")
-					GetPanel:ClearControls()
-					DoBuildCPanel_Relationship(GetPanel)
-				end)
+			for k, v in pairs(defaultConvars) do
+				LocalPlayer():ConCommand(k .. " " .. v)
 			end
+			timer.Simple(0.05, function() -- Otherwise it will not update the values in time
+				local getPanel = controlpanel.Get("vj_tool_relationship")
+				getPanel:Clear()
+				ControlPanel(getPanel)
+			end)
 		end
 		Panel:AddPanel(reset)
 
@@ -80,10 +73,10 @@ if CLIENT then
 				else
 					chat.AddText(Color(0,255,0),"Added",Color(255,100,0)," "..val.." ",Color(0,255,0),"to the class list!")
 					table.insert(VJ_NPCRELATION_TblCurrentValues,val)
-					timer.Simple(0.05,function()
-						local GetPanel = controlpanel.Get("vj_tool_relationship")
-						GetPanel:ClearControls()
-						DoBuildCPanel_Relationship(GetPanel)
+					timer.Simple(0.05, function() -- Otherwise it will not update the values in time
+						local getPanel = controlpanel.Get("vj_tool_relationship")
+						getPanel:Clear()
+						ControlPanel(getPanel)
 					end)
 				end
 			end
@@ -160,7 +153,7 @@ if CLIENT then
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)
-		DoBuildCPanel_Relationship(Panel)
+		ControlPanel(Panel)
 	end
 	
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -177,10 +170,10 @@ if CLIENT then
 			//PrintTable(classtbl)
 			//print(#classtbl)
 			VJ_NPCRELATION_TblCurrentValues = classtbl
-			timer.Simple(0.05,function()
-				local GetPanel = controlpanel.Get("vj_tool_relationship")
-				GetPanel:ClearControls()
-				DoBuildCPanel_Relationship(GetPanel)
+			timer.Simple(0.05, function() -- Otherwise it will not update the values in time
+				local getPanel = controlpanel.Get("vj_tool_relationship")
+				getPanel:Clear()
+				ControlPanel(getPanel)
 			end)
 		end
 	end)

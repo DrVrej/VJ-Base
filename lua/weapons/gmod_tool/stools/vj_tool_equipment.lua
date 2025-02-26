@@ -10,31 +10,24 @@ TOOL.ClientConVar = {
 	weaponname = "Unknown"
 }
 
--- Just to make it easier to reset everything to default
-local DefaultConVars = {}
-for k,v in pairs(TOOL.ClientConVar) do
-	DefaultConVars["vj_tool_equipment_"..k] = v
-end
+local defaultConvars = TOOL:BuildConVarList()
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local function DoBuildCPanel_VJ_NPCEquipment(Panel)
+	local function ControlPanel(Panel)
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150,25)
 		reset:SetColor(VJ.COLOR_BLACK)
 		reset.DoClick = function()
-			for k,v in pairs(DefaultConVars) do
-				if v == "" then
-				LocalPlayer():ConCommand(k.." ".."None")
-			else
-				LocalPlayer():ConCommand(k.." "..v) end
-				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vj_tool_equipment")
-					GetPanel:ClearControls()
-					DoBuildCPanel_VJ_NPCEquipment(GetPanel)
-				end)
+			for k, v in pairs(defaultConvars) do
+				LocalPlayer():ConCommand(k .. " " .. v)
 			end
+			timer.Simple(0.05, function() -- Otherwise it will not update the values in time
+				local getPanel = controlpanel.Get("vj_tool_equipment")
+				getPanel:Clear()
+				ControlPanel(getPanel)
+			end)
 		end
 		Panel:AddPanel(reset)
 		
@@ -48,7 +41,7 @@ if CLIENT then
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)
-		DoBuildCPanel_VJ_NPCEquipment(Panel)
+		ControlPanel(Panel)
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	concommand.Add("vj_npcequipment_openwepselect",function(pl,cmd,args)
@@ -77,10 +70,10 @@ if CLIENT then
 				LocalPlayer():ConCommand("vj_tool_equipment_weaponname "..line:GetValue(1))
 				LocalPlayer():ConCommand("vj_tool_equipment_weaponclass "..line:GetValue(2))
 				MenuFrame:Close()
-				timer.Simple(0.05, function()
-					local GetPanel = controlpanel.Get("vj_tool_equipment")
-					GetPanel:ClearControls()
-					DoBuildCPanel_VJ_NPCEquipment(GetPanel)
+				timer.Simple(0.05, function() -- Otherwise it will not update the values in time
+					local getPanel = controlpanel.Get("vj_tool_equipment")
+					getPanel:Clear()
+					ControlPanel(getPanel)
 				end)
 			end
 		//MenuFrame:AddItem(CheckList)
@@ -108,8 +101,4 @@ function TOOL:RightClick(tr)
 	if !tr.Entity:IsNPC() then return end
 	if IsValid(tr.Entity:GetActiveWeapon()) then tr.Entity:GetActiveWeapon():Remove() end
 	return true
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function TOOL:Reload(tr)
-	if CLIENT then return true end
 end
