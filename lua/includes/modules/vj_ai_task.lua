@@ -44,24 +44,20 @@ function Task:InitCustom(taskName, startFunc, endFunc, taskData) -- Create a cus
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:Start(npc)
-	if (self:IsCustomType()) then
+	if self.TaskType == TYPE_CUSTOM then
 		if (!self.TaskFunc_Start) then return end
 		npc[self.TaskFunc_Start](npc, TASKSTATUS_NEW, self.TaskData)
-		return
-	end
-	if (self:IsEngineType()) then
+	elseif self.TaskType == TYPE_ENGINE then
 		if (!self.TaskID) then self.TaskID = ai.GetTaskID(self.TaskName) end
 		npc:StartEngineTask(self.TaskID, self.TaskData or 0)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:Run(npc)
-	if (self:IsCustomType()) then
+	if self.TaskType == TYPE_CUSTOM then
 		if (!self.TaskFunc_Run) then return end
 		npc[self.TaskFunc_Run](npc, TASKSTATUS_RUN_TASK, self.TaskData)
-		return
-	end
-	if (self:IsEngineType()) then
+	elseif self.TaskType == TYPE_ENGINE then
 		npc:RunEngineTask(self.TaskID, self.TaskData or 0)
 	end
 end

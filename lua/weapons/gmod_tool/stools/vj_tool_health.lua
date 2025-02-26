@@ -1,19 +1,18 @@
 TOOL.Name = "#tool.vj_tool_health.name"
 TOOL.Tab = "DrVrej"
 TOOL.Category = "Tools"
-TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
-
 TOOL.Information = {
 	{name = "left"},
 	{name = "right"},
 	{name = "reload"},
 }
-
-TOOL.ClientConVar["health"] = "100"
-TOOL.ClientConVar["godmode"] = 0
-TOOL.ClientConVar["healthregen"] = 0
-TOOL.ClientConVar["healthregen_amt"] = 4
-TOOL.ClientConVar["healthregen_delay"] = 5
+TOOL.ClientConVar = {
+	health = "100",
+	godmode = 0,
+	healthregen = 0,
+	healthregen_amt = 4,
+	healthregen_delay = 5
+}
 
 -- Just to make it easier to reset everything to default
 local DefaultConVars = {}
@@ -27,7 +26,7 @@ if CLIENT then
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150,25)
-		reset:SetColor(Color(0,0,0,255))
+		reset:SetColor(VJ.COLOR_BLACK)
 		reset.DoClick = function()
 			for k,v in pairs(DefaultConVars) do
 				if v == "" then
@@ -45,9 +44,9 @@ if CLIENT then
 		
 		local tutorial = vgui.Create("DButton")
 		tutorial:SetFont("DermaDefaultBold")
-		tutorial:SetText("#tool.vjstool.menu.tutorialvideo")
+		tutorial:SetText("#vjbase.menu.general.tutorial.vid")
 		tutorial:SetSize(150, 20)
-		tutorial:SetColor(Color(0,0,255,255))
+		tutorial:SetColor(VJ.COLOR_BLUE)
 		tutorial.DoClick = function()
 			gui.OpenURL("http://www.youtube.com/watch?v=kLygPP-vbHY")
 		end

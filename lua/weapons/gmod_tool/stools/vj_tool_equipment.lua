@@ -1,15 +1,14 @@
 TOOL.Name = "#tool.vj_tool_equipment.name"
 TOOL.Tab = "DrVrej"
 TOOL.Category = "Tools"
-TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
-
 TOOL.Information = {
 	{name = "left"},
 	{name = "right"},
 }
-
-TOOL.ClientConVar["weaponclass"] = "None"
-TOOL.ClientConVar["weaponname"] = "Unknown"
+TOOL.ClientConVar = {
+	weaponclass = "None",
+	weaponname = "Unknown"
+}
 
 -- Just to make it easier to reset everything to default
 local DefaultConVars = {}
@@ -23,7 +22,7 @@ if CLIENT then
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150,25)
-		reset:SetColor(Color(0,0,0,255))
+		reset:SetColor(VJ.COLOR_BLACK)
 		reset.DoClick = function()
 			for k,v in pairs(DefaultConVars) do
 				if v == "" then
@@ -39,8 +38,7 @@ if CLIENT then
 		end
 		Panel:AddPanel(reset)
 		
-		Panel:AddControl("Label", {Text = "#tool.vjstool.menu.label.recommendation"})
-		Panel:ControlHelp("#tool.vj_tool_equipment.label")
+		Panel:AddControl("Label", {Text = "#tool.vj_tool_equipment.label"})
 		
 		local selectwep = vgui.Create("DTextEntry")
 		selectwep:SetEditable(false)
@@ -98,7 +96,10 @@ function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	if !tr.Entity:IsNPC() then return end
 	if IsValid(tr.Entity:GetActiveWeapon()) then tr.Entity:GetActiveWeapon():Remove() end
-	tr.Entity:Give(GetConVarString("vj_tool_equipment_weaponclass"))
+	local equipment = GetConVarString("vj_tool_equipment_weaponclass")
+	if equipment != "None" then
+		tr.Entity:Give(equipment)
+	end
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,16 +1,14 @@
 TOOL.Name = "#tool.vj_tool_relationship.name"
 TOOL.Tab = "DrVrej"
 TOOL.Category = "Tools"
-TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
-
 TOOL.Information = {
 	{name = "left"},
 	{name = "right"},
 	{name = "reload"},
 }
-
-//TOOL.ClientConVar["playerinteract"] = 1
-TOOL.ClientConVar["allytoplyallies"] = 1
+TOOL.ClientConVar = {
+	allytoplyallies = 1
+}
 
 -- Just to make it easier to reset everything to default
 local DefaultConVars = {}
@@ -24,7 +22,7 @@ if CLIENT then
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150,25)
-		reset:SetColor(Color(0,0,0,255))
+		reset:SetColor(VJ.COLOR_BLACK)
 		reset.DoClick = function()
 			for k,v in pairs(DefaultConVars) do
 				if v == "" then
@@ -42,9 +40,9 @@ if CLIENT then
 
 		local tutorial = vgui.Create("DButton")
 		tutorial:SetFont("DermaDefaultBold")
-		tutorial:SetText("#tool.vjstool.menu.tutorialvideo")
+		tutorial:SetText("#vjbase.menu.general.tutorial.vid")
 		tutorial:SetSize(150, 20)
-		tutorial:SetColor(Color(0,0,255,255))
+		tutorial:SetColor(VJ.COLOR_BLUE)
 		tutorial.DoClick = function()
 			gui.OpenURL("http://www.youtube.com/watch?v=SnuQU8Sc4cg")
 		end
@@ -102,7 +100,7 @@ if CLIENT then
 		button:SetFont("DermaDefaultBold")
 		button:SetText("#tool.vj_tool_relationship.button.antlion")
 		button:SetSize(50,20)
-		button:SetColor(Color(0,0,0,255))
+		button:SetColor(VJ.COLOR_BLACK)
 		button.DoClick = function()
 			InsertToTable("CLASS_ANTLION")
 		end
@@ -112,7 +110,7 @@ if CLIENT then
 		button:SetFont("DermaDefaultBold")
 		button:SetText("#tool.vj_tool_relationship.button.combine")
 		button:SetSize(50,20)
-		button:SetColor(Color(0,0,0,255))
+		button:SetColor(VJ.COLOR_BLACK)
 		button.DoClick = function()
 			InsertToTable("CLASS_COMBINE")
 		end
@@ -122,7 +120,7 @@ if CLIENT then
 		button:SetFont("DermaDefaultBold")
 		button:SetText("#tool.vj_tool_relationship.button.hecu")
 		button:SetSize(50,20)
-		button:SetColor(Color(0,0,0,255))
+		button:SetColor(VJ.COLOR_BLACK)
 		button.DoClick = function()
 			InsertToTable("CLASS_UNITED_STATES")
 		end
@@ -132,7 +130,7 @@ if CLIENT then
 		button:SetFont("DermaDefaultBold")
 		button:SetText("#tool.vj_tool_relationship.button.xen")
 		button:SetSize(50,20)
-		button:SetColor(Color(0,0,0,255))
+		button:SetColor(VJ.COLOR_BLACK)
 		button.DoClick = function()
 			InsertToTable("CLASS_XEN")
 		end
@@ -142,7 +140,7 @@ if CLIENT then
 		button:SetFont("DermaDefaultBold")
 		button:SetText("#tool.vj_tool_relationship.button.zombie")
 		button:SetSize(50,20)
-		button:SetColor(Color(0,0,0,255))
+		button:SetColor(VJ.COLOR_BLACK)
 		button.DoClick = function()
 			InsertToTable("CLASS_ZOMBIE")
 		end
@@ -152,17 +150,13 @@ if CLIENT then
 		button:SetFont("DermaDefaultBold")
 		button:SetText("#tool.vj_tool_relationship.button.player")
 		button:SetSize(50,20)
-		button:SetColor(Color(0,0,0,255))
+		button:SetColor(VJ.COLOR_BLACK)
 		button.DoClick = function()
 			InsertToTable("CLASS_PLAYER_ALLY")
 		end
 		Panel:AddPanel(button)
 		Panel:AddControl("Checkbox", {Label = "#tool.vj_tool_relationship.togglealliedply", Command = "vj_tool_relationship_allytoplyallies"})
 		Panel:ControlHelp(language.GetPhrase("#tool.vj_tool_relationship.label3"))
-		
-		//Panel:AddControl("Label", {Text = "For PLAYER entities Only:"})
-		//Panel:AddControl("Checkbox", {Label = "Make NPCs interact with friendly player", Command = "vj_tool_spawner_playerinteract"})
-		//Panel:ControlHelp("Make NPCs be able to interact with friendly player, such follow when pressed E or get out of their way")
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)

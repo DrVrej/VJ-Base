@@ -1,8 +1,6 @@
 TOOL.Name = "#tool.vj_tool_notarget.name"
 TOOL.Tab = "DrVrej"
 TOOL.Category = "Tools"
-TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
-
 TOOL.Information = {
 	{name = "left"},
 	{name = "right"},

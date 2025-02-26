@@ -11,5 +11,7 @@ ENT.AdminSpawnable 	= false
 ENT.IsVJBaseSpawner = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	function ENT:Draw() self:DrawModel() end
+	local metaEntity = FindMetaTable("Entity")
+	local funcDrawModel = metaEntity.DrawModel
+	function ENT:Draw() funcDrawModel(self) end
 end

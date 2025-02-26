@@ -395,7 +395,7 @@ else
 		-- Tutorial Video
 		local tutorialVid = vgui.Create("DButton")
 		tutorialVid:SetFont("TargetID")
-		tutorialVid:SetText("#tool.vjstool.menu.tutorialvideo")
+		tutorialVid:SetText("#vjbase.menu.general.tutorial.vid")
 		tutorialVid:SetSize(150, 25)
 		tutorialVid:SetColor(Color(0, 0, 102))
 		tutorialVid:SetFont("VJBaseSmallMedium")

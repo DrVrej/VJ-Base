@@ -174,12 +174,12 @@ if SERVER then
 elseif CLIENT then
 	hook.Add("AddToolMenuTabs", "VJ_CREATETOOLTAB", function()
 		spawnmenu.AddToolTab("DrVrej", "DrVrej", "vj_base/icons/vrejgaming.png") // "icon16/plugin.png"
-		spawnmenu.AddToolCategory("DrVrej", "Main", "#vjbase.menu.tabs.mainmenu")
-		spawnmenu.AddToolCategory("DrVrej", "NPCs", "#vjbase.menu.tabs.settings.npc")
-		spawnmenu.AddToolCategory("DrVrej", "Weapons", "#vjbase.menu.tabs.settings.weapon")
-		spawnmenu.AddToolCategory("DrVrej", "HUDs", "#vjbase.menu.tabs.settings.hud")
-		spawnmenu.AddToolCategory("DrVrej", "Tools", "#vjbase.menu.tabs.tools")
-		spawnmenu.AddToolCategory("DrVrej", "SNPC Configures", "#vjbase.menu.tabs.configures.snpc")
+		spawnmenu.AddToolCategory("DrVrej", "Main", "#vjbase.menu.tabs.main")
+		spawnmenu.AddToolCategory("DrVrej", "NPCs", "#vjbase.menu.tabs.npc")
+		spawnmenu.AddToolCategory("DrVrej", "Weapons", "#vjbase.menu.tabs.weapon")
+		spawnmenu.AddToolCategory("DrVrej", "HUDs", "#vjbase.menu.tabs.hud")
+		spawnmenu.AddToolCategory("DrVrej", "Tools", "#vjbase.menu.tabs.tool")
+		spawnmenu.AddToolCategory("DrVrej", "SNPC Configures", "#vjbase.menu.tabs.npc.plugins")
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

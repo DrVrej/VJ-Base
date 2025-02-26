@@ -43,17 +43,18 @@ local strings_english = {
 	["vjbase.menu.general.admin.only"] = "NOTE: Only admins can use this menu!",
 	["vjbase.menu.general.admin.not"] = "You are NOT an admin!",
 	["vjbase.menu.general.reset.everything"] = "Reset To Default",
+	["vjbase.menu.general.tutorial.vid"] = "Tutorial Video",
 	["vjbase.menu.general.npc.warnfuture"] = "NOTE: Only future spawned NPCs will be affected!",
 	["vjbase.menu.general.npc.creaturesettings"] = "Creature Settings:",
 	["vjbase.menu.general.npc.humansettings"] = "Human Settings:",
 	
 	-- Menu Tabs
-	["vjbase.menu.tabs.mainmenu"] = "Main",
-	["vjbase.menu.tabs.settings.npc"] = "NPCs",
-	["vjbase.menu.tabs.settings.weapon"] = "Weapons",
-	["vjbase.menu.tabs.settings.hud"] = "HUD",
-	["vjbase.menu.tabs.tools"] = "Tools",
-	["vjbase.menu.tabs.configures.snpc"] = "SNPC Configures",
+	["vjbase.menu.tabs.main"] = "Main",
+	["vjbase.menu.tabs.npc"] = "NPCs",
+	["vjbase.menu.tabs.weapon"] = "Weapons",
+	["vjbase.menu.tabs.hud"] = "HUD",
+	["vjbase.menu.tabs.tool"] = "Tools",
+	["vjbase.menu.tabs.npc.plugins"] = "Plugin Settings",
 	
 	-- Cleanup
 	["vjbase.menu.cleanup"] = "Clean Up",
@@ -348,10 +349,9 @@ local strings_english = {
 	["vjbase.menu.context.print.adminonly"] = "These options are restricted to Admin only!",
 	
 	-- Tools
-	["tool.vjstool.menu.tutorialvideo"] = "Tutorial Video",
-	["tool.vjstool.menu.label.recommendation"] = "Recommended to use this tool only for VJ Base SNPCs.",
+	["tool.vjstool.menu.label.recommendation"] = "Recommended to use this tool only for VJ Base NPCs.",
 	
-	["tool.vj_tool_bullseye.name"] = "NPC Bullseye",
+	["tool.vj_tool_bullseye.name"] = "Bullseye",
 	["tool.vj_tool_bullseye.desc"] = "Creates a bullseye that NPCs will target",
 	["tool.vj_tool_bullseye.left"] = "Create a bullseye",
 	["tool.vj_tool_bullseye.menu.help1"] = "Press USE on the entity to activate/deactivate.",
@@ -371,9 +371,9 @@ local strings_english = {
 	["tool.vj_tool_health.left"] = "Set health",
 	["tool.vj_tool_health.right"] = "Set health & max health",
 	["tool.vj_tool_health.reload"] = "Heal the entity to its max health",
-	["tool.vj_tool_health.adminonly"] = "Only admins can modify or heal another player's health.",
+	["tool.vj_tool_health.adminonly"] = "Only admins can modify another player's health.",
 	["tool.vj_tool_health.sliderhealth"] = "Health",
-	["tool.vj_tool_health.label1"] = "Following are only for VJ Base SNPCs:",
+	["tool.vj_tool_health.label1"] = "VJ NPCs Only:",
 	["tool.vj_tool_health.togglegodmode"] = "God Mode (invincible)",
 	["tool.vj_tool_health.togglehealthregen"] = "Enable Health Regeneration",
 	["tool.vj_tool_health.sliderhealthregenamt"] = "Regeneration Amount",
@@ -387,7 +387,7 @@ local strings_english = {
 	["tool.vj_tool_notarget.print.yourselfon"] = "Set no target to yourself: ON",
 	["tool.vj_tool_notarget.print.yourselfoff"] = "Set no target to yourself: OFF",
 	
-	["tool.vj_tool_equipment.name"] = "NPC Equipment",
+	["tool.vj_tool_equipment.name"] = "Equipment",
 	["tool.vj_tool_equipment.desc"] = "Modifies an NPC's equipment",
 	["tool.vj_tool_equipment.left"] = "Change the NPC's equipment",
 	["tool.vj_tool_equipment.right"] = "Remove the NPC's equipment",
@@ -399,7 +399,7 @@ local strings_english = {
 	["tool.vj_tool_equipment.header1"] = "Name",
 	["tool.vj_tool_equipment.header2"] = "Class",
 	
-	["tool.vj_tool_mover.name"] = "NPC Mover",
+	["tool.vj_tool_mover.name"] = "Mover",
 	["tool.vj_tool_mover.desc"] = "Move NPC(s), an NPC must first be selected",
 	["tool.vj_tool_mover.left"] = "Select an NPC",
 	["tool.vj_tool_mover.right"] = "Run to the location",
@@ -411,7 +411,7 @@ local strings_english = {
 	["tool.vj_tool_mover.print.unselectedall"] = "Unselected all NPCs!",
 	["tool.vj_tool_mover.print.unselectedall.error"] = "Nothing to unselect!",
 	
-	["tool.vj_tool_relationship.name"] = "NPC Relationship Modifier",
+	["tool.vj_tool_relationship.name"] = "Relationship Modifier",
 	["tool.vj_tool_relationship.desc"] = "Modify the relationship of entities",
 	["tool.vj_tool_relationship.left"] = "Apply the relationship table",
 	["tool.vj_tool_relationship.right"] = "Obtain the current classes",
@@ -430,7 +430,7 @@ local strings_english = {
 	["tool.vj_tool_relationship.label3"] = "Special case for \"CLASS_PLAYER_ALLY\", where both need to have this flag to be allied.",
 	["tool.vj_tool_relationship.print.applied"] = "Applied the relationship class table on",
 	
-	["tool.vj_tool_spawner.name"] = "NPC Spawner",
+	["tool.vj_tool_spawner.name"] = "Spawner",
 	["tool.vj_tool_spawner.desc"] = "Creates a customizable spawner",
 	["tool.vj_tool_spawner.left"] = "Create a spawner",
 	["tool.vj_tool_spawner.right"] = "Create the entities once",
@@ -457,7 +457,7 @@ local strings_english = {
 	["tool.vj_tool_spawner.title2"] = "Double click to select a weapon.",
 	["tool.vj_tool_spawner.print.nothingspawn"] = "Nothing to spawn!",
 	
-	["tool.vj_tool_follower.name"] = "NPC Follower",
+	["tool.vj_tool_follower.name"] = "Follower",
 	["tool.vj_tool_follower.desc"] = "Select an NPC and make it follow an entity",
 	["tool.vj_tool_follower.left"] = "Select an NPC",
 	["tool.vj_tool_follower.right"] = "Make the selected NPC follow an entity",
@@ -500,12 +500,12 @@ local strings_russian = {
 	["vjbase.menu.general.npc.humansettings"] = "Настройки людей:",
 
 	-- Menu Tabs
-	["vjbase.menu.tabs.mainmenu"] = "Главное меню",
-	["vjbase.menu.tabs.settings.npc"] = "Настройки NPC",
-	["vjbase.menu.tabs.settings.weapon"] = "Настройки оружия",
-	["vjbase.menu.tabs.settings.hud"] = "Настройки интерфейса",
-	["vjbase.menu.tabs.tools"] = "Инструменты",
-	["vjbase.menu.tabs.configures.snpc"] = "Конфигурации SNPC",
+	["vjbase.menu.tabs.main"] = "Главное меню",
+	["vjbase.menu.tabs.npc"] = "Настройки NPC",
+	["vjbase.menu.tabs.weapon"] = "Настройки оружия",
+	["vjbase.menu.tabs.hud"] = "Настройки интерфейса",
+	["vjbase.menu.tabs.tool"] = "Инструменты",
+	["vjbase.menu.tabs.npc.plugins"] = "Конфигурации SNPC",
 	["vjbase.menu.tabs.default"] = "По молчанию",
 
 	-- Main Menu
@@ -779,7 +779,7 @@ local strings_russian = {
 	["vjbase.menu.context.print.adminonly"] = "Эти опции доступны только администратору!",
 
 	-- Tools
-	["tool.vjstool.menu.tutorialvideo"] = "Обучающее видео",
+	["vjbase.menu.general.tutorial.vid"] = "Обучающее видео",
 	["tool.vjstool.menu.label.recommendation"] = "Рекомендуется использовать этот инструмент только для VJ Base SNPC.",
 
 	["tool.vj_tool_bullseye.name"] = "Зона прицеливания NPC",
@@ -928,12 +928,12 @@ local strings_lithuanian = {
 	["vjbase.menu.general.npc.humansettings"] = "Žmonių nustatymai:",
 
 	-- Menu Tabs
-	["vjbase.menu.tabs.mainmenu"] = "Pagrindinis meniu",
-	["vjbase.menu.tabs.settings.npc"] = "NPC nustatymai",
-	["vjbase.menu.tabs.settings.weapon"] = "Ginklų nustatymai",
-	["vjbase.menu.tabs.settings.hud"] = "HUD nustatymai",
-	["vjbase.menu.tabs.tools"] = "Įrankiai",
-	["vjbase.menu.tabs.configures.snpc"] = "SNPC konfigūracija",
+	["vjbase.menu.tabs.main"] = "Pagrindinis meniu",
+	["vjbase.menu.tabs.npc"] = "NPC nustatymai",
+	["vjbase.menu.tabs.weapon"] = "Ginklų nustatymai",
+	["vjbase.menu.tabs.hud"] = "HUD nustatymai",
+	["vjbase.menu.tabs.tool"] = "Įrankiai",
+	["vjbase.menu.tabs.npc.plugins"] = "SNPC konfigūracija",
 
 	-- Main Menu
 	["vjbase.menu.cleanup"] = "Valymas",
@@ -1204,7 +1204,7 @@ local strings_lithuanian = {
 	["vjbase.menu.context.devmode"] = "Įgalinti kūrėjo režimą",
 
 	-- Tools
-	["tool.vjstool.menu.tutorialvideo"] = "Mokomasis vaizdo įrašas",
+	["vjbase.menu.general.tutorial.vid"] = "Mokomasis vaizdo įrašas",
 	["tool.vjstool.menu.label.recommendation"] = "Patariama naudoti šį įrankį tik VJ Base SNPC personažams.",
 
 	["tool.vj_tool_bullseye.name"] = "Personažas-taikinys",
@@ -1315,12 +1315,12 @@ local strings_spanish_latin = {
 	["vjbase.menu.general.npc.creaturesettings"] = "Opciones de creatura:",
 	["vjbase.menu.general.npc.humansettings"] = "Opciones de humano:",
 	-- Menu Tabs			
-	["vjbase.menu.tabs.mainmenu"] = "Menú Principal",
-	["vjbase.menu.tabs.settings.npc"] = "Opciones de NPC",
-	["vjbase.menu.tabs.settings.weapon"] = "Opciones de Arma",
-	["vjbase.menu.tabs.settings.hud"] = "Opciones de HUD",
-	["vjbase.menu.tabs.tools"] = "Herramientas",
-	["vjbase.menu.tabs.configures.snpc"] = "Configuraciones de SNPC",
+	["vjbase.menu.tabs.main"] = "Menú Principal",
+	["vjbase.menu.tabs.npc"] = "Opciones de NPC",
+	["vjbase.menu.tabs.weapon"] = "Opciones de Arma",
+	["vjbase.menu.tabs.hud"] = "Opciones de HUD",
+	["vjbase.menu.tabs.tool"] = "Herramientas",
+	["vjbase.menu.tabs.npc.plugins"] = "Configuraciones de SNPC",
 	-- Main Menu			
 	["vjbase.menu.cleanup"] = "Limpiar",
 	["vjbase.menu.cleanup.all"] = "Limpiar Todo",
@@ -1398,12 +1398,12 @@ local strings_chinese_simplified = {
 	["vjbase.menu.general.npc.humansettings"] = "人类设置：",
 	
 	-- Menu Tabs
-	["vjbase.menu.tabs.mainmenu"] = "主菜单",
-	["vjbase.menu.tabs.settings.npc"] = "NPC 设置",
-	["vjbase.menu.tabs.settings.weapon"] = "武器设置",
-	["vjbase.menu.tabs.settings.hud"] = "HUD 设置",
-	["vjbase.menu.tabs.tools"] = "工具",
-	["vjbase.menu.tabs.configures.snpc"] = "SNPC 配置",
+	["vjbase.menu.tabs.main"] = "主菜单",
+	["vjbase.menu.tabs.npc"] = "NPC 设置",
+	["vjbase.menu.tabs.weapon"] = "武器设置",
+	["vjbase.menu.tabs.hud"] = "HUD 设置",
+	["vjbase.menu.tabs.tool"] = "工具",
+	["vjbase.menu.tabs.npc.plugins"] = "SNPC 配置",
 	
 	-- Main Menu
 	["vjbase.menu.cleanup"] = "清除",
@@ -1678,7 +1678,7 @@ local strings_chinese_simplified = {
 	["vjbase.menu.context.print.adminonly"] = "这些选项仅限于管理员！",
 	
 	-- Tools
-	["tool.vjstool.menu.tutorialvideo"] = "教程视频",
+	["vjbase.menu.general.tutorial.vid"] = "教程视频",
 	["tool.vjstool.menu.label.recommendation"] = "建议仅对 VJ Base 的 SNPC 使用此工具。",
 	
 	["tool.vj_tool_bullseye.name"] = "NPC 靶子",
@@ -1827,12 +1827,12 @@ local strings_turkish = {
 	["vjbase.menu.general.npc.humansettings"] = "İnsan Ayarları:",
 
 	-- Menu Tabs
-	["vjbase.menu.tabs.mainmenu"] = "Ana Menü",
-	["vjbase.menu.tabs.settings.npc"] = "NPC Ayarları",
-	["vjbase.menu.tabs.settings.weapon"] = "Silah Ayarları",
-	["vjbase.menu.tabs.settings.hud"] = "HUD Ayarları",
-	["vjbase.menu.tabs.tools"] = "Araçlar",
-	["vjbase.menu.tabs.configures.snpc"] = "SNPC Yapılandırmaları",
+	["vjbase.menu.tabs.main"] = "Ana Menü",
+	["vjbase.menu.tabs.npc"] = "NPC Ayarları",
+	["vjbase.menu.tabs.weapon"] = "Silah Ayarları",
+	["vjbase.menu.tabs.hud"] = "HUD Ayarları",
+	["vjbase.menu.tabs.tool"] = "Araçlar",
+	["vjbase.menu.tabs.npc.plugins"] = "SNPC Yapılandırmaları",
 
 	-- Main Menu
 	["vjbase.menu.cleanup"] = "Temizle",
@@ -2107,7 +2107,7 @@ local strings_turkish = {
 	["vjbase.menu.context.print.adminonly"] = "Bu ayarları sadece yöneticiler değiştirebilir!",
 
 	-- Tools
-	["tool.vjstool.menu.tutorialvideo"] = "Eğitim Videosu",
+	["vjbase.menu.general.tutorial.vid"] = "Eğitim Videosu",
 	["tool.vjstool.menu.label.recommendation"] = "Bu aracın sadece VJBase sNPC'leri üstünde kullanılması önerilir.",
 	
 	["tool.vj_tool_bullseye.name"] = "NPC Hedef Takibi",

@@ -1,7 +1,6 @@
 TOOL.Name = "#tool.vj_tool_follower.name"
 TOOL.Tab = "DrVrej"
 TOOL.Category = "Tools"
-TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
 TOOL.Information = {
 	{name = "left"},
 	{name = "right"},
@@ -23,7 +22,7 @@ if CLIENT then
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150, 25)
-		reset:SetColor(Color(0,0,0,255))
+		reset:SetColor(VJ.COLOR_BLACK)
 		reset.DoClick = function()
 			for k, v in pairs(DefaultConVars) do
 				if v == "" then

@@ -1,6 +1,6 @@
 "LightmappedGeneric"
 {
-	"$basetexture" "VJ_Base/decals/splat_acid1"
+	"$basetexture" "vj_base/decals/splat_acid1"
 	"$decal" 1
 	"$decalscale" 0.30
 	"$additive" 1

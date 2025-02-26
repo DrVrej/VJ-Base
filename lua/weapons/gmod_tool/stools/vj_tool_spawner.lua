@@ -1,25 +1,23 @@
 TOOL.Name = "#tool.vj_tool_spawner.name"
 TOOL.Tab = "DrVrej"
 TOOL.Category = "Tools"
-TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
-
 TOOL.Information = {
 	{name = "left"},
 	{name = "right"},
 }
-
-TOOL.ClientConVar["playsound"] = 1
-TOOL.ClientConVar["nextspawntime"] = 1
-TOOL.ClientConVar["spawnent"] = "None"
-TOOL.ClientConVar["spawnentname"] = "Unknown"
-TOOL.ClientConVar["spawnnpclass"] = ""
-TOOL.ClientConVar["fritoplyallies"] = 1
-TOOL.ClientConVar["spawnpos_forward"] = 0
-TOOL.ClientConVar["spawnpos_right"] = 0
-TOOL.ClientConVar["spawnpos_up"] = 0
-TOOL.ClientConVar["weaponequip"] = "None"
-TOOL.ClientConVar["weaponequipname"] = "None"
-TOOL.ClientConVar["nextspawntime"] = 3
+TOOL.ClientConVar = {
+	playsound = 1,
+	spawnent = "None",
+	spawnentname = "Unknown",
+	spawnnpclass = "",
+	fritoplyallies = 1,
+	spawnpos_forward = 0,
+	spawnpos_right = 0,
+	spawnpos_up = 0,
+	weaponequip = "None",
+	weaponequipname = "None",
+	nextspawntime = 3
+}
 
 -- Just to make it easier to reset everything to default
 local DefaultConVars = {}
@@ -33,7 +31,7 @@ if CLIENT then
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150,25)
-		reset:SetColor(Color(0,0,0,255))
+		reset:SetColor(VJ.COLOR_BLACK)
 		reset.DoClick = function()
 			for k,v in pairs(DefaultConVars) do
 				-- Ignore "vj_tool_spawner_spawnnpclass" because we don't want it set to "None", we need it to stay ""
@@ -55,9 +53,9 @@ if CLIENT then
 		
 		local tutorial = vgui.Create("DButton")
 		tutorial:SetFont("DermaDefaultBold")
-		tutorial:SetText("#tool.vjstool.menu.tutorialvideo")
+		tutorial:SetText("#vjbase.menu.general.tutorial.vid")
 		tutorial:SetSize(150, 20)
-		tutorial:SetColor(Color(0,0,255,255))
+		tutorial:SetColor(VJ.COLOR_BLUE)
 		tutorial.DoClick = function()
 			gui.OpenURL("http://www.youtube.com/watch?v=5H_hIz35W90")
 		end

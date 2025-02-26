@@ -866,6 +866,8 @@ function ENT:IsBusy(checkType)
 		local navType = self:GetNavType()
 		return navType == NAV_JUMP or navType == NAV_CLIMB
 	end
+	
+	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

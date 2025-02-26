@@ -163,6 +163,8 @@ VJ.COLOR_LOGO_ORANGE_LIGHT			= Color(255, 163, 121) -- Used to refer to VJ Base 
 VJ.COLOR_SERVER						= Color(156, 241, 255, 200) -- GMod's server print color
 VJ.COLOR_CLIENT						= Color(255, 241, 122, 200) -- GMod's client print color
 --
+VJ.COLOR_BLACK						= Color(0, 0, 0)
+VJ.COLOR_WHITE						= Color(255, 255, 255)
 VJ.COLOR_RED						= Color(255, 0, 0)
 VJ.COLOR_RED_LIGHT					= Color(255, 130, 130)
 VJ.COLOR_GREEN						= Color(0, 255, 0)

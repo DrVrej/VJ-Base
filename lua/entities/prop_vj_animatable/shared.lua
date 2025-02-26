@@ -10,11 +10,8 @@ ENT.AdminOnly = false
 ENT.AutomaticFrameAdvance = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	function ENT:Draw()
-		self:DrawModel()
-	end
-	
-	function ENT:DrawTranslucent()
-		self:Draw()
-	end
+	local metaEntity = FindMetaTable("Entity")
+	local funcDrawModel = metaEntity.DrawModel
+	function ENT:Draw() funcDrawModel(self) end
+	function ENT:DrawTranslucent() self:Draw() end
 end
