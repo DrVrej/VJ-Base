@@ -2773,13 +2773,15 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 	local ene = self:GetEnemy()
 	local eneValid = IsValid(ene)
 	local eneData = selfData.EnemyData
+	local curTime = CurTime()
 	if checkAllies then
 		local getAllies = self:Allies_Check(1000)
-		if getAllies != false then
+		if getAllies then
 			for _, ally in ipairs(getAllies) do
 				local allyEne = ally:GetEnemy()
-				if IsValid(allyEne) && (CurTime() - ally.EnemyData.VisibleTime) < selfData.EnemyTimeout && allyEne:Alive() && self:CheckRelationship(allyEne) == D_HT then
+				if IsValid(allyEne) && (curTime - ally.EnemyData.VisibleTime) < selfData.EnemyTimeout && allyEne:Alive() && self:CheckRelationship(allyEne) == D_HT then
 					self:ForceSetEnemy(allyEne, false)
+					eneData.VisibleTime = curTime -- Reset the time otherwise it will run "ResetEnemy" none-stop!
 					eneData.Reset = false
 					return false
 				end
@@ -2820,7 +2822,7 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 		//print("Clear memory", ene)
 		self:ClearEnemyMemory(ene)
 	end
-	selfData.NextWanderTime = CurTime() + math.Rand(3, 5)
+	selfData.NextWanderTime = curTime + math.Rand(3, 5)
 	self:SetEnemy(NULL)
 	if moveToEnemy then
 		self:SetLastPosition(moveToEnemy)

@@ -32,10 +32,11 @@ local bShiftL = bit.lshift
 		- value, the randomly picked value from the table (Can be anything)
 -----------------------------------------------------------]]
 function VJ.PICK(values)
+	if !values then return false end
 	if istable(values) then
 		return values[math.random(1, #values)] or false -- "or false" = To make sure it doesn't return nil when the table is empty!
 	end
-	return values or false -- Not a table, so just return it
+	return values -- Not a table, so just return it
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

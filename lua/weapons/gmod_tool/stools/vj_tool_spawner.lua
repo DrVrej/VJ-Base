@@ -273,7 +273,7 @@ else -- If SERVER
 			if convartbl.vj_tool_spawner_playsound == 1 then
 				spawner.SoundTbl_SpawnEntity = spawnSounds
 			end
-			spawner.TimedSpawn_Time = convartbl.vj_tool_spawner_nextspawntime //GetConVarNumber("vj_tool_spawner_nextspawntime")
+			spawner.RespawnCooldown = convartbl.vj_tool_spawner_nextspawntime //GetConVarNumber("vj_tool_spawner_nextspawntime")
 			if svgettype == "RightClick" then spawner.SingleSpawner = true end
 			spawner:SetCreator(ply)
 			spawner:Spawn()

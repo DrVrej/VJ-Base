@@ -2223,16 +2223,17 @@ function ENT:Allies_CallHelp(dist)
 	local curTime = CurTime()
 	local isFirst = true -- Is this the first ent that received a call?
 	for _, ent in ipairs(ents.FindInSphere(myPos, dist or 800)) do
-		if ent != self && ent.IsVJBaseSNPC && ent.CanReceiveOrders && ent:Alive() && (ent:GetClass() == myClass or ent:Disposition(self) == D_LI) && ent.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && ene:GetClass() != ent:GetClass() && !IsValid(ent:GetEnemy()) then
+		local entData = ent:GetTable()
+		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && ent:Alive() && (ent:GetClass() == myClass or ent:Disposition(self) == D_LI) && entData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && ene:GetClass() != ent:GetClass() && !IsValid(ent:GetEnemy()) then
 			-- If it's guarding and enemy is not visible, then don't call!
-			if ent.IsGuard && !ent:Visible(ene) then continue end
+			if entData.IsGuard && !ent:Visible(ene) then continue end
 			
 			local eneIsPlayer = ene:IsPlayer()
 			if ((!eneIsPlayer && ent:Disposition(ene) != D_LI) or eneIsPlayer) then
 				-- Enemy too far away for ent
 				if ent:GetPos():Distance(ene:GetPos()) > ent:GetMaxLookDistance() then
 					-- See if you can move to the ent's location to get closer
-					if !ent.IsFollowing && !ent:IsBusy() then
+					if !entData.IsFollowing && !ent:IsBusy() then
 						-- If it's wandering, then just override it as it's not important
 						if ent:IsMoving() && selfData.CurrentScheduleName != "SCHEDULE_IDLE_WANDER" then
 							continue
@@ -2248,7 +2249,7 @@ function ENT:Allies_CallHelp(dist)
 						ent:SetRelationshipMemory(ene, VJ.MEM_OVERRIDE_DISPOSITION, D_HT)
 					end
 					ent:ForceSetEnemy(ene, true)
-					if curTime > ent.NextChaseTime then
+					if curTime > entData.NextChaseTime then
 						if ent.Behavior != VJ_BEHAVIOR_PASSIVE && ent:Visible(ene) then
 							ent:SetTarget(ene)
 							ent:SCHEDULE_FACE("TASK_FACE_TARGET")
@@ -2288,9 +2289,10 @@ function ENT:Allies_Check(dist)
 	local isPassive = self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE
 	local myClass = self:GetClass()
 	for _, ent in ipairs(ents.FindInSphere(self:GetPos(), dist or 800)) do
-		if ent != self && ent.IsVJBaseSNPC && ent:Alive() && (ent:GetClass() == myClass or (ent:Disposition(self) == D_LI or ent.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) && ent.CanReceiveOrders then
+		local entData = ent:GetTable()
+		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && ent:Alive() && (ent:GetClass() == myClass or (ent:Disposition(self) == D_LI or entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) then
 			if isPassive then
-				if ent.Behavior == VJ_BEHAVIOR_PASSIVE or ent.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
+				if entData.Behavior == VJ_BEHAVIOR_PASSIVE or entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 					alliesNum = alliesNum + 1
 					allies[alliesNum] = ent
 				end
@@ -2323,12 +2325,14 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 	limit = limit or 3
 	local myClass = self:GetClass()
 	local it = 0
+	local curTime = CurTime()
 	for _, ent in ipairs(entsTbl or ents.FindInSphere(myPos, dist)) do
-		if ent != self && ent.IsVJBaseSNPC && ent:Alive() && (ent:GetClass() == myClass or ent:Disposition(self) == D_LI) && ent.Behavior != VJ_BEHAVIOR_PASSIVE && ent.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !ent.IsFollowing && !ent.IsGuard && ent.CanReceiveOrders && CurTime() > ent.TakingCoverT then
+		local entData = ent:GetTable()
+		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && ent:Alive() && (ent:GetClass() == myClass or ent:Disposition(self) == D_LI) && entData.Behavior != VJ_BEHAVIOR_PASSIVE && entData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !entData.IsFollowing && !entData.IsGuard && curTime > entData.TakingCoverT then
 			if onlyVis && !ent:Visible(self) then continue end
 			if !IsValid(ent:GetEnemy()) && myPos:Distance(ent:GetPos()) < dist then
-				self.NextWanderTime = CurTime() + 8
-				ent.NextWanderTime = CurTime() + 8
+				self.NextWanderTime = curTime + 8
+				entData.NextWanderTime = curTime + 8
 				it = it + 1
 				-- Formation
 				if formType == "Random" then
@@ -2346,7 +2350,7 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 					ent:DoGroupFormation("Diamond", self, it)
 				end
 				-- Move type
-				if ent.IsVJBaseSNPC_Human && !IsValid(ent:GetActiveWeapon()) then
+				if entData.IsVJBaseSNPC_Human && !IsValid(ent:GetActiveWeapon()) then
 					ent:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH")
 				else
 					ent:SCHEDULE_GOTO_POSITION("TASK_WALK_PATH", function(x) x.CanShootWhenMoving = true x.TurnData = {Type = VJ.FACE_ENEMY} end)
