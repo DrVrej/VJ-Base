@@ -1,46 +1,46 @@
+AddCSLuaFile()
+
 SWEP.Base = "weapon_vj_base"
 SWEP.PrintName = "RPG"
 SWEP.Author = "DrVrej"
 SWEP.Contact = "http://steamcommunity.com/groups/vrejgaming"
 SWEP.Category = "VJ Base"
-	-- Client Settings ---------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.Spawnable = true
+
 if CLIENT then
 	VJ.AddKillIcon("weapon_vj_rpg", SWEP.PrintName, VJ.KILLICON_TYPE_ALIAS, "rpg_missile")
-	
-	SWEP.Slot = 4 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 6) 
-	SWEP.SlotPos = 4 -- Which part of that slot do you want the SWEP to be in? (1 2 3 4 5 6)
-	SWEP.UseHands = true
 end
-	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.NPC_NextPrimaryFire = 5 -- RPM of the weapon in seconds | Calculation: 60 / RPM
-SWEP.NPC_TimeUntilFire = 0.8 -- How much time until the bullet/projectile is fired?
-SWEP.NPC_BulletSpawnAttachment = "missile" -- The attachment that the bullet spawns on, leave empty for base to decide!
-SWEP.NPC_FiringDistanceScale = 2.5 -- Changes how far the NPC can fire | 1 = No change, x < 1 = closer, x > 1 = farther
-SWEP.NPC_StandingOnly = true -- If true, the weapon can only be fired if the NPC is standing still
-	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
+
 SWEP.ViewModel = "models/vj_base/weapons/c_rpg7.mdl" // "models/weapons/c_rpg.mdl"
 SWEP.WorldModel = "models/vj_base/weapons/w_rpg7.mdl" // "models/weapons/w_rocket_launcher.mdl"
-SWEP.WorldModel_UseCustomPosition = true -- Should the gun use custom position? This can be used to fix guns that are in the crotch
+SWEP.WorldModel_UseCustomPosition = true
 SWEP.WorldModel_CustomPositionAngle = Vector(-10, 0, 180)
 SWEP.WorldModel_CustomPositionOrigin = Vector(-1.5, -0.5, 1)
 SWEP.HoldType = "rpg"
-SWEP.ViewModelFOV = 60 -- Player FOV for the view model
-SWEP.Spawnable = true
-SWEP.AdminSpawnable = false
-	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.Primary.Damage = 5 -- Damage
-SWEP.Primary.Force = 5 -- Force applied on the object the bullet hits
-SWEP.Primary.ClipSize = 1 -- Max amount of rounds per clip
-SWEP.Primary.Recoil = 0.6 -- How much recoil does the player get?
-SWEP.Primary.Delay = 0.3 -- Time until it can shoot again
-SWEP.Primary.Automatic = true -- Should the weapon continue firing as long as the attack button is held down?
-SWEP.Primary.Ammo = "RPG_Round" -- Ammo type
+SWEP.ViewModelFOV = 60
+SWEP.Slot = 4
+SWEP.SlotPos = 4
+SWEP.UseHands = true
+
+SWEP.NPC_NextPrimaryFire = 5
+SWEP.NPC_TimeUntilFire = 0.8
+SWEP.NPC_BulletSpawnAttachment = "missile"
+SWEP.NPC_FiringDistanceScale = 2.5
+SWEP.NPC_StandingOnly = true
+
+SWEP.Primary.Damage = 5
+SWEP.Primary.Force = 5
+SWEP.Primary.ClipSize = 1
+SWEP.Primary.Recoil = 0.6
+SWEP.Primary.Delay = 0.3
+SWEP.Primary.Automatic = true
+SWEP.Primary.Ammo = "RPG_Round"
 SWEP.Primary.Sound = "VJ.Weapon_RPG.Single"
-SWEP.Primary.DisableBulletCode = true -- The bullet won't spawn, this can be used when creating a projectile-based weapon
+SWEP.Primary.DisableBulletCode = true
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_SpawnShells = false
-	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.HasReloadSound = true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
+
+SWEP.HasReloadSound = true
 SWEP.Reload_TimeUntilAmmoIsSet = 0.8
 SWEP.ReloadSound = "vj_base/weapons/reload_rpg.wav"
 ---------------------------------------------------------------------------------------------------------------------------------------------

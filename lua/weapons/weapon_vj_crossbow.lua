@@ -1,3 +1,5 @@
+AddCSLuaFile()
+
 SWEP.Base = "weapon_vj_base"
 SWEP.PrintName = "Crossbow"
 SWEP.Author = "DrVrej"
@@ -7,24 +9,24 @@ SWEP.Category = "VJ Base"
 if CLIENT then
 	VJ.AddKillIcon("weapon_vj_crossbow", SWEP.PrintName, VJ.KILLICON_TYPE_ALIAS, "crossbow_bolt")
 end
-	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.MadeForNPCsOnly = true
-SWEP.ReplacementWeapon = "weapon_crossbow"
-SWEP.NPC_NextPrimaryFire = 1 -- RPM of the weapon in seconds | Calculation: 60 / RPM
-SWEP.NPC_TimeUntilFire = 0.15 -- How much time until the bullet/projectile is fired?
-SWEP.NPC_ReloadSound = "weapons/crossbow/reload1.wav"
-SWEP.NPC_FiringDistanceScale = 2.5 -- Changes how far the NPC can fire | 1 = No change, x < 1 = closer, x > 1 = farther
-SWEP.NPC_StandingOnly = true -- If true, the weapon can only be fired if the NPC is standing still
-	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
+
 SWEP.WorldModel = "models/weapons/w_crossbow.mdl"
 SWEP.HoldType = "crossbow"
-	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.Primary.ClipSize = 1 -- Max amount of rounds per clip
-SWEP.Primary.Ammo = "XBowBolt" -- Ammo type
+
+SWEP.MadeForNPCsOnly = true
+SWEP.ReplacementWeapon = "weapon_crossbow"
+SWEP.NPC_NextPrimaryFire = 1
+SWEP.NPC_TimeUntilFire = 0.15
+SWEP.NPC_ReloadSound = "weapons/crossbow/reload1.wav"
+SWEP.NPC_FiringDistanceScale = 2.5
+SWEP.NPC_StandingOnly = true
+
+SWEP.Primary.ClipSize = 1
+SWEP.Primary.Ammo = "XBowBolt"
 SWEP.Primary.Sound = "weapons/crossbow/fire1.wav"
-SWEP.Primary.DisableBulletCode = true -- The bullet won't spawn, this can be used when creating a projectile-based weapon
+SWEP.Primary.DisableBulletCode = true
 SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_smoke", "vj_rifle_smoke_dark", "vj_rifle_smoke_flash", "vj_rifle_sparks2"}
-SWEP.PrimaryEffects_MuzzleParticlesAsOne = true -- Should all the particles spawn together instead of picking only one?
+SWEP.PrimaryEffects_MuzzleParticlesAsOne = true
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = false
 ---------------------------------------------------------------------------------------------------------------------------------------------

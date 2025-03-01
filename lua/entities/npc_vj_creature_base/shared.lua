@@ -4,9 +4,6 @@ ENT.PrintName 		= "VJ Base Creature"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Category		= "VJ Base"
-
-ENT.Spawnable = false
-ENT.AdminSpawnable = false
 ENT.AutomaticFrameAdvance = false
 
 ENT.IsVJBaseSNPC = true

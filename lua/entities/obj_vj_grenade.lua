@@ -12,9 +12,7 @@ ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Information 	= "Default VJ grenade, will explode after 3 seconds."
 ENT.Category		= "VJ Base"
-
-ENT.Spawnable = true
-ENT.AdminOnly = false
+ENT.Spawnable		= true
 
 ENT.VJ_ID_Grenade = true
 ENT.VJ_ID_Grabbable = true

@@ -13,9 +13,6 @@ ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Information 	= "Target for VJ NPCs."
 ENT.Category		= "VJ Base"
 
-ENT.Spawnable 		= false
-ENT.AdminSpawnable 	= false
-
 ENT.IsVJBaseBullseye = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then

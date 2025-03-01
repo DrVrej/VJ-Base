@@ -12,9 +12,6 @@ ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Category		= "VJ Base"
 
-ENT.Spawnable = false
-ENT.AdminOnly = false
-
 ENT.VJ_ID_Danger = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then

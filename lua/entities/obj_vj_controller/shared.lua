@@ -4,9 +4,6 @@ ENT.PrintName 		= "NPC Controller Base"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Category		= "VJ Base"
-
-ENT.Spawnable 		= false
-ENT.AdminSpawnable 	= false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	function ENT:Draw()

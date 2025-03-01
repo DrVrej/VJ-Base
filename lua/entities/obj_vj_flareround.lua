@@ -12,9 +12,7 @@ ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Information 	= "Flare that will burn for 1 minute.\nIgnites anything it touches."
 ENT.Category		= "VJ Base"
-
-ENT.Spawnable = true
-ENT.AdminOnly = false
+ENT.Spawnable		= true
 
 ENT.PhysicsSounds = true
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -12,9 +12,8 @@ ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Information 	= "Sets an spawn point for all the players.\nPress USE to toggle it."
 ENT.Category		= "VJ Base"
-
-ENT.Spawnable = true
-ENT.AdminOnly = true
+ENT.Spawnable		= true
+ENT.AdminOnly		= true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	function ENT:Draw()

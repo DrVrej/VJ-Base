@@ -12,9 +12,8 @@ ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Information 	= "Gives players 1000000 health when picked up."
 ENT.Category		= "VJ Base"
-
-ENT.Spawnable = true
-ENT.AdminOnly = true
+ENT.Spawnable		= true
+ENT.AdminOnly		= true
 
 ENT.PhysicsSounds = true
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,47 +1,47 @@
+AddCSLuaFile()
+
 SWEP.Base = "weapon_vj_base"
 SWEP.PrintName = "SPAS-12"
 SWEP.Author = "DrVrej"
 SWEP.Contact = "http://steamcommunity.com/groups/vrejgaming"
 SWEP.Category = "VJ Base"
-	-- Client Settings ---------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.Spawnable = true
+
 if CLIENT then
 	VJ.AddKillIcon("weapon_vj_spas12", SWEP.PrintName, VJ.KILLICON_TYPE_ALIAS, "weapon_shotgun")
-	
-	SWEP.Slot = 3 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 6) 
-	SWEP.SlotPos = 4 -- Which part of that slot do you want the SWEP to be in? (1 2 3 4 5 6)
-	SWEP.UseHands = true
 end
-	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.NPC_NextPrimaryFire = 0.9 -- RPM of the weapon in seconds | Calculation: 60 / RPM
-SWEP.NPC_TimeUntilFire = 0.2 -- How much time until the bullet/projectile is fired?
-SWEP.NPC_CustomSpread = 2.5 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
-SWEP.NPC_ExtraFireSound = "vj_base/weapons/cycle_shotgun_pump.wav" -- Plays an extra sound after it fires (Example: Bolt action sound)
-SWEP.NPC_FiringDistanceScale = 0.5 -- Changes how far the NPC can fire | 1 = No change, x < 1 = closer, x > 1 = farther
-	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
+
 SWEP.ViewModel = "models/weapons/c_shotgun.mdl"
 SWEP.WorldModel = "models/weapons/w_shotgun.mdl"
 SWEP.HoldType = "shotgun"
-SWEP.Spawnable = true
-SWEP.AdminSpawnable = false
-	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.Primary.Damage = 4 -- Damage
-SWEP.Primary.PlayerDamage = "Double" -- For players only | "Same" = Same as self.Primary.Damage | "Double" = Double the self.Primary.Damage | number = Overrides self.Primary.Damage
-SWEP.Primary.Force = 1 -- Force applied on the object the bullet hits
-SWEP.Primary.NumberOfShots = 7 -- How many shots per attack?
-SWEP.Primary.ClipSize = 6 -- Max amount of rounds per clip
-SWEP.Primary.Cone = 12 -- How accurate is the bullet? (Players)
-SWEP.Primary.Delay = 0.8 -- Time until it can shoot again
-SWEP.Primary.Automatic = true -- Should the weapon continue firing as long as the attack button is held down?
-SWEP.Primary.Ammo = "Buckshot" -- Ammo type
+SWEP.Slot = 3
+SWEP.SlotPos = 4
+SWEP.UseHands = true
+
+SWEP.NPC_NextPrimaryFire = 0.9
+SWEP.NPC_TimeUntilFire = 0.2
+SWEP.NPC_CustomSpread = 2.5
+SWEP.NPC_ExtraFireSound = "vj_base/weapons/cycle_shotgun_pump.wav"
+SWEP.NPC_FiringDistanceScale = 0.5
+
+SWEP.Primary.Damage = 4
+SWEP.Primary.PlayerDamage = "Double"
+SWEP.Primary.Force = 1
+SWEP.Primary.NumberOfShots = 7
+SWEP.Primary.ClipSize = 6
+SWEP.Primary.Cone = 12
+SWEP.Primary.Delay = 0.8
+SWEP.Primary.Automatic = true
+SWEP.Primary.Ammo = "Buckshot"
 SWEP.Primary.Sound = "VJ.Weapon_SPAS12.Single"
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = 2
 SWEP.PrimaryEffects_ShellType = "ShotgunShellEject"
-	-- ====== Secondary Fire Variables ====== --
-SWEP.Secondary.Automatic = true -- Should the weapon continue firing as long as the attack button is held down?
-SWEP.Secondary.Ammo = "Buckshot" -- Ammo type
-	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.HasReloadSound = true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
+
+SWEP.Secondary.Automatic = true
+SWEP.Secondary.Ammo = "Buckshot"
+
+SWEP.HasReloadSound = true
 SWEP.ReloadSound = {"weapons/shotgun/shotgun_reload1.wav", "weapons/shotgun/shotgun_reload2.wav", "weapons/shotgun/shotgun_reload3.wav"}
 SWEP.Reload_TimeUntilAmmoIsSet = 0.3
 ---------------------------------------------------------------------------------------------------------------------------------------------

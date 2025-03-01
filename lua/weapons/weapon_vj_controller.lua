@@ -1,3 +1,5 @@
+AddCSLuaFile()
+
 SWEP.Base = "weapon_vj_base"
 SWEP.PrintName = "NPC Controller"
 SWEP.Author = "DrVrej"
@@ -5,32 +7,18 @@ SWEP.Contact = "http://steamcommunity.com/groups/vrejgaming"
 SWEP.Purpose = "Made to control VJ NPCs."
 SWEP.Instructions = "Press PRIMARY FIRE to control the NPC you are looking at."
 SWEP.Category = "VJ Base"
-	-- Client Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-if CLIENT then
-	SWEP.Slot = 5 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 6) 
-	SWEP.SlotPos = 7 -- Which part of that slot do you want the SWEP to be in? (1 2 3 4 5 6)
-	SWEP.SwayScale = 1 -- Default is 1, The scale of the viewmodel sway
-	SWEP.CSMuzzleFlashes = false -- Use CS:S Muzzle flash?
-	SWEP.DrawAmmo = true -- Draw regular Garry's Mod HUD?
-	SWEP.DrawCrosshair = true -- Draw Crosshair?
-	SWEP.DrawWeaponInfoBox = true -- Should the information box show in the weapon selection menu?
-	SWEP.BounceWeaponIcon = true -- Should the icon bounce in the weapon selection menu?
-	SWEP.RenderGroup = RENDERGROUP_OPAQUE
-end
-	-- Server Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-if SERVER then
-SWEP.Weight = 30 -- Decides whether we should switch from/to this
-SWEP.AutoSwitchTo = false -- Auto switch to this weapon when it's picked up
-SWEP.AutoSwitchFrom = false -- Auto switch weapon when the owner picks up a better weapon
-end
-	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.Spawnable = true
+
 SWEP.ViewModel = "models/vj_base/weapons/c_controller.mdl"
 SWEP.WorldModel = "models/vj_base/gibs/human/brain.mdl"
+SWEP.WorldModel_UseCustomPosition = true
+SWEP.WorldModel_CustomPositionAngle = Vector(0, 0, 0)
+SWEP.WorldModel_CustomPositionOrigin = Vector(0, 4, -1.1)
 SWEP.HoldType = "pistol"
-SWEP.Spawnable = true
-SWEP.AdminSpawnable = false
-SWEP.UseHands = true -- Should this weapon use Garry's Mod hands? (The model must support it!)
-	-- Primary/Secondary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.Slot = 5
+SWEP.SlotPos = 7
+SWEP.UseHands = true
+
 SWEP.Primary.Sound = {"physics/flesh/flesh_squishy_impact_hard1.wav", "physics/flesh/flesh_squishy_impact_hard2.wav", "physics/flesh/flesh_squishy_impact_hard3.wav", "physics/flesh/flesh_squishy_impact_hard4.wav"}
 SWEP.Primary.SoundPitch	= VJ.SET(140, 140)
 SWEP.Primary.ClipSize = -1
@@ -42,11 +30,7 @@ SWEP.Secondary.DefaultClip = -1
 SWEP.Secondary.Automatic = false
 SWEP.Secondary.Ammo = "none"
 
-SWEP.WorldModel_UseCustomPosition = true
-SWEP.WorldModel_CustomPositionAngle = Vector(0, 0, 0)
-SWEP.WorldModel_CustomPositionOrigin = Vector(0, 4, -1.1)
-
-SWEP.DeploySound = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"}
+SWEP.DeploySound = {"physics/flesh/flesh_squishy_impact_hard1.wav", "physics/flesh/flesh_squishy_impact_hard2.wav", "physics/flesh/flesh_squishy_impact_hard3.wav", "physics/flesh/flesh_squishy_impact_hard4.wav"}
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttack()
 	local owner = self:GetOwner()
