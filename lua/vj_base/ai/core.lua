@@ -505,8 +505,11 @@ function ENT:MaintainIdleAnimation(force)
 		//VJ.DEBUG_Print(self, "MaintainIdleAnimation", "force")
 		self.LastAnimSeed = 0
 		self:ResetIdealActivity(ACT_IDLE)
-		self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L2987
-		funcSetSaveValue(self, "m_bSequenceLoops", false) -- Otherwise it will stutter and play an idle sequence at 999x playback speed for 0.001 second when changing from one idle to another!
+		-- Need this check otherwise it may quickly repeat the last animation that was NOT an ACT_IDLE !
+		if funcGetIdealActivity(self) == ACT_IDLE && funcGetActivity(self) == ACT_IDLE then
+			self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L2987
+			funcSetSaveValue(self, "m_bSequenceLoops", false) -- Otherwise it will stutter and play an idle sequence at 999x playback speed for 0.001 second when changing from one idle to another!
+		end
 	elseif funcGetIdealActivity(self) == ACT_IDLE && funcGetActivity(self) == ACT_IDLE then -- Check both ideal and current to make sure we are 100% playing an idle, otherwise transitions, certain movements, and animations will break!
 		-- If animation has finished OR idle animation has changed then play a new idle!
 		if (funcGetCycle(self) >= 0.98) or (self:TranslateActivity(ACT_IDLE) != funcGetSequenceActivity(self, funcGetIdealSequence(self))) then
@@ -1530,7 +1533,7 @@ function ENT:ResetFollowBehavior()
 		end
 	end
 	self.IsFollowing = false
-	followData.Target = NULL -- Need to recall it here because localized can't update the table
+	followData.Target = NULL
 	followData.MinDist = 0
 	followData.Moving = false
 	followData.StopAct = false
@@ -1912,7 +1915,7 @@ local ENT_TYPE_NPC = 1
 local ENT_TYPE_PLAYER = 2
 local ENT_TYPE_NEXTBOT = 3
 --
--- Returns whether or not it found an enemy
+-- Return: Whether or not it found an enemy
 function ENT:MaintainRelationships()
 	local selfData = self:GetTable()
 	local myBehavior = selfData.Behavior
@@ -2613,7 +2616,7 @@ end
 -- combatIdle = Play combat idle if possible
 function ENT:PlayIdleSound(customSD, sdType, combatIdle)
 	local selfData = self:GetTable()
-	if !selfData.HasSounds or !selfData.HasIdleSounds then return end
+	if !selfData.HasSounds or !selfData.HasIdleSounds then return false end
 	
 	local curTime = CurTime()
 	if selfData.NextIdleSoundT_Reg < curTime && selfData.NextIdleSoundT < curTime then
@@ -2721,7 +2724,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	local selfData = self:GetTable()
-	if !selfData.HasSounds or !sdSet then return end
+	if !selfData.HasSounds or !sdSet then return false end
 	if customSD then
 		customSD = PICK(customSD)
 	end
