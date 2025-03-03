@@ -277,9 +277,12 @@ SWEP.NPC_SecondaryFireNextT = 0
 SWEP.LastOwner = NULL
 SWEP.InitTime = 0 -- Holds the CurTime that it was spawned at, used to make sure spawned weapons can be given to the player without needing to press USE on it
 
-local cv_muszzleflash = GetConVar("vj_wep_nomuszzleflash")
-local cv_dynamiclight = GetConVar("vj_wep_nomuszzleflash_dynamiclight")
-local cv_bulletshells = GetConVar("vj_wep_nobulletshells")
+local metaEntity = FindMetaTable("Entity")
+local funcDrawModel = metaEntity.DrawModel
+
+local vj_wep_muzzleflash = GetConVar("vj_wep_muzzleflash")
+local vj_wep_muzzleflash_light = GetConVar("vj_wep_muzzleflash_light")
+local vj_wep_shells = GetConVar("vj_wep_shells")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local oldShells = {VJ_Weapon_PistolShell1 = "ShellEject", VJ_Weapon_RifleShell1 = "RifleShellEject", VJ_Weapon_ShotgunShell1 = "ShotgunShellEject"} -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
 --
@@ -507,7 +510,7 @@ function SWEP:GetBulletPos()
 	end
 	
 	-- Everything else has failed, post a warning and use eye position!
-	print("WARNING: "..self:GetClass().." doesn't have a custom position or attachment or bone for bullet spawn! Using EyePos!")
+	VJ.DEBUG_Print(self, "GetBulletPos", "error", "Failed to find custom position or attachment or bone! Using EyePos!")
 	return owner:EyePos()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -527,7 +530,8 @@ function SWEP:NPC_Think()
 	self:MaintainWorldModel()
 	self:OnThink()
 	
-	if self.NPC_NextPrimaryFire && CurTime() > self.NPC_NextPrimaryFireT && self:NPC_CanFire() then
+	local selfData = self:GetTable()
+	if selfData.NPC_NextPrimaryFire && CurTime() > selfData.NPC_NextPrimaryFireT && self:NPC_CanFire() then
 		self:NPCShoot_Primary()
 	end
 end
@@ -758,7 +762,6 @@ function SWEP:PrimaryAttack(UseAlt)
 				end
 			owner:FireBullets(bullet)
 		end
-		if cv_muszzleflash:GetInt() == 0 then owner:MuzzleFlash() end
 	end
 	
 	if !self.IsMeleeWeapon then -- Melee weapons shouldn't consume ammo!
@@ -787,10 +790,12 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttackEffects(owner)
 	if self.IsMeleeWeapon then return end
-	if self.CustomOnPrimaryAttackEffects && self:CustomOnPrimaryAttackEffects(owner) == false then return end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	owner = owner or self:GetOwner()
+	if self.CustomOnPrimaryAttackEffects && self:CustomOnPrimaryAttackEffects(owner) == false then return end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	
-	if cv_muszzleflash:GetInt() == 0 then
+	if vj_wep_muzzleflash:GetInt() == 1 then
+		owner:MuzzleFlash()
+		
 		-- MUZZLE FLASH
 		if self.PrimaryEffects_MuzzleFlash then
 			local muzzleAttach = self.PrimaryEffects_MuzzleAttachment
@@ -798,31 +803,41 @@ function SWEP:PrimaryAttackEffects(owner)
 			-- Players
 			if owner:IsPlayer() && owner:GetViewModel() != nil then
 				local muzzleFlashEffect = EffectData()
-				muzzleFlashEffect:SetOrigin(owner:GetShootPos())
+				local shootPos = owner:GetShootPos()
+				muzzleFlashEffect:SetOrigin(shootPos)
 				muzzleFlashEffect:SetEntity(self)
-				muzzleFlashEffect:SetStart(owner:GetShootPos())
+				muzzleFlashEffect:SetStart(shootPos)
 				muzzleFlashEffect:SetNormal(owner:GetAimVector())
 				muzzleFlashEffect:SetAttachment(muzzleAttach)
 				util.Effect("VJ_MuzzleFlash_Player", muzzleFlashEffect)
-			else -- NPCs
+			-- NPCs
+			else
+				local particles = self.PrimaryEffects_MuzzleParticles
 				if self.PrimaryEffects_MuzzleParticlesAsOne then -- Combine all of the particles in the table!
-					for _, v in ipairs(self.PrimaryEffects_MuzzleParticles) do
+					for _, v in ipairs(particles) do
 						ParticleEffectAttach(v, PATTACH_POINT_FOLLOW, self, muzzleAttach)
 					end
 				else
-					ParticleEffectAttach(VJ.PICK(self.PrimaryEffects_MuzzleParticles), PATTACH_POINT_FOLLOW, self, muzzleAttach)
+					particles = VJ.PICK(particles)
+					if particles then
+						ParticleEffectAttach(particles, PATTACH_POINT_FOLLOW, self, muzzleAttach)
+					end
 				end
 			end
 		end
 		
 		-- MUZZLE DYNAMIC LIGHT
-		if SERVER && self.PrimaryEffects_SpawnDynamicLight && cv_dynamiclight:GetInt() == 0 then
+		if SERVER && self.PrimaryEffects_SpawnDynamicLight && vj_wep_muzzleflash_light:GetInt() == 1 then
 			local muzzleLight = ents.Create("light_dynamic")
 			muzzleLight:SetKeyValue("brightness", self.PrimaryEffects_DynamicLightBrightness)
 			muzzleLight:SetKeyValue("distance", self.PrimaryEffects_DynamicLightDistance)
-			if owner:IsPlayer() then muzzleLight:SetLocalPos(owner:GetShootPos() + self:GetForward()*40 + self:GetUp()*-10) else muzzleLight:SetLocalPos(self:GetBulletPos()) end
+			if owner:IsPlayer() then
+				muzzleLight:SetLocalPos(owner:GetShootPos() + self:GetForward()*40 + self:GetUp()*-10)
+			else
+				muzzleLight:SetLocalPos(self:GetBulletPos())
+			end
 			muzzleLight:SetLocalAngles(self:GetAngles())
-			muzzleLight:Fire("Color", self.PrimaryEffects_DynamicLightColor.r.." "..self.PrimaryEffects_DynamicLightColor.g.." "..self.PrimaryEffects_DynamicLightColor.b)
+			muzzleLight:SetColor(self.PrimaryEffects_DynamicLightColor)
 			//muzzleLight:SetParent(self)
 			muzzleLight:Spawn()
 			muzzleLight:Activate()
@@ -833,10 +848,9 @@ function SWEP:PrimaryAttackEffects(owner)
 	end
 
 	-- SHELL CASING
-	if !owner:IsPlayer() && self.PrimaryEffects_SpawnShells && cv_bulletshells:GetInt() == 0 then
+	if !owner:IsPlayer() && self.PrimaryEffects_SpawnShells && vj_wep_shells:GetInt() == 1 then
 		local shellAttach = self.PrimaryEffects_ShellAttachment
-		if !isnumber(shellAttach) then shellAttach = self:LookupAttachment(shellAttach) end
-		shellAttach = self:GetAttachment(shellAttach)
+		shellAttach = self:GetAttachment(isnumber(shellAttach) and shellAttach or self:LookupAttachment(shellAttach))
 		if !shellAttach then -- No attachment found, so just use some default pos & ang
 			shellAttach = {Pos = owner:GetShootPos(), Ang = self:GetAngles()}
 		end
@@ -905,9 +919,9 @@ function SWEP:FireAnimationEvent(pos, ang, event, options)
 		return true
 	elseif event == 22 or event == 6001 then
 		return true
-	elseif cv_muszzleflash:GetInt() == 1 && (event == 21 or event == 5001 or event == 5003) then
+	elseif vj_wep_muzzleflash:GetInt() == 0 && (event == 21 or event == 5001 or event == 5003) then
 		return true
-	elseif cv_bulletshells:GetInt() == 1 && event == 20 then
+	elseif vj_wep_shells:GetInt() == 0 && event == 20 then
 		return true
 	end
 end
@@ -973,10 +987,11 @@ function SWEP:CanBePickedUpByNPCs()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:GetWeaponCustomPosition(owner)
-	local boneID = owner:LookupBone(self.WorldModel_CustomPositionBone)
+	local selfData = self:GetTable()
+	local boneID = owner:LookupBone(selfData.WorldModel_CustomPositionBone)
 	if !boneID then return false end
-	local customPos = self.WorldModel_CustomPositionOrigin
-	local customAng = self.WorldModel_CustomPositionAngle
+	local customPos = selfData.WorldModel_CustomPositionOrigin
+	local customAng = selfData.WorldModel_CustomPositionAngle
 	local pos, ang = owner:GetBonePosition(boneID)
 	ang:RotateAroundAxis(ang:Right(), customAng.x)
 	ang:RotateAroundAxis(ang:Up(), customAng.y)
@@ -986,12 +1001,13 @@ function SWEP:GetWeaponCustomPosition(owner)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:MaintainWorldModel()
-	if self:GetNW2Bool("VJ_WorldModel_Invisible") != self.WorldModel_Invisible then
-		self:SetNW2Bool("VJ_WorldModel_Invisible", self.WorldModel_Invisible)
+	local selfData = self:GetTable()
+	if self:GetNW2Bool("VJ_WorldModel_Invisible") != selfData.WorldModel_Invisible then
+		self:SetNW2Bool("VJ_WorldModel_Invisible", selfData.WorldModel_Invisible)
 	end
 	
 	local owner = self:GetOwner()
-	if IsValid(owner) && self.WorldModel_UseCustomPosition then
+	if IsValid(owner) && selfData.WorldModel_UseCustomPosition then
 		local wepPos, wepAng = self:GetWeaponCustomPosition(owner)
 		if wepPos then
 			self:SetPos(wepPos)
@@ -1003,9 +1019,10 @@ end
 if CLIENT then
 	function SWEP:DrawWorldModel()
 		local drawMdl = true
-		if !self:OnDrawWorldModel() or self:GetNW2Bool("VJ_WorldModel_Invisible") or self.WorldModel_Invisible then drawMdl = false end
+		local selfData = self:GetTable()
+		if !self:OnDrawWorldModel() or self:GetNW2Bool("VJ_WorldModel_Invisible") or selfData.WorldModel_Invisible then drawMdl = false end
 		
-		if self.WorldModel_UseCustomPosition then
+		if selfData.WorldModel_UseCustomPosition then
 			local owner = self:GetOwner()
 			if IsValid(owner) then
 				if owner:IsPlayer() && owner:InVehicle() then return end
@@ -1021,7 +1038,7 @@ if CLIENT then
 				self:SetRenderAngles(nil)
 			end
 		end
-		if drawMdl then self:DrawModel() end
+		if drawMdl then funcDrawModel(self) end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

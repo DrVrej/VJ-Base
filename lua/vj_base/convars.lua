@@ -5,131 +5,128 @@
 --------------------------------------------------*/
 include("autorun/vj_controls.lua")
 
-local cvarList = {}
+local defFlags = FCVAR_ARCHIVE
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Admin Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-cvarList["vj_npc_admin_properties"] = 0 -- Should the properties menu be restricted to admins only?
+CreateConVar("vj_npc_admin_properties", 0, defFlags, "Should the NPC properties menu be restricted to admins only?")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC Attack & Weapon Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-cvarList["vj_npc_range"] = 1 -- Can NPCs do range attacks?
-cvarList["vj_npc_leap"] = 1 -- Can NPCs do leap attacks?
-cvarList["vj_npc_melee"] = 1 -- Can NPCs do melee attacks?
-cvarList["vj_npc_melee_bleed"] = 1 -- Can NPCs deal bleeding to enemies on melee attack?
-cvarList["vj_npc_melee_propint"] = 1 -- Can NPCs damage or push props?
-cvarList["vj_npc_melee_ply_dsp"] = 1 -- Can NPC melee attacks cause DSP effects on players?
-cvarList["vj_npc_melee_ply_speed"] = 1 -- Can NPC melee attack modify player speed?
-cvarList["vj_npc_grenade"] = 1 -- Can NPCs do grenade attacks?
-cvarList["vj_npc_wep"] = 1 -- Can NPCs use weapons?
-cvarList["vj_npc_wep_reload"] = 1 -- Can NPCs reload their weapon?
-cvarList["vj_npc_wep_drop"] = 1 -- Should NPCs drop their weapon on death?
-cvarList["vj_npc_wep_ply_pickup"] = 1 -- Can players pick up NPC dropped weapons?
+CreateConVar("vj_npc_range", 1, defFlags, "Can NPCs do range attacks?")
+CreateConVar("vj_npc_leap", 1, defFlags, "Can NPCs do leap attacks?")
+CreateConVar("vj_npc_melee", 1, defFlags, "Can NPCs do melee attacks?")
+CreateConVar("vj_npc_melee_bleed", 1, defFlags, "Can NPCs deal bleeding to enemies on melee attack?")
+CreateConVar("vj_npc_melee_propint", 1, defFlags, "Can NPCs damage or push props?")
+CreateConVar("vj_npc_melee_ply_dsp", 1, defFlags, "Can NPC melee attacks cause DSP effects on players?")
+CreateConVar("vj_npc_melee_ply_speed", 1, defFlags, "Can NPC melee attack modify player speed?")
+CreateConVar("vj_npc_grenade", 1, defFlags, "Can NPCs do grenade attacks?")
+CreateConVar("vj_npc_wep", 1, defFlags, "Can NPCs use weapons?")
+CreateConVar("vj_npc_wep_reload", 1, defFlags, "Can NPCs reload their weapon?")
+CreateConVar("vj_npc_wep_drop", 1, defFlags, "Should NPCs drop their weapon on death?")
+CreateConVar("vj_npc_wep_ply_pickup", 1, defFlags, "Can players pick up NPC dropped weapons?")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC AI Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-cvarList["vj_npc_sight_distance"] = 0 -- Override all NPCs to use the set number as their sight distance | 0 = Don't override
-cvarList["vj_npc_sight_xray"] = 0 -- Should they have X-Ray vision with 360 FOV?
-cvarList["vj_npc_wander"] = 1 -- Can NPCs wander around?
-cvarList["vj_npc_chase"] = 1 -- Can NPCs chase enemies?
-cvarList["vj_npc_flinch"] = 1 -- Can NPCs play their flinch animations?
-cvarList["vj_npc_investigate"] = 1 -- Can NPCs detect and investigate disturbances?
-cvarList["vj_npc_callhelp"] = 1 -- Can NPCs call for help?
-cvarList["vj_npc_ply_follow"] = 1 -- Can NPCs follow players?
-cvarList["vj_npc_medic"] = 1 -- Can NPCs be medics?
-cvarList["vj_npc_eat"] = 1 -- Can NPCs eat things like corpses or gibs?
-cvarList["vj_npc_dangerdetection"] = 1 -- Can NPCs run from grenades/dangers
-cvarList["vj_npc_human_jump"] = 1 -- Can the human NPCs jump?
-cvarList["vj_npc_creature_opendoor"] = 1 -- Should Creatures open doors?
-cvarList["vj_npc_allies"] = 1 -- Can NPCs ally to other entities?
-cvarList["vj_npc_ply_betray"] = 1 -- Can friendly NPCs become enemy to players?
-cvarList["vj_npc_fri_base"] = 0 -- Makes the NPC Friendly to all VJ NPCs
-cvarList["vj_npc_fri_player"] = 0 -- Makes the NPC Friendly to Players
-cvarList["vj_npc_fri_zombie"] = 0 -- Makes the NPC Friendly to Zombies
-cvarList["vj_npc_fri_antlion"] = 0 -- Makes the NPC Friendly to Antlion
-cvarList["vj_npc_fri_combine"] = 0 -- Makes the NPC Friendly to Combine
+CreateConVar("vj_npc_sight_distance", 0, defFlags, "Override all NPCs to use the set number as their sight distance | 0 = Don't override")
+CreateConVar("vj_npc_sight_xray", 0, defFlags, "Should they have X-Ray vision with 360 FOV?")
+CreateConVar("vj_npc_wander", 1, defFlags, "Can NPCs wander around?")
+CreateConVar("vj_npc_chase", 1, defFlags, "Can NPCs chase enemies?")
+CreateConVar("vj_npc_flinch", 1, defFlags, "Can NPCs play their flinch animations?")
+CreateConVar("vj_npc_investigate", 1, defFlags, "Can NPCs detect and investigate disturbances?")
+CreateConVar("vj_npc_callhelp", 1, defFlags, "Can NPCs call for help?")
+CreateConVar("vj_npc_ply_follow", 1, defFlags, "Can NPCs follow players?")
+CreateConVar("vj_npc_medic", 1, defFlags, "Can NPCs be medics?")
+CreateConVar("vj_npc_eat", 1, defFlags, "Can NPCs eat things like corpses or gibs?")
+CreateConVar("vj_npc_dangerdetection", 1, defFlags, "Can NPCs run from grenades/dangers")
+CreateConVar("vj_npc_human_jump", 1, defFlags, "Can the human NPCs jump?")
+CreateConVar("vj_npc_creature_opendoor", 1, defFlags, "Should Creatures open doors?")
+CreateConVar("vj_npc_allies", 1, defFlags, "Can NPCs ally with other entities?")
+CreateConVar("vj_npc_ply_betray", 1, defFlags, "Can friendly NPCs become enemy to allied players?")
+CreateConVar("vj_npc_fri_base", 0, defFlags, "Makes all VJ NPCs friendly to other VJ NPCs")
+CreateConVar("vj_npc_fri_player", 0, defFlags, "Makes all VJ NPCs friendly to Players")
+CreateConVar("vj_npc_fri_zombie", 0, defFlags, "Makes all VJ NPCs friendly to Zombies")
+CreateConVar("vj_npc_fri_antlion", 0, defFlags, "Makes all VJ NPCs friendly to Antlion")
+CreateConVar("vj_npc_fri_combine", 0, defFlags, "Makes all VJ NPCs friendly to Combine")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ General Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-cvarList["vj_npc_difficulty"] = 0 -- Difficulty of the NPCs
-cvarList["vj_npc_anim_death"] = 1 -- Can NPCs play death animation?
-cvarList["vj_npc_god"] = 0 -- The NPC will never die!
-cvarList["vj_npc_health"] = 0 -- Health Changer
-cvarList["vj_npc_blood"] = 1 -- Can NPCs bleed?
-cvarList["vj_npc_blood_pool"] = 1 -- Can corpses spawn blood pools?
-cvarList["vj_npc_blood_gmod"] = 0 -- Should Garry's Mod's blood decals be used whenever possible?
-cvarList["vj_npc_corpse"] = 1 -- Can NPCs create corpses?
-cvarList["vj_npc_corpse_limit"] = 32 -- What is the limit for NPC corpses on the ground? (When Keep Corpses is off)
-cvarList["vj_npc_corpse_collision"] = 0 -- Collision type for the NPC's corpse
-cvarList["vj_npc_corpse_fade"] = 0 -- Make Corpses fade
-cvarList["vj_npc_corpse_fadetime"] = 10 -- Time until Corpses fade
-cvarList["vj_npc_corpse_undo"] = 0 -- Make corpses undoable
-cvarList["vj_npc_gib"] = 1 -- Can NPCs gib?
-cvarList["vj_npc_gib_vfx"] = 1 -- Gib VFX (particles, effects, decals, etc.)
-cvarList["vj_npc_gib_collision"] = 0 -- Collidable Gibs?
-cvarList["vj_npc_gib_fade"] = 1 -- Should Gibs Fade or not?
-cvarList["vj_npc_gib_fadetime"] = 90 -- Gib Fade Time
-cvarList["vj_npc_loot"] = 1 -- Can NPCs drop loot on death?
-cvarList["vj_npc_ply_frag"] = 1 -- Disable frags (points) being added to player's scoreboard
-cvarList["vj_npc_ply_chat"] = 1 -- Can NPC post in a player's chat? | EX: "Scientist is now following you"
+CreateConVar("vj_npc_difficulty", 0, defFlags, "Difficulty of all NPCs")
+CreateConVar("vj_npc_anim_death", 1, defFlags, "Can NPCs play death animation?")
+CreateConVar("vj_npc_god", 0, defFlags, "Can NPCs take damage?")
+CreateConVar("vj_npc_health", 0, defFlags, "Overrides the health of all NPCs | 0 = Don't override")
+CreateConVar("vj_npc_blood", 1, defFlags, "Can NPCs bleed?")
+CreateConVar("vj_npc_blood_pool", 1, defFlags, "Can corpses create blood pools?")
+CreateConVar("vj_npc_blood_gmod", 0, defFlags, "Should Garry's Mod's blood decals be used whenever possible?")
+CreateConVar("vj_npc_corpse", 1, defFlags, "Can NPCs create corpses?")
+CreateConVar("vj_npc_corpse_limit", 32, defFlags, "What is the limit for NPC corpses on the ground? (When Keep Corpses is off)")
+CreateConVar("vj_npc_corpse_collision", 0, defFlags, "Collision type for the NPC's corpse")
+CreateConVar("vj_npc_corpse_fade", 0, defFlags, "Should NPC corpses fade?")
+CreateConVar("vj_npc_corpse_fadetime", 10, defFlags, "Time until NPC corpses fade")
+CreateConVar("vj_npc_corpse_undo", 0, defFlags, "Should corpses be undoable?")
+CreateConVar("vj_npc_gib", 1, defFlags, "Can NPCs gib?")
+CreateConVar("vj_npc_gib_vfx", 1, defFlags, "Can Gib VFX be created? | EX: particles, effects, decals, etc.")
+CreateConVar("vj_npc_gib_collision", 0, defFlags, "Should gibs be collidable?")
+CreateConVar("vj_npc_gib_fade", 1, defFlags, "Should Gibs Fade?")
+CreateConVar("vj_npc_gib_fadetime", 90, defFlags, "Time until gibs fade out")
+CreateConVar("vj_npc_loot", 1, defFlags, "Can NPCs drop loot on death?")
+CreateConVar("vj_npc_ply_frag", 1, defFlags, "Disable frags (points) being added to player's scoreboard when a player kills an NPC")
+CreateConVar("vj_npc_ply_chat", 1, defFlags, "Can NPC post in a player's chat? | EX: \"Scientist is now following you\"")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC Performance Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-cvarList["vj_npc_processtime"] = 1 -- How often does the NPC do performance-heavy processing?
-cvarList["vj_npc_poseparams"] = 1 -- Can NPCs have pose parameters?
-cvarList["vj_npc_shadows"] = 1 -- Should NPC shadows draw?
-cvarList["vj_npc_ikchains"] = 1 -- Can NPCs have IK chains?
-cvarList["vj_npc_forcelowlod"] = 0 -- Should NPCs be forced to use the lowest LOD?
-cvarList["vj_npc_reduce_vfx"] = 0 -- Reduces VFX, especially non-essential ones | EX: Eye glow, idle particles
+CreateConVar("vj_npc_processtime", 1, defFlags, "How often does the NPC do performance-heavy processing?")
+CreateConVar("vj_npc_poseparams", 1, defFlags, "Can NPCs have pose parameters?")
+CreateConVar("vj_npc_shadows", 1, defFlags, "Should NPC shadows draw?")
+CreateConVar("vj_npc_ikchains", 1, defFlags, "Can NPCs have IK chains?")
+CreateConVar("vj_npc_forcelowlod", 0, defFlags, "Should NPCs be forced to use the lowest LOD?")
+CreateConVar("vj_npc_reduce_vfx", 0, defFlags, "Reduces VFX, especially non-essential ones | EX: Eye glow, idle particles")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC Sound Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-cvarList["vj_npc_snd"] = 1 -- Can NPCs play a sound?
-cvarList["vj_npc_snd_track"] = 1 -- Sound track
-cvarList["vj_npc_snd_idle"] = 1 -- Idle sounds
-cvarList["vj_npc_snd_breath"] = 1 -- Breathing sounds
-cvarList["vj_npc_snd_alert"] = 1 -- Alert Sounds
-cvarList["vj_npc_snd_pain"] = 1 -- Hurt Sounds
-cvarList["vj_npc_snd_death"] = 1 -- Death Sounds
-cvarList["vj_npc_snd_footstep"] = 1 -- Footstep sounds
-cvarList["vj_npc_snd_melee"] = 1 -- Melee attack sounds
-cvarList["vj_npc_snd_gib"] = 1 -- Gibbing sounds
-cvarList["vj_npc_snd_plyfollow"] = 1 -- NPC follows/unfollows a player
-cvarList["vj_npc_snd_plybetrayal"] = 1 -- When a friendly NPC become enemy to the player
-cvarList["vj_npc_snd_plysight"] = 1 -- Sw player Sounds
-cvarList["vj_npc_snd_plydamage"] = 1 -- Damage by player Sounds
-cvarList["vj_npc_snd_medic"] = 1 -- Medic sounds
-cvarList["vj_npc_snd_callhelp"] = 1 -- Call for help sounds
-cvarList["vj_npc_snd_receiveorder"] = 1 -- On receive order sounds (Ex: When called to come help an ally)
-	-- ====== Creature Sound Settings ====== --
-cvarList["vj_npc_snd_range"] = 1 -- Range Attack Sounds
-cvarList["vj_npc_snd_leap"] = 1 -- Leap Attack Sounds
-cvarList["vj_npc_snd_plyslow"] = 1 -- Slow Player Melee sounds
-	-- ====== Human Sound Settings ====== --
-cvarList["vj_npc_snd_danger"] = 1 -- Grenade / danger sight Sounds
-cvarList["vj_npc_snd_grenade"] = 1 -- Grenade attack sounds
-cvarList["vj_npc_snd_wep_reload"] = 1 -- Weapon reload call out sounds
-cvarList["vj_npc_snd_wep_suppressing"] = 1 -- Suppressing callout sounds
+CreateConVar("vj_npc_snd", 1, defFlags, "Can NPCs play sounds?")
+CreateConVar("vj_npc_snd_track", 1, defFlags, "Can NPCs play sound tracks?")
+CreateConVar("vj_npc_snd_idle", 1, defFlags, "Can NPCs play idle sounds?")
+CreateConVar("vj_npc_snd_breath", 1, defFlags, "Can NPCs play breathing sounds?")
+CreateConVar("vj_npc_snd_alert", 1, defFlags, "Can NPCs play alert sounds?")
+CreateConVar("vj_npc_snd_pain", 1, defFlags, "Can NPCs play hurt sounds?")
+CreateConVar("vj_npc_snd_death", 1, defFlags, "Can NPCs play death sounds?")
+CreateConVar("vj_npc_snd_footstep", 1, defFlags, "Can NPCs play footstep sounds?")
+CreateConVar("vj_npc_snd_melee", 1, defFlags, "Can NPCs play melee attack sounds?")
+CreateConVar("vj_npc_snd_plyspeed", 1, defFlags, "Can NPCs play melee attack player speed modifier sounds?")
+CreateConVar("vj_npc_snd_range", 1, defFlags, "Can NPCs play range Attack sounds?")
+CreateConVar("vj_npc_snd_leap", 1, defFlags, "Can NPCs play leap Attack sounds?")
+CreateConVar("vj_npc_snd_grenade", 1, defFlags, "Can NPCs play grenade attack sounds?")
+CreateConVar("vj_npc_snd_gib", 1, defFlags, "Can NPCs play gib / dismemberment sounds?")
+CreateConVar("vj_npc_snd_plyfollow", 1, defFlags, "Can NPCs play player follow and unfollow sounds?")
+CreateConVar("vj_npc_snd_plybetrayal", 1, defFlags, "Can NPCs play player betrayal sounds?")
+CreateConVar("vj_npc_snd_plysight", 1, defFlags, "Can NPCs play player sight sounds?")
+CreateConVar("vj_npc_snd_plydamage", 1, defFlags, "Can NPCs play damage by player sounds?")
+CreateConVar("vj_npc_snd_medic", 1, defFlags, "Can NPCs play medic sounds?")
+CreateConVar("vj_npc_snd_callhelp", 1, defFlags, "Can NPCs play call for help sounds?")
+CreateConVar("vj_npc_snd_receiveorder", 1, defFlags, "Can NPCs play on receive order sounds? | EX: When called to come help an ally")
+CreateConVar("vj_npc_snd_danger", 1, defFlags, "Can NPCs play grenade and danger sight sounds?")
+CreateConVar("vj_npc_snd_wep_reload", 1, defFlags, "Can NPCs play weapon reload call out sounds?")
+CreateConVar("vj_npc_snd_wep_suppressing", 1, defFlags, "Can NPCs play suppressing callout sounds?")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC Developer Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-CreateConVar("vj_npc_debug", 0) -- Should NPC debugging be active? | Required to make the dev option below work!
-cvarList["vj_npc_debug_engine"] = 0 -- Enables engine debugging
-cvarList["vj_npc_debug_attack"] = 0 -- Enables attack debugging
-cvarList["vj_npc_debug_damage"] = 0 -- Enables damage debugging
-cvarList["vj_npc_debug_touch"] = 0 -- Prints when something touches the NPC
-cvarList["vj_npc_debug_enemy"] = 0 -- Prints the current enemy
-cvarList["vj_npc_debug_resetenemy"] = 0 -- Prints something when the NPC has rested its enemy
-cvarList["vj_npc_debug_lastseenenemytime"] = 0 -- Prints the 'LastSeenEnemy' time
-cvarList["vj_npc_debug_takingcover"] = 0 -- Prints whether the NPC is taking cover or not
-	-- ====== Human Options ====== --
-cvarList["vj_npc_debug_weapon"] = 0 -- Prints weapon-related information
+CreateConVar("vj_npc_debug", 0, FCVAR_NONE, "Enables NPC debugging mode | Required for other debug convars to work!")
+CreateConVar("vj_npc_debug_engine", 0, defFlags, "Enables engine debugging")
+CreateConVar("vj_npc_debug_attack", 0, defFlags, "Enables attack debugging")
+CreateConVar("vj_npc_debug_damage", 0, defFlags, "Enables damage & death debugging")
+CreateConVar("vj_npc_debug_touch", 0, defFlags, "Prints when something collides with an NPC")
+CreateConVar("vj_npc_debug_enemy", 0, defFlags, "Enables enemy debugging")
+CreateConVar("vj_npc_debug_resetenemy", 0, defFlags, "Prints whenever an NPC has rest its enemy")
+CreateConVar("vj_npc_debug_lastseenenemytime", 0, defFlags, "Prints the value of \"LastSeenEnemy\"")
+CreateConVar("vj_npc_debug_takingcover", 0, defFlags, "Prints whether an NPC is taking cover or not")
+CreateConVar("vj_npc_debug_weapon", 0, defFlags, "Enables weapon debugging")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC Controller Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 VJ.AddClientConVar("vj_npc_cont_hud", 1, "Display HUD when controlling NPCs")
-VJ.AddClientConVar("vj_npc_cont_zoomdist", 5, "Distance that the zoom moves between each interval")
-VJ.AddClientConVar("vj_npc_cont_cam_zoomspeed", 10, "How fast the camera zooms in & out")
+VJ.AddClientConVar("vj_npc_cont_cam_zoom_dist", 5, "Distance that the zoom moves between each interval")
+VJ.AddClientConVar("vj_npc_cont_cam_zoom_speed", 10, "How fast the camera zooms in & out")
 VJ.AddClientConVar("vj_npc_cont_cam_speed", 6, "How fast the camera moves (lerping)")
 VJ.AddClientConVar("vj_npc_cont_debug", 0, "Display developer entities")
 VJ.AddClientConVar("vj_npc_cont_diewithnpc", 0, "Player should die with the NPC (Requires respawn!)")
@@ -140,10 +137,6 @@ VJ.AddClientConVar("vj_npc_spawn_guard", 0, "Spawn all VJ NPCs with guarding ena
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Weapon Client Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-VJ.AddClientConVar("vj_wep_nomuszzleflash", 0, "Should weapons make a muzzle flash?")
-VJ.AddClientConVar("vj_wep_nomuszzleflash_dynamiclight", 0, "Should weapons make a dynamic light when being fired?")
-VJ.AddClientConVar("vj_wep_nobulletshells", 0, "Should weapons drop bullet shells?")
----------------------------------------------------------------------------------------------------------------------------
-for k, v in pairs(cvarList) do
-	CreateConVar(k, v, FCVAR_ARCHIVE)
-end
+VJ.AddClientConVar("vj_wep_muzzleflash", 1, "Should weapons make a muzzle flash?")
+VJ.AddClientConVar("vj_wep_muzzleflash_light", 1, "Should weapons make a dynamic light when being fired?")
+VJ.AddClientConVar("vj_wep_shells", 1, "Should weapons drop bullet shells?")

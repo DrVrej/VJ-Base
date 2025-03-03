@@ -49,14 +49,14 @@ local entInfos = {
 	npc_stalker = {classNPC = "CLASS_COMBINE"},
 	npc_strider = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Boss = true end},
 	npc_hunter = {classNPC = "CLASS_COMBINE"},
-	npc_cscanner = {classNPC = "CLASS_COMBINE"},
-	npc_clawscanner = {classNPC = "CLASS_COMBINE"},
-	npc_manhack = {classNPC = "CLASS_COMBINE"},
+	npc_cscanner = {classNPC = "CLASS_COMBINE", func = function(ent) ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	npc_clawscanner = {classNPC = "CLASS_COMBINE", func = function(ent) ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	npc_manhack = {classNPC = "CLASS_COMBINE", func = function(ent) ent.MovementType = VJ_MOVETYPE_AERIAL end},
 	npc_apcdriver = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Boss = true end},
-	npc_combinedropship = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true end},
-	npc_combinegunship = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true end},
-	npc_helicopter = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true end},
-	npc_advisor = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Boss = true end},
+	npc_combinedropship = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	npc_combinegunship = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	npc_helicopter = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	npc_advisor = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
 	npc_rollermine = {classNPC = "CLASS_COMBINE", func = function(ent)
 		ent.CanBeEngaged = function(_, otherEnt, distance)
 			return distance <= 256
@@ -105,13 +105,30 @@ local entInfos = {
 	monster_bullchicken = {classNPC = "CLASS_XEN"},
 	monster_alien_grunt = {classNPC = "CLASS_XEN"},
 	monster_alien_slave = {classNPC = "CLASS_XEN"},
-	monster_alien_controller = {classNPC = "CLASS_XEN"},
+	monster_alien_controller = {classNPC = "CLASS_XEN", func = function(ent) ent.MovementType = VJ_MOVETYPE_AERIAL end},
 	monster_houndeye = {classNPC = "CLASS_XEN"},
 	monster_gargantua = {classNPC = "CLASS_XEN", func = function(ent) ent.VJ_ID_Boss = true end},
-	monster_nihilanth = {classNPC = "CLASS_XEN", func = function(ent) ent.VJ_ID_Boss = true end},
-	monster_ichthyosaur = {classNPC = "CLASS_XEN"},
+	monster_nihilanth = {classNPC = "CLASS_XEN", func = function(ent) ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
 	monster_tentacle = {classNPC = "CLASS_XEN"},
-	monster_leech = {classNPC = "CLASS_XEN"},
+	monster_ichthyosaur = {classNPC = "CLASS_XEN", func = function(ent) ent.MovementType = VJ_MOVETYPE_AQUATIC end},
+	monster_leech = {classNPC = "CLASS_XEN", func = function(ent) ent.MovementType = VJ_MOVETYPE_AQUATIC end},
+	
+	-- HECU NPCs
+	monster_human_grunt = {classNPC = "CLASS_UNITED_STATES"},
+	monster_sentry = {classNPC = "CLASS_UNITED_STATES", func = function(ent) ent.VJ_ID_Turret = true end},
+	monster_apache = {classNPC = "CLASS_UNITED_STATES", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	monster_osprey = {classNPC = "CLASS_UNITED_STATES", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	
+	-- Black Ops NPCs
+	monster_human_assassin = {classNPC = "CLASS_BLACKOPS"},
+	
+	-- Portal NPCs
+	npc_portal_turret_floor = {classNPC = "CLASS_APERTURE", func = function(ent) ent.VJ_ID_Turret = true end},
+	npc_rocket_turret = {classNPC = "CLASS_APERTURE"},
+	npc_security_camera = {classNPC = "CLASS_APERTURE"},
+	npc_wheatley_boss = {classNPC = "CLASS_APERTURE", func = function(ent) ent.VJ_ID_Boss = true end},
+	
+	-- Hostile to all NPCs
 	npc_barnacle = {func = function(ent)
 		ent.CanBeEngaged = function(_, otherEnt, distance)
 			if otherEnt.IsVJBaseSNPC_Human then
@@ -131,30 +148,15 @@ local entInfos = {
 		end
 	end},
 	
-	-- HECU NPCs
-	monster_human_grunt = {classNPC = "CLASS_UNITED_STATES"},
-	monster_sentry = {classNPC = "CLASS_UNITED_STATES", func = function(ent) ent.VJ_ID_Turret = true end},
-	monster_apache = {classNPC = "CLASS_UNITED_STATES", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true end},
-	monster_osprey = {classNPC = "CLASS_UNITED_STATES", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true end},
-	
-	-- Black Ops NPCs
-	monster_human_assassin = {classNPC = "CLASS_BLACKOPS"},
-	
-	-- Portal NPCs
-	npc_portal_turret_floor = {classNPC = "CLASS_APERTURE", func = function(ent) ent.VJ_ID_Turret = true end},
-	npc_rocket_turret = {classNPC = "CLASS_APERTURE"},
-	npc_security_camera = {classNPC = "CLASS_APERTURE"},
-	npc_wheatley_boss = {classNPC = "CLASS_APERTURE", func = function(ent) ent.VJ_ID_Boss = true end},
-	
 	-- Nature NPCs (Passive animals)
-	npc_crow = {func = function(ent) ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE end},
-	npc_pigeon = {func = function(ent) ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE end},
-	npc_seagull = {func = function(ent) ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE end},
+	npc_crow = {func = function(ent) ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	npc_pigeon = {func = function(ent) ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	npc_seagull = {func = function(ent) ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE ent.MovementType = VJ_MOVETYPE_AERIAL end},
 	monster_cockroach = {func = function(ent) ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE end},
-	monster_flyer = {func = function(ent) ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE end},
+	monster_flyer = {func = function(ent) ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE ent.MovementType = VJ_MOVETYPE_AERIAL end},
 }
 
-local ignoredNPCs = {npc_cranedriver = true, npc_missiledefense = true, monster_generic = true,  monster_furniture = true,  npc_furniture = true,  npc_helicoptersensor = true, monster_gman = true,  npc_grenade_frag = true,  bullseye_strider_focus = true,  npc_bullseye = true,  npc_enemyfinder = true,  hornet = true}
+local ignoredNPCs = {npc_cranedriver = true, npc_missiledefense = true, monster_generic = true, monster_furniture = true, npc_furniture = true, npc_helicoptersensor = true, monster_gman = true, npc_grenade_frag = true, bullseye_strider_focus = true, npc_bullseye = true, npc_enemyfinder = true, hornet = true}
 local grenadeEnts = {npc_grenade_frag = true, grenade_hand = true, obj_spore = true, obj_grenade = true, obj_handgrenade = true, doom3_grenade = true, fas2_thrown_m67 = true, cw_grenade_thrown = true, obj_cpt_grenade = true, cw_flash_thrown = true, ent_hl1_grenade = true, rtbr_grenade_frag = true}
 local grenadeGrabbableEnts = {npc_grenade_frag = true, obj_spore = true, obj_handgrenade = true, obj_cpt_grenade = true, cw_grenade_thrown = true, cw_flash_thrown = true, cw_smoke_thrown = true, ent_hl1_grenade = true, rtbr_grenade_frag = true}
 local attackableEnts = {prop_physics = true, prop_physics_multiplayer = true, prop_physics_respawnable = true, func_breakable = true, func_physbox = true, prop_door_rotating = true, item_item_crate = true, prop_glados_core = true, weapon_striderbuster = true}
@@ -253,7 +255,7 @@ hook.Add("PlayerSelectSpawn", "VJ_PlayerSelectSpawn", function(ply)
 		end
 	end
 	local result = VJ.PICK(points)
-	if result != false then
+	if result then
 		return result
 	end
 end)

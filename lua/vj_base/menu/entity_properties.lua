@@ -4,8 +4,10 @@
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+local vj_npc_admin_properties = GetConVar("vj_npc_admin_properties")
+--
 hook.Add("CanProperty", "VJ_PLY_CAN_PROPERTY", function(ply, property, ent)
-	if GetConVar("vj_npc_admin_properties"):GetInt() == 1 && !ply:IsAdmin() && property == "vj_npc_properties" then ply:ChatPrint("#vjbase.menu.context.print.adminonly") return false end
+	if vj_npc_admin_properties:GetInt() == 1 && !ply:IsAdmin() && property == "vj_npc_properties" then ply:ChatPrint("#vjbase.menu.context.print.adminonly") return false end
 end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC Controlling ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -35,17 +37,17 @@ properties.Add("vj_pr_npc_control",{
 		if !ply:Alive() then return end -- Keep the player from becoming a zombie =)
 		if ply.VJ_IsControllingNPC then ply:ChatPrint("Can't control " .. ent:GetName() .. " because you are already controlling another NPC!") return end
 		if !ent.VJ_IsBeingControlled then
-			if ent:Health() > 0 then
+			if ent:Alive() then
 				local obj = ents.Create("obj_vj_controller")
 				obj.VJCE_Player = ply
 				obj:SetControlledNPC(ent)
 				obj:Spawn()
 				obj:StartControlling()
 			else
-				ply:ChatPrint("Can't control " .. ent:GetName() .. " its health is 0 or below.")
+				ply:ChatPrint("Can't control " .. ent:GetName() .. ", it's currently dead.")
 			end
 		else
-			ply:ChatPrint("Can't control " .. ent:GetName() .. " it's already being controlled.")
+			ply:ChatPrint("Can't control " .. ent:GetName() .. ", it's already being controlled.")
 		end
 	end
 })

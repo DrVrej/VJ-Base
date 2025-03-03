@@ -141,7 +141,7 @@ function ENT:StartControlling()
 			end
 			
 			-- Zoom
-			local zoom = ply2:GetInfoNum("vj_npc_cont_zoomdist", 5)
+			local zoom = ply2:GetInfoNum("vj_npc_cont_cam_zoom_dist", 5)
 			if button == KEY_LEFT then
 				ent.VJC_Camera_CurZoom = ent.VJC_Camera_CurZoom - Vector(0, zoom, 0)
 			elseif button == KEY_RIGHT then

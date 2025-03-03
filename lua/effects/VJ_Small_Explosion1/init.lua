@@ -20,7 +20,7 @@ function EFFECT:Init(data)
 			smoke:SetRoll(math.Rand(480, 540))
 			smoke:SetRollDelta(math.Rand(-0.2, 0.2))
 			smoke:SetColor(50, 50, 50)
-			smoke:SetGravity(Vector(0,  0,  0))
+			smoke:SetGravity(Vector(0, 0, 0))
 			smoke:SetAirResistance(15)
 			smoke:SetCollide(true)
 		end

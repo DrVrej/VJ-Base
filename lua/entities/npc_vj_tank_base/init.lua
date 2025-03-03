@@ -147,7 +147,7 @@ ENT.Tank_Status = 1
 ENT.Tank_NextLowHealthSparkT = 0
 ENT.Tank_NextRunOverSoundT = 0
 ENT.Tank_NextIdleParticles = 0
-local runoverException = {npc_antlionguard=true,npc_turret_ceiling=true,monster_gargantua=true,monster_bigmomma=true,monster_nihilanth=true,npc_strider=true,npc_combine_camera=true,npc_helicopter=true,npc_combinegunship=true,npc_combinedropship=true,npc_rollermine=true}
+local runoverException = {npc_antlionguard = true, npc_turret_ceiling = true, npc_combine_camera = true, npc_rollermine = true}
 local defAng = Angle(0, 0, 0)
 
 local vj_npc_melee = GetConVar("vj_npc_melee")

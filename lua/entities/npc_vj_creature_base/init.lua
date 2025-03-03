@@ -956,7 +956,7 @@ local vj_npc_snd_idle = GetConVar("vj_npc_snd_idle")
 local vj_npc_snd_breath = GetConVar("vj_npc_snd_breath")
 local vj_npc_snd_alert = GetConVar("vj_npc_snd_alert")
 local vj_npc_snd_melee = GetConVar("vj_npc_snd_melee")
-local vj_npc_snd_plyslow = GetConVar("vj_npc_snd_plyslow")
+local vj_npc_snd_plyspeed = GetConVar("vj_npc_snd_plyspeed")
 local vj_npc_snd_range = GetConVar("vj_npc_snd_range")
 local vj_npc_snd_leap = GetConVar("vj_npc_snd_leap")
 local vj_npc_snd_pain = GetConVar("vj_npc_snd_pain")
@@ -1027,7 +1027,7 @@ local function InitConvars(self)
 	if vj_npc_snd_breath:GetInt() == 0 then self.HasBreathSound = false end
 	if vj_npc_snd_alert:GetInt() == 0 then self.HasAlertSounds = false end
 	if vj_npc_snd_melee:GetInt() == 0 then self.HasMeleeAttackSounds = false self.HasExtraMeleeAttackSounds = false self.HasMeleeAttackMissSounds = false end
-	if vj_npc_snd_plyslow:GetInt() == 0 then self.HasMeleeAttackPlayerSpeedSounds = false end
+	if vj_npc_snd_plyspeed:GetInt() == 0 then self.HasMeleeAttackPlayerSpeedSounds = false end
 	if vj_npc_snd_range:GetInt() == 0 then self.HasRangeAttackSounds = false end
 	if vj_npc_snd_leap:GetInt() == 0 then self.HasBeforeLeapAttackSounds = false self.HasLeapAttackJumpSounds = false self.HasLeapAttackDamageSounds = false self.HasLeapAttackDamageMissSounds = false end
 	if vj_npc_snd_pain:GetInt() == 0 then self.HasPainSounds = false end

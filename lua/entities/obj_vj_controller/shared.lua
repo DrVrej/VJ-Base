@@ -93,9 +93,9 @@ if CLIENT then
 		if (bind == "invprev" or bind == "invnext") && ply.VJ_IsControllingNPC && IsValid(ply.VJCE_Camera) && ply.VJC_Camera_Mode != 2 then
 			ply.VJCE_Camera.Zoom = ply.VJCE_Camera.Zoom or 100
 			if bind == "invprev" then
-				ply.VJCE_Camera.Zoom = math.Clamp(ply.VJCE_Camera.Zoom - ply:GetInfoNum("vj_npc_cont_cam_zoomspeed", 10), 0, 500)
+				ply.VJCE_Camera.Zoom = math.Clamp(ply.VJCE_Camera.Zoom - ply:GetInfoNum("vj_npc_cont_cam_zoom_speed", 10), 0, 500)
 			else
-				ply.VJCE_Camera.Zoom = math.Clamp(ply.VJCE_Camera.Zoom + ply:GetInfoNum("vj_npc_cont_cam_zoomspeed", 10), 0, 500)
+				ply.VJCE_Camera.Zoom = math.Clamp(ply.VJCE_Camera.Zoom + ply:GetInfoNum("vj_npc_cont_cam_zoom_speed", 10), 0, 500)
 			end
 		end
 	end)

@@ -351,8 +351,8 @@ else
 		//pluginList:Center() -- No need since Size does it already
 		pluginList:SetSize(100, 300) -- Size
 		pluginList:SetMultiSelect(false)
-		pluginList:AddColumn("#vjbase.menu.plugins.header1") -- Add column
-		pluginList:AddColumn("#vjbase.menu.plugins.header2"):SetFixedWidth(50) -- Add column
+		pluginList:AddColumn("#vjbase.menu.plugins.header1")
+		pluginList:AddColumn("#vjbase.menu.plugins.header2"):SetFixedWidth(50)
 		//Panel:SetName("Test") -- Renames the blue label
 		if VJ.Plugins != nil then
 			for _,v in SortedPairsByMemberValue(VJ.Plugins, "Name") do

@@ -13,7 +13,7 @@ function ENT:MatFootStepQCEvent(data)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	net.Receive("vj_testentity_onmenuopen", function()
+	net.Receive("vj_npc_testint_menu", function()
 		local welMsgs = {
 			"Welcome to my shop, how can I help you?",
 			"Hi!",
@@ -88,7 +88,7 @@ if CLIENT then
 			button_vj:SetPos(10, 170)
 			button_vj:SetSize(50, 30)
 			button_vj.DoClick = function()
-				net.Start("vj_testentity_runtextsd")
+				net.Start("vj_npc_testint_textsd")
 				net.WriteBool(false)
 				net.SendToServer()
 			end
@@ -98,7 +98,7 @@ if CLIENT then
 			button_sd:SetPos(120, 170 )
 			button_sd:SetSize(50, 30)
 			button_sd.DoClick = function()
-				net.Start("vj_testentity_runtextsd")
+				net.Start("vj_npc_testint_textsd")
 				net.WriteBool(true)
 				net.SendToServer()
 			end
