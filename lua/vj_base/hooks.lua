@@ -317,7 +317,7 @@ hook.Add("EntityFireBullets", "VJ_EntityFireBullets", function(ent, data)
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_NPCPLY_DEATH(ent, attacker, inflictor)
-	if IsValid(attacker) && attacker.IsVJBaseSNPC then
+	if ent != attacker && IsValid(attacker) && attacker.IsVJBaseSNPC then
 		local wasLast = (!IsValid(attacker:GetEnemy()) or (attacker.EnemyData.VisibleCount <= 1))
 		attacker:OnKilledEnemy(ent, inflictor, wasLast)
 		-- If its the last enemy then --> (If there no valid enemy) OR (The number of enemies is 1 or less)
