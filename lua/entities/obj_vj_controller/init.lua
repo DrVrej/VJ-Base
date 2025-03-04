@@ -516,7 +516,6 @@ end
 function ENT:StopControlling(keyPressed)
 	//if !IsValid(self.VJCE_Player) then return self:Remove() end
 	keyPressed = keyPressed or false
-	self:OnStopControlling(keyPressed)
 
 	local npc = self.VJCE_NPC
 	local ply = self.VJCE_Player
@@ -589,6 +588,7 @@ function ENT:StopControlling(keyPressed)
 			npc.EnemyDetection = npcData[22]
 		end
 	end
+	self:OnStopControlling(keyPressed)
 	//self.VJCE_Camera:Remove()
 	self.VJC_Removed = true
 	self:Remove()

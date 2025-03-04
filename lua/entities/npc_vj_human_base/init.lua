@@ -539,10 +539,10 @@ ENT.DeathSoundPitch = false
 function ENT:PreInit() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
-	-- Collision bounds of the NPC | NOTE: All 4 Xs and Ys should be the same! | To view: "cl_ent_bbox"
+	-- Collision bounds of the NPC | NOTE: Both Xs and Ys should be the same! | To view: "cl_ent_bbox"
 	-- self:SetCollisionBounds(Vector(50, 50, 100), Vector(-50, -50, 0))
 	
-	-- Damage bounds of the NPC | NOTE: All 4 Xs and Ys should be the same! | To view: "cl_ent_absbox"
+	-- Damage bounds of the NPC | NOTE: Both Xs and Ys should be the same! | To view: "cl_ent_absbox"
 	-- self:SetSurroundingBounds(Vector(150, 150, 200), Vector(-150, -150, 0))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2808,7 +2808,7 @@ function ENT:Think()
 							if anim != ACT_INVALID then
 								selfData.AttackAnim = anim
 								selfData.AttackAnimDuration = animDur - (selfData.MeleeAttackAnimationDecreaseLengthAmount / selfData.AnimPlaybackRate)
-								if animType != ANIM_TYPE_GESTURE then -- Useful for gesture-based attacks, it allows things like chasing to continue running
+								if animType != ANIM_TYPE_GESTURE then -- Allow things like chasing to continue for gestures
 									selfData.AttackAnimTime = curTime + selfData.AttackAnimDuration
 								end
 							end

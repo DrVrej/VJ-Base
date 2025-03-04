@@ -292,13 +292,11 @@ ENT.MeleeAttackDSPLimit = 60 -- Should it only apply if the damage surpasses the
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasRangeAttack = false -- Can it range attack?
 ENT.RangeAttackProjectiles = "obj_vj_rocket" -- Entities that it can spawn when range attacking | table = Picks randomly
-ENT.DisableDefaultRangeAttackCode = false -- When true, it won't spawn the range attack entity, allowing you to make your own
 	-- ====== Animation ====== --
 ENT.AnimTbl_RangeAttack = ACT_RANGE_ATTACK1 -- Animations to play when it range attacks | false = Don't play an animation
 ENT.RangeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.RangeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the range attack animation?
 ENT.RangeAttackAnimationDecreaseLengthAmount = 0 -- Decreases animation time | Use it to fix animations that have extra frames at the end
-ENT.RangeAttackAnimationStopMovement = true -- Should it stop moving when performing a range attack?
 	-- ====== Distance ====== --
 ENT.RangeAttackMinDistance = 800 -- Min range attack distance
 ENT.RangeAttackMaxDistance = 2000 -- Max range attack distance
@@ -557,10 +555,10 @@ ENT.DeathSoundPitch = false
 function ENT:PreInit() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
-	-- Collision bounds of the NPC | NOTE: All 4 Xs and Ys should be the same! | To view: "cl_ent_bbox"
+	-- Collision bounds of the NPC | NOTE: Both Xs and Ys should be the same! | To view: "cl_ent_bbox"
 	-- self:SetCollisionBounds(Vector(50, 50, 100), Vector(-50, -50, 0))
 	
-	-- Damage bounds of the NPC | NOTE: All 4 Xs and Ys should be the same! | To view: "cl_ent_absbox"
+	-- Damage bounds of the NPC | NOTE: Both Xs and Ys should be the same! | To view: "cl_ent_absbox"
 	-- self:SetSurroundingBounds(Vector(150, 150, 200), Vector(-150, -150, 0))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -712,15 +710,49 @@ function ENT:CustomOnMeleeAttack_Miss() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomAttackCheck_RangeAttack() return true end -- Not returning true will not let the range attack code run!
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnRangeAttack_BeforeStartTimer(seed) end
+--[[
+Called when range attack is triggered
+
+=-=-=| PARAMETERS |=-=-=
+	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "Init" : When the attack initially starts | Before sound, timers, and animations are set!
+			RETURNS
+				-> [nil]
+		-> "PostInit" : After the sound, timers, and animations are set!
+			RETURNS
+				-> [nil]
+	2. enemy [entity] : Enemy that caused the attack to trigger
+
+=-=-=| RETURNS |=-=-=
+	-> [nil]
+--]]
+function ENT:OnRangeAttack(status, enemy) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnRangeAttack_AfterStartTimer(seed) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomRangeAttackCode() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomRangeAttackCode_BeforeProjectileSpawn(projectile) end -- Called before Spawn()
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomRangeAttackCode_AfterProjectileSpawn(projectile) end -- Called after Spawn()
+--[[
+Called when range attack is executed
+
+=-=-=| PARAMETERS |=-=-=
+	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "Init" : When the attack initially executed | Before entities are checked and damaged
+			RETURNS
+				-> [nil | boolean] : Return true to skip spawning the projectile
+		-> "PreProjSpawn" : Right before "Spawn()" is called on the projectile
+			PARAMETERS
+				3. projectile [entity] : The projectile entity that is about to spawn
+			RETURNS
+				-> [nil]
+		-> "PostProjSpawn" : After "Spawn()" is called and velocity is set on the projectile
+			PARAMETERS
+				3. projectile [entity] : The projectile entity that just spawned
+			RETURNS
+				-> [nil]
+	2. enemy [entity] : Enemy that it's about to fire at
+	3. projectile [nil | entity] : Depends on `status` value, refer to it for more details
+
+=-=-=| RETURNS |=-=-=
+	-> [nil | boolean] : Depends on `status` value, refer to it for more details
+--]]
+function ENT:OnRangeAttackExecute(status, enemy, projectile) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttackProjPos(projectile)
 	// return self:GetAttachment(self:LookupAttachment("muzzle")).Pos -- Attachment example
@@ -769,7 +801,7 @@ Called when leap attack is executed
 				-> [nil]
 		-> "PreDamage" : Right before the damage is applied to an entity
 			PARAMETERS
-				2. statusData [entity] : The entity that is about to be damaged
+				2. ent [entity] : The entity that is about to be damaged
 			RETURNS
 				-> [nil | boolean] : Return true to skip hitting this entity
 		-> "Miss" : When the attack misses and doesn't hit anything
@@ -1390,6 +1422,31 @@ local function ApplyBackwardsCompatibility(self)
 			if self.MultipleMeleeAttacks then self:MultipleMeleeAttacks() end
 			if self.MultipleRangeAttacks then self:MultipleRangeAttacks() end
 			if self.MultipleLeapAttacks then self:MultipleLeapAttacks() end
+		end
+	end
+	if self.CustomOnRangeAttack_BeforeStartTimer or self.CustomOnRangeAttack_AfterStartTimer then
+		self.OnRangeAttack = function(_, status, enemy)
+			if status == "Init" && self.CustomOnRangeAttack_BeforeStartTimer then
+				self:CustomOnRangeAttack_BeforeStartTimer(self.AttackSeed)
+			elseif status == "PostInit" && self.CustomOnRangeAttack_AfterStartTimer then
+				self:CustomOnRangeAttack_AfterStartTimer(self.AttackSeed)
+			end
+		end
+	end
+	if self.DisableDefaultRangeAttackCode or self.CustomRangeAttackCode or self.CustomRangeAttackCode_BeforeProjectileSpawn or self.CustomRangeAttackCode_AfterProjectileSpawn then
+		self.OnRangeAttackExecute = function(_, status, enemy, projectile)
+			if status == "Init" && (self.CustomRangeAttackCode or self.DisableDefaultRangeAttackCode) then
+				if self.CustomRangeAttackCode then
+					self:CustomRangeAttackCode()
+				end
+				if self.DisableDefaultRangeAttackCode then
+					return true
+				end
+			elseif status == "PreProjSpawn" && self.CustomRangeAttackCode_BeforeProjectileSpawn then
+				self:CustomRangeAttackCode_BeforeProjectileSpawn(projectile)
+			elseif status == "PostProjSpawn" && self.CustomRangeAttackCode_AfterProjectileSpawn then
+				self:CustomRangeAttackCode_AfterProjectileSpawn(projectile)
+			end
 		end
 	end
 	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -2149,7 +2206,7 @@ function ENT:Think()
 								if anim != ACT_INVALID then
 									selfData.AttackAnim = anim
 									selfData.AttackAnimDuration = animDur - (selfData.MeleeAttackAnimationDecreaseLengthAmount / selfData.AnimPlaybackRate)
-									if animType != ANIM_TYPE_GESTURE then -- Useful for gesture-based attacks, it allows things like chasing to continue running
+									if animType != ANIM_TYPE_GESTURE then -- Allow things like chasing to continue for gestures
 										selfData.AttackAnimTime = curTime + selfData.AttackAnimDuration
 									end
 								end
@@ -2177,15 +2234,16 @@ function ENT:Think()
 						selfData.AttackAnim = ACT_INVALID
 						selfData.AttackAnimDuration = 0
 						selfData.AttackAnimTime = 0
-						if selfData.RangeAttackAnimationStopMovement then self:StopMoving() end
-						self:CustomOnRangeAttack_BeforeStartTimer(seed)
+						self:OnRangeAttack("Init", ene)
 						self:PlaySoundSystem("BeforeRangeAttack")
 						if selfData.AnimTbl_RangeAttack then
-							local anim, animDur = self:PlayAnim(selfData.AnimTbl_RangeAttack, false, 0, false, selfData.RangeAttackAnimationDelay)
+							local anim, animDur, animType = self:PlayAnim(selfData.AnimTbl_RangeAttack, false, 0, false, selfData.RangeAttackAnimationDelay)
 							if anim != ACT_INVALID then
 								selfData.AttackAnim = anim
 								selfData.AttackAnimDuration = animDur - (selfData.RangeAttackAnimationDecreaseLengthAmount / selfData.AnimPlaybackRate)
-								selfData.AttackAnimTime = curTime + selfData.AttackAnimDuration
+								if animType != ANIM_TYPE_GESTURE then -- Allow things like chasing to continue for gestures
+									selfData.AttackAnimTime = curTime + selfData.AttackAnimDuration
+								end
 							end
 						end
 						if !selfData.TimeUntilRangeAttackProjectileRelease then
@@ -2198,7 +2256,7 @@ function ENT:Think()
 								end
 							end
 						end
-						self:CustomOnRangeAttack_AfterStartTimer(seed)
+						self:OnRangeAttack("PostInit", ene)
 					end
 					
 					-- Leap Attack
@@ -2215,11 +2273,13 @@ function ENT:Think()
 						self:PlaySoundSystem("BeforeLeapAttack")
 						timer.Create("attack_leap_jump" .. self:EntIndex(), selfData.TimeUntilLeapAttackVelocity / selfData.AnimPlaybackRate, 1, function() self:LeapAttackJump() end)
 						if selfData.AnimTbl_LeapAttack then
-							local anim, animDur = self:PlayAnim(selfData.AnimTbl_LeapAttack, false, 0, false)
+							local anim, animDur, animType = self:PlayAnim(selfData.AnimTbl_LeapAttack, false, 0, false)
 							if anim != ACT_INVALID then
 								selfData.AttackAnim = anim
 								selfData.AttackAnimDuration = animDur - (selfData.LeapAttackAnimationDecreaseLengthAmount / selfData.AnimPlaybackRate)
-								selfData.AttackAnimTime = curTime + selfData.AttackAnimDuration
+								if animType != ANIM_TYPE_GESTURE then -- Allow things like chasing to continue for gestures
+									selfData.AttackAnimTime = curTime + selfData.AttackAnimDuration
+								end
 							end
 						end
 						if !selfData.TimeUntilLeapAttackDamage then
@@ -2519,20 +2579,20 @@ function ENT:ExecuteRangeAttack()
 	local selfData = self:GetTable()
 	if selfData.Dead or selfData.PauseAttacks or selfData.Flinching or selfData.AttackType == VJ.ATTACK_TYPE_MELEE then return end
 	local ene = self:GetEnemy()
-	if IsValid(ene) then
+	local eneValid = IsValid(ene)
+	if eneValid then
 		selfData.AttackType = VJ.ATTACK_TYPE_RANGE
 		//self:PointAtEntity(ene)
-		if selfData.RangeAttackAnimationStopMovement then self:StopMoving() end
-		self:CustomRangeAttackCode()
-		self:PlaySoundSystem("RangeAttack")
-		-- Default projectile code
-		if !selfData.DisableDefaultRangeAttackCode then
+		local skipProj = self:OnRangeAttackExecute("Init", ene)
+		-- Create projectile
+		if !skipProj then
 			local projectileClass = PICK(selfData.RangeAttackProjectiles) or PICK(selfData.RangeAttackEntityToSpawn)
 			if projectileClass then
 				local projectile = ents.Create(projectileClass)
-				projectile:SetPos(self:RangeAttackProjPos(projectile))
-				projectile:SetAngles((ene:GetPos() - projectile:GetPos()):Angle())
-				self:CustomRangeAttackCode_BeforeProjectileSpawn(projectile)
+				local spawnPos = self:RangeAttackProjPos(projectile)
+				projectile:SetPos(spawnPos)
+				projectile:SetAngles((ene:GetPos() - spawnPos):Angle())
+				self:OnRangeAttackExecute("PreProjSpawn", ene, projectile)
 				projectile:SetOwner(self)
 				projectile:SetPhysicsAttacker(self)
 				projectile:Spawn()
@@ -2549,11 +2609,14 @@ function ENT:ExecuteRangeAttack()
 					projectile:SetVelocity(vel)
 					projectile:SetAngles(vel:GetNormal():Angle())
 				end
-				self:CustomRangeAttackCode_AfterProjectileSpawn(projectile)
+				self:OnRangeAttackExecute("PostProjSpawn", ene, projectile)
 			end
 		end
 	end
 	if selfData.AttackState < VJ.ATTACK_STATE_EXECUTED then
+		if eneValid then -- Play range attack only once, otherwise it will spam it for every projectile!
+			self:PlaySoundSystem("RangeAttack")
+		end
 		selfData.AttackState = VJ.ATTACK_STATE_EXECUTED
 		if selfData.TimeUntilRangeAttackProjectileRelease then
 			attackTimers[VJ.ATTACK_TYPE_RANGE](self)
