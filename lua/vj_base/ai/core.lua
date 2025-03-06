@@ -2632,7 +2632,7 @@ function ENT:PlayIdleSound(customSD, sdType, combatIdle)
 		
 		if combatIdle then
 			local pickedSD = PICK(selfData.SoundTbl_CombatIdle)
-			if (math.random(1, selfData.CombatIdleSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.CombatIdleSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentIdleSound)
 				selfData.CurrentIdleSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.CombatIdleSoundLevel, self:GetSoundPitch(selfData.CombatIdleSoundPitch))
@@ -2732,7 +2732,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	if sdSet == "IdleDialogueAnswer" then
 		if selfData.HasIdleDialogueAnswerSounds then
 			local pickedSD = PICK(selfData.SoundTbl_IdleDialogueAnswer)
-			if (math.random(1, selfData.IdleDialogueAnswerSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.IdleDialogueAnswerSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentExtraSpeechSound)
@@ -2747,7 +2747,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "FollowPlayer" then
 		if selfData.HasFollowPlayerSounds then
 			local pickedSD = PICK(selfData.SoundTbl_FollowPlayer)
-			if (math.random(1, selfData.FollowPlayerSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.FollowPlayerSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -2758,7 +2758,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "UnFollowPlayer" then
 		if selfData.HasFollowPlayerSounds then
 			local pickedSD = PICK(selfData.SoundTbl_UnFollowPlayer)
-			if (math.random(1, selfData.FollowPlayerSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.FollowPlayerSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -2769,7 +2769,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "ReceiveOrder" then
 		if selfData.HasReceiveOrderSounds then
 			local pickedSD = PICK(selfData.SoundTbl_ReceiveOrder)
-			if (math.random(1, selfData.ReceiveOrderSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.ReceiveOrderSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -2781,7 +2781,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "YieldToPlayer" then
 		if selfData.HasYieldToPlayerSounds then
 			local pickedSD = PICK(selfData.SoundTbl_YieldToPlayer)
-			if (math.random(1, selfData.YieldToPlayerSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.YieldToPlayerSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -2792,7 +2792,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "MedicBeforeHeal" then
 		if selfData.HasMedicSounds then
 			local pickedSD = PICK(selfData.SoundTbl_MedicBeforeHeal)
-			if (math.random(1, selfData.MedicBeforeHealSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.MedicBeforeHealSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -2803,7 +2803,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "MedicOnHeal" then
 		if selfData.HasMedicSounds then
 			local pickedSD = PICK(selfData.SoundTbl_MedicOnHeal)
-			if (math.random(1, selfData.MedicOnHealSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.MedicOnHealSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -2814,7 +2814,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "MedicReceiveHeal" then
 		if selfData.HasMedicSounds then
 			local pickedSD = PICK(selfData.SoundTbl_MedicReceiveHeal)
-			if (math.random(1, selfData.MedicReceiveHealSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.MedicReceiveHealSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -2825,7 +2825,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "OnPlayerSight" then
 		if selfData.HasOnPlayerSightSounds then
 			local pickedSD = PICK(selfData.SoundTbl_OnPlayerSight)
-			if (math.random(1, selfData.OnPlayerSightSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.OnPlayerSightSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -2837,7 +2837,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "Investigate" then
 		if selfData.HasInvestigateSounds && CurTime() > selfData.NextInvestigateSoundT then
 			local pickedSD = PICK(selfData.SoundTbl_Investigate)
-			if (math.random(1, selfData.InvestigateSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.InvestigateSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -2849,7 +2849,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "LostEnemy" then
 		if selfData.HasLostEnemySounds && CurTime() > selfData.NextLostEnemySoundT then
 			local pickedSD = PICK(selfData.SoundTbl_LostEnemy)
-			if (math.random(1, selfData.LostEnemySoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.LostEnemySoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -2861,7 +2861,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "Alert" then
 		if selfData.HasAlertSounds then
 			local pickedSD = PICK(selfData.SoundTbl_Alert)
-			if (math.random(1, selfData.AlertSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.AlertSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -2876,7 +2876,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "CallForHelp" then
 		if selfData.HasCallForHelpSounds then
 			local pickedSD = PICK(selfData.SoundTbl_CallForHelp)
-			if (math.random(1, selfData.CallForHelpSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.CallForHelpSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -2888,7 +2888,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "BeforeMeleeAttack" then
 		if selfData.HasMeleeAttackSounds then
 			local pickedSD = PICK(selfData.SoundTbl_BeforeMeleeAttack)
-			if (math.random(1, selfData.BeforeMeleeAttackSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.BeforeMeleeAttackSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentExtraSpeechSound)
@@ -2900,7 +2900,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "MeleeAttack" then
 		if selfData.HasMeleeAttackSounds then
 			local pickedSD = PICK(selfData.SoundTbl_MeleeAttack)
-			if (math.random(1, selfData.MeleeAttackSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.MeleeAttackSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
@@ -2909,7 +2909,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			end
 			if selfData.HasExtraMeleeAttackSounds then
 				pickedSD = PICK(selfData.SoundTbl_MeleeAttackExtra)
-				if (math.random(1, selfData.ExtraMeleeSoundChance) == 1 && pickedSD) or customSD then
+				if (pickedSD && math.random(1, selfData.ExtraMeleeSoundChance) == 1) or customSD then
 					if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 					VJ.EmitSound(self, pickedSD, selfData.ExtraMeleeAttackSoundLevel, self:GetSoundPitch(selfData.ExtraMeleeSoundPitch))
 				end
@@ -2918,7 +2918,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "MeleeAttackMiss" then
 		if selfData.HasMeleeAttackMissSounds then
 			local pickedSD = PICK(selfData.SoundTbl_MeleeAttackMiss)
-			if (math.random(1, selfData.MeleeAttackMissSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.MeleeAttackMissSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				StopSD(selfData.CurrentMeleeAttackMissSound)
@@ -2929,7 +2929,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "BecomeEnemyToPlayer" then
 		if selfData.HasBecomeEnemyToPlayerSounds then
 			local pickedSD = PICK(selfData.SoundTbl_BecomeEnemyToPlayer)
-			if (math.random(1, selfData.BecomeEnemyToPlayerChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.BecomeEnemyToPlayerChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -2945,7 +2945,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "KilledEnemy" then
 		if selfData.HasKilledEnemySounds && CurTime() > selfData.NextKilledEnemySoundT then
 			local pickedSD = PICK(selfData.SoundTbl_KilledEnemy)
-			if (math.random(1, selfData.KilledEnemySoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.KilledEnemySoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -2957,7 +2957,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "AllyDeath" then
 		if selfData.HasKilledEnemySounds && CurTime() > selfData.NextAllyDeathSoundT then
 			local pickedSD = PICK(selfData.SoundTbl_AllyDeath)
-			if (math.random(1, selfData.AllyDeathSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.AllyDeathSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -2970,7 +2970,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 		if selfData.HasPainSounds && CurTime() > selfData.NextPainSoundT then
 			local pickedSD = PICK(selfData.SoundTbl_Pain)
 			local sdDur = 2
-			if (math.random(1, selfData.PainSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.PainSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -2983,7 +2983,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "Impact" then
 		if selfData.HasImpactSounds then
 			local pickedSD = PICK(selfData.SoundTbl_Impact)
-			if (math.random(1, selfData.ImpactSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.ImpactSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				selfData.CurrentImpactSound = (sdType or VJ.EmitSound)(self, pickedSD, selfData.ImpactSoundLevel, self:GetSoundPitch(selfData.ImpactSoundPitch))
 			end
@@ -2992,7 +2992,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 		//if selfData.HasDamageByPlayerSounds && CurTime() > selfData.NextDamageByPlayerSoundT then -- This is done in the call instead
 			local pickedSD = PICK(selfData.SoundTbl_DamageByPlayer)
 			local sdDur = 2
-			if (math.random(1, selfData.DamageByPlayerSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.DamageByPlayerSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -3006,7 +3006,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "Death" then
 		if selfData.HasDeathSounds then
 			local pickedSD = PICK(selfData.SoundTbl_Death)
-			if (math.random(1, selfData.DeathSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.DeathSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				selfData.CurrentDeathSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.DeathSoundLevel, self:GetSoundPitch(selfData.DeathSoundPitch))
 			end
@@ -3027,7 +3027,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "BeforeRangeAttack" then
 		if selfData.HasRangeAttackSounds then
 			local pickedSD = PICK(selfData.SoundTbl_BeforeRangeAttack)
-			if (math.random(1, selfData.BeforeRangeAttackSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.BeforeRangeAttackSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentExtraSpeechSound)
@@ -3039,7 +3039,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "RangeAttack" then
 		if selfData.HasRangeAttackSounds then
 			local pickedSD = PICK(selfData.SoundTbl_RangeAttack)
-			if (math.random(1, selfData.RangeAttackSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.RangeAttackSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
@@ -3050,7 +3050,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "BeforeLeapAttack" then
 		if selfData.HasBeforeLeapAttackSounds then
 			local pickedSD = PICK(selfData.SoundTbl_BeforeLeapAttack)
-			if (math.random(1, selfData.BeforeLeapAttackSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.BeforeLeapAttackSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentExtraSpeechSound)
@@ -3062,7 +3062,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "LeapAttackJump" then
 		if selfData.HasLeapAttackJumpSounds then
 			local pickedSD = PICK(selfData.SoundTbl_LeapAttackJump)
-			if (math.random(1, selfData.LeapAttackJumpSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.LeapAttackJumpSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
@@ -3073,7 +3073,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "LeapAttackDamage" then
 		if selfData.HasLeapAttackDamageSounds then
 			local pickedSD = PICK(selfData.SoundTbl_LeapAttackDamage)
-			if (math.random(1, selfData.LeapAttackDamageSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.LeapAttackDamageSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				StopSD(selfData.CurrentSpeechSound)
@@ -3084,7 +3084,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "LeapAttackDamageMiss" then
 		if selfData.HasLeapAttackDamageMissSounds then
 			local pickedSD = PICK(selfData.SoundTbl_LeapAttackDamageMiss)
-			if (math.random(1, selfData.LeapAttackDamageMissSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.LeapAttackDamageMissSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				selfData.NextIdleSoundT_Reg = CurTime() + 1
@@ -3095,7 +3095,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "Suppressing" then
 		if selfData.HasSuppressingSounds && CurTime() > selfData.NextSuppressingSoundT then
 			local pickedSD = PICK(selfData.SoundTbl_Suppressing)
-			if (math.random(1, selfData.SuppressingSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.SuppressingSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -3107,7 +3107,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "WeaponReload" then
 		if selfData.HasWeaponReloadSounds then
 			local pickedSD = PICK(selfData.SoundTbl_WeaponReload)
-			if (math.random(1, selfData.WeaponReloadSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.WeaponReloadSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
@@ -3118,7 +3118,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "GrenadeAttack" then
 		if selfData.HasGrenadeAttackSounds && CurTime() > selfData.NextGrenadeAttackSoundT then
 			local pickedSD = PICK(selfData.SoundTbl_GrenadeAttack)
-			if (math.random(1, selfData.GrenadeAttackSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.GrenadeAttackSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
@@ -3126,32 +3126,23 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.GrenadeAttackSoundLevel, self:GetSoundPitch(selfData.GrenadeAttackSoundPitch))
 			end
 		end
-	elseif sdSet == "DangerSight" then
+	elseif sdSet == "DangerSight" or sdSet == "GrenadeSight" then
 		if selfData.HasDangerSightSounds && CurTime() > selfData.NextDangerSightSoundT then
 			local pickedSD = PICK(selfData.SoundTbl_DangerSight)
-			local sdDur = 3
-			if (math.random(1, selfData.DangerSightSoundChance) == 1 && pickedSD) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSD(selfData.CurrentSpeechSound)
-				StopSD(selfData.CurrentIdleSound)
-				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
-				selfData.NextIdleSoundT_Reg = CurTime() + sdDur
-				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.DangerSightSoundLevel, self:GetSoundPitch(selfData.DangerSightSoundPitch))
+			if sdSet == "GrenadeSight" then
+				local grenSDs = PICK(selfData.SoundTbl_GrenadeSight)
+				if grenSDs then
+					pickedSD = grenSDs
+				end
 			end
-			selfData.NextDangerSightSoundT = CurTime() + sdDur
-		end
-	elseif sdSet == "GrenadeSight" then
-		if selfData.HasDangerSightSounds && CurTime() > selfData.NextDangerSightSoundT then
-			local pickedSD = PICK(selfData.SoundTbl_GrenadeSight)
 			local sdDur = 3
-			if (math.random(1, selfData.DangerSightSoundChance) == 1 && pickedSD) or customSD then
+			if (pickedSD && math.random(1, selfData.DangerSightSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
 				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
 				selfData.NextIdleSoundT_Reg = CurTime() + sdDur
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.DangerSightSoundLevel, self:GetSoundPitch(selfData.DangerSightSoundPitch))
-				return true
 			end
 			selfData.NextDangerSightSoundT = CurTime() + sdDur
 		end
