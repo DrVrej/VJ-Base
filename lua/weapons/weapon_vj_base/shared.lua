@@ -253,7 +253,7 @@ Called whenever the weapon is reloaded
 --]]
 function SWEP:OnReload(status) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:OnHolster(newWep) return true end -- Return false to disallow the weapon from switching
+function SWEP:OnHolster(newWep) end -- Return true to disallow the weapon from switching
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnRemove() end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -303,7 +303,7 @@ function SWEP:Initialize()
 	if self.CustomBulletSpawnPosition then self.OnGetBulletPos = function() return self:CustomBulletSpawnPosition() end end
 	if self.CustomOnDrawWorldModel then self.OnDrawWorldModel = function() return self:CustomOnDrawWorldModel() end end
 	if self.CustomOnFireAnimationEvent then self.OnAnimEvent = function(_, pos, ang, event, options) return self:CustomOnFireAnimationEvent(pos, ang, event, options) end end
-	if self.CustomOnHolster then self.OnHolster = function(_, newWep) return self:CustomOnHolster(newWep) end end
+	if self.CustomOnHolster then self.OnHolster = function(_, newWep) return !self:CustomOnHolster(newWep) end end
 	if self.CustomOnReload or self.CustomOnReload_Finish then
 		self.OnReload = function(_, status)
 			if status == "Start" && self.CustomOnReload then
@@ -975,7 +975,7 @@ function SWEP:Holster(newWep)
 	hook.Remove("Think", self) -- Otherwise "NPC_Think" will just keep running!
 	self.HasIdleAnimation = false
 	//self:SendWeaponAnim(ACT_VM_HOLSTER)
-	return self:OnHolster(newWep)
+	return self:OnHolster(newWep) != true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnDrop()

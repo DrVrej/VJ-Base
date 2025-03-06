@@ -680,13 +680,27 @@ function ENT:OnCallForHelp(ally, isFirst) end
 -----------------------------------------------------------]]
 function ENT:OnThinkAttack(isAttacking, enemy) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMeleeAttack_BeforeStartTimer(seed) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMeleeAttack_AfterStartTimer(seed) end
+--[[
+Called when melee attack is triggered
+
+=-=-=| PARAMETERS |=-=-=
+	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "Init" : When the attack initially starts | Before sound, timers, and animations are set!
+			RETURNS
+				-> [nil]
+		-> "PostInit" : After the sound, timers, and animations are set!
+			RETURNS
+				-> [nil]
+	2. enemy [entity] : Enemy that caused the attack to trigger
+
+=-=-=| RETURNS |=-=-=
+	-> [nil]
+--]]
+function ENT:OnMeleeAttack(status, enemy) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_BeforeChecks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:GetMeleeAttackDamageOrigin()
+function ENT:MeleeAttackTraceOrigin()
 	return (IsValid(self:GetEnemy()) and VJ.GetNearestPositions(self, self:GetEnemy(), true)) or self:GetPos() + self:GetForward() -- Override this to use a different position
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -709,44 +723,66 @@ function ENT:OnWeaponStrafe() end -- Return false to disable default behavior, c
 function ENT:OnWeaponReload() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[
-Called for important changes or requests during a grenade attack
+Called when grenade attack is triggered or grenade position is requested
 
 =-=-=| PARAMETERS |=-=-=
 	1. status [string] : Type of update that is occurring, holds one of the following states:
-		-> "Start" : Before the start timer is ran
-			USAGE EXAMPLES -> Change grenade attack sounds | Make changes to "self.GrenadeAttackThrowTime"
+		-> "Init" : When the attack initially starts | Before sound, timers, and animations are set!
+			USAGE EXAMPLES -> Change grenade attack sounds or make changes to "self.GrenadeAttackThrowTime"
+			RETURNS
+				-> [nil | boolean] : Return true to disallow throwing a grenade
+		-> "PostInit" : After the sound, timers, and animations are set!
 			RETURNS
 				-> [nil]
 		-> "SpawnPos" : When the spawn position is requested
 			USAGE EXAMPLES -> Override the spawn position if needed by returning a vector
 			RETURNS
-				-> [nil] : Do NOT override the spawn position, this lets the default code execute
+				-> [nil] : Do NOT override the spawn position
 				-> [vector] : Override the spawn position
-		-> "Throw" : When the grenade is being thrown
-			USAGE EXAMPLES -> Throw velocity | Apply changes to grenade entity | Disallow throw velocity
-			RETURNS
-				-> [nil] : Do NOT apply any velocity to the grenade
-				-> [vector] : Velocity that will be applied to the grenade
-	2. grenade [nil | entity] : The actual grenade entity that is being thrown | NOTE: Only valid for "Throw" status
-	3. customEnt [nil | string | entity] : What entity it should throw (IF any)
-		-> [nil] : Using the default grenade class set by "self.GrenadeAttackEntity"
-		-> [string] : Using the given class name to override "self.GrenadeAttackEntity"
-		-> [entity] : Using an existing entity to override "self.GrenadeAttackEntity" | Example: When the NPC is throwing back an enemy grenade
-	4. landDir [number | vector | bool] : Direction the grenade should land, used to align where the grenade should land
-		-> 0 : Use enemy's position
-		-> 1 : Use enemy's last visible position
+	2. overrideEnt [nil | string | entity] : string or entity if the grenade attack was triggered through an override
+		-> [nil] : Using the default grenade class set by "self.GrenadeAttackEntity" | DEFAULT
+		-> [string] : Using the given class name as an override
+		-> [entity] : Using an existing entity as an override | EX: When the NPC is throwing back an enemy grenade
+	3. landDir [string | vector] : Direction the grenade should land, used to align where the grenade should land
+		-> "Enemy" : Use enemy's position
+		-> "EnemyLastVis" : Use enemy's last visible position
+		-> "FindBest" : Find the best random position
 		-> [vector] : Use given vector
-		-> [bool] : Find the best random position
-	5. landingPos [nil | vector] : The position the grenade is aimed to land | NOTE: Only valid for "Throw" status
 
 =-=-=| RETURNS |=-=-=
-	-> [nil | vector] : Depends on `status` value, refer to it for more details
+	-> [nil | vector | boolean] : Depends on `status` value, refer to it for more details
 --]]
-function ENT:OnGrenadeAttack(status, grenade, customEnt, landDir, landingPos)
-	if status == "Throw" then
-		return (landingPos - grenade:GetPos()) + (self:GetUp()*200 + self:GetForward()*500 + self:GetRight()*math.Rand(-20, 20))
-	end
-end
+function ENT:OnGrenadeAttack(status, overrideEnt, landDir) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[
+Called when grenade attack is executed
+
+=-=-=| PARAMETERS |=-=-=
+	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "PreSpawn" : Right before "Spawn()" is called on the grenade | Not called for grenade entity overrides, such as throwing back an enemy grenade
+			RETURNS
+				-> [nil]
+		-> "PostSpawn" : After "Spawn()" is called on the grenade | Can be used to override the throw velocity or not apply it at all
+			RETURNS
+				-> [nil] : Apply the default velocity
+				-> [vector] : Override the velocity to the given vector
+				-> [boolean] : Return true to not apply any velocity
+	2. grenade [nil | entity] : The grenade entity that is being thrown
+	3. overrideEnt [nil | string | entity] : string or entity if the grenade attack was triggered through an override
+		-> [nil] : Using the default grenade class set by "self.GrenadeAttackEntity" | DEFAULT
+		-> [string] : Using the given class name as an override
+		-> [entity] : Using an existing entity as an override | EX: When the NPC is throwing back an enemy grenade
+	4. landDir [string | vector] : Direction the grenade should land, used to align where the grenade should land
+		-> "Enemy" : Use enemy's position
+		-> "EnemyLastVis" : Use enemy's last visible position
+		-> "FindBest" : Find the best random position
+		-> [vector] : Use given vector
+	5. landingPos [nil | vector] : The position the grenade is aimed to land
+
+=-=-=| RETURNS |=-=-=
+	-> [nil | vector | boolean] : Depends on `status` value, refer to it for more details
+--]]
+function ENT:OnGrenadeAttackExecute(status, grenade, overrideEnt, landDir, landingPos) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnKilledEnemy(ent, inflictor, wasLast) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1996,6 +2032,20 @@ local function ApplyBackwardsCompatibility(self)
 			if self.CustomAttack then self:CustomAttack(enemy, self.EnemyData.Visible) end
 		end
 	end
+	if self.CustomOnMeleeAttack_BeforeStartTimer or self.CustomOnMeleeAttack_AfterStartTimer then
+		self.OnMeleeAttack = function(_, status, enemy)
+			if status == "Init" && self.CustomOnMeleeAttack_BeforeStartTimer then
+				self:CustomOnMeleeAttack_BeforeStartTimer(self.AttackSeed)
+			elseif status == "PostInit" && self.CustomOnMeleeAttack_AfterStartTimer then
+				self:CustomOnMeleeAttack_AfterStartTimer(self.AttackSeed)
+			end
+		end
+	end
+	if self.GetMeleeAttackDamageOrigin then
+		self.MeleeAttackTraceOrigin = function()
+			return self:GetMeleeAttackDamageOrigin()
+		end
+	end
 	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2012,7 +2062,12 @@ function ENT:Initialize()
 	self:SetRenderMode(RENDERMODE_NORMAL)
 	self:AddEFlags(EFL_NO_DISSOLVE)
 	self:SetUseType(SIMPLE_USE)
-	local models = PICK(self.Model); if models then self:SetModel(models) end
+	if !self:GetModel() then
+		local models = PICK(self.Model)
+		if models then
+			self:SetModel(models)
+		end
+	end
 	self:SetHullType(self.HullType)
 	self:SetHullSizeNormal()
 	self:SetSolid(SOLID_BBOX)
@@ -2800,7 +2855,7 @@ function ENT:Think()
 						selfData.AttackAnimDuration = 0
 						selfData.AttackAnimTime = 0
 						self:SetTurnTarget("Enemy") -- Always turn towards the enemy at the start
-						self:CustomOnMeleeAttack_BeforeStartTimer(seed)
+						self:OnMeleeAttack("Init", ene)
 						self:PlaySoundSystem("BeforeMeleeAttack")
 						selfData.NextAlertSoundT = curTime + 0.4
 						if selfData.AnimTbl_MeleeAttack then
@@ -2823,7 +2878,7 @@ function ENT:Think()
 								end
 							end
 						end
-						self:CustomOnMeleeAttack_AfterStartTimer(seed)
+						self:OnMeleeAttack("PostInit", ene)
 					end
 					
 					-- Grenade attack
@@ -2926,7 +2981,7 @@ function ENT:ExecuteMeleeAttack()
 	local myPos = self:GetPos()
 	local myClass = self:GetClass()
 	local hitRegistered = false
-	for _, ent in ipairs(ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), selfData.MeleeAttackDamageDistance)) do
+	for _, ent in ipairs(ents.FindInSphere(self:MeleeAttackTraceOrigin(), selfData.MeleeAttackDamageDistance)) do
 		if ent == self or ent:GetClass() == myClass or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then continue end
 		if ent:IsPlayer() && (ent.VJ_IsControllingNPC or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
 		if ((ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible) && self:GetInternalVariable("m_latchedHeadDirection"):Dot((Vector(ent:GetPos().x, ent:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackDamageAngleRadius)) then
@@ -2975,22 +3030,21 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Performs a grenade attack
+	Triggers a grenade attack
 		- customEnt = What entity it should throw | DEFAULT: nil
 			- nil = Spawn the NPC's default grenade class usually set by "self.GrenadeAttackEntity"
-			- string = Spawn the given entity class as the grenade
-			- entity = Use the given entity as the grenade by changing its parent to the NPC and altering its position
-		- disableOwner = If set to true, the NPC will not be set as the owner of the grenade, allowing it to damage itself and its allies when applicable!
+			- string = Override to use given entity class
+			- entity = Override to use the given entity as the grenade by changing its parent to the NPC and altering its position
+		- disableOwner = If true, the NPC will not be set as the owner of the grenade, allowing it to damage itself and its allies when applicable!
 	Returns
-		- false, Grenade attack was canceled
+		- [boolean] = Whether or not it successfully triggered the attack
 -----------------------------------------------------------]]
 function ENT:GrenadeAttack(customEnt, disableOwner)
 	if self.Dead or self.Flinching or self.AttackType == VJ.ATTACK_TYPE_MELEE then return false end
 	local eneData = self.EnemyData
 	local ene = self:GetEnemy()
 	local isLiveEnt = IsValid(customEnt)
-	local landDir = false -- 0 = Enemy's position | 1 = Enemy's last visible position | anything else = Best position
-	local seed = CurTime(); self.AttackSeed = seed
+	local landDir = "FindBest"
 
 	-- Handle possible destinations:
 		-- Enemy not valid --> Best position away from the NPC and allies
@@ -3001,11 +3055,11 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 	if IsValid(ene) then
 		-- If enemy is visible then face them!
 		if eneData.Visible then
-			landDir = 0 -- If enemy is visible leave then do NOT face random pos, even if "self.GrenadeAttackAnimationFaceEnemy" is disabled!
+			landDir = "Enemy" -- Do NOT face random pos, even if "self.GrenadeAttackAnimationFaceEnemy" is disabled!
 		else -- We have a hidden enemy...
 			-- Attempt to flush the enemy out of hiding
 			if self:VisibleVec(eneData.VisiblePos) && ene:GetPos():Distance(eneData.VisiblePos) <= self.GrenadeAttackMaxDistance then // self.GrenadeAttackMaxDistance
-				landDir = 1 -- We are going to face flush position, do NOT face random pos!
+				landDir = "EnemyLastVis" -- We are going to face flush position, do NOT face random pos!
 			-- If can't flush the enemy, then face random open position ONLY if we are given a live entity, otherwise...
 			-- If live entity is NOT given and it's allowed to continue, it will cause the NPC to throw a grenade when both the enemy and its flush position are hidden!
 			elseif !isLiveEnt then
@@ -3013,6 +3067,9 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 			end
 		end
 	end
+	
+	if self:OnGrenadeAttack("Init", customEnt) then return false end
+	local seed = CurTime(); self.AttackSeed = seed
 	
 	-- Handle animations
 	self.AttackAnim = ACT_INVALID
@@ -3023,15 +3080,15 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 		if anim != ACT_INVALID then
 			self.AttackAnim = anim
 			self.AttackAnimDuration = animDur
-			self.AttackAnimTime = CurTime() + self.AttackAnimDuration
+			self.AttackAnimTime = seed + self.AttackAnimDuration
 		end
 	end
 	
-	if landDir == 0 then -- Face enemy
+	if landDir == "Enemy" then -- Face enemy
 		if self.GrenadeAttackAnimationFaceEnemy then
 			self:SetTurnTarget("Enemy")
 		end
-	elseif landDir == 1 then -- Face enemy's last visible pos
+	elseif landDir == "EnemyLastVis" then -- Face enemy's last visible pos
 		self:SetTurnTarget(eneData.VisiblePos, self.AttackAnimDuration or 1.5)
 	else -- Face best pos
 		local bestPos = PICK(VJ.TraceDirections(self, "Quick", 200, true, false, 8))
@@ -3050,7 +3107,7 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 			-- 2. ATTACHMENT 	If a valid attachment is given then use that, otherwise...
 			-- 3. BONE 			If a valid bone is given then use that, otherwise...
 			-- 4. FAIL 			Use the NPC's shoot position (fail safe)
-		local customPos = self:OnGrenadeAttack("SpawnPos", nil, customEnt, landDir, nil)
+		local customPos = self:OnGrenadeAttack("SpawnPos", customEnt, landDir)
 		if !customPos then -- If no custom position is given...
 			local getAttach = self:LookupAttachment(self.GrenadeAttackAttachment)
 			if !getAttach or getAttach == 0 or getAttach == -1 then -- Attachment invalid, try bone...
@@ -3081,7 +3138,6 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 
 	self.AttackType = VJ.ATTACK_TYPE_GRENADE
 	self.AttackState = VJ.ATTACK_STATE_STARTED
-	self:OnGrenadeAttack("Start", nil, customEnt, landDir, nil)
 	self:PlaySoundSystem("GrenadeAttack")
 	
 	local releaseTime = self.GrenadeAttackThrowTime
@@ -3097,6 +3153,7 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 			self:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
 		end
 	end)
+	self:OnGrenadeAttack("PostInit", customEnt, landDir)
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3108,13 +3165,13 @@ end
 			- entity = Use the given entity as the grenade by changing its parent to the NPC and altering its position
 		- disableOwner = If set to true, the NPC will not be set as the owner of the grenade, allowing it to damage itself and its allies when applicable!
 		- landDir = Direction the grenade should land | Used by the base to align where the grenade is gonna land
-			- 0 = Use enemy's position
-			- 1 = Use enemy's last visible position
-			- Vector = Use given vector's position
-			- Anything else = Find a best random position
+			- "Enemy" = Use enemy's position
+			- "EnemyLastVis" = Use enemy's last visible position
+			- vector = Use given vector's position
+			- "FindBest" or nil = Find a best random position
 	Returns
 		- false, Grenade attack was canceled
-		- Entity, The grenade that was thrown
+		- entity, Grenade entity that was thrown
 -----------------------------------------------------------]]
 function ENT:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
 	if self.Dead or self.PauseAttacks or self.Flinching or self.AttackType == VJ.ATTACK_TYPE_MELEE then return false end
@@ -3127,7 +3184,7 @@ function ENT:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
 		-- 2. ATTACHMENT 	If a valid attachment is given then use that, otherwise...
 		-- 3. BONE 			If a valid bone is given then use that, otherwise...
 		-- 4. FAIL 			Use the NPC's shoot position (fail safe)
-	local spawnPos = self:OnGrenadeAttack("SpawnPos", nil, customEnt, landDir, nil)
+	local spawnPos = self:OnGrenadeAttack("SpawnPos", customEnt, landDir)
 	local spawnAng;
 	if !spawnPos then -- If no custom position is given...
 		local getAttach = self:LookupAttachment(self.GrenadeAttackAttachment)
@@ -3151,16 +3208,16 @@ function ENT:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
 	-- Handle NPC turning and grenade landing position
 	-- Do NOT set it to actually turn & face because it's pointless at this point since the grenade is already being released!
 	local landingPos = self:GetPos() + self:GetForward()*200
-	if landDir == 0 then -- Use enemy's position
+	if landDir == "Enemy" then -- Use enemy's position
 		landingPos = self:GetEnemyLastKnownPos()
 		//if self.GrenadeAttackAnimationFaceEnemy then self:SetTurnTarget("Enemy") end
-	elseif landDir == 1 then -- Use enemy's last visible position
+	elseif landDir == "EnemyLastVis" then -- Use enemy's last visible position
 		local eneData = self.EnemyData
 		landingPos = eneData.VisiblePos
 		//self:SetTurnTarget(eneData.VisiblePos, self.AttackAnimDuration - self.GrenadeAttackThrowTime)
 	elseif isvector(landDir) then -- Use given vector's position
 		landingPos = landDir
-	else -- Find a best random position
+	else -- Find a best random position | Includes "FindBest"
 		local bestPos = PICK(VJ.TraceDirections(self, "Quick", 200, true, false, 8))
 		if bestPos then
 			landingPos = bestPos
@@ -3212,21 +3269,22 @@ function ENT:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
 			grenade:Fuse(fuseTime)
 		end
 		
-		-- Spawn the grenade
+		self:OnGrenadeAttackExecute("PreSpawn", grenade, customEnt, landDir, landingPos)
 		grenade:Spawn()
 		grenade:Activate()
 	end
 	
 	-- Handle throw velocity
-	local throwVel = self:OnGrenadeAttack("Throw", grenade, customEnt, landDir, landingPos)
-	if throwVel then
+	local postSpawnResult = self:OnGrenadeAttackExecute("PostSpawn", grenade, customEnt, landDir, landingPos)
+	if postSpawnResult != true then
+		local vel = postSpawnResult or ((landingPos - grenade:GetPos()) + (self:GetUp()*200 + self:GetForward()*500 + self:GetRight()*math.Rand(-20, 20)))
 		local phys = grenade:GetPhysicsObject()
 		if IsValid(phys) then
 			phys:Wake()
 			phys:AddAngleVelocity(Vector(math.Rand(500, 500), math.Rand(500, 500), math.Rand(500, 500)))
-			phys:SetVelocity(throwVel)
+			phys:SetVelocity(vel)
 		else -- If we don't have a physics object, then attempt to set the entity's velocity directly
-			grenade:SetVelocity(throwVel)
+			grenade:SetVelocity(vel)
 		end
 	end
 	

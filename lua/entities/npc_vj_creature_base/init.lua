@@ -316,7 +316,7 @@ ENT.LeapAttackDamageType = DMG_SLASH
 ENT.DisableDefaultLeapAttackDamageCode = false -- Disables the default leap attack damage code
 	-- ====== Animation ====== --
 ENT.AnimTbl_LeapAttack = ACT_SPECIAL_ATTACK1 -- Animations to play when it leap attacks | false = Don't play an animation
-ENT.LeapAttackAnimationFaceEnemy = 2 -- true = Face the enemy the entire time! | 2 = Face the enemy UNTIL it jumps! | false = Don't face the enemy AT ALL!
+ENT.LeapAttackAnimationFaceEnemy = 2 -- 2 = Face the enemy UNTIL it jumps! | true = Face the enemy the entire time! | false = Don't face the enemy AT ALL!
 ENT.LeapAttackAnimationDecreaseLengthAmount = 0 -- Decreases animation time | Use it to fix animations that have extra frames at the end
 	-- ====== Distance ====== --
 ENT.LeapAttackMinDistance = 200 -- Min distance that it can leap from
@@ -690,13 +690,27 @@ function ENT:OnCallForHelp(ally, isFirst) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomAttackCheck_MeleeAttack() return true end -- Not returning true will not let the melee attack code run!
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMeleeAttack_BeforeStartTimer(seed) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMeleeAttack_AfterStartTimer(seed) end
+--[[
+Called when melee attack is triggered
+
+=-=-=| PARAMETERS |=-=-=
+	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "Init" : When the attack initially starts | Before sound, timers, and animations are set!
+			RETURNS
+				-> [nil]
+		-> "PostInit" : After the sound, timers, and animations are set!
+			RETURNS
+				-> [nil]
+	2. enemy [entity] : Enemy that caused the attack to trigger
+
+=-=-=| RETURNS |=-=-=
+	-> [nil]
+--]]
+function ENT:OnMeleeAttack(status, enemy) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_BeforeChecks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:GetMeleeAttackDamageOrigin()
+function ENT:MeleeAttackTraceOrigin()
 	return (IsValid(self:GetEnemy()) and VJ.GetNearestPositions(self, self:GetEnemy(), true)) or self:GetPos() + self:GetForward() -- Override this to use a different position
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -736,12 +750,12 @@ Called when range attack is executed
 		-> "Init" : When the attack initially executed | Before entities are checked and damaged
 			RETURNS
 				-> [nil | boolean] : Return true to skip spawning the projectile
-		-> "PreProjSpawn" : Right before "Spawn()" is called on the projectile
+		-> "PreSpawn" : Right before "Spawn()" is called on the projectile
 			PARAMETERS
 				3. projectile [entity] : The projectile entity that is about to spawn
 			RETURNS
 				-> [nil]
-		-> "PostProjSpawn" : After "Spawn()" is called and velocity is set on the projectile
+		-> "PostSpawn" : After "Spawn()" is called and velocity is set on the projectile
 			PARAMETERS
 				3. projectile [entity] : The projectile entity that just spawned
 			RETURNS
@@ -798,7 +812,7 @@ Called when leap attack is executed
 	1. status [string] : Type of update that is occurring, holds one of the following states:
 		-> "Init" : When the attack initially executed | Before entities are checked and damaged
 			RETURNS
-				-> [nil]
+				-> [nil | boolean] : Return true to skip running the execution (Useful for custom code)
 		-> "PreDamage" : Right before the damage is applied to an entity
 			PARAMETERS
 				2. ent [entity] : The entity that is about to be damaged
@@ -1442,11 +1456,25 @@ local function ApplyBackwardsCompatibility(self)
 				if self.DisableDefaultRangeAttackCode then
 					return true
 				end
-			elseif status == "PreProjSpawn" && self.CustomRangeAttackCode_BeforeProjectileSpawn then
+			elseif status == "PreSpawn" && self.CustomRangeAttackCode_BeforeProjectileSpawn then
 				self:CustomRangeAttackCode_BeforeProjectileSpawn(projectile)
-			elseif status == "PostProjSpawn" && self.CustomRangeAttackCode_AfterProjectileSpawn then
+			elseif status == "PostSpawn" && self.CustomRangeAttackCode_AfterProjectileSpawn then
 				self:CustomRangeAttackCode_AfterProjectileSpawn(projectile)
 			end
+		end
+	end
+	if self.CustomOnMeleeAttack_BeforeStartTimer or self.CustomOnMeleeAttack_AfterStartTimer then
+		self.OnMeleeAttack = function(_, status, enemy)
+			if status == "Init" && self.CustomOnMeleeAttack_BeforeStartTimer then
+				self:CustomOnMeleeAttack_BeforeStartTimer(self.AttackSeed)
+			elseif status == "PostInit" && self.CustomOnMeleeAttack_AfterStartTimer then
+				self:CustomOnMeleeAttack_AfterStartTimer(self.AttackSeed)
+			end
+		end
+	end
+	if self.GetMeleeAttackDamageOrigin then
+		self.MeleeAttackTraceOrigin = function()
+			return self:GetMeleeAttackDamageOrigin()
 		end
 	end
 	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -1464,7 +1492,12 @@ function ENT:Initialize()
 	self:SetRenderMode(RENDERMODE_NORMAL)
 	self:AddEFlags(EFL_NO_DISSOLVE)
 	self:SetUseType(SIMPLE_USE)
-	local models = PICK(self.Model); if models then self:SetModel(models) end
+	if !self:GetModel() then
+		local models = PICK(self.Model)
+		if models then
+			self:SetModel(models)
+		end
+	end
 	self:SetHullType(self.HullType)
 	self:SetHullSizeNormal()
 	self:SetSolid(SOLID_BBOX)
@@ -2199,7 +2232,7 @@ function ENT:Think()
 								self:SetTurnTarget("Enemy") -- Always turn towards the enemy at the start
 								selfData.MeleeAttack_IsPropAttack = false
 							end
-							self:CustomOnMeleeAttack_BeforeStartTimer(seed)
+							self:OnMeleeAttack("Init", ene)
 							self:PlaySoundSystem("BeforeMeleeAttack")
 							if selfData.AnimTbl_MeleeAttack then
 								local anim, animDur, animType = self:PlayAnim(selfData.AnimTbl_MeleeAttack, false, 0, false)
@@ -2221,7 +2254,7 @@ function ENT:Think()
 									end
 								end
 							end
-							self:CustomOnMeleeAttack_AfterStartTimer(seed)
+							self:OnMeleeAttack("PostInit", ene)
 						end
 					end
 					
@@ -2422,11 +2455,11 @@ function ENT:ExecuteMeleeAttack(isPropAttack)
 	local myPos = self:GetPos()
 	local myClass = self:GetClass()
 	local hitRegistered = false
-	//debugoverlay.Cross(self:GetMeleeAttackDamageOrigin(), 5, 3, Color(255, 255, 0))
-	//debugoverlay.EntityTextAtPosition(self:GetMeleeAttackDamageOrigin(), 0, "Melee damage origin", 3, Color(255, 255, 0))
-	//debugoverlay.Cross(self:GetMeleeAttackDamageOrigin() + self:GetForward()*selfData.MeleeAttackDamageDistance, 5, 3, Color(238, 119, 222))
-	//debugoverlay.EntityTextAtPosition(self:GetMeleeAttackDamageOrigin() + self:GetForward()*selfData.MeleeAttackDamageDistance, 0, "Melee damage distance", 3, Color(238, 119, 222))
-	for _, ent in ipairs(ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), selfData.MeleeAttackDamageDistance)) do
+	//debugoverlay.Cross(self:MeleeAttackTraceOrigin(), 5, 3, Color(255, 255, 0))
+	//debugoverlay.EntityTextAtPosition(self:MeleeAttackTraceOrigin(), 0, "Melee damage origin", 3, Color(255, 255, 0))
+	//debugoverlay.Cross(self:MeleeAttackTraceOrigin() + self:GetForward()*selfData.MeleeAttackDamageDistance, 5, 3, Color(238, 119, 222))
+	//debugoverlay.EntityTextAtPosition(self:MeleeAttackTraceOrigin() + self:GetForward()*selfData.MeleeAttackDamageDistance, 0, "Melee damage distance", 3, Color(238, 119, 222))
+	for _, ent in ipairs(ents.FindInSphere(self:MeleeAttackTraceOrigin(), selfData.MeleeAttackDamageDistance)) do
 		if ent == self or ent:GetClass() == myClass or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then continue end
 		if ent:IsPlayer() && (ent.VJ_IsControllingNPC or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
 		if ((ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible) && self:GetInternalVariable("m_latchedHeadDirection"):Dot((Vector(ent:GetPos().x, ent:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackDamageAngleRadius)) then
@@ -2583,16 +2616,15 @@ function ENT:ExecuteRangeAttack()
 	if eneValid then
 		selfData.AttackType = VJ.ATTACK_TYPE_RANGE
 		//self:PointAtEntity(ene)
-		local skipProj = self:OnRangeAttackExecute("Init", ene)
 		-- Create projectile
-		if !skipProj then
+		if !self:OnRangeAttackExecute("Init", ene) then
 			local projectileClass = PICK(selfData.RangeAttackProjectiles) or PICK(selfData.RangeAttackEntityToSpawn)
 			if projectileClass then
 				local projectile = ents.Create(projectileClass)
 				local spawnPos = self:RangeAttackProjPos(projectile)
 				projectile:SetPos(spawnPos)
 				projectile:SetAngles((ene:GetPos() - spawnPos):Angle())
-				self:OnRangeAttackExecute("PreProjSpawn", ene, projectile)
+				self:OnRangeAttackExecute("PreSpawn", ene, projectile)
 				projectile:SetOwner(self)
 				projectile:SetPhysicsAttacker(self)
 				projectile:Spawn()
@@ -2602,14 +2634,14 @@ function ENT:ExecuteRangeAttack()
 				if IsValid(phys) then
 					phys:Wake()
 					local vel = self:RangeAttackProjVel(projectile)
-					phys:SetVelocity(vel) //ApplyForceCenter
+					phys:SetVelocity(vel)
 					projectile:SetAngles(vel:GetNormal():Angle())
 				else
 					local vel = self:RangeAttackProjVel(projectile)
 					projectile:SetVelocity(vel)
 					projectile:SetAngles(vel:GetNormal():Angle())
 				end
-				self:OnRangeAttackExecute("PostProjSpawn", ene, projectile)
+				self:OnRangeAttackExecute("PostSpawn", ene, projectile)
 			end
 		end
 	end
@@ -2627,30 +2659,32 @@ end
 function ENT:ExecuteLeapAttack()
 	local selfData = self:GetTable()
 	if selfData.Dead or selfData.PauseAttacks or selfData.Flinching or (selfData.LeapAttackStopOnHit && selfData.AttackState == VJ.ATTACK_STATE_EXECUTED_HIT) then return end
-	self:OnLeapAttackExecute("Init")
-	local myClass = self:GetClass()
+	local skip = self:OnLeapAttackExecute("Init")
 	local hitRegistered = false
-	for _,ent in ipairs(ents.FindInSphere(self:GetPos(), selfData.LeapAttackDamageDistance)) do
-		if ent == self or ent:GetClass() == myClass or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then continue end
-		if ent:IsPlayer() && (ent.VJ_IsControllingNPC or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
-		if (ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible then
-			if self:OnLeapAttackExecute("PreDamage", ent) == true then continue end
-			local dmgAmount = self:ScaleByDifficulty(selfData.LeapAttackDamage)
-			-- Damage
-			if !selfData.DisableDefaultLeapAttackDamageCode then
-				local dmgInfo = DamageInfo()
-				dmgInfo:SetDamage(dmgAmount)
-				dmgInfo:SetInflictor(self)
-				dmgInfo:SetDamageType(selfData.LeapAttackDamageType)
-				dmgInfo:SetAttacker(self)
-				if ent.VJ_ID_Living then dmgInfo:SetDamageForce(self:GetForward() * ((dmgInfo:GetDamage() + 100) * 70)) end
-				ent:TakeDamageInfo(dmgInfo, self)
+	if !skip then
+		local myClass = self:GetClass()
+		for _,ent in ipairs(ents.FindInSphere(self:GetPos(), selfData.LeapAttackDamageDistance)) do
+			if ent == self or ent:GetClass() == myClass or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then continue end
+			if ent:IsPlayer() && (ent.VJ_IsControllingNPC or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
+			if (ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible then
+				if self:OnLeapAttackExecute("PreDamage", ent) == true then continue end
+				local dmgAmount = self:ScaleByDifficulty(selfData.LeapAttackDamage)
+				-- Damage
+				if !selfData.DisableDefaultLeapAttackDamageCode then
+					local dmgInfo = DamageInfo()
+					dmgInfo:SetDamage(dmgAmount)
+					dmgInfo:SetInflictor(self)
+					dmgInfo:SetDamageType(selfData.LeapAttackDamageType)
+					dmgInfo:SetAttacker(self)
+					if ent.VJ_ID_Living then dmgInfo:SetDamageForce(self:GetForward() * ((dmgInfo:GetDamage() + 100) * 70)) end
+					ent:TakeDamageInfo(dmgInfo, self)
+				end
+				if ent:IsPlayer() then
+					ent:ViewPunch(Angle(math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount))
+				end
+				hitRegistered = true
+				if selfData.LeapAttackStopOnHit then break end
 			end
-			if ent:IsPlayer() then
-				ent:ViewPunch(Angle(math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount))
-			end
-			hitRegistered = true
-			if selfData.LeapAttackStopOnHit then break end
 		end
 	end
 	if selfData.AttackState < VJ.ATTACK_STATE_EXECUTED then
@@ -2659,12 +2693,14 @@ function ENT:ExecuteLeapAttack()
 			attackTimers[VJ.ATTACK_TYPE_LEAP](self)
 		end
 	end
-	if hitRegistered then
-		self:PlaySoundSystem("LeapAttackDamage")
-		selfData.AttackState = VJ.ATTACK_STATE_EXECUTED_HIT
-	else
-		self:OnLeapAttackExecute("Miss")
-		self:PlaySoundSystem("LeapAttackDamageMiss")
+	if !skip then
+		if hitRegistered then
+			self:PlaySoundSystem("LeapAttackDamage")
+			selfData.AttackState = VJ.ATTACK_STATE_EXECUTED_HIT
+		else
+			self:OnLeapAttackExecute("Miss")
+			self:PlaySoundSystem("LeapAttackDamageMiss")
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
