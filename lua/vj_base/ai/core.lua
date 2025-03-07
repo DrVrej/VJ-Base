@@ -9,6 +9,12 @@
 	
 	-- Change movement speed:
 	self:SetLocalVelocity(self:GetMoveVelocity() * 1.5)
+	
+	-- To debug eye and head directions:
+	debugoverlay.Box(self:EyePos() + self:GetHeadDirection(), Vector(-2, -2, -2), Vector(2, 2, 2), 0.2)
+	debugoverlay.Line(self:EyePos() + self:GetHeadDirection(), self:EyePos() + self:GetHeadDirection() * 100, 0.2)
+	debugoverlay.Box(self:EyePos() + self:GetEyeDirection(), Vector(-2, -2, -2), Vector(2, 2, 2), 0.2, VJ.COLOR_RED)
+	debugoverlay.Line(self:EyePos() + self:GetEyeDirection(), self:EyePos() + self:GetEyeDirection() * 100, 0.2, VJ.COLOR_RED)
 */
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Localized static values

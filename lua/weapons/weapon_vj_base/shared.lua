@@ -563,7 +563,7 @@ function SWEP:NPC_CanFire()
 				local spawnPos = self:GetPos() //self:GetBulletPos() -- Because "GetBulletPos" is VERY costly sadly =(
 				local aimPos = owner.IsVJBaseSNPC and owner:GetAimPosition(ene, spawnPos, 0) or ene:BodyTarget(spawnPos)
 				local aimDir = aimPos - spawnPos
-				local sightDir = owner:GetInternalVariable("m_latchedHeadDirection") // owner:GetForward() -- Owner's sight direction
+				local sightDir = owner:GetHeadDirection() // owner:GetForward() -- Owner's sight direction
 				aimDir.z = 0
 				aimDir:Normalize()
 				sightDir.z = 0

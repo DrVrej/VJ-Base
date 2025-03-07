@@ -1699,7 +1699,7 @@ function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to alw
 	
 	-- Not melee attacking yet but it is in range, so don't chase the enemy!
 	local eneData = selfData.EnemyData
-	if selfData.HasMeleeAttack && eneData.DistanceNearest < selfData.MeleeAttackDistance && eneData.Visible && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackAngleRadius))) then
+	if selfData.HasMeleeAttack && eneData.DistanceNearest < selfData.MeleeAttackDistance && eneData.Visible && (self:GetHeadDirection():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackAngleRadius))) then
 		if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then
 			self:AA_StopMoving()
 		end
@@ -2205,7 +2205,7 @@ function ENT:Think()
 							end
 						else
 							-- Regular non-prop attack
-							if eneIsVisible && eneDistNear < selfData.MeleeAttackDistance && self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackAngleRadius)) then
+							if eneIsVisible && eneDistNear < selfData.MeleeAttackDistance && self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackAngleRadius)) then
 								atkType = 1
 							-- Check for possible props that we can attack/push
 							elseif curTime > selfData.PropInteraction_NextCheckT then
@@ -2259,7 +2259,7 @@ function ENT:Think()
 					end
 					
 					-- Range Attack
-					if eneIsVisible && selfData.HasRangeAttack && selfData.IsAbleToRangeAttack && !selfData.AttackType && self:CustomAttackCheck_RangeAttack() == true && ((plyControlled && selfData.VJ_TheController:KeyDown(IN_ATTACK2)) or (!plyControlled && (eneDist < selfData.RangeAttackMaxDistance) && (eneDist > selfData.RangeAttackMinDistance) && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.RangeAttackAngleRadius))))) then
+					if eneIsVisible && selfData.HasRangeAttack && selfData.IsAbleToRangeAttack && !selfData.AttackType && self:CustomAttackCheck_RangeAttack() == true && ((plyControlled && selfData.VJ_TheController:KeyDown(IN_ATTACK2)) or (!plyControlled && (eneDist < selfData.RangeAttackMaxDistance) && (eneDist > selfData.RangeAttackMinDistance) && (self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.RangeAttackAngleRadius))))) then
 						local seed = curTime; selfData.AttackSeed = seed
 						selfData.IsAbleToRangeAttack = false
 						selfData.AttackType = VJ.ATTACK_TYPE_RANGE
@@ -2293,7 +2293,7 @@ function ENT:Think()
 					end
 					
 					-- Leap Attack
-					if eneIsVisible && selfData.HasLeapAttack && selfData.IsAbleToLeapAttack && !selfData.AttackType && self:CustomAttackCheck_LeapAttack() == true && ((plyControlled && selfData.VJ_TheController:KeyDown(IN_JUMP)) or (!plyControlled && (self:IsOnGround() && eneDist < selfData.LeapAttackMaxDistance) && (eneDist > selfData.LeapAttackMinDistance) && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.LeapAttackAngleRadius))))) then
+					if eneIsVisible && selfData.HasLeapAttack && selfData.IsAbleToLeapAttack && !selfData.AttackType && self:CustomAttackCheck_LeapAttack() == true && ((plyControlled && selfData.VJ_TheController:KeyDown(IN_JUMP)) or (!plyControlled && (self:IsOnGround() && eneDist < selfData.LeapAttackMaxDistance) && (eneDist > selfData.LeapAttackMinDistance) && (self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.LeapAttackAngleRadius))))) then
 						local seed = curTime; selfData.AttackSeed = seed
 						selfData.IsAbleToLeapAttack = false
 						selfData.LeapAttackHasJumped = false
@@ -2420,7 +2420,7 @@ function ENT:MaintainPropInteraction(customEnts)
 	for _, ent in ipairs(customEnts or ents.FindInSphere(myCenter, self.MeleeAttackDistance * 1.2)) do
 		if ent.VJ_ID_Attackable then
 			local vPhys = ent:GetPhysicsObject()
-			if IsValid(vPhys) && !propColBlacklist[ent:GetCollisionGroup()] && (customEnts or (self:GetInternalVariable("m_latchedHeadDirection"):Dot((ent:GetPos() - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius / 1.3)))) then
+			if IsValid(vPhys) && !propColBlacklist[ent:GetCollisionGroup()] && (customEnts or (self:GetHeadDirection():Dot((ent:GetPos() - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius / 1.3)))) then
 				local tr = util.TraceLine({
 					start = myCenter,
 					endpos = ent:NearestPoint(myCenter),
@@ -2462,7 +2462,7 @@ function ENT:ExecuteMeleeAttack(isPropAttack)
 	for _, ent in ipairs(ents.FindInSphere(self:MeleeAttackTraceOrigin(), selfData.MeleeAttackDamageDistance)) do
 		if ent == self or ent:GetClass() == myClass or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then continue end
 		if ent:IsPlayer() && (ent.VJ_IsControllingNPC or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
-		if ((ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible) && self:GetInternalVariable("m_latchedHeadDirection"):Dot((Vector(ent:GetPos().x, ent:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackDamageAngleRadius)) then
+		if ((ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible) && self:GetHeadDirection():Dot((Vector(ent:GetPos().x, ent:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackDamageAngleRadius)) then
 			if isPropAttack && ent.VJ_ID_Living && VJ.GetNearestDistance(self, ent, true) > selfData.MeleeAttackDistance then continue end -- Since this attack initiated as prop attack, its melee distance may be off!
 			local applyDmg = true
 			local isProp = ent.VJ_ID_Attackable
