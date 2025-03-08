@@ -24,7 +24,6 @@ SWEP.WorldModel_UseCustomPosition = false -- Should the gun use custom position?
 SWEP.WorldModel_CustomPositionAngle = Vector(0, 0, 0)
 SWEP.WorldModel_CustomPositionOrigin = Vector(0, 0, 0)
 SWEP.WorldModel_CustomPositionBone = "ValveBiped.Bip01_R_Hand" -- The bone it will use as the main point (Owner's bone)
-SWEP.WorldModel_Invisible = false -- Should the world model be invisible?
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC Only ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -538,41 +537,39 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_CanFire()
 	local owner = self:GetOwner()
-	if IsValid(owner) && owner:IsNPC() then
-		local ene = owner:GetEnemy()
-		local isVJHuman = owner.IsVJBaseSNPC_Human
-		if (isVJHuman && IsValid(ene) && !owner:CanFireWeapon(true, true)) or (self.NPC_StandingOnly && owner:IsMoving()) then
+	local ene = owner:GetEnemy()
+	local isVJHuman = owner.IsVJBaseSNPC_Human
+	if (isVJHuman && IsValid(ene) && !owner:CanFireWeapon(true, true)) or (self.NPC_StandingOnly && owner:IsMoving()) then
+		return false
+	end
+	if (isVJHuman && (owner.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE or (owner.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND && VJ.IsCurrentAnim(owner, owner.WeaponAttackAnim)))) or (!isVJHuman) then
+		local isControlled = owner.VJ_IsBeingControlled
+		-- For VJ Humans only, ammo check
+		if isVJHuman && owner.Weapon_CanReload && self:Clip1() <= 0 then -- No ammo!
+			if isControlled then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
+			if self.HasDryFireSound && !self.IsMeleeWeapon && CurTime() > self.NPC_NextDrySoundT then
+				local sdTbl = VJ.PICK(self.DryFireSound)
+				if sdTbl != false then owner:EmitSound(sdTbl, 80, math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter) end
+				if self.NPC_NextPrimaryFire != false then
+					self.NPC_NextDrySoundT = CurTime() + self.NPC_NextPrimaryFire
+				end
+			end
 			return false
 		end
-		if (isVJHuman && (owner.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE or (owner.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND && VJ.IsCurrentAnim(owner, owner.WeaponAttackAnim)))) or (!isVJHuman) then
-			local isControlled = owner.VJ_IsBeingControlled
-			-- For VJ Humans only, ammo check
-			if isVJHuman && owner.Weapon_CanReload && self:Clip1() <= 0 then -- No ammo!
-				if isControlled then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
-				if self.HasDryFireSound && !self.IsMeleeWeapon && CurTime() > self.NPC_NextDrySoundT then
-					local sdTbl = VJ.PICK(self.DryFireSound)
-					if sdTbl != false then owner:EmitSound(sdTbl, 80, math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter) end
-					if self.NPC_NextPrimaryFire != false then
-						self.NPC_NextDrySoundT = CurTime() + self.NPC_NextPrimaryFire
-					end
-				end
-				return false
-			end
-			-- Check to make sure the enemy is within the firing cone!
-			if IsValid(ene) && ((!isControlled) or (isControlled && owner.VJ_TheController:KeyDown(IN_ATTACK2))) then
-				local spawnPos = self:GetPos() //self:GetBulletPos() -- Because "GetBulletPos" is VERY costly sadly =(
-				local aimPos = owner.IsVJBaseSNPC and owner:GetAimPosition(ene, spawnPos, 0) or ene:BodyTarget(spawnPos)
-				local aimDir = aimPos - spawnPos
-				local sightDir = owner:GetHeadDirection() // owner:GetForward() -- Owner's sight direction
-				aimDir.z = 0
-				aimDir:Normalize()
-				sightDir.z = 0
-				sightDir:Normalize()
-				//print(sightDir:Dot(aimDir))
-				//debugoverlay.Line(spawnPos, spawnPos + aimDir * 10000, 2, Color(255, 0, 0), true) -- Red: Direction to enemy
-				//debugoverlay.Line(spawnPos, spawnPos + sightDir * 10000, 2, Color(0, 255, 0), true) -- Green: Aim direction
-				return sightDir:Dot(aimDir) > self.NPC_FiringCone
-			end
+		-- Check to make sure the enemy is within the firing cone!
+		if IsValid(ene) && ((!isControlled) or (isControlled && owner.VJ_TheController:KeyDown(IN_ATTACK2))) then
+			local spawnPos = self:GetPos() //self:GetBulletPos() -- Because "GetBulletPos" is VERY costly sadly =(
+			local aimPos = owner.IsVJBaseSNPC and owner:GetAimPosition(ene, spawnPos, 0) or ene:BodyTarget(spawnPos)
+			local aimDir = aimPos - spawnPos
+			local sightDir = owner:GetHeadDirection() // owner:GetForward() -- Owner's sight direction
+			aimDir.z = 0
+			aimDir:Normalize()
+			sightDir.z = 0
+			sightDir:Normalize()
+			//print(sightDir:Dot(aimDir))
+			//debugoverlay.Line(spawnPos, spawnPos + aimDir * 10000, 2, Color(255, 0, 0), true) -- Red: Direction to enemy
+			//debugoverlay.Line(spawnPos, spawnPos + sightDir * 10000, 2, Color(0, 255, 0), true) -- Green: Aim direction
+			return sightDir:Dot(aimDir) > self.NPC_FiringCone
 		end
 	end
 	return false
@@ -617,15 +614,24 @@ function SWEP:NPCShoot_Primary()
 	
 	-- Primary Fire
 	timer.Simple(self.NPC_TimeUntilFire, function()
-		if IsValid(self) && IsValid(owner) && self:NPC_CanFire() && CurTime() > self.NPC_NextPrimaryFireT then
+		if !IsValid(self) then return end
+		local curTime = CurTime()
+		owner = self:GetOwner()
+		if IsValid(owner) && owner:IsNPC() && self:NPC_CanFire() && curTime > self.NPC_NextPrimaryFireT then
 			self:PrimaryAttack()
+			owner.WeaponLastShotTime = curTime
 			if self.NPC_NextPrimaryFire != false then -- Support for animation events
-				self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
+				self.NPC_NextPrimaryFireT = curTime + self.NPC_NextPrimaryFire
 				for _, tv in ipairs(self.NPC_TimeUntilFireExtraTimers) do
-					timer.Simple(tv, function() if IsValid(self) && IsValid(owner) && self:NPC_CanFire() then self:PrimaryAttack() end end)
+					timer.Simple(tv, function()
+						if !IsValid(self) then return end
+						owner = self:GetOwner()
+						if IsValid(owner) && owner:IsNPC() && self:NPC_CanFire() then
+							self:PrimaryAttack()
+						end
+					end)
 				end
 			end
-			owner.WeaponLastShotTime = CurTime()
 		end
 	end)
 end
@@ -1001,13 +1007,8 @@ function SWEP:GetWeaponCustomPosition(owner)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:MaintainWorldModel()
-	local selfData = self:GetTable()
-	if self:GetNW2Bool("VJ_WorldModel_Invisible") != selfData.WorldModel_Invisible then
-		self:SetNW2Bool("VJ_WorldModel_Invisible", selfData.WorldModel_Invisible)
-	end
-	
 	local owner = self:GetOwner()
-	if IsValid(owner) && selfData.WorldModel_UseCustomPosition then
+	if IsValid(owner) && self.WorldModel_UseCustomPosition then
 		local wepPos, wepAng = self:GetWeaponCustomPosition(owner)
 		if wepPos then
 			self:SetPos(wepPos)
@@ -1016,11 +1017,18 @@ function SWEP:MaintainWorldModel()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:SetupDataTables()
+	self:NetworkVar("Bool", "DrawWorldModel")
+	if SERVER then
+		self:SetDrawWorldModel(true)
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	function SWEP:DrawWorldModel()
 		local drawMdl = true
 		local selfData = self:GetTable()
-		if !self:OnDrawWorldModel() or self:GetNW2Bool("VJ_WorldModel_Invisible") or selfData.WorldModel_Invisible then drawMdl = false end
+		if !self:OnDrawWorldModel() or !self:GetDrawWorldModel() then drawMdl = false end
 		
 		if selfData.WorldModel_UseCustomPosition then
 			local owner = self:GetOwner()

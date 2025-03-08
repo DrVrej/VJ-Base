@@ -1432,7 +1432,7 @@ function ENT:OnRestore()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:KeyValue(k, v)
-	//VJ.DEBUG_Print(self, "KeyValue", key, value)
+	//VJ.DEBUG_Print(self, "KeyValue", k, v)
 	if string_left(k, 2) == "On" then
 		self:StoreOutput(k, v)
 	end

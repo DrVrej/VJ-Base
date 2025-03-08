@@ -351,42 +351,46 @@ end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Convar Callbacks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-cvars.AddChangeCallback("ai_ignoreplayers", function(convar_name, oldValue, newValue)
+cvars.AddChangeCallback("ai_ignoreplayers", function(name, oldValue, newValue)
 	if tonumber(newValue) == 0 then -- Turn off ignore players
 		VJ_CVAR_IGNOREPLAYERS = false
-		local getPlys = player.GetAll()
-		local getAll = ents.GetAll()
-		for x = 1, #getAll do
-			local ent = getAll[x]
-			if ent:IsNPC() && ent.IsVJBaseSNPC then
-				for _, ply in ipairs(getPlys) do
-					ent.RelationshipEnts[#ent.RelationshipEnts + 1] = ply
-					if !ent.RelationshipMemory[ply] then
-						ent.RelationshipMemory[ply] = {}
+		if SERVER then
+			local getPlys = player.GetAll()
+			local getAll = ents.GetAll()
+			for x = 1, #getAll do
+				local ent = getAll[x]
+				if ent:IsNPC() && ent.IsVJBaseSNPC then
+					for _, ply in ipairs(getPlys) do
+						ent.RelationshipEnts[#ent.RelationshipEnts + 1] = ply
+						if !ent.RelationshipMemory[ply] then
+							ent.RelationshipMemory[ply] = {}
+						end
 					end
 				end
 			end
 		end
 	else -- Turn on ignore players
 		VJ_CVAR_IGNOREPLAYERS = true
-		for _, ent in ipairs(ents.GetAll()) do
-			if ent.IsVJBaseSNPC then
-				if ent.IsFollowing && ent.FollowData.Target:IsPlayer() then ent:ResetFollowBehavior() end -- Reset the NPC's follow system if it's following a player
-				local relationEnts = ent.RelationshipEnts
-				//local relationData = ent.RelationshipMemory -- Keep the relationship data
-				local it = 1
-				while it <= #relationEnts do
-					local relationEnt = relationEnts[it]
-					if IsValid(relationEnt) && relationEnt:IsPlayer() then
-						ent:AddEntityRelationship(relationEnt, D_NU, 10) -- Make the player neutral
-						-- Reset the NPC's enemy if it's a player
-						if IsValid(ent:GetEnemy()) && ent:GetEnemy() == relationEnt then
-							ent:ResetEnemy()
+		if SERVER then
+			for _, ent in ipairs(ents.GetAll()) do
+				if ent.IsVJBaseSNPC then
+					if ent.IsFollowing && ent.FollowData.Target:IsPlayer() then ent:ResetFollowBehavior() end -- Reset the NPC's follow system if it's following a player
+					local relationEnts = ent.RelationshipEnts
+					//local relationData = ent.RelationshipMemory -- Keep the relationship data
+					local it = 1
+					while it <= #relationEnts do
+						local relationEnt = relationEnts[it]
+						if IsValid(relationEnt) && relationEnt:IsPlayer() then
+							ent:AddEntityRelationship(relationEnt, D_NU, 10) -- Make the player neutral
+							-- Reset the NPC's enemy if it's a player
+							if IsValid(ent:GetEnemy()) && ent:GetEnemy() == relationEnt then
+								ent:ResetEnemy()
+							end
+							table_remove(relationEnts, it) -- Remove the player from possible enemy table
+							//relationData[relationEnt] = nil
+						else
+							it = it + 1
 						end
-						table_remove(relationEnts, it) -- Remove the player from possible enemy table
-						//relationData[relationEnt] = nil
-					else
-						it = it + 1
 					end
 				end
 			end
@@ -394,6 +398,6 @@ cvars.AddChangeCallback("ai_ignoreplayers", function(convar_name, oldValue, newV
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-cvars.AddChangeCallback("ai_disabled", function(convar_name, oldValue, newValue)
+cvars.AddChangeCallback("ai_disabled", function(name, oldValue, newValue)
 	VJ_CVAR_AI_ENABLED = tonumber(newValue) != 1
 end)
