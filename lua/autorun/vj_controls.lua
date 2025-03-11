@@ -8,11 +8,11 @@ if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
 if !VJ.Plugins then VJ.Plugins = {} end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Registers the addon to the VJ plugin list
+	Registers the addon to the VJ Base plugin list
 		- name = Addon name
 		- type = Type of addon | EX: NPC, Weapon, etc.
 -----------------------------------------------------------]]
-VJ.AddAddonProperty = function(name, type)
+VJ.AddPlugin = function(name, type)
 	table.insert(VJ.Plugins, {Name = name, Type = type})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -166,7 +166,7 @@ end
 	Registers a ConVar
 		- name = Convar name
 		- defValue = Default value
-		- flags = Convar's flags | Can be a bitflag or a table | Flag List: https://wiki.facepunch.com/gmod/Enums/FCVAR
+		- flags = Convar's flags | Can be a bit flag or a table | Flag List: https://wiki.facepunch.com/gmod/Enums/FCVAR
 		- helpText = Help text to display in the console
 		- min = If set, the ConVar cannot be changed to a number lower than this value
 		- max = If set, the ConVar cannot be changed to a number higher than this value
@@ -190,3 +190,8 @@ VJ.AddClientConVar = function(name, defValue, helpText, min, max)
 		CreateClientConVar(name, defValue, true, true, helpText or "", min, max)
 	end
 end
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Backwards Compatibility ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!!
+VJ.AddAddonProperty = VJ.AddPlugin

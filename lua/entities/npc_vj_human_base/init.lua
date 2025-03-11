@@ -3314,7 +3314,7 @@ local sdBitMortar = bit.bor(SOUND_DANGER, SOUND_CONTEXT_MORTAR) ---> Combine mor
 	- Distance based on self.DangerDetectionDistance
 	- Ignores dangers from allies
 	- BEST USE: Entities that should NOT scare the owner's allies, commonly used for projectiles
-- NPC Conditions (Old system: sound.EmitHint)
+- NPC Conditions
 	- Detected as a danger
 	- Distance based on the sound hint's volume/distance
 	- Does NOT ignore, is detected by everyone that catches the hint, including allies

@@ -640,13 +640,13 @@ function SWEP:PrimaryAttack(UseAlt)
 	//if self:GetOwner():KeyDown(IN_RELOAD) then return end
 	//self:GetOwner():SetFOV(45, 0.3)
 	//if !IsFirstTimePredicted() then return end
-	
-	self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
+	local curTime = CurTime()
+	self:SetNextPrimaryFire(curTime + self.Primary.Delay)
 	local owner = self:GetOwner()
 	local isNPC = owner:IsNPC()
 	local isPly = owner:IsPlayer()
 	
-	if self.Reloading or self:GetNextSecondaryFire() > CurTime() then return end
+	if self.Reloading or self:GetNextSecondaryFire() > curTime then return end
 	if isNPC && !owner.VJ_IsBeingControlled && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return end
 	if !self.IsMeleeWeapon && ((isPly && !self.Primary.AllowInWater && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then
 		if SERVER then
@@ -787,11 +787,11 @@ function SWEP:PrimaryAttack(UseAlt)
 		local anim = VJ.PICK(self.AnimTbl_PrimaryFire)
 		local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
 		self:SendWeaponAnim(anim)
-		self.PLY_NextIdleAnimT = CurTime() + animTime
-		self.PLY_NextReloadT = CurTime() + animTime
+		self.PLY_NextIdleAnimT = curTime + animTime
+		self.PLY_NextReloadT = curTime + animTime
 	end
 	self:OnPrimaryAttack("PostFire")
-	//self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
+	//self:SetNextPrimaryFire(curTime + self.Primary.Delay)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttackEffects(owner)
@@ -876,27 +876,29 @@ function SWEP:SecondaryAttack()
 	if self:Ammo2() <= 0 or self.Reloading then return end // !self:CanSecondaryAttack()
 	if self:OnSecondaryAttack() == true then return end
 	
+	local curTime = CurTime()
 	local owner = self:GetOwner()
 	self:TakeSecondaryAmmo(self.Secondary.TakeAmmo)
 	owner:SetAnimation(PLAYER_ATTACK1)
 	local anim = VJ.PICK(self.AnimTbl_SecondaryFire)
 	local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
 	self:SendWeaponAnim(anim)
-	self.PLY_NextIdleAnimT = CurTime() + animTime
-	self.PLY_NextReloadT = CurTime() + animTime
+	self.PLY_NextIdleAnimT = curTime + animTime
+	self.PLY_NextReloadT = curTime + animTime
 	
-	self:SetNextSecondaryFire(CurTime() + (self.Secondary.Delay == false and animTime or self.Secondary.Delay))
+	self:SetNextSecondaryFire(curTime + (self.Secondary.Delay == false and animTime or self.Secondary.Delay))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:DoIdleAnimation()
-	if !self.HasIdleAnimation or CurTime() < self.PLY_NextIdleAnimT then return end
+	local curTime = CurTime()
+	if !self.HasIdleAnimation or curTime < self.PLY_NextIdleAnimT then return end
 	local owner = self:GetOwner()
 	if IsValid(owner) then
 		owner:SetAnimation(PLAYER_IDLE)
 		local anim = VJ.PICK(self.AnimTbl_Idle)
 		local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
 		self:SendWeaponAnim(anim)
-		self.PLY_NextIdleAnimT = CurTime() + animTime
+		self.PLY_NextIdleAnimT = curTime + animTime
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
