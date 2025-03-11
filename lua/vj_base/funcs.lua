@@ -419,9 +419,10 @@ end
 function VJ.IsCurrentAnim(ent, anim)
 	if istable(anim) then
 		local curSeq = ent:GetSequence()
+		local curAct = ent:GetActivity()
 		for _, v in ipairs(anim) do
 			if isnumber(v) then
-				if v != -1 && ent:SelectWeightedSequence(v) == curSeq then -- Translate activity to sequence
+				if v != -1 && v == curAct then
 					return true
 				end
 			elseif ent:LookupSequence(v) == curSeq then
@@ -429,8 +430,10 @@ function VJ.IsCurrentAnim(ent, anim)
 			end
 		end
 	else
+		if anim == -1 then return false end
 		if isnumber(anim) then -- For numbers do an activity check because an activity can have more than 1 sequence!
-			return anim != -1 && anim == ent:GetActivity()
+			local curAct = ent:GetActivity()
+			return (anim == curAct) or (ent:TranslateActivity(anim) == curAct)
 		end
 		return ent:LookupSequence(anim) == ent:GetSequence()
 	end
