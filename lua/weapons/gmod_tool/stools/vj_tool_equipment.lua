@@ -13,7 +13,7 @@ TOOL.ClientConVar = {
 local defaultConvars = TOOL:BuildConVarList()
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local function ControlPanel(Panel)
+	local function ControlPanel(panel)
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
@@ -29,19 +29,19 @@ if CLIENT then
 				ControlPanel(getPanel)
 			end)
 		end
-		Panel:AddPanel(reset)
+		panel:AddPanel(reset)
 		
-		Panel:AddControl("Label", {Text = "#tool.vj_tool_equipment.label"})
+		panel:AddControl("Label", {Text = "#tool.vj_tool_equipment.label"})
 		
 		local selectwep = vgui.Create("DTextEntry")
 		selectwep:SetEditable(false)
 		selectwep:SetText(language.GetPhrase("#tool.vj_tool_equipment.selectedequipment")..": "..GetConVarString("vj_tool_equipment_weaponname").." ["..GetConVarString("vj_tool_equipment_weaponclass").."]")
 		selectwep.OnGetFocus = function() LocalPlayer():ConCommand("vj_npcequipment_openwepselect") end
-		Panel:AddItem(selectwep)
+		panel:AddItem(selectwep)
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	function TOOL.BuildCPanel(Panel)
-		ControlPanel(Panel)
+	function TOOL.BuildCPanel(panel)
+		ControlPanel(panel)
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	concommand.Add("vj_npcequipment_openwepselect",function(pl,cmd,args)
@@ -87,18 +87,24 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
-	if !tr.Entity:IsNPC() then return end
-	if IsValid(tr.Entity:GetActiveWeapon()) then tr.Entity:GetActiveWeapon():Remove() end
+	
+	local ent = tr.Entity
+	if !IsValid(ent) or !ent:IsNPC() then return end
 	local equipment = GetConVarString("vj_tool_equipment_weaponclass")
+	
+	if IsValid(ent:GetActiveWeapon()) then ent:GetActiveWeapon():Remove() end
 	if equipment != "None" then
-		tr.Entity:Give(equipment)
+		ent:Give(equipment)
 	end
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
-	if !tr.Entity:IsNPC() then return end
-	if IsValid(tr.Entity:GetActiveWeapon()) then tr.Entity:GetActiveWeapon():Remove() end
+	
+	local ent = tr.Entity
+	if !IsValid(ent) or !ent:IsNPC() then return end
+	
+	if IsValid(ent:GetActiveWeapon()) then ent:GetActiveWeapon():Remove() end
 	return true
 end

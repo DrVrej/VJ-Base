@@ -4,32 +4,35 @@ TOOL.Category = "Tools"
 TOOL.Information = {
 	{name = "left"},
 }
-
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	function TOOL.BuildCPanel(Panel)
-		Panel:AddControl("Label", {Text = "#tool.vj_tool_scanner.label"})
+	function TOOL.BuildCPanel(panel)
+		panel:AddControl("Label", {Text = "#tool.vj_tool_scanner.label"})
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
-	if !IsValid(tr.Entity) then return false end
-	local Ent = tr.Entity
-	local Phys = Ent:GetPhysicsObject()
-	PrintMessage(HUD_PRINTCONSOLE,"------------------- Name = "..Ent:GetName().." ||| Class = "..Ent:GetClass().." ||| Index = "..Ent:EntIndex().." -------------------")
-	PrintMessage(HUD_PRINTCONSOLE,"MODEL: File Path = "..Ent:GetModel().." ||| Skin = "..Ent:GetSkin())
-	PrintMessage(HUD_PRINTCONSOLE,"POSITION: Vector("..Ent:GetPos().x..", "..Ent:GetPos().y..", "..Ent:GetPos().z..") ||| X = "..Ent:GetPos().x.." , Y = "..Ent:GetPos().y.." , Z = "..Ent:GetPos().z)
-	PrintMessage(HUD_PRINTCONSOLE,"ANGLE: Angle("..Ent:GetAngles().p..", "..Ent:GetAngles().y..", "..Ent:GetAngles().r..") ||| Pitch = "..Ent:GetAngles().p.." , Yaw = "..Ent:GetAngles().y.." , Roll = "..Ent:GetAngles().r)
-	PrintMessage(HUD_PRINTCONSOLE,"SEQUENCE: ID = "..Ent:GetSequence().." ||| Name = "..Ent:GetSequenceName(Ent:GetSequence()).." ||| Duration = "..VJ.AnimDuration(Ent,Ent:GetSequenceName(Ent:GetSequence())))
-	if IsValid(Phys) then
-		PrintMessage(HUD_PRINTCONSOLE,"VELOCITY: Vector("..Phys:GetVelocity().x..", "..Phys:GetVelocity().y..", "..Phys:GetVelocity().z..") ||| X = "..Phys:GetVelocity().x.." , Y = "..Phys:GetVelocity().y.." , Z = "..Phys:GetVelocity().z.." ||| Length = "..Phys:GetVelocity():Length())
-		PrintMessage(HUD_PRINTCONSOLE,"PHYSICS: Mass = "..Phys:GetMass().." ||| Surface Area = "..Phys:GetSurfaceArea().." ||| Volume = "..Phys:GetVolume())
+	
+	local ent = tr.Entity
+	if !IsValid(ent) then return false end
+	local ply = self:GetOwner()
+	local phys = ent:GetPhysicsObject()
+	
+	ply:PrintMessage(HUD_PRINTCONSOLE, "-----------------------------------------------------------------------------------------------")
+	ply:PrintMessage(HUD_PRINTCONSOLE, "====> " .. tostring(ent) .. " / " .. ent:GetName() .. " <==== \n\n")
+	ply:PrintMessage(HUD_PRINTCONSOLE, "MODEL    ==> " .. ent:GetModel() .. " ;;; Skin = " .. ent:GetSkin() .. "\n\n")
+	ply:PrintMessage(HUD_PRINTCONSOLE, "POSITION ==> Vector(" .. ent:GetPos().x .. ", " .. ent:GetPos().y .. ", " .. ent:GetPos().z .. ")\n\n")
+	ply:PrintMessage(HUD_PRINTCONSOLE, "ANGLE    ==> Angle(" .. ent:GetAngles().p .. ", " .. ent:GetAngles().y .. ", " .. ent:GetAngles().r .. ")\n\n")
+	ply:PrintMessage(HUD_PRINTCONSOLE, "SEQUENCE ==> \"" .. ent:GetSequenceName(ent:GetSequence()) .. "\" [" .. ent:GetSequence() .. "] ;;; Duration = " .. VJ.AnimDuration(ent, ent:GetSequenceName(ent:GetSequence())) .. "\n\n")
+	if IsValid(phys) then
+		ply:PrintMessage(HUD_PRINTCONSOLE, "VELOCITY ==> Vector(" .. phys:GetVelocity().x .. ", " .. phys:GetVelocity().y .. ", " .. phys:GetVelocity().z .. ") ;;; Length = " .. phys:GetVelocity():Length() .. "\n\n")
+		ply:PrintMessage(HUD_PRINTCONSOLE, "PHYSICS  ==> Mass = " .. phys:GetMass() .. " ;;; Surface Area = " .. phys:GetSurfaceArea() .. " ;;; Volume = " .. phys:GetVolume() .. "\n\n")
 	else
-		PrintMessage(HUD_PRINTCONSOLE,"VELOCITY: Can't display this information! Reason: Model doesn't have proper physics!")
-		PrintMessage(HUD_PRINTCONSOLE,"PHYSICS: Can't display this information! Reason: Model doesn't have proper physics!")
+		ply:PrintMessage(HUD_PRINTCONSOLE, "VELOCITY ==> Model doesn't have a physics object!\n\n")
+		ply:PrintMessage(HUD_PRINTCONSOLE, "PHYSICS  ==> Model doesn't have a physics object!\n\n")
 	end
-	PrintMessage(HUD_PRINTCONSOLE,"COLOR: Color("..Ent:GetColor().r..", "..Ent:GetColor().g..", "..Ent:GetColor().b..", "..Ent:GetColor().a..") ||| Red = "..Ent:GetColor().r.." , Green = "..Ent:GetColor().g.." , Blue = "..Ent:GetColor().b.." , Alpha = "..Ent:GetColor().a)
-	PrintMessage(HUD_PRINTCONSOLE,"-----------------------------------------------------------------------------------------------")
+	ply:PrintMessage(HUD_PRINTCONSOLE, "COLOR    ==> Color(" .. ent:GetColor().r .. ", " .. ent:GetColor().g .. ", " .. ent:GetColor().b .. ", " .. ent:GetColor().a .. ")")
+	ply:PrintMessage(HUD_PRINTCONSOLE, "-----------------------------------------------------------------------------------------------")
 	return true
 end

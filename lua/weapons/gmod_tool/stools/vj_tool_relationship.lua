@@ -13,7 +13,7 @@ TOOL.ClientConVar = {
 local defaultConvars = TOOL:BuildConVarList()
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local function ControlPanel(Panel)
+	local function ControlPanel(panel)
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
@@ -29,7 +29,7 @@ if CLIENT then
 				ControlPanel(getPanel)
 			end)
 		end
-		Panel:AddPanel(reset)
+		panel:AddPanel(reset)
 
 		local tutorial = vgui.Create("DButton")
 		tutorial:SetFont("DermaDefaultBold")
@@ -39,10 +39,10 @@ if CLIENT then
 		tutorial.DoClick = function()
 			gui.OpenURL("http://www.youtube.com/watch?v=SnuQU8Sc4cg")
 		end
-		Panel:AddPanel(tutorial)
+		panel:AddPanel(tutorial)
 
-		Panel:AddControl("Label", {Text = "#tool.vj_tool_relationship.header"})
-		Panel:ControlHelp("#tool.vj_tool_relationship.header.help")
+		panel:AddControl("Label", {Text = "#tool.vj_tool_relationship.header"})
+		panel:ControlHelp("#tool.vj_tool_relationship.header.help")
 		
 		VJ_NPCRELATION_TblCurrentValues = VJ_NPCRELATION_TblCurrentValues or {}
 		local CheckList = vgui.Create("DListView")
@@ -60,7 +60,7 @@ if CLIENT then
 					table.insert(VJ_NPCRELATION_TblCurrentValues,vLine:GetValue(1))
 				end
 			end
-		Panel:AddItem(CheckList)
+		panel:AddItem(CheckList)
 		for _,v in pairs(VJ_NPCRELATION_TblCurrentValues) do
 			CheckList:AddLine(v)
 		end
@@ -86,8 +86,8 @@ if CLIENT then
 		TextEntry.OnEnter = function()
 			InsertToTable(TextEntry:GetValue())
 		end
-		Panel:AddItem(TextEntry)
-		Panel:ControlHelp("#tool.vj_tool_relationship.label2")
+		panel:AddItem(TextEntry)
+		panel:ControlHelp("#tool.vj_tool_relationship.label2")
 		
 		local button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
@@ -97,7 +97,7 @@ if CLIENT then
 		button.DoClick = function()
 			InsertToTable("CLASS_ANTLION")
 		end
-		Panel:AddPanel(button)
+		panel:AddPanel(button)
 		
 		button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
@@ -107,7 +107,7 @@ if CLIENT then
 		button.DoClick = function()
 			InsertToTable("CLASS_COMBINE")
 		end
-		Panel:AddPanel(button)
+		panel:AddPanel(button)
 		
 		button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
@@ -117,7 +117,7 @@ if CLIENT then
 		button.DoClick = function()
 			InsertToTable("CLASS_UNITED_STATES")
 		end
-		Panel:AddPanel(button)
+		panel:AddPanel(button)
 		
 		button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
@@ -127,7 +127,7 @@ if CLIENT then
 		button.DoClick = function()
 			InsertToTable("CLASS_XEN")
 		end
-		Panel:AddPanel(button)
+		panel:AddPanel(button)
 		
 		button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
@@ -137,7 +137,7 @@ if CLIENT then
 		button.DoClick = function()
 			InsertToTable("CLASS_ZOMBIE")
 		end
-		Panel:AddPanel(button)
+		panel:AddPanel(button)
 		
 		button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
@@ -147,19 +147,18 @@ if CLIENT then
 		button.DoClick = function()
 			InsertToTable("CLASS_PLAYER_ALLY")
 		end
-		Panel:AddPanel(button)
-		Panel:AddControl("Checkbox", {Label = "#tool.vj_tool_relationship.togglealliedply", Command = "vj_tool_relationship_allytoplyallies"})
-		Panel:ControlHelp(language.GetPhrase("#tool.vj_tool_relationship.label3"))
+		panel:AddPanel(button)
+		panel:AddControl("Checkbox", {Label = "#tool.vj_tool_relationship.togglealliedply", Command = "vj_tool_relationship_allytoplyallies"})
+		panel:ControlHelp(language.GetPhrase("#tool.vj_tool_relationship.label3"))
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	function TOOL.BuildCPanel(Panel)
-		ControlPanel(Panel)
+	function TOOL.BuildCPanel(panel)
+		ControlPanel(panel)
 	end
-	
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	net.Receive("vj_npcrelationship_cl_select", function(len, ply)
+	net.Receive("vj_tool_relationship_cl_select", function(len)
 		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" then
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" && hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_relationship") then
 			//local ent = net.ReadEntity()
 			local entname = net.ReadString()
 			//local hasclasstbl = net.ReadBool()
@@ -178,16 +177,16 @@ if CLIENT then
 		end
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	net.Receive("vj_npcrelationship_cl_leftclick", function(len, ply)
+	net.Receive("vj_tool_relationship_cl_apply", function(len)
 		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" then
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" && hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_relationship") then
 			local ent = net.ReadEntity()
 			local entname = net.ReadString()
 			local clicktype = net.ReadString()
 			local allynum = net.ReadFloat()
 			if clicktype == "ReloadClick" then entname = "Yourself" end
 			chat.AddText(Color(0,255,0),"#tool.vj_tool_relationship.print.applied",Color(255,100,0)," "..entname)
-			net.Start("vj_npcrelationship_sr_leftclick")
+			net.Start("vj_tool_relationship_sv_apply")
 			net.WriteEntity(ent)
 			//net.WriteTable(self)
 			//net.WriteString(clicktype)
@@ -197,13 +196,13 @@ if CLIENT then
 		end
 	end)
 else
-	util.AddNetworkString("vj_npcrelationship_cl_select")
-	util.AddNetworkString("vj_npcrelationship_cl_leftclick")
-	util.AddNetworkString("vj_npcrelationship_sr_leftclick")
+	util.AddNetworkString("vj_tool_relationship_cl_select")
+	util.AddNetworkString("vj_tool_relationship_cl_apply")
+	util.AddNetworkString("vj_tool_relationship_sv_apply")
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	net.Receive("vj_npcrelationship_sr_leftclick", function(len, ply)
+	net.Receive("vj_tool_relationship_sv_apply", function(len, ply)
 		local wep = ply:GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" then
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" && hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_relationship") then
 			local ent = net.ReadEntity()
 			//local clicktype = net.ReadString()
 			local classtbl = net.ReadTable()
@@ -226,7 +225,7 @@ function TOOL:LeftClick(tr)
 	if IsValid(ent) && ent.VJ_ID_Living then
 		local entname = ent:GetName()
 		if entname == "" then entname = ent:GetClass() end
-		net.Start("vj_npcrelationship_cl_leftclick")
+		net.Start("vj_tool_relationship_cl_apply")
 		net.WriteEntity(ent)
 		net.WriteString(entname)
 		net.WriteString("LeftClick")
@@ -253,7 +252,7 @@ function TOOL:RightClick(tr)
 			//if (classtbl.BaseClass) then table.remove(classtbl,BaseClass) end
 		end
 		//PrintTable(ent.VJ_NPC_Class)
-		net.Start("vj_npcrelationship_cl_select")
+		net.Start("vj_tool_relationship_cl_select")
 		//net.WriteEntity(ent)
 		net.WriteString(entname)
 		//net.WriteBool(hasclasstbl)
@@ -272,7 +271,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:Reload(tr)
 	if CLIENT then return true end
-	net.Start("vj_npcrelationship_cl_leftclick")
+	net.Start("vj_tool_relationship_cl_apply")
 	net.WriteEntity(self:GetOwner())
 	net.WriteString("Me")
 	net.WriteString("ReloadClick")

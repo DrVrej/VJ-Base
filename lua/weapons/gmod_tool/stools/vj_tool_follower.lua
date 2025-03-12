@@ -6,118 +6,73 @@ TOOL.Information = {
 	{name = "right"},
 	{name = "reload"},
 }
-
-local strNoSelection = "No NPC selected"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local function ControlPanel(Panel, curEntName)
-		curEntName = curEntName or strNoSelection
-		local reset = vgui.Create("DButton")
-		reset:SetFont("DermaDefaultBold")
-		reset:SetText("#vjbase.menu.general.reset.everything")
-		reset:SetSize(150, 25)
-		reset:SetColor(VJ.COLOR_BLACK)
-		reset.DoClick = function()
-			timer.Simple(0.05, function() -- Otherwise it will not update the values in time
-				local getPanel = controlpanel.Get("vj_tool_follower")
-				getPanel:Clear()
-				ControlPanel(getPanel)
-			end)
-		end
-		Panel:AddPanel(reset)
-		
-		Panel:AddControl("Label", {Text = "#vjbase.tool.general.note.recommend"})
-		Panel:AddControl("Label", {Text = "Selected NPC: " .. curEntName})
+	function TOOL.BuildCPanel(panel)
+		panel:AddControl("Label", {Text = "#vjbase.tool.general.note.recommend"})
 	end
----------------------------------------------------------------------------------------------------------------------------------------------
-	net.Receive("vj_npcfollower_cl_update", function(len, ply)
-		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_follower" then
-			local entName = net.ReadString()
-			local getPanel = controlpanel.Get("vj_tool_follower")
-			getPanel:Clear()
-			ControlPanel(getPanel, entName)
-		end
-	end)
----------------------------------------------------------------------------------------------------------------------------------------------
-	function TOOL.BuildCPanel(Panel)
-		ControlPanel(Panel)
-	end
-else -- If SERVER
-	util.AddNetworkString("vj_npcfollower_cl_update")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
-	local ent = tr.Entity
-	if (!IsValid(ent)) or !ent:IsNPC() or !ent.IsVJBaseSNPC then return end
 	
-	local npcName = list.Get("NPC")[ent:GetClass()].Name
+	local ent = tr.Entity
+	if !IsValid(ent) or !ent:IsNPC() or !ent.IsVJBaseSNPC then return end
 	local ply = self:GetOwner()
-	local selectedEnt = self:GetEnt(1)
-	-- If we are selecting the NPC then unselected it
-	if IsValid(selectedEnt) && selectedEnt == ent then
+	local selectedNPC = self:GetEnt(1)
+	local npcName = list.Get("NPC")[ent:GetClass()].Name
+	
+	-- Unselect the NPC
+	if IsValid(selectedNPC) && selectedNPC == ent then
 		self:ClearObjects()
 		ply:ChatPrint(npcName .. " Has been unselected!")
-		net.Start("vj_npcfollower_cl_update")
-		net.WriteString(strNoSelection)
-		net.Send(ply)
-	else -- Select new NPC
+	-- Select the NPC
+	else
 		self:ClearObjects()
-		self:SetObject(1, ent, tr.HitPos, Phys, tr.PhysicsBone, tr.HitNormal)
+		self:SetObject(1, ent, tr.HitPos, nil, tr.PhysicsBone, tr.HitNormal)
 		ply:ChatPrint(npcName .. " Has been selected!")
-		net.Start("vj_npcfollower_cl_update")
-		net.WriteString(npcName .. " " .. tostring(ent))
-		net.Send(ply)
 	end
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
-	local ent = tr.Entity
-	if (!IsValid(ent)) then return end
 	
+	local ent = tr.Entity
+	if !IsValid(ent) then return end
 	local ply = self:GetOwner()
-	local selectedEnt = self:GetEnt(1)
-	if IsValid(selectedEnt) then
-		local followed, failureReason = selectedEnt:Follow(ent, false)
-		if followed then -- Follow attempt successful
+	local selectedNPC = self:GetEnt(1)
+	
+	if IsValid(selectedNPC) then
+		local npcName = list.Get("NPC")[selectedNPC:GetClass()].Name
+		local followed, failureReason = selectedNPC:Follow(ent, false)
+		
+		-- SUCCESS
+		if followed then
 			self:ClearObjects()
-			ply:ChatPrint(list.Get("NPC")[selectedEnt:GetClass()].Name .. " is now following " .. ent:GetClass())
+			ply:ChatPrint(npcName .. " is now following " .. ent:GetClass())
+		-- FAILURES
 		elseif failureReason == 1 then
-			ply:ChatPrint("ERROR: " .. list.Get("NPC")[selectedEnt:GetClass()].Name .. " NPC is stationary and currently unable to follow!")
+			ply:ChatPrint("ERROR: " .. npcName .. " NPC is stationary and currently unable to follow!")
 		elseif failureReason == 2 then
-			ply:ChatPrint("ERROR: " .. list.Get("NPC")[selectedEnt:GetClass()].Name .. " is already following another entity!")
+			ply:ChatPrint("ERROR: " .. npcName .. " is already following another entity!")
 		elseif failureReason == 3 then
-			ply:ChatPrint("ERROR: " .. list.Get("NPC")[selectedEnt:GetClass()].Name .. " is NOT friendly to the other entity!")
-		else -- Follow failed!
-			ply:ChatPrint("ERROR: " .. list.Get("NPC")[selectedEnt:GetClass()].Name .. " is currently unable to follow!")
+			ply:ChatPrint("ERROR: " .. npcName .. " is NOT friendly to the other entity!")
+		else
+			ply:ChatPrint("ERROR: " .. npcName .. " is currently unable to follow!")
 		end
 	else
 		ply:ChatPrint("#tool.vj_tool_follower.print.noselection")
 	end
-	net.Start("vj_npcfollower_cl_update")
-	net.WriteString(strNoSelection)
-	net.Send(ply)
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:Reload(tr)
 	if CLIENT then return true end
-	local ent = tr.Entity
-	if (!IsValid(ent)) or !ent:IsNPC() or !ent.IsVJBaseSNPC then return end
 	
+	local ent = tr.Entity
+	if !IsValid(ent) or !ent:IsNPC() or !ent.IsVJBaseSNPC then return end
 	ent:ResetFollowBehavior()
 	self:GetOwner():ChatPrint("#tool.vj_tool_follower.print.reset")
 	return true
 end
----------------------------------------------------------------------------------------------------------------------------------------------
-/*function TOOL:Holster()
-	self:ClearObjects()
-	if SERVER then
-		net.Start("vj_npcfollower_cl_update")
-		net.WriteString(strNoSelection)
-		net.Send(self:GetOwner())
-	end
-end*/

@@ -6,7 +6,7 @@ TOOL.Information = {
 }
 TOOL.ClientConVar = {
 	type = "Dynamic",
-	modeldirectory = "models/hunter/plates/plate.mdl",
+	model = "models/hunter/plates/plate.mdl",
 	usecolor = 1,
 	startactivate = 1
 }
@@ -14,7 +14,7 @@ TOOL.ClientConVar = {
 local defaultConvars = TOOL:BuildConVarList()
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local function ControlPanel(Panel)
+	local function ControlPanel(panel)
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
@@ -30,7 +30,7 @@ if CLIENT then
 				ControlPanel(getPanel)
 			end)
 		end
-		Panel:AddPanel(reset)
+		panel:AddPanel(reset)
 		
 		local tutorial = vgui.Create("DButton")
 		tutorial:SetFont("DermaDefaultBold")
@@ -40,12 +40,12 @@ if CLIENT then
 		tutorial.DoClick = function()
 			gui.OpenURL("http://www.youtube.com/watch?v=Qf-vrE-BAW4")
 		end
-		Panel:AddPanel(tutorial)
+		panel:AddPanel(tutorial)
 		
-		Panel:AddControl("Label", {Text = "#vjbase.tool.general.note.recommend"})
-		Panel:ControlHelp("- "..language.GetPhrase("#tool.vj_tool_bullseye.menu.help1"))
-		Panel:ControlHelp("- "..language.GetPhrase("#tool.vj_tool_bullseye.menu.help2"))
-		Panel:AddControl("Label", {Text = language.GetPhrase("#tool.vj_tool_bullseye.menu.label1")..":"})
+		panel:AddControl("Label", {Text = "#vjbase.tool.general.note.recommend"})
+		panel:ControlHelp("- "..language.GetPhrase("#tool.vj_tool_bullseye.menu.help1"))
+		panel:ControlHelp("- "..language.GetPhrase("#tool.vj_tool_bullseye.menu.help2"))
+		panel:AddControl("Label", {Text = language.GetPhrase("#tool.vj_tool_bullseye.menu.label1")..":"})
 		local typebox = vgui.Create("DComboBox")
 		//typebox:SetConVar("vj_tool_bullseye_type")
 		typebox:SetValue(GetConVarString("vj_tool_bullseye_type"))
@@ -55,35 +55,35 @@ if CLIENT then
 		function typebox:OnSelect(index,value,data)
 			LocalPlayer():ConCommand("vj_tool_bullseye_type "..value)
 		end
-		Panel:AddPanel(typebox)
-		Panel:AddControl("Label", {Text = language.GetPhrase("#tool.vj_tool_bullseye.menu.label2")..":"})
+		panel:AddPanel(typebox)
+		panel:AddControl("Label", {Text = language.GetPhrase("#tool.vj_tool_bullseye.menu.label2")..":"})
 		local modeldir = vgui.Create("DTextEntry")
-		modeldir:SetConVar("vj_tool_bullseye_modeldirectory")
+		modeldir:SetConVar("vj_tool_bullseye_model")
 		modeldir:SetMultiline(false)
-		Panel:AddPanel(modeldir)
-		Panel:AddControl("Checkbox", {Label = "#tool.vj_tool_bullseye.menu.toggleusestatus", Command = "vj_tool_bullseye_usecolor"})
-		Panel:AddControl("Checkbox", {Label = "#tool.vj_tool_bullseye.menu.togglestartactivated", Command = "vj_tool_bullseye_startactivate"})
+		panel:AddPanel(modeldir)
+		panel:AddControl("Checkbox", {Label = "#tool.vj_tool_bullseye.menu.toggleusestatus", Command = "vj_tool_bullseye_usecolor"})
+		panel:AddControl("Checkbox", {Label = "#tool.vj_tool_bullseye.menu.togglestartactivated", Command = "vj_tool_bullseye_startactivate"})
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	function TOOL.BuildCPanel(Panel)
-		ControlPanel(Panel)
+	function TOOL.BuildCPanel(panel)
+		ControlPanel(panel)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
-		local spawner = ents.Create("obj_vj_bullseye")
-		spawner:SetPos(tr.HitPos)
-		spawner:SetModel(GetConVarString("vj_tool_bullseye_modeldirectory"))
-		spawner.SolidMovementType = GetConVarString("vj_tool_bullseye_type")
-		spawner.UseActivationSystem = true
-		spawner.ActivationSystemStatusColors = GetConVar("vj_tool_bullseye_usecolor"):GetBool()
-		spawner.Activated = GetConVar("vj_tool_bullseye_startactivate"):GetBool()
-		spawner:Spawn()
-		spawner:Activate()
-		undo.Create("NPC Bullseye")
-		undo.AddEntity(spawner)
-		undo.SetPlayer(self:GetOwner())
-		undo.Finish()
+	local spawner = ents.Create("obj_vj_bullseye")
+	spawner:SetPos(tr.HitPos)
+	spawner:SetModel(GetConVarString("vj_tool_bullseye_model"))
+	spawner.SolidMovementType = GetConVarString("vj_tool_bullseye_type")
+	spawner.UseActivationSystem = true
+	spawner.ActivationSystemStatusColors = GetConVar("vj_tool_bullseye_usecolor"):GetBool()
+	spawner.Activated = GetConVar("vj_tool_bullseye_startactivate"):GetBool()
+	spawner:Spawn()
+	spawner:Activate()
+	undo.Create("NPC Bullseye")
+	undo.AddEntity(spawner)
+	undo.SetPlayer(self:GetOwner())
+	undo.Finish()
 	return true
 end
