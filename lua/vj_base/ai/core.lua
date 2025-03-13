@@ -2811,8 +2811,6 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			local pickedSD = PICK(selfData.SoundTbl_MedicOnHeal)
 			if (pickedSD && math.random(1, selfData.MedicOnHealSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
-				StopSD(selfData.CurrentSpeechSound)
-				StopSD(selfData.CurrentIdleSound)
 				selfData.NextIdleSoundT_Reg = CurTime() + math.random(3, 4)
 				selfData.CurrentMedicAfterHealSound = (sdType or VJ.EmitSound)(self, pickedSD, selfData.MedicOnHealSoundLevel, self:GetSoundPitch(selfData.MedicOnHealSoundPitch))
 			end
