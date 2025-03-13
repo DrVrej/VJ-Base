@@ -132,7 +132,7 @@ function ENT:OnCollision(data, phys)
 
 	if (dataEnt:IsNPC() or dataEnt:IsPlayer()) then return end
 	
-	self:OnBounce(data,phys)
+	self:OnBounce(data, phys)
 
 	local dataF = EffectData()
 	dataF:SetOrigin(data.HitPos)

@@ -18,7 +18,7 @@ if CLIENT then
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
-		reset:SetSize(150,25)
+		reset:SetSize(150, 25)
 		reset:SetColor(VJ.COLOR_BLACK)
 		reset.DoClick = function()
 			for k, v in pairs(defaultConvars) do
@@ -52,7 +52,7 @@ if CLIENT then
 		typebox:AddChoice("Dynamic")
 		typebox:AddChoice("Static")
 		typebox:AddChoice("Physics")
-		function typebox:OnSelect(index,value,data)
+		function typebox:OnSelect(index, value, data)
 			LocalPlayer():ConCommand("vj_tool_bullseye_type "..value)
 		end
 		panel:AddPanel(typebox)

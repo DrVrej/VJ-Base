@@ -2663,7 +2663,7 @@ function ENT:ExecuteLeapAttack()
 	local hitRegistered = false
 	if !skip then
 		local myClass = self:GetClass()
-		for _,ent in ipairs(ents.FindInSphere(self:GetPos(), selfData.LeapAttackDamageDistance)) do
+		for _, ent in ipairs(ents.FindInSphere(self:GetPos(), selfData.LeapAttackDamageDistance)) do
 			if ent == self or ent:GetClass() == myClass or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then continue end
 			if ent:IsPlayer() && (ent.VJ_IsControllingNPC or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
 			if (ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible then

@@ -232,10 +232,10 @@ if (SLVBase) then
 		if !VJBASE_ERROR_CONFLICT then
 			VJBASE_ERROR_CONFLICT = true
 			if CLIENT then
-				chat.AddText(Color(255, 100, 0),"Confliction Detected!",
-				Color(0, 255, 0)," VJ Base ",
-				Color(255, 255, 255),"is being overridden by another addon!")
-				chat.AddText(Color(0, 200, 200),"Incompatible Addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
+				chat.AddText(Color(255, 100, 0), "Confliction Detected!",
+				Color(0, 255, 0), " VJ Base ",
+				Color(255, 255, 255), "is being overridden by another addon!")
+				chat.AddText(Color(0, 200, 200), "Incompatible Addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
 
 				local frame = vgui.Create("DFrame")
 				frame:SetSize(600, 200)

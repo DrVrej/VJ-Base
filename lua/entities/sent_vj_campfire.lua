@@ -85,7 +85,7 @@ function ENT:Use(activator, caller)
 		self:EmitSound("ambient/fire/mtov_flame2.wav", 60, 100)
 		self.fireLoopSD = CreateSound(self, "ambient/fire/fire_small_loop1.wav")
 		self.fireLoopSD:SetSoundLevel(60)
-		self.fireLoopSD:PlayEx(1,100)
+		self.fireLoopSD:PlayEx(1, 100)
 		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.campfire.print.activated") 
 	else
 		self:SetNW2Bool("VJ_FirePlace_Activated", false)

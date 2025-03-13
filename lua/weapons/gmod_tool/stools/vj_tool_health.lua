@@ -21,7 +21,7 @@ if CLIENT then
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
-		reset:SetSize(150,25)
+		reset:SetSize(150, 25)
 		reset:SetColor(VJ.COLOR_BLACK)
 		reset.DoClick = function()
 			for k, v in pairs(defaultConvars) do

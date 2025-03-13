@@ -68,7 +68,7 @@ end
 			- Tiny cube: "models/hunter/plates/plate.mdl"
 	Returns
 		- Entity, the created test entity
-	Note: To quickly remove all of them run "lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end"
+	Note: To quickly remove all of them run "lua_run for k, v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end"
 		- WARNING: This will remove ALL dynamic objects
 -----------------------------------------------------------]]
 function VJ.DEBUG_TempEnt(pos, ang, color, time, mdl)

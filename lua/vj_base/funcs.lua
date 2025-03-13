@@ -733,7 +733,7 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 							if IsValid(phys) then
 								if forceUp == false then forceUp = force / 9.4 end
 								if ent:GetClass() == "prop_ragdoll" then force = force * 1.5 end
-								phys:ApplyForceCenter(((ent:GetPos() + ent:OBBCenter() + ent:GetUp() * forceUp) - startPos) * force) //+attacker:GetForward()*vForcePropPhysics
+								phys:ApplyForceCenter(((ent:GetPos() + ent:OBBCenter() + ent:GetUp() * forceUp) - startPos) * force) // + attacker:GetForward()*vForcePropPhysics
 							end
 						else
 							force = force * 1.2

@@ -26,7 +26,7 @@ if CLIENT then
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
-		reset:SetSize(150,25)
+		reset:SetSize(150, 25)
 		reset:SetColor(VJ.COLOR_BLACK)
 		reset.DoClick = function()
 			for k, v in pairs(defaultConvars) do
@@ -65,18 +65,18 @@ if CLIENT then
 			selectnpc:SetText(language.GetPhrase("#tool.vj_tool_spawner.selectednpc")..": "..GetConVarString("vj_tool_spawner_spawnentname").." ["..GetConVarString("vj_tool_spawner_spawnent").."]")
 			selectnpc.OnGetFocus = function() LocalPlayer():ConCommand("vj_npcspawner_opennpcselect") end
 		panel:AddItem(selectnpc)
-		panel:AddControl("TextBox",{Label = "#tool.vj_tool_spawner.spawnpos.forward",MaxLength = 10,Type = "Float",WaitForEnter = false,Command = "vj_tool_spawner_spawnpos_forward"})
-		panel:AddControl("TextBox",{Label = "#tool.vj_tool_spawner.spawnpos.right",MaxLength = 10,Type = "Float",WaitForEnter = false,Command = "vj_tool_spawner_spawnpos_right"})
-		panel:AddControl("TextBox",{Label = "#tool.vj_tool_spawner.spawnpos.up",MaxLength = 10,Type = "Float",WaitForEnter = false,Command = "vj_tool_spawner_spawnpos_up"})
+		panel:AddControl("TextBox", {Label = "#tool.vj_tool_spawner.spawnpos.forward", MaxLength = 10, Type = "Float", WaitForEnter = false, Command = "vj_tool_spawner_spawnpos_forward"})
+		panel:AddControl("TextBox", {Label = "#tool.vj_tool_spawner.spawnpos.right", MaxLength = 10, Type = "Float", WaitForEnter = false, Command = "vj_tool_spawner_spawnpos_right"})
+		panel:AddControl("TextBox", {Label = "#tool.vj_tool_spawner.spawnpos.up", MaxLength = 10, Type = "Float", WaitForEnter = false, Command = "vj_tool_spawner_spawnpos_up"})
 		local selectwep = vgui.Create("DTextEntry")
 			selectwep:SetEditable(false)
 			selectwep:SetText(language.GetPhrase("#tool.vj_tool_spawner.selectweapon")..": "..GetConVarString("vj_tool_spawner_weaponequipname").." ["..GetConVarString("vj_tool_spawner_weaponequip").."]")
 			selectwep.OnGetFocus = function() LocalPlayer():ConCommand("vj_npcspawner_openwepselect") end
 		panel:AddItem(selectwep)
-		panel:AddControl("TextBox",{Label = "#tool.vj_tool_spawner.spawnnpclass",WaitForEnter = false,Command = "vj_tool_spawner_spawnnpclass"})
-		panel:AddControl("CheckBox",{Label = "#tool.vj_tool_spawner.fritoplyallies",Command = "vj_tool_spawner_fritoplyallies"})
+		panel:AddControl("TextBox", {Label = "#tool.vj_tool_spawner.spawnnpclass", WaitForEnter = false, Command = "vj_tool_spawner_spawnnpclass"})
+		panel:AddControl("CheckBox", {Label = "#tool.vj_tool_spawner.fritoplyallies", Command = "vj_tool_spawner_fritoplyallies"})
 		panel:ControlHelp("#tool.vj_tool_spawner.label.fritoplyallies")
-		panel:AddControl("Button",{Label = "#tool.vj_tool_spawner.button.updatelist",Command = "vj_npcspawner_updatelist"})
+		panel:AddControl("Button", {Label = "#tool.vj_tool_spawner.button.updatelist", Command = "vj_npcspawner_updatelist"})
 		panel:ControlHelp("#tool.vj_tool_spawner.label1")
 		local CheckList = vgui.Create("DListView")
 			CheckList:SetTooltip(false)
@@ -85,38 +85,38 @@ if CLIENT then
 			CheckList:AddColumn("#tool.vj_tool_spawner.header1")
 			CheckList:AddColumn("#tool.vj_tool_spawner.header2")
 			CheckList:AddColumn("#tool.vj_tool_spawner.header3")
-			CheckList.OnRowSelected = function(rowIndex,row) chat.AddText(Color(0,255,0),"Double click to ",Color(255,100,0),"remove ",Color(0,255,0),"a NPC") end
-			function CheckList:DoDoubleClick(lineID,line)
-				chat.AddText(Color(0,255,0),"NPC",Color(255,100,0)," "..line:GetValue(1).." ",Color(0,255,0),"removed!")
+			CheckList.OnRowSelected = function(rowIndex, row) chat.AddText(Color(0, 255, 0), "Double click to ", Color(255, 100, 0), "remove ", Color(0, 255, 0), "a NPC") end
+			function CheckList:DoDoubleClick(lineID, line)
+				chat.AddText(Color(0, 255, 0), "NPC", Color(255, 100, 0), " "..line:GetValue(1).." ", Color(0, 255, 0), "removed!")
 				CheckList:RemoveLine(lineID)
 				table.Empty(VJ_NPCSPAWNER_TblCurrentLinesUsable)
-				for _,vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
-					table.insert(VJ_NPCSPAWNER_TblCurrentLinesUsable,{Entities=vLine:GetValue(4),SpawnPosition=vLine:GetValue(2),WeaponsList=vLine:GetValue(3),EntityName=vLine:GetValue(1),Relationship=vLine:GetValue(5)})
+				for _, vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
+					table.insert(VJ_NPCSPAWNER_TblCurrentLinesUsable, {Entities=vLine:GetValue(4), SpawnPosition=vLine:GetValue(2), WeaponsList=vLine:GetValue(3), EntityName=vLine:GetValue(1), Relationship=vLine:GetValue(5)})
 				end
 			end
 		panel:AddItem(CheckList)
-		for k,v in pairs(VJ_NPCSPAWNER_TblCurrentValues) do
-			if v.Entities == "" or v.Entities == "none" or v.Entities == {} then table.remove(VJ_NPCSPAWNER_TblCurrentValues,k) continue end
+		for k, v in pairs(VJ_NPCSPAWNER_TblCurrentValues) do
+			if v.Entities == "" or v.Entities == "none" or v.Entities == {} then table.remove(VJ_NPCSPAWNER_TblCurrentValues, k) continue end
 			if v.Entities != "" && v.Entities != "none" && v.Entities != {} then
-				CheckList:AddLine(v.EntityName,v.SpawnPosition,v.WeaponsList,v.Entities,v.Relationship)
-				//CheckList:AddLine(v.Entities,"x:"..v.SpawnPosition.vForward.." y:"..v.SpawnPosition.vRight.." z:"..v.SpawnPosition.vUp)
+				CheckList:AddLine(v.EntityName, v.SpawnPosition, v.WeaponsList, v.Entities, v.Relationship)
+				//CheckList:AddLine(v.Entities, "x:"..v.SpawnPosition.vForward.." y:"..v.SpawnPosition.vRight.." z:"..v.SpawnPosition.vUp)
 			end
 		end
 		table.Empty(VJ_NPCSPAWNER_TblCurrentValues)
-		for _,vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
-			CheckList:AddLine(vLine:GetValue(1),vLine:GetValue(2),vLine:GetValue(3),vLine:GetValue(4),vLine:GetValue(5))
+		for _, vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
+			CheckList:AddLine(vLine:GetValue(1), vLine:GetValue(2), vLine:GetValue(3), vLine:GetValue(4), vLine:GetValue(5))
 		end
 		VJ_NPCSPAWNER_TblCurrentLines = CheckList:GetLines()
 		table.Empty(VJ_NPCSPAWNER_TblCurrentLinesUsable)
-		for _,vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
-			table.insert(VJ_NPCSPAWNER_TblCurrentLinesUsable,{Entities=vLine:GetValue(4),SpawnPosition=vLine:GetValue(2),WeaponsList=vLine:GetValue(3),EntityName=vLine:GetValue(1),Relationship=vLine:GetValue(5)})
+		for _, vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
+			table.insert(VJ_NPCSPAWNER_TblCurrentLinesUsable, {Entities=vLine:GetValue(4), SpawnPosition=vLine:GetValue(2), WeaponsList=vLine:GetValue(3), EntityName=vLine:GetValue(1), Relationship=vLine:GetValue(5)})
 		end
 		panel:AddControl("Label", {Text = language.GetPhrase("#tool.vj_tool_spawner.label2")..":"})
 		panel:AddControl("Checkbox", {Label = "#tool.vj_tool_spawner.toggle.spawnsound", Command = "vj_tool_spawner_playsound"})
-		panel:AddControl("Slider", {Label = "#tool.vj_tool_spawner.nextspawntime",min = 0,max = 1000,Command = "vj_tool_spawner_nextspawntime"})
+		panel:AddControl("Slider", {Label = "#tool.vj_tool_spawner.nextspawntime", min = 0, max = 1000, Command = "vj_tool_spawner_nextspawntime"})
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	concommand.Add("vj_npcspawner_opennpcselect",function(ply,cmd,args)
+	concommand.Add("vj_npcspawner_opennpcselect", function(ply, cmd, args)
 		local MenuFrame = vgui.Create('DFrame')
 		MenuFrame:SetSize(420, 440)
 		MenuFrame:SetPos(ScrW()*0.6, ScrH()*0.1)
@@ -132,15 +132,15 @@ if CLIENT then
 			CheckList:SetTooltip(false)
 			//CheckList:Center() -- No need since Size does it already
 			CheckList:SetParent(MenuFrame)
-			CheckList:SetPos(10,30)
-			CheckList:SetSize(400,400) -- Size
+			CheckList:SetPos(10, 30)
+			CheckList:SetSize(400, 400) -- Size
 			CheckList:SetMultiSelect(false)
 			CheckList:AddColumn("#tool.vj_tool_spawner.popup.header1")
 			CheckList:AddColumn("#tool.vj_tool_spawner.popup.header2")
 			CheckList:AddColumn("#tool.vj_tool_spawner.popup.header3")
-			CheckList.OnRowSelected = function() chat.AddText(Color(0,255,0),"#tool.vj_tool_spawner.title1") end
-			function CheckList:DoDoubleClick(lineID,line)
-				chat.AddText(Color(0,255,0),"NPC",Color(255,100,0)," "..line:GetValue(1).." ",Color(0,255,0),"selected!")
+			CheckList.OnRowSelected = function() chat.AddText(Color(0, 255, 0), "#tool.vj_tool_spawner.title1") end
+			function CheckList:DoDoubleClick(lineID, line)
+				chat.AddText(Color(0, 255, 0), "NPC", Color(255, 100, 0), " "..line:GetValue(1).." ", Color(0, 255, 0), "selected!")
 				LocalPlayer():ConCommand("vj_tool_spawner_spawnentname "..line:GetValue(1))
 				LocalPlayer():ConCommand("vj_tool_spawner_spawnent "..line:GetValue(2))
 				MenuFrame:Close()
@@ -160,7 +160,7 @@ if CLIENT then
 		CheckList:SortByColumn(1, false)
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	concommand.Add("vj_npcspawner_openwepselect",function(ply,cmd,args)
+	concommand.Add("vj_npcspawner_openwepselect", function(ply, cmd, args)
 		local MenuFrame = vgui.Create('DFrame')
 		MenuFrame:SetSize(420, 440)
 		MenuFrame:SetPos(ScrW()*0.6, ScrH()*0.1)
@@ -176,14 +176,14 @@ if CLIENT then
 			CheckList:SetTooltip(false)
 			//CheckList:Center() -- No need since Size does it already
 			CheckList:SetParent(MenuFrame)
-			CheckList:SetPos(10,30)
-			CheckList:SetSize(400,400) -- Size
+			CheckList:SetPos(10, 30)
+			CheckList:SetSize(400, 400) -- Size
 			CheckList:SetMultiSelect(false)
 			CheckList:AddColumn("#tool.vj_tool_spawner.popup.header1")
 			CheckList:AddColumn("#tool.vj_tool_spawner.popup.header2")
-			CheckList.OnRowSelected = function() chat.AddText(Color(0,255,0),"#tool.vj_tool_spawner.title2") end
-			function CheckList:DoDoubleClick(lineID,line)
-				chat.AddText(Color(0,255,0),"Weapon",Color(255,100,0)," "..line:GetValue(1).." ",Color(0,255,0),"selected!")
+			CheckList.OnRowSelected = function() chat.AddText(Color(0, 255, 0), "#tool.vj_tool_spawner.title2") end
+			function CheckList:DoDoubleClick(lineID, line)
+				chat.AddText(Color(0, 255, 0), "Weapon", Color(255, 100, 0), " "..line:GetValue(1).." ", Color(0, 255, 0), "selected!")
 				LocalPlayer():ConCommand("vj_tool_spawner_weaponequipname "..line:GetValue(1))
 				LocalPlayer():ConCommand("vj_tool_spawner_weaponequip "..line:GetValue(2))
 				MenuFrame:Close()
@@ -195,15 +195,15 @@ if CLIENT then
 			end
 		//MenuFrame:AddItem(CheckList)
 		//CheckList:SizeToContents()
-		for _,v in pairs(list.Get("NPCUsableWeapons")) do
-			CheckList:AddLine(v.title,v.class)
+		for _, v in pairs(list.Get("NPCUsableWeapons")) do
+			CheckList:AddLine(v.title, v.class)
 		end
-		CheckList:SortByColumn(1,false)
-		CheckList:AddLine("None","None")
-		CheckList:AddLine("Default","Default")
+		CheckList:SortByColumn(1, false)
+		CheckList:AddLine("None", "None")
+		CheckList:AddLine("Default", "Default")
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	concommand.Add("vj_npcspawner_updatelist",function(ply,cmd,args)
+	concommand.Add("vj_npcspawner_updatelist", function(ply, cmd, args)
 		local spawnent = string.lower(GetConVarString("vj_tool_spawner_spawnent"))
 		local spawnentname = GetConVarString("vj_tool_spawner_spawnentname")
 		local spawnposfor = GetConVarString("vj_tool_spawner_spawnpos_forward")
@@ -212,7 +212,7 @@ if CLIENT then
 		local spawnnpclass = GetConVarString("vj_tool_spawner_spawnnpclass")
 		local spawnfritoplyallies = GetConVarString("vj_tool_spawner_fritoplyallies")
 		local spawnequip = string.lower(GetConVarString("vj_tool_spawner_weaponequip"))
-		table.insert(VJ_NPCSPAWNER_TblCurrentValues,{EntityName=spawnentname, Entities=spawnent, SpawnPosition=Vector(spawnposfor, spawnposright, spawnposup), WeaponsList=spawnequip, Relationship={Class = spawnnpclass, FriToPlyAllies = spawnfritoplyallies}})
+		table.insert(VJ_NPCSPAWNER_TblCurrentValues, {EntityName=spawnentname, Entities=spawnent, SpawnPosition=Vector(spawnposfor, spawnposright, spawnposup), WeaponsList=spawnequip, Relationship={Class = spawnnpclass, FriToPlyAllies = spawnfritoplyallies}})
 		local getPanel = controlpanel.Get("vj_tool_spawner")
 		getPanel:Clear()
 		ControlPanel(getPanel)
@@ -224,7 +224,7 @@ if CLIENT then
 			local svpos = net.ReadVector()
 			local svclicktype = net.ReadString()
 			local convartbl = {}
-			for k,_ in pairs(defaultConvars) do
+			for k, _ in pairs(defaultConvars) do
 				convartbl[k] = GetConVarNumber(k)
 			end
 			net.Start("vj_tool_spawner_sv_create")
@@ -257,7 +257,7 @@ else
 			local spawner = ents.Create("obj_vj_spawner_base")
 			spawner.EntitiesToSpawn = {}
 			spawner:SetPos(svpos)
-			local angs = Angle(0,0,0)
+			local angs = Angle(0, 0, 0)
 			if IsValid(ply) then
 				angs = ply:GetAngles()
 				angs.pitch = 0
@@ -265,9 +265,9 @@ else
 				angs.yaw = angs.yaw + 180
 			end
 			spawner:SetAngles(angs)
-			for _,v in pairs(svgetlines) do
+			for _, v in pairs(svgetlines) do
 				//if v.IsVJBaseSpawner == true then ply:ChatPrint("Can't be spawned because it's a spawner") end
-				table.insert(spawner.EntitiesToSpawn,{SpawnPosition=v.SpawnPosition, Entities={v.Entities}, WeaponsList={v.WeaponsList}, NPC_Class = v.Relationship.Class, FriToPlyAllies = tobool(v.Relationship.FriToPlyAllies)})
+				table.insert(spawner.EntitiesToSpawn, {SpawnPosition=v.SpawnPosition, Entities={v.Entities}, WeaponsList={v.WeaponsList}, NPC_Class = v.Relationship.Class, FriToPlyAllies = tobool(v.Relationship.FriToPlyAllies)})
 			end
 			//spawner.EntitiesToSpawn = {entitiestospawntbl}
 			if convartbl.vj_tool_spawner_playsound == 1 then
@@ -282,7 +282,7 @@ else
 			undo.AddEntity(spawner)
 			undo.SetPlayer(ply)
 			undo.Finish()
-			for vpk,vpv in pairs(spawner.CurrentEntities) do
+			for vpk, vpv in pairs(spawner.CurrentEntities) do
 				if IsValid(vpv.TheEntity) && vpv.TheEntity.IsVJBaseSpawner == true && vpv.TheEntity.SingleSpawner == true then
 					vpv.TheEntity:SetCreator(ply)
 					table.remove(spawner.CurrentEntities, vpk)

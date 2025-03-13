@@ -7,8 +7,8 @@ if CLIENT then return end
 
 module("vj_ai_nodegraph", package.seeall)
 
-local Nodegraph		= {}
-Nodegraph.__index 	= Nodegraph
+local Nodegraph = {}
+Nodegraph.__index = Nodegraph
 
 Nodegraph.Data = nil
 

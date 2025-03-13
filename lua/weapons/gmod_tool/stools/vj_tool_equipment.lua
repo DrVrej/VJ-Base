@@ -17,7 +17,7 @@ if CLIENT then
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
-		reset:SetSize(150,25)
+		reset:SetSize(150, 25)
 		reset:SetColor(VJ.COLOR_BLACK)
 		reset.DoClick = function()
 			for k, v in pairs(defaultConvars) do
@@ -44,7 +44,7 @@ if CLIENT then
 		ControlPanel(panel)
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	concommand.Add("vj_npcequipment_openwepselect",function(pl,cmd,args)
+	concommand.Add("vj_npcequipment_openwepselect", function(pl, cmd, args)
 		local MenuFrame = vgui.Create('DFrame')
 		MenuFrame:SetSize(420, 440)
 		MenuFrame:SetPos(ScrW()*0.6, ScrH()*0.1)
@@ -59,14 +59,14 @@ if CLIENT then
 		local CheckList = vgui.Create("DListView")
 			CheckList:SetTooltip(false)
 			CheckList:SetParent(MenuFrame)
-			CheckList:SetPos(10,30)
-			CheckList:SetSize(400,400) -- Size
+			CheckList:SetPos(10, 30)
+			CheckList:SetSize(400, 400) -- Size
 			CheckList:SetMultiSelect(false)
 			CheckList:AddColumn("#tool.vj_tool_equipment.header1")
 			CheckList:AddColumn("#tool.vj_tool_equipment.header2")
-			CheckList.OnRowSelected = function() chat.AddText(Color(0,255,0), "#tool.vj_tool_equipment.print.doubleclick") end
-			function CheckList:DoDoubleClick(lineID,line)
-				chat.AddText(Color(0,255,0), "#tool.vj_tool_equipment.print.weaponselected1", Color(255,100,0), " "..line:GetValue(1).." ", Color(0,255,0), "#tool.vj_tool_equipment.print.weaponselected2")
+			CheckList.OnRowSelected = function() chat.AddText(Color(0, 255, 0), "#tool.vj_tool_equipment.print.doubleclick") end
+			function CheckList:DoDoubleClick(lineID, line)
+				chat.AddText(Color(0, 255, 0), "#tool.vj_tool_equipment.print.weaponselected1", Color(255, 100, 0), " "..line:GetValue(1).." ", Color(0, 255, 0), "#tool.vj_tool_equipment.print.weaponselected2")
 				LocalPlayer():ConCommand("vj_tool_equipment_weaponname "..line:GetValue(1))
 				LocalPlayer():ConCommand("vj_tool_equipment_weaponclass "..line:GetValue(2))
 				MenuFrame:Close()
@@ -78,10 +78,10 @@ if CLIENT then
 			end
 		//MenuFrame:AddItem(CheckList)
 		//CheckList:SizeToContents()
-		for _,v in pairs(list.Get("NPCUsableWeapons")) do
-			CheckList:AddLine(v.title,v.class)
+		for _, v in pairs(list.Get("NPCUsableWeapons")) do
+			CheckList:AddLine(v.title, v.class)
 		end
-		CheckList:SortByColumn(1,false)
+		CheckList:SortByColumn(1, false)
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

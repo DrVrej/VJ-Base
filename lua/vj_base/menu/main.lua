@@ -294,7 +294,7 @@ else
 		Panel:ControlHelp("#vjbase.menu.contact.patreon.label")
 
 		/*HTMLTest = vgui.Create("HTML")
-		HTMLTest:SetPos(50,50)
+		HTMLTest:SetPos(50, 50)
 		HTMLTest:SetSize(ScrW() - 100, ScrH() - 100)
 		HTMLTest:OpenURL("http://steamcommunity.com/sharedfiles/filedetails/?id=131759821")	*/
 		//Panel:AddPanel(HTMLTest)
@@ -329,13 +329,13 @@ else
 		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.bonemanip.npcs", Command = "sbox_bonemanip_npc"})
 		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.bonemanip.players", Command = "sbox_bonemanip_player"})
 		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.bonemanip.others", Command = "sbox_bonemanip_misc"})
-		Panel:AddControl("Slider",{Label = "#vjbase.menu.svsettings.timescale.general",Type = "Float",min = 0.1,max = 10,Command = "host_timescale"})
-		Panel:AddControl("Slider",{Label = "#vjbase.menu.svsettings.timescale.physics",Type = "Float",min = 0,max = 2,Command = "phys_timescale"})
-		Panel:AddControl("Slider",{Label = "#vjbase.menu.svsettings.gravity",Type = "Float",min = -200,max = 600,Command = "sv_gravity"})
+		Panel:AddControl("Slider", {Label = "#vjbase.menu.svsettings.timescale.general", Type = "Float", min = 0.1, max = 10, Command = "host_timescale"})
+		Panel:AddControl("Slider", {Label = "#vjbase.menu.svsettings.timescale.physics", Type = "Float", min = 0, max = 2, Command = "phys_timescale"})
+		Panel:AddControl("Slider", {Label = "#vjbase.menu.svsettings.gravity", Type = "Float", min = -200, max = 600, Command = "sv_gravity"})
 		Panel:AddControl("Label", {Text = "#vjbase.menu.svsettings.maxentsprops"})
 		for _, x in pairs(cleanup.GetTable()) do -- Simply receives all of the GMod limit convars
 			if (!GetConVar("sbox_max"..x)) then continue end
-			Panel:AddControl("Slider",{Label = "#max_"..x, Command = "sbox_max"..x, Min = "0", Max = "9999"})
+			Panel:AddControl("Slider", {Label = "#max_"..x, Command = "sbox_max"..x, Min = "0", Max = "9999"})
 		end
 	end
 	----=================================----
@@ -355,7 +355,7 @@ else
 		pluginList:AddColumn("#vjbase.menu.plugins.header2"):SetFixedWidth(50)
 		//Panel:SetName("Test") -- Renames the blue label
 		if VJ.Plugins != nil then
-			for _,v in SortedPairsByMemberValue(VJ.Plugins, "Name") do
+			for _, v in SortedPairsByMemberValue(VJ.Plugins, "Name") do
 				pluginList:AddLine(v.Name, v.Type)
 			end
 		else

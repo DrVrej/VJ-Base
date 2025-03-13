@@ -382,7 +382,7 @@ function ENT:PlaySound(sdSet)
 				VJ.STOPSOUND(selfData.CurrentIdleSound)
 				selfData.CurrentIdleSound = VJ.CreateSound(self, selfData.SoundTbl_Idle, selfData.IdleSoundLevel, math.random(selfData.IdleSoundPitch.a, selfData.IdleSoundPitch.b))
 			end
-			selfData.NextIdleSoundT = CurTime() + math.Rand(selfData.NextSoundTime_Idle.a ,selfData.NextSoundTime_Idle.b)
+			selfData.NextIdleSoundT = CurTime() + math.Rand(selfData.NextSoundTime_Idle.a , selfData.NextSoundTime_Idle.b)
 		end
 	elseif sdSet == "OnCollide" then
 		if selfData.HasOnCollideSounds && math.random(1, selfData.OnCollideSoundChance) == 1 then

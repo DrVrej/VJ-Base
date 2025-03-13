@@ -165,7 +165,7 @@ function ENT:Init()
 	self:PhysicsInit(SOLID_VPHYSICS) // SOLID_BBOX
 	//self:SetSolid(SOLID_VPHYSICS)
 	self:SetAngles(self:GetAngles() + Angle(0, -self.Tank_AngleOffset, 0))
-	//self:SetPos(self:GetPos()+Vector(0,0,90))
+	//self:SetPos(self:GetPos() + Vector(0, 0, 90))
 	self:SetCollisionBounds(Vector(self.Tank_CollisionBoundSize, self.Tank_CollisionBoundSize, self.Tank_CollisionBoundUp), Vector(-self.Tank_CollisionBoundSize, -self.Tank_CollisionBoundSize, self.Tank_CollisionBoundDown))
 
 	local phys = self:GetPhysicsObject()
@@ -220,9 +220,9 @@ function ENT:OnThink()
 			//ParticleEffectAttach("vj_rocket_idle2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 
 			selfData.Spark1 = ents.Create("env_spark")
-			selfData.Spark1:SetKeyValue("MaxDelay",0.01)
-			selfData.Spark1:SetKeyValue("Magnitude","8")
-			selfData.Spark1:SetKeyValue("Spark Trail Length","3")
+			selfData.Spark1:SetKeyValue("MaxDelay", 0.01)
+			selfData.Spark1:SetKeyValue("Magnitude", "8")
+			selfData.Spark1:SetKeyValue("Spark Trail Length", "3")
 			self:GetNearDeathSparkPositions()
 			selfData.Spark1:SetAngles(self:GetAngles())
 			//selfData.Spark1:Fire("LightColor", "255 255 255")
@@ -234,12 +234,12 @@ function ENT:OnThink()
 			self:DeleteOnRemove(selfData.Spark1)
 
 			/*local effectData = EffectData()
-			effectData:SetOrigin(self:GetPos() +self:GetUp()*60 +self:GetForward()*100)
+			effectData:SetOrigin(self:GetPos() + self:GetUp()*60 + self:GetForward()*100)
 			effectData:SetNormal(Vector(0, 0, 0))
 			effectData:SetMagnitude(5)
 			effectData:SetScale(0.1)
 			effectData:SetRadius(10)
-			util.Effect("Sparks",effectData)*/
+			util.Effect("Sparks", effectData)*/
 			selfData.Tank_NextLowHealthSparkT = CurTime() + math.random(4, 6)
 		end
 	end

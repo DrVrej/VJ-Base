@@ -1399,10 +1399,10 @@ function ENT:IsJumpLegal(startPos, apex, endPos)
 		start = endPos,
 		endpos = endPos + vecZN100,
 	})
-	/*VJ.DEBUG_TempEnt(startPos, Angle(0,0,0), Color(0,255,0))
-	VJ.DEBUG_TempEnt(apex, Angle(0,0,0), Color(255,115,0))
-	VJ.DEBUG_TempEnt(endPos, Angle(0,0,0), Color(255,0,0))
-	VJ.DEBUG_TempEnt(tr.HitPos, Angle(0,0,0), Color(132,0,255))*/
+	/*VJ.DEBUG_TempEnt(startPos, Angle(0, 0, 0), Color(0, 255, 0))
+	VJ.DEBUG_TempEnt(apex, Angle(0, 0, 0), Color(255, 115, 0))
+	VJ.DEBUG_TempEnt(endPos, Angle(0, 0, 0), Color(255, 0, 0))
+	VJ.DEBUG_TempEnt(tr.HitPos, Angle(0, 0, 0), Color(132, 0, 255))*/
 	return tr.Hit
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2834,7 +2834,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
 				selfData.NextIdleSoundT_Reg = CurTime() + math.random(3, 4)
-				selfData.NextAlertSoundT = CurTime() + math.random(1,2)
+				selfData.NextAlertSoundT = CurTime() + math.random(1, 2)
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.OnPlayerSightSoundLevel, self:GetSoundPitch(selfData.OnPlayerSightSoundPitch))
 			end
 		end
@@ -3384,7 +3384,7 @@ function ENT:DoWeaponAttackMovementCode(override, moveType)
 		if self.EnemyData.Visible && self:CanFireWeapon(true, false) == true && ((self:IsMoving() && (self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true)) or (override == true)) then
 			if (override == true && moveType == 0) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 1) then
 				local anim = self:TranslateToWeaponAnim(PICK(self.AnimTbl_ShootWhileMovingRun))
-				if VJ.AnimExists(self,anim) == true then
+				if VJ.AnimExists(self, anim) == true then
 					self.DoingWeaponAttack = true
 					self.DoingWeaponAttack_Standing = false
 					self:CapabilitiesAdd(CAP_MOVE_SHOOT)
@@ -3393,7 +3393,7 @@ function ENT:DoWeaponAttackMovementCode(override, moveType)
 				end
 			elseif (override == true && moveType == 1) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 0) then
 				local anim = self:TranslateToWeaponAnim(PICK(self.AnimTbl_ShootWhileMovingWalk))
-				if VJ.AnimExists(self,anim) == true then
+				if VJ.AnimExists(self, anim) == true then
 					self.DoingWeaponAttack = true
 					self.DoingWeaponAttack_Standing = false
 					self:CapabilitiesAdd(CAP_MOVE_SHOOT)

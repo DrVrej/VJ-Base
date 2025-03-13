@@ -74,7 +74,7 @@ if CLIENT then
 		
 		-- Send the player's hit position to the controller entity
 		local tr = util.TraceLine({start = viewLerpVec, endpos = viewLerpVec + viewLerpAng:Forward()*32768, filter = {ply, camera, npc}})
-		//ParticleEffect("vj_impact_dirty", tr.HitPos, Angle(0,0,0), npc)
+		//ParticleEffect("vj_impact_dirty", tr.HitPos, Angle(0, 0, 0), npc)
 		net.Start("vj_controller_cldata")
 			net.WriteVector(tr.HitPos)
 		net.SendToServer()
@@ -147,16 +147,16 @@ if CLIENT then
 		local ply = LocalPlayer()
 		hook.Add("HUDPaint", "vj_controller_HUD", function()
 			draw.RoundedBox(1, ScrW() / 2.25, ScrH()-120, 220, 100, Color(0, 0, 0, 150))
-			draw.SimpleText(name, "VJBaseSmallMedium", ScrW() / 2.21, ScrH()-115, Color(255,255,255,255), 0, 0)
+			draw.SimpleText(name, "VJBaseSmallMedium", ScrW() / 2.21, ScrH()-115, Color(255, 255, 255, 255), 0, 0)
 			
 			local hp_r = 255
 			local hp_g = 153
 			local hp_b = 0
-			lerp_hp = Lerp(5*FrameTime(),lerp_hp,hp)
-			draw.RoundedBox(0, ScrW() / 2.21, ScrH()-95, 180, 20, Color(hp_r,hp_g,hp_b,40))
-			draw.RoundedBox(0, ScrW() / 2.21, ScrH()-95, (190*math.Clamp(lerp_hp,0,maxhp))/maxhp,20, Color(hp_r,hp_g,hp_b,255))
-			surface.SetDrawColor(hp_r,hp_g,hp_b,255)
-			surface.DrawOutlinedRect( ScrW() / 2.21, ScrH()-95,180,20)
+			lerp_hp = Lerp(5*FrameTime(), lerp_hp, hp)
+			draw.RoundedBox(0, ScrW() / 2.21, ScrH()-95, 180, 20, Color(hp_r, hp_g, hp_b, 40))
+			draw.RoundedBox(0, ScrW() / 2.21, ScrH()-95, (190*math.Clamp(lerp_hp, 0, maxhp))/maxhp, 20, Color(hp_r, hp_g, hp_b, 255))
+			surface.SetDrawColor(hp_r, hp_g, hp_b, 255)
+			surface.DrawOutlinedRect( ScrW() / 2.21, ScrH()-95, 180, 20)
 			
 			local finalhp = tostring(string.format("%.0f", lerp_hp).."/"..maxhp)
 			local distlen = string.len(finalhp)
@@ -164,7 +164,7 @@ if CLIENT then
 			if distlen > 1 then
 				move = move - (0.009*(distlen-1))
 			end
-			draw.SimpleText(finalhp, "VJBaseSmallMedium", ScrW() / (2-move), ScrH()-94, Color(255,255,255,255), 0, 0)
+			draw.SimpleText(finalhp, "VJBaseSmallMedium", ScrW() / (2-move), ScrH()-94, Color(255, 255, 255, 255), 0, 0)
 			
 			-- Attack Icons
 			surface.SetMaterial(mat_icon_melee)

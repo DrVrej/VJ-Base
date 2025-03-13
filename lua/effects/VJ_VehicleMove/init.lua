@@ -13,7 +13,7 @@ function EFFECT:Init(data)
 	-- Dust
 	local dust = emitter:Add("particles/smokey", origin)
 	if dust then
-		dust:SetVelocity(ent:GetVelocity() + ent:GetForward() * math.Rand(100, 200) + Vector(math.Rand(5, -5), math.Rand(5, -5),math.Rand(5, -5)))
+		dust:SetVelocity(ent:GetVelocity() + ent:GetForward() * math.Rand(100, 200) + Vector(math.Rand(5, -5), math.Rand(5, -5), math.Rand(5, -5)))
 		dust:SetDieTime(4)
 		dust:SetStartAlpha(50)
 		dust:SetEndAlpha(0)

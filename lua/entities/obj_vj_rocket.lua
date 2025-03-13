@@ -21,14 +21,14 @@ if CLIENT then
 	/*function ENT:Think()
 		if self:IsValid() then
 			self.Emitter = ParticleEmitter(self:GetPos())
-			self.SmokeEffect1 = self.Emitter:Add("particles/flamelet2",self:GetPos() +self:GetForward()*-7)
-			self.SmokeEffect1:SetVelocity(self:GetForward() *math.Rand(0, -50) +Vector(math.Rand(5, -5), math.Rand(5, -5), math.Rand(5, -5)) +self:GetVelocity())
+			self.SmokeEffect1 = self.Emitter:Add("particles/flamelet2", self:GetPos() + self:GetForward()*-7)
+			self.SmokeEffect1:SetVelocity(self:GetForward() *math.Rand(0, -50) + Vector(math.Rand(5, -5), math.Rand(5, -5), math.Rand(5, -5)) + self:GetVelocity())
 			self.SmokeEffect1:SetDieTime(0.2)
 			self.SmokeEffect1:SetStartAlpha(100)
 			self.SmokeEffect1:SetEndAlpha(0)
 			self.SmokeEffect1:SetStartSize(10)
 			self.SmokeEffect1:SetEndSize(1)
-			self.SmokeEffect1:SetRoll(math.Rand(-0.2,0.2))
+			self.SmokeEffect1:SetRoll(math.Rand(-0.2, 0.2))
 			self.SmokeEffect1:SetAirResistance(200)
 			self.Emitter:Finish()
 		end
@@ -49,7 +49,7 @@ ENT.SoundTbl_Idle = "weapons/rpg/rocket1.wav"
 ENT.SoundTbl_OnCollide = "ambient/explosions/explode_8.wav"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
-	//util.SpriteTrail(self, 0, Color(90,90,90,255), false, 10, 1, 3, 1/(15+1)*0.5, "trails/smoke.vmt")
+	//util.SpriteTrail(self, 0, Color(90, 90, 90, 255), false, 10, 1, 3, 1 / (15 + 1)*0.5, "trails/smoke.vmt")
 	ParticleEffectAttach("vj_rocket_idle1", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 	ParticleEffectAttach("vj_rocket_idle2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 	//ParticleEffectAttach("rocket_smoke", PATTACH_ABSORIGIN_FOLLOW, self, 0)

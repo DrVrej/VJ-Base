@@ -406,7 +406,7 @@ function SWEP:Equip(newOwner)
 				newOwner:GiveAmmo(self.Primary.PickUpAmmoAmount, self.Primary.Ammo)
 			end
 		end
-		//newOwner:RemoveAmmo(self.Primary.DefaultClip,self.Primary.Ammo)
+		//newOwner:RemoveAmmo(self.Primary.DefaultClip, self.Primary.Ammo)
 		if self.MadeForNPCsOnly then
 			newOwner:PrintMessage(HUD_PRINTTALK, self.PrintName.." removed! It's made for NPCs only!")
 			self:Remove()
@@ -423,11 +423,11 @@ function SWEP:Equip(newOwner)
 				end
 			end
 		else -- For non-VJ NPCs
-			if VJ.AnimExists(newOwner,ACT_WALK_AIM_PISTOL) && VJ.AnimExists(newOwner,ACT_RUN_AIM_PISTOL) && VJ.AnimExists(newOwner,ACT_POLICE_HARASS1) then
+			if VJ.AnimExists(newOwner, ACT_WALK_AIM_PISTOL) && VJ.AnimExists(newOwner, ACT_RUN_AIM_PISTOL) && VJ.AnimExists(newOwner, ACT_POLICE_HARASS1) then
 				self.NPC_AnimationSet = VJ.ANIM_SET_METROCOP
-			elseif VJ.AnimExists(newOwner,"cheer1") && VJ.AnimExists(newOwner,"wave_smg1") && VJ.AnimExists(newOwner,ACT_BUSY_SIT_GROUND) then
+			elseif VJ.AnimExists(newOwner, "cheer1") && VJ.AnimExists(newOwner, "wave_smg1") && VJ.AnimExists(newOwner, ACT_BUSY_SIT_GROUND) then
 				self.NPC_AnimationSet = VJ.ANIM_SET_REBEL
-			elseif VJ.AnimExists(newOwner,"signal_takecover") && VJ.AnimExists(newOwner,"grenthrow") && VJ.AnimExists(newOwner,"bugbait_hit") then
+			elseif VJ.AnimExists(newOwner, "signal_takecover") && VJ.AnimExists(newOwner, "grenthrow") && VJ.AnimExists(newOwner, "bugbait_hit") then
 				self.NPC_AnimationSet = VJ.ANIM_SET_COMBINE
 			end
 			if newOwner:GetClass() == "npc_citizen" then newOwner:Fire("DisableWeaponPickup") end -- If it's a citizen, disable them picking up weapons from the ground
@@ -695,7 +695,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	-- MELEE WEAPON
 	if self.IsMeleeWeapon then
 		local meleeHitEnt = false
-		for _,v in ipairs(ents.FindInSphere(owner:GetPos(), self.MeleeWeaponDistance + 20)) do
+		for _, v in ipairs(ents.FindInSphere(owner:GetPos(), self.MeleeWeaponDistance + 20)) do
 			if (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) or (v:IsPlayer() && v.VJ_IsControllingNPC) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
 			if (isPly && v:EntIndex() != owner:EntIndex()) or (isNPC && (v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS) or v:IsNextBot()) && (owner:Disposition(v) != D_LI) && (v != owner) && (v:GetClass() != owner:GetClass()) or (v:GetClass() == "prop_physics") or v.VJ_ID_Attackable or v.VJ_ID_Destructible && (owner:GetForward():Dot((v:GetPos() - owner:GetPos()):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius)))) then
 				local dmginfo = DamageInfo()

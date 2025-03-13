@@ -168,7 +168,7 @@ end
 function ENT:SetControlledNPC(npc)
 	-- Set the bullseye entity values
 	local bullseye = ents.Create("obj_vj_bullseye")
-	bullseye:SetPos(npc:GetPos() + npc:GetForward()*100 + npc:GetUp()*50) //Vector(npc:OBBMaxs().x +20,0,npc:OBBMaxs().z +20))
+	bullseye:SetPos(npc:GetPos() + npc:GetForward()*100 + npc:GetUp()*50) //Vector(npc:OBBMaxs().x + 20, 0, npc:OBBMaxs().z + 20))
 	bullseye:SetModel("models/hunter/blocks/cube025x025x025.mdl")
 	//bullseye:SetParent(npc)
 	bullseye:SetRenderMode(RENDERMODE_NONE)
@@ -393,7 +393,7 @@ function ENT:Think()
 	-- Weapon attack
 	if npc.IsVJBaseSNPC_Human then
 		if IsValid(npcWeapon) && !npc:IsMoving() && npcWeapon.IsVJBaseWeapon && ply:KeyDown(IN_ATTACK2) && !npc.AttackType && !npc.PauseAttacks && npc:GetWeaponState() == VJ.WEP_STATE_READY then
-			//npc:SetAngles(Angle(0,math.ApproachAngle(npc:GetAngles().y,ply:GetAimVector():Angle().y,100),0))
+			//npc:SetAngles(Angle(0, math.ApproachAngle(npc:GetAngles().y, ply:GetAimVector():Angle().y, 100), 0))
 			npc:SetTurnTarget(bullseyePos, 0.2)
 			canTurn = false
 			if !VJ.IsCurrentAnim(npc, npc:TranslateActivity(npc.WeaponAttackAnim)) && !VJ.IsCurrentAnim(npc, npc.AnimTbl_WeaponAttack) then
@@ -424,7 +424,7 @@ function ENT:Think()
 				end
 			end
 			//self.TestLerp = npc:GetAngles().y
-			//npc:SetAngles(Angle(0,Lerp(100*FrameTime(),self.TestLerp,ply:GetAimVector():Angle().y),0))
+			//npc:SetAngles(Angle(0, Lerp(100*FrameTime(), self.TestLerp, ply:GetAimVector():Angle().y), 0))
 		end
 		
 		-- Movement
@@ -541,7 +541,7 @@ function ENT:StopControlling(keyPressed)
 			ply:SetPos(self.VJC_NPC_LastPos)
 		end
 		/*if IsValid(self.VJCE_Camera) then
-		ply:SetPos(self.VJCE_Camera:GetPos() +self.VJCE_Camera:GetUp()*100) else
+		ply:SetPos(self.VJCE_Camera:GetPos() + self.VJCE_Camera:GetUp()*100) else
 		ply:SetPos(ply:GetPos()) end*/
 		ply:SetNoDraw(false)
 		ply:DrawShadow(true)

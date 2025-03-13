@@ -49,7 +49,7 @@ function ENT:Initialize()
 	end
 
 	-- Effects
-	//util.SpriteTrail(self, 0, Color(90,90,90,255), false, 10, 1, 3, 1/(15+1)*0.5, "trails/smoke.vmt")
+	//util.SpriteTrail(self, 0, Color(90, 90, 90, 255), false, 10, 1, 3, 1 / (15 + 1)*0.5, "trails/smoke.vmt")
 	//ParticleEffectAttach("vj_rocket_idle2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 	util.SpriteTrail(self, 0, colorTrailRed, false, 1, 100, 5, 5 / ((2 + 10) * 0.5), "trails/smoke.vmt")
 
@@ -70,8 +70,8 @@ function ENT:Initialize()
 	envFlare:SetPos(self:GetPos())
 	envFlare:SetAngles(self:GetAngles())
 	envFlare:SetParent(self)
-	envFlare:SetKeyValue("Scale","5")
-	envFlare:SetKeyValue("spawnflags","4")
+	envFlare:SetKeyValue("Scale", "5")
+	envFlare:SetKeyValue("spawnflags", "4")
 	envFlare:Spawn()
 	envFlare:Fire("Start", tostring(self.FuseTime))
 	envFlare:SetOwner(self)

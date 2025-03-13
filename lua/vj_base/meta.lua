@@ -111,7 +111,7 @@ function metaNPC:AddEntityRelationship(...)
 
 	self.StoredDispositions = self.StoredDispositions or {}
 	self.StoredDispositions[ent] = disp
-	return AddEntityRelationship(self,...)
+	return AddEntityRelationship(self, ...)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local Disposition = metaNPC.Disposition
@@ -123,7 +123,7 @@ function metaNPC:Disposition(...)
 	if IsValid(ent) && self:GetModel() == ent:GetModel() then
 		return self.StoredDispositions[ent] or D_ER
 	end
-	return Disposition(self,...)
+	return Disposition(self, ...)
 end
 */
 ---------------------------------------------------------------------------------------------------------------------------------------------
