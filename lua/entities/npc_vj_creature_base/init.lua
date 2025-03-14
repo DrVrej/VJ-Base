@@ -3277,7 +3277,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 		self:RemoveAllGestures()
 		self:OnDeath(dmginfo, hitgroup, "DeathAnim")
 		local chosenAnim = PICK(self.AnimTbl_Death)
-		local animTime = self:DecideAnimationLength(chosenAnim, self.DeathAnimationTime) - self.DeathAnimationDecreaseLengthAmount
+		local animTime = VJ.AnimDurationEx(self, chosenAnim, self.DeathAnimationTime) - self.DeathAnimationDecreaseLengthAmount
 		self:PlayAnim(chosenAnim, true, animTime, false, 0, {PlayBackRateCalculated = true})
 		deathTime = deathTime + animTime
 		self.DeathAnimationCodeRan = true

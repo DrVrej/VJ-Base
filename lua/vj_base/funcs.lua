@@ -387,6 +387,26 @@ function VJ.AnimDuration(ent, anim)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
+	Decides the length of the animation using the given parameters (Useful for variables that allow "false" to let the base decide the time)
+		- anim = Animation to use when determining the length
+		- override = Whether to override the animation duration | DEFAULT = false
+			-- false = Let the base decide the duration
+			-- number = Override the duration by the given number
+		- decrease = Decreases the duration by the given amount | DEFAULT = 0
+			-- Will NOT decrease it if "override" is set to a number!
+-----------------------------------------------------------]]
+function VJ.AnimDurationEx(ent, anim, override, decrease)
+	if isbool(anim) then return 0 end
+	if !override then -- Base decides
+		return (VJ.AnimDuration(ent, anim) - (decrease or 0)) / ent.AnimPlaybackRate
+	elseif isnumber(override) then -- User decides
+		return override / ent.AnimPlaybackRate
+	else
+		return 0
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
 	Takes the given value and attempts to convert it to an activity (ACT_)
 		- ent = Entity to use
 		- anim = The animation to convert

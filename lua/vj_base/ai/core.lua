@@ -707,8 +707,8 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 		local originalPlaybackRate = self.AnimPlaybackRate
 		local customPlaybackRate = extraOptions.PlayBackRate
 		local playbackRate = customPlaybackRate or originalPlaybackRate
-		self:SetPlaybackRate(playbackRate) -- Call this to change "self.AnimPlaybackRate" so "DecideAnimationLength" can be calculated correctly
-		local animTime = self:DecideAnimationLength(animation, false)
+		self:SetPlaybackRate(playbackRate) -- Call this to change "self.AnimPlaybackRate" so "VJ.AnimDurationEx" can be calculated correctly
+		local animTime = VJ.AnimDurationEx(self, animation, false)
 		self.AnimPlaybackRate = originalPlaybackRate -- Change it back to the true rate
 		local doRealAnimTime = true -- Only for activities, recalculate the animTime after the schedule starts to get the real sequence time, if `lockAnimTime` is NOT set!
 		
@@ -840,7 +840,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 				PlayAct()
 			end
 		end)
-		return animation, animDelay + self:DecideAnimationLength(animation, false), animType -- Approximation, this may be inaccurate!
+		return animation, animDelay + VJ.AnimDurationEx(self, animation, false), animType -- Approximation, this may be inaccurate!
 	else
 		return animation, PlayAct(), animType
 	end
@@ -3313,6 +3313,7 @@ function ENT:FootStepSoundCode(customSD) self:PlayFootstepSound(customSD) end
 function ENT:MeleeAttackCode(isPropAttack) self:ExecuteMeleeAttack(isPropAttack) end
 function ENT:RangeAttackCode() self:ExecuteRangeAttack() end
 function ENT:LeapDamageCode() self:ExecuteLeapAttack() end
+function ENT:DecideAnimationLength(anim, override, decrease) return VJ.AnimDurationEx(self, anim, override, decrease) end
 ENT.LatestEnemyDistance = 0 -- Only here to avoid errors
 ENT.NearestPointToEnemyDistance = 0 -- Only here to avoid errors
 ---------------------------------------------------------------------------------------------------------------------------------------------

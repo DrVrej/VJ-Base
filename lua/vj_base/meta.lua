@@ -4,10 +4,6 @@
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 
--- Localized static values
-local isnumber = isnumber
-local vj_animdur = VJ.AnimDuration
-
 local metaEntity = FindMetaTable("Entity")
 local metaNPC = FindMetaTable("NPC")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -79,18 +75,6 @@ end*/
 --	VJ.DEBUG_Print(self, "CanBeEngaged", otherEnt, distance)
 --	return true
 --end
----------------------------------------------------------------------------------------------------------------------------------------------
--- override = Used internally by the base, overrides the result and returns Val instead (Useful for variables that allow "false" to let the base decide the time)
-function metaNPC:DecideAnimationLength(anim, override, decrease)
-	if isbool(anim) then return 0 end
-	if !override then -- Base decides
-		return (vj_animdur(self, anim) - (decrease or 0)) / self.AnimPlaybackRate
-	elseif isnumber(override) then -- User decides
-		return override / self.AnimPlaybackRate
-	else
-		return 0
-	end
-end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 function metaEntity:CalculateProjectile(algorithmType, startPos, targetPos, strength)

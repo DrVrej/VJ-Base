@@ -419,7 +419,7 @@ function ENT:Think()
 				elseif npc:GetActivity() == ACT_IDLE && npc:GetIdealActivity() == ACT_IDLE && npc:DeltaIdealYaw() <= -45 or npc:DeltaIdealYaw() >= 45 then -- Check both current act AND ideal act because certain activities only change the current act (Ex: UpdateTurnActivity function)
 					npc:UpdateTurnActivity()
 					if npc:GetIdealActivity() != ACT_IDLE then -- If ideal act is no longer idle, then we have selected a turn activity!
-						npc.NextIdleTime = CurTime() + npc:DecideAnimationLength(npc:GetIdealActivity())
+						npc.NextIdleTime = CurTime() + VJ.AnimDurationEx(npc, npc:GetIdealActivity())
 					end
 				end
 			end
