@@ -687,13 +687,14 @@ function ENT:OnCallForHelp(ally, isFirst) end
 -----------------------------------------------------------]]
 -- function ENT:OnThinkAttack(isAttacking, enemy) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomAttackCheck_MeleeAttack() return true end -- Not returning true will not let the melee attack code run!
----------------------------------------------------------------------------------------------------------------------------------------------
 --[[
 Called when melee attack is triggered
 
 =-=-=| PARAMETERS |=-=-=
 	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "PreInit" : Before the attack is initialized | Before anything is set, useful to prevent the attack completely
+			RETURNS
+				-> [nil | boolean] : Return true to prevent the attack from being triggered
 		-> "Init" : When the attack initially starts | Before sound, timers, and animations are set!
 			RETURNS
 				-> [nil]
@@ -703,7 +704,7 @@ Called when melee attack is triggered
 	2. enemy [entity] : Enemy that caused the attack to trigger
 
 =-=-=| RETURNS |=-=-=
-	-> [nil]
+	-> [nil | boolean] : Depends on `status` value, refer to it for more details
 --]]
 function ENT:OnMeleeAttack(status, enemy) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -740,13 +741,14 @@ Called when melee attack is executed
 --]]
 function ENT:OnMeleeAttackExecute(status, ent, isProp) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomAttackCheck_RangeAttack() return true end -- Not returning true will not let the range attack code run!
----------------------------------------------------------------------------------------------------------------------------------------------
 --[[
 Called when range attack is triggered
 
 =-=-=| PARAMETERS |=-=-=
 	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "PreInit" : Before the attack is initialized | Before anything is set, useful to prevent the attack completely
+			RETURNS
+				-> [nil | boolean] : Return true to prevent the attack from being triggered
 		-> "Init" : When the attack initially starts | Before sound, timers, and animations are set!
 			RETURNS
 				-> [nil]
@@ -756,7 +758,7 @@ Called when range attack is triggered
 	2. enemy [entity] : Enemy that caused the attack to trigger
 
 =-=-=| RETURNS |=-=-=
-	-> [nil]
+	-> [nil | boolean] : Depends on `status` value, refer to it for more details
 --]]
 function ENT:OnRangeAttack(status, enemy) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -800,13 +802,14 @@ function ENT:RangeAttackProjVel(projectile)
 	return VJ.CalculateTrajectory(self, self:GetEnemy(), "Line", projectile:GetPos(), 1, 1500)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomAttackCheck_LeapAttack() return true end -- Not returning true will not let the leap attack code run!
----------------------------------------------------------------------------------------------------------------------------------------------
 --[[
 Called when leap attack is triggered
 
 =-=-=| PARAMETERS |=-=-=
 	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "PreInit" : Before the attack is initialized | Before anything is set, useful to prevent the attack completely
+			RETURNS
+				-> [nil | boolean] : Return true to prevent the attack from being triggered
 		-> "Init" : When the attack initially starts | Before sound, timers, and animations are set!
 			RETURNS
 				-> [nil]
@@ -819,7 +822,7 @@ Called when leap attack is triggered
 	2. enemy [entity] : Enemy that caused the attack to trigger
 
 =-=-=| RETURNS |=-=-=
-	-> [nil | vector] : Depends on `status` value, refer to it for more details
+	-> [nil | vector | boolean] : Depends on `status` value, refer to it for more details
 --]]
 function ENT:OnLeapAttack(status, enemy) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1417,9 +1420,11 @@ local function ApplyBackwardsCompatibility(self)
 			return self.RangeAttackCode_GetShootPos(self, projectile)
 		end
 	end
-	if self.LeapAttackVelocityForward or self.LeapAttackVelocityUp or self.CustomOnLeapAttack_BeforeStartTimer or self.CustomOnLeapAttack_AfterStartTimer then
+	if self.LeapAttackVelocityForward or self.LeapAttackVelocityUp or self.CustomAttackCheck_LeapAttack or self.CustomOnLeapAttack_BeforeStartTimer or self.CustomOnLeapAttack_AfterStartTimer then
 		self.OnLeapAttack = function(_, status, enemy)
-			if status == "Init" && self.CustomOnLeapAttack_BeforeStartTimer then
+			if status == "PreInit" && self.CustomAttackCheck_LeapAttack then
+				return !self:CustomAttackCheck_LeapAttack(enemy)
+			elseif status == "Init" && self.CustomOnLeapAttack_BeforeStartTimer then
 				self:CustomOnLeapAttack_BeforeStartTimer(self.AttackSeed)
 			elseif status == "PostInit" && self.CustomOnLeapAttack_AfterStartTimer then
 				self:CustomOnLeapAttack_AfterStartTimer(self.AttackSeed)
@@ -1449,9 +1454,11 @@ local function ApplyBackwardsCompatibility(self)
 			if self.MultipleLeapAttacks then self:MultipleLeapAttacks() end
 		end
 	end
-	if self.CustomOnRangeAttack_BeforeStartTimer or self.CustomOnRangeAttack_AfterStartTimer then
+	if self.CustomAttackCheck_RangeAttack or self.CustomOnRangeAttack_BeforeStartTimer or self.CustomOnRangeAttack_AfterStartTimer then
 		self.OnRangeAttack = function(_, status, enemy)
-			if status == "Init" && self.CustomOnRangeAttack_BeforeStartTimer then
+			if status == "PreInit" && self.CustomAttackCheck_RangeAttack then
+				return !self:CustomAttackCheck_RangeAttack(enemy)
+			elseif status == "Init" && self.CustomOnRangeAttack_BeforeStartTimer then
 				self:CustomOnRangeAttack_BeforeStartTimer(self.AttackSeed)
 			elseif status == "PostInit" && self.CustomOnRangeAttack_AfterStartTimer then
 				self:CustomOnRangeAttack_AfterStartTimer(self.AttackSeed)
@@ -1474,9 +1481,11 @@ local function ApplyBackwardsCompatibility(self)
 			end
 		end
 	end
-	if self.CustomOnMeleeAttack_BeforeStartTimer or self.CustomOnMeleeAttack_AfterStartTimer then
+	if self.CustomAttackCheck_MeleeAttack or self.CustomOnMeleeAttack_BeforeStartTimer or self.CustomOnMeleeAttack_AfterStartTimer then
 		self.OnMeleeAttack = function(_, status, enemy)
-			if status == "Init" && self.CustomOnMeleeAttack_BeforeStartTimer then
+			if status == "PreInit" && self.CustomAttackCheck_MeleeAttack then
+				return !self:CustomAttackCheck_MeleeAttack(enemy)
+			elseif status == "Init" && self.CustomOnMeleeAttack_BeforeStartTimer then
 				self:CustomOnMeleeAttack_BeforeStartTimer(self.AttackSeed)
 			elseif status == "PostInit" && self.CustomOnMeleeAttack_AfterStartTimer then
 				self:CustomOnMeleeAttack_AfterStartTimer(self.AttackSeed)
@@ -2249,7 +2258,7 @@ function ENT:Think()
 								selfData.PropInteraction_NextCheckT = curTime + 0.5
 							end
 						end
-						if atkType && self:CustomAttackCheck_MeleeAttack() == true then
+						if atkType && self:OnMeleeAttack("PreInit", ene) != true then
 							local seed = curTime; selfData.AttackSeed = seed
 							selfData.IsAbleToMeleeAttack = false
 							selfData.AttackType = VJ.ATTACK_TYPE_MELEE
@@ -2291,7 +2300,7 @@ function ENT:Think()
 					end
 					
 					-- Range Attack
-					if eneIsVisible && selfData.HasRangeAttack && selfData.IsAbleToRangeAttack && !selfData.AttackType && self:CustomAttackCheck_RangeAttack() == true && ((plyControlled && selfData.VJ_TheController:KeyDown(IN_ATTACK2)) or (!plyControlled && (eneDist < selfData.RangeAttackMaxDistance) && (eneDist > selfData.RangeAttackMinDistance) && (self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.RangeAttackAngleRadius))))) then
+					if eneIsVisible && selfData.HasRangeAttack && selfData.IsAbleToRangeAttack && !selfData.AttackType && ((plyControlled && selfData.VJ_TheController:KeyDown(IN_ATTACK2)) or (!plyControlled && (eneDist < selfData.RangeAttackMaxDistance) && (eneDist > selfData.RangeAttackMinDistance) && (self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.RangeAttackAngleRadius))))) && self:OnRangeAttack("PreInit", ene) != true then
 						local seed = curTime; selfData.AttackSeed = seed
 						selfData.IsAbleToRangeAttack = false
 						selfData.AttackType = VJ.ATTACK_TYPE_RANGE
@@ -2325,7 +2334,7 @@ function ENT:Think()
 					end
 					
 					-- Leap Attack
-					if eneIsVisible && selfData.HasLeapAttack && selfData.IsAbleToLeapAttack && !selfData.AttackType && self:CustomAttackCheck_LeapAttack() == true && ((plyControlled && selfData.VJ_TheController:KeyDown(IN_JUMP)) or (!plyControlled && (self:IsOnGround() && eneDist < selfData.LeapAttackMaxDistance) && (eneDist > selfData.LeapAttackMinDistance) && (self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.LeapAttackAngleRadius))))) then
+					if eneIsVisible && selfData.HasLeapAttack && selfData.IsAbleToLeapAttack && !selfData.AttackType && ((plyControlled && selfData.VJ_TheController:KeyDown(IN_JUMP)) or (!plyControlled && (self:IsOnGround() && eneDist < selfData.LeapAttackMaxDistance) && (eneDist > selfData.LeapAttackMinDistance) && (self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.LeapAttackAngleRadius))))) && self:OnLeapAttack("PreInit", ene) != true then
 						local seed = curTime; selfData.AttackSeed = seed
 						selfData.IsAbleToLeapAttack = false
 						selfData.LeapAttackHasJumped = false

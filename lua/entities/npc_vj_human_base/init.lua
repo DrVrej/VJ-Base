@@ -684,6 +684,9 @@ Called when melee attack is triggered
 
 =-=-=| PARAMETERS |=-=-=
 	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "PreInit" : Before the attack is initialized | Before anything is set, useful to prevent the attack completely
+			RETURNS
+				-> [nil | boolean] : Return true to prevent the attack from being triggered
 		-> "Init" : When the attack initially starts | Before sound, timers, and animations are set!
 			RETURNS
 				-> [nil]
@@ -693,7 +696,7 @@ Called when melee attack is triggered
 	2. enemy [entity] : Enemy that caused the attack to trigger
 
 =-=-=| RETURNS |=-=-=
-	-> [nil]
+	-> [nil | boolean] : Depends on `status` value, refer to it for more details
 --]]
 function ENT:OnMeleeAttack(status, enemy) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2050,9 +2053,11 @@ local function ApplyBackwardsCompatibility(self)
 			if self.CustomAttack then self:CustomAttack(enemy, self.EnemyData.Visible) end
 		end
 	end
-	if self.CustomOnMeleeAttack_BeforeStartTimer or self.CustomOnMeleeAttack_AfterStartTimer then
+	if self.CustomAttackCheck_MeleeAttack or self.CustomOnMeleeAttack_BeforeStartTimer or self.CustomOnMeleeAttack_AfterStartTimer then
 		self.OnMeleeAttack = function(_, status, enemy)
-			if status == "Init" && self.CustomOnMeleeAttack_BeforeStartTimer then
+			if status == "PreInit" && self.CustomAttackCheck_MeleeAttack then
+				return !self:CustomAttackCheck_MeleeAttack(enemy)
+			elseif status == "Init" && self.CustomOnMeleeAttack_BeforeStartTimer then
 				self:CustomOnMeleeAttack_BeforeStartTimer(self.AttackSeed)
 			elseif status == "PostInit" && self.CustomOnMeleeAttack_AfterStartTimer then
 				self:CustomOnMeleeAttack_AfterStartTimer(self.AttackSeed)
@@ -2885,7 +2890,7 @@ function ENT:Think()
 					local funcThinkAtk = self.OnThinkAttack; if funcThinkAtk then funcThinkAtk(self, !!selfData.AttackType, ene) end
 					
 					-- Melee Attack
-					if selfData.HasMeleeAttack && selfData.IsAbleToMeleeAttack && !selfData.AttackType && (!IsValid(curWep) or (IsValid(curWep) && (!curWep.IsMeleeWeapon))) && ((plyControlled && selfData.VJ_TheController:KeyDown(IN_ATTACK)) or (!plyControlled && (eneDistNear < selfData.MeleeAttackDistance && eneIsVisible) && (self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackAngleRadius))))) then
+					if selfData.HasMeleeAttack && selfData.IsAbleToMeleeAttack && !selfData.AttackType && (!IsValid(curWep) or (IsValid(curWep) && (!curWep.IsMeleeWeapon))) && ((plyControlled && selfData.VJ_TheController:KeyDown(IN_ATTACK)) or (!plyControlled && (eneDistNear < selfData.MeleeAttackDistance && eneIsVisible) && (self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackAngleRadius))))) && self:OnMeleeAttack("PreInit", ene) != true then
 						local seed = curTime; selfData.AttackSeed = seed
 						selfData.IsAbleToMeleeAttack = false
 						selfData.AttackType = VJ.ATTACK_TYPE_MELEE
