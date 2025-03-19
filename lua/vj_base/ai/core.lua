@@ -1993,10 +1993,10 @@ function ENT:MaintainRelationships()
 					entType = ENT_TYPE_PLAYER
 					self:SetRelationshipMemory(ent, MEM_CACHE_ENT_TYPE, ENT_TYPE_PLAYER)
 				elseif ent:IsNextBot() then
-					entType = ENT_TYPE_PLAYER
+					entType = ENT_TYPE_NEXTBOT
 					self:SetRelationshipMemory(ent, MEM_CACHE_ENT_TYPE, ENT_TYPE_NEXTBOT)
 				else -- Other
-					entType = 0
+					entType = ENT_TYPE_OTHER
 					self:SetRelationshipMemory(ent, MEM_CACHE_ENT_TYPE, ENT_TYPE_OTHER)
 				end
 			end

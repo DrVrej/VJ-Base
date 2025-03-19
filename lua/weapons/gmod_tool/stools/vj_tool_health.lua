@@ -67,7 +67,7 @@ function TOOL:LeftClick(tr)
 	local ply = self:GetOwner()
 	local heal = true
 	
-	if (ent:Health() != 0) or (ent:IsNPC() or ent:IsPlayer()) then
+	if (ent:Health() != 0) or (ent:IsNPC() or ent:IsPlayer() or ent:IsNextBot()) then
 		if ent:IsPlayer() && !ply:IsAdmin() then
 			heal = false
 		end

@@ -244,7 +244,6 @@ ENT.HasMeleeAttack = true -- Can it melee attack?
 ENT.MeleeAttackDamage = 10
 ENT.MeleeAttackDamageType = DMG_CLUB
 ENT.HasMeleeAttackKnockBack = true -- Should knockback be applied on melee hit? | Use "MeleeAttackKnockbackVelocity" function to edit the velocity
-ENT.DisableDefaultMeleeAttackCode = false -- Completely disable the default melee attack code
 ENT.DisableDefaultMeleeAttackDamageCode = false -- Disables the default melee attack damage code
 	-- ====== Animation ====== --
 ENT.AnimTbl_MeleeAttack = ACT_MELEE_ATTACK1 -- Animations to play when it melee attacks | false = Don't play an animation
@@ -698,19 +697,38 @@ Called when melee attack is triggered
 --]]
 function ENT:OnMeleeAttack(status, enemy) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMeleeAttack_BeforeChecks() end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackTraceOrigin()
 	return (IsValid(self:GetEnemy()) and VJ.GetNearestPositions(self, self:GetEnemy(), true)) or self:GetPos() + self:GetForward() -- Override this to use a different position
 end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMeleeAttack_AfterChecks(hitEnt, isProp) end -- return `true` to disable the attack and move onto the next entity!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackKnockbackVelocity(hitEnt)
 	return self:GetForward() * math.random(100, 140) + self:GetUp() * 10
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMeleeAttack_Miss() end
+--[[
+Called when melee attack is executed
+
+=-=-=| PARAMETERS |=-=-=
+	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "Init" : When the attack initially executed | Before entities are checked and damaged
+			RETURNS
+				-> [nil | boolean] : Return true to skip running the default execution (Useful for custom code)
+		-> "PreDamage" : Right before the damage is applied to an entity
+			PARAMETERS
+				2. ent [entity] : The entity that is about to be damaged
+				3. isProp [entity] : Is the entity detected as a prop?
+			RETURNS
+				-> [nil | boolean] : Return true to skip hitting this entity
+		-> "Miss" : When the attack misses and doesn't hit anything
+			RETURNS
+				-> [nil]
+	2. ent [nil | entity] : Depends on `status` value, refer to it for more details
+	3. isProp [nil | entity] : Depends on `status` value, refer to it for more details
+
+=-=-=| RETURNS |=-=-=
+	-> [nil | boolean] : Depends on `status` value, refer to it for more details
+--]]
+function ENT:OnMeleeAttackExecute(status, ent, isProp) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnWeaponChange(newWeapon, oldWeapon, invSwitch) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2041,6 +2059,27 @@ local function ApplyBackwardsCompatibility(self)
 			end
 		end
 	end
+	if self.DisableDefaultMeleeAttackCode or self.MeleeAttackWorldShakeOnMiss or self.CustomOnMeleeAttack_BeforeChecks or self.CustomOnMeleeAttack_AfterChecks or self.CustomOnMeleeAttack_Miss then
+		self.OnMeleeAttackExecute = function(_, status, ent, isProp)
+			if status == "Init" && (self.CustomOnMeleeAttack_BeforeChecks or self.DisableDefaultMeleeAttackCode) then
+				if self.CustomOnMeleeAttack_BeforeChecks then
+					self:CustomOnMeleeAttack_BeforeChecks()
+				end
+				if self.DisableDefaultMeleeAttackCode then
+					return true
+				end
+			elseif status == "PreDamage" && self.CustomOnMeleeAttack_AfterChecks then
+				return self:CustomOnMeleeAttack_AfterChecks(ent, isProp)
+			elseif status == "Miss" && (self.CustomOnMeleeAttack_Miss or self.MeleeAttackWorldShakeOnMiss) then
+				if self.CustomOnMeleeAttack_Miss then
+					self:CustomOnMeleeAttack_Miss()
+				end
+				if self.MeleeAttackWorldShakeOnMiss then
+					util.ScreenShake(self:GetPos(), self.MeleeAttackWorldShakeOnMissAmplitude or 16, 100, self.MeleeAttackWorldShakeOnMissDuration or 1, self.MeleeAttackWorldShakeOnMissRadius or 2000)
+				end
+			end
+		end
+	end
 	if self.GetMeleeAttackDamageOrigin then
 		self.MeleeAttackTraceOrigin = function()
 			return self:GetMeleeAttackDamageOrigin()
@@ -2976,40 +3015,50 @@ end
 function ENT:ExecuteMeleeAttack()
 	local selfData = self:GetTable()
 	if selfData.Dead or selfData.PauseAttacks or selfData.Flinching or selfData.AttackType == VJ.ATTACK_TYPE_GRENADE or (selfData.MeleeAttackStopOnHit && selfData.AttackState == VJ.ATTACK_STATE_EXECUTED_HIT) then return end
-	self:CustomOnMeleeAttack_BeforeChecks()
-	if selfData.DisableDefaultMeleeAttackCode then return end
+	local skip = self:OnMeleeAttackExecute("Init")
+	local hitRegistered = false
+	if !skip then
 	local myPos = self:GetPos()
 	local myClass = self:GetClass()
-	local hitRegistered = false
-	for _, ent in ipairs(ents.FindInSphere(self:MeleeAttackTraceOrigin(), selfData.MeleeAttackDamageDistance)) do
-		if ent == self or ent:GetClass() == myClass or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then continue end
-		if ent:IsPlayer() && (ent.VJ_IsControllingNPC or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
-		if ((ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible) && self:GetHeadDirection():Dot((Vector(ent:GetPos().x, ent:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackDamageAngleRadius)) then
-			local isProp = ent.VJ_ID_Attackable
-			if self:CustomOnMeleeAttack_AfterChecks(ent, isProp) == true then continue end
-			local dmgAmount = self:ScaleByDifficulty(selfData.MeleeAttackDamage)
-			-- Knockback (Don't push things like doors, trains, elevators as it will make them fly when activated)
-			if selfData.HasMeleeAttackKnockBack && ent:GetMoveType() != MOVETYPE_PUSH && ent.MovementType != VJ_MOVETYPE_STATIONARY && (!ent.VJ_ID_Boss or ent.IsVJBaseSNPC_Tank) then
-				ent:SetGroundEntity(NULL)
-				ent:SetVelocity(self:MeleeAttackKnockbackVelocity(ent))
-			end
-			-- Apply actual damage
-			if !selfData.DisableDefaultMeleeAttackDamageCode then
-				local applyDmg = DamageInfo()
-				applyDmg:SetDamage(dmgAmount)
-				applyDmg:SetDamageType(selfData.MeleeAttackDamageType)
-				if ent.VJ_ID_Living then applyDmg:SetDamageForce(self:GetForward() * ((applyDmg:GetDamage() + 100) * 70)) end
-				applyDmg:SetInflictor(self)
-				applyDmg:SetAttacker(self)
-				VJ.DamageSpecialEnts(self, ent, applyDmg)
-				ent:TakeDamageInfo(applyDmg, self)
-			end
-			if ent:IsPlayer() then
-				ent:ViewPunch(Angle(math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount))
-			end
-			if !isProp then -- Only for non-props...
-				hitRegistered = true
-				if selfData.MeleeAttackStopOnHit then break end
+		for _, ent in ipairs(ents.FindInSphere(self:MeleeAttackTraceOrigin(), selfData.MeleeAttackDamageDistance)) do
+			if ent == self or ent:GetClass() == myClass or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then continue end
+			if ent:IsPlayer() && (ent.VJ_IsControllingNPC or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
+			if ((ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible) && self:GetHeadDirection():Dot((Vector(ent:GetPos().x, ent:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackDamageAngleRadius)) then
+				local isProp = ent.VJ_ID_Attackable
+				if self:OnMeleeAttackExecute("PreDamage", ent, isProp) == true then continue end
+				local dmgAmount = self:ScaleByDifficulty(selfData.MeleeAttackDamage)
+				-- Knockback (Don't push things like doors, trains, elevators as it will make them fly when activated)
+				if selfData.HasMeleeAttackKnockBack && ent:GetMoveType() != MOVETYPE_PUSH && ent.MovementType != VJ_MOVETYPE_STATIONARY && (!ent.VJ_ID_Boss or ent.IsVJBaseSNPC_Tank) then
+					local isNextBot = ent:IsNextBot()
+						if !isNextBot then
+							ent:SetGroundEntity(NULL)
+						end
+						local vel = self:MeleeAttackKnockbackVelocity(ent)
+						ent:SetVelocity(vel)
+						if isNextBot then
+							ent.loco:Approach(vel, 1)
+							ent.loco:Jump()
+							ent.loco:SetVelocity(vel)
+						end
+				end
+				-- Apply actual damage
+				if !selfData.DisableDefaultMeleeAttackDamageCode then
+					local applyDmg = DamageInfo()
+					applyDmg:SetDamage(dmgAmount)
+					applyDmg:SetDamageType(selfData.MeleeAttackDamageType)
+					if ent.VJ_ID_Living then applyDmg:SetDamageForce(self:GetForward() * ((applyDmg:GetDamage() + 100) * 70)) end
+					applyDmg:SetInflictor(self)
+					applyDmg:SetAttacker(self)
+					VJ.DamageSpecialEnts(self, ent, applyDmg)
+					ent:TakeDamageInfo(applyDmg, self)
+				end
+				if ent:IsPlayer() then
+					ent:ViewPunch(Angle(math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount))
+				end
+				if !isProp then -- Only for non-props...
+					hitRegistered = true
+					if selfData.MeleeAttackStopOnHit then break end
+				end
 			end
 		end
 	end
@@ -3019,15 +3068,16 @@ function ENT:ExecuteMeleeAttack()
 			attackTimers[VJ.ATTACK_TYPE_MELEE](self)
 		end
 	end
-	if hitRegistered then
-		self:PlaySoundSystem("MeleeAttack")
-		selfData.AttackState = VJ.ATTACK_STATE_EXECUTED_HIT
-	else
-		self:CustomOnMeleeAttack_Miss()
-		self:PlaySoundSystem("MeleeAttackMiss")
+	if !skip then
+		if hitRegistered then
+			self:PlaySoundSystem("MeleeAttack")
+			selfData.AttackState = VJ.ATTACK_STATE_EXECUTED_HIT
+		else
+			self:OnMeleeAttackExecute("Miss")
+			self:PlaySoundSystem("MeleeAttackMiss")
+		end
 	end
 end
-
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Triggers a grenade attack

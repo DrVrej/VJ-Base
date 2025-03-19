@@ -721,7 +721,7 @@ function SWEP:PrimaryAttack(UseAlt)
 				self:EmitSound(meleeSd, 70, math.random(90, 100), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter)
 			end
 		else
-			if owner.IsVJBaseSNPC then owner:CustomOnMeleeAttack_Miss() end
+			if owner.IsVJBaseSNPC then owner:OnMeleeAttackExecute("Miss") end
 			local meleeSd = VJ.PICK(self.MeleeWeaponSound_Miss)
 			if meleeSd != false then
 				self:EmitSound(meleeSd, 70, math.random(90, 100), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter)
