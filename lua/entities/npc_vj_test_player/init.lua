@@ -74,19 +74,19 @@ function ENT:Init()
 	self:SetPlayerColor(Color(math.Rand(0, 255), math.Rand(0, 255), math.Rand(0, 255)):ToVector())
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-/*function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpseEnt)
+/*function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpse)
 	-- Has to be client side, not worth networking, therefore this has been abandoned
-	corpseEnt.SetupDataTables = function()
-		//corpseEnt:NetworkVar("Vector", 0, "PlayerColor")
-		corpseEnt:DTVar("Vector", 0, "PlayerColor")
+	corpse.SetupDataTables = function()
+		//corpse:NetworkVar("Vector", 0, "PlayerColor")
+		corpse:DTVar("Vector", 0, "PlayerColor")
 	end
 	
-	corpseEnt:InstallDataTable()
-	corpseEnt:SetupDataTables()
+	corpse:InstallDataTable()
+	corpse:SetupDataTables()
 	
-	corpseEnt:DTVar("Vector", 0, "PlayerColor")
-	//corpseEnt:SetDTVector(0, self:GetPlayerColor())
-    //corpseEnt:SetPlayerColor(self:GetPlayerColor())
+	corpse:DTVar("Vector", 0, "PlayerColor")
+	//corpse:SetDTVector(0, self:GetPlayerColor())
+    //corpse:SetPlayerColor(self:GetPlayerColor())
 end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnGrenadeAttackExecute(status, grenade, overrideEnt, landDir, landingPos)

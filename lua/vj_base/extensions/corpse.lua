@@ -14,7 +14,7 @@ local IsValid = IsValid
 local table_remove = table.remove
 local sdEmitHint = sound.EmitHint
 
-local cv_globalcorpselimit = GetConVar("vj_npc_corpse_limit")
+local vj_npc_corpse_limit = GetConVar("vj_npc_corpse_limit")
 
 VJ.Corpse_Ents = {}
 VJ.Corpse_StinkyEnts = {}
@@ -75,7 +75,7 @@ function VJ.Corpse_Add(ent)
 	VJ.Corpse_Ents[count] = ent
 	
 	-- Check if we surpassed the limit, if we did, remove the oldest corpse
-	if count > cv_globalcorpselimit:GetInt() then
+	if count > vj_npc_corpse_limit:GetInt() then
 		local oldestCorpse = table_remove(VJ.Corpse_Ents, 1)
 		if IsValid(oldestCorpse) then
 			local fadeType = oldestCorpse.FadeCorpseType

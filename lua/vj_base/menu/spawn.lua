@@ -239,6 +239,7 @@ if CLIENT then
 		
 		local sidebar = ctrl.ContentNavBar
 		sidebar.Options = vgui.Create( "VJ_SpawnmenuNPCSidebarToolbox", sidebar )
+		sidebar.Options:Dock( BOTTOM )
 	
 		return ctrl
 	end, "vj_base/icons/vrejgaming.png", 60, "All VJ Base entities are located here!") // icon16/plugin.png
@@ -404,10 +405,28 @@ local function InternalSpawnNPC( NPCData, ply, Position, Normal, Class, Equipmen
 	--
 	-- Optional Key Values
 	--
+	local squadName = nil
 	if ( NPCData.KeyValues ) then
 		for k, v in pairs( NPCData.KeyValues ) do
 			NPC:SetKeyValue( k, v )
+
+			if ( string.lower( k ) == "squadname" ) then squadName = v end
 		end
+	end
+
+	--
+	-- Handle squads being overflown.
+	--
+	local MAX_SQUAD_MEMBERS	= 16
+	if ( squadName and ai.GetSquadMemberCount( squadName ) >= MAX_SQUAD_MEMBERS ) then
+
+		-- Find first open squad
+		local sqNum = 0
+		while ( ai.GetSquadMemberCount( squadName .. sqNum ) >= MAX_SQUAD_MEMBERS ) do
+			sqNum = sqNum + 1
+		end
+
+		NPC:SetKeyValue( "SquadName", squadName .. sqNum )
 	end
 
 	--
@@ -516,6 +535,7 @@ VJ.CreateDupe_NPC = function( ply, mdl, class, equipment, spawnflags, data )
 		end
 
 		if ( IsValid( ply ) ) then
+			ent:SetCreator( ply )
 			gamemode.Call( "PlayerSpawnedNPC", ply, ent )
 			ply:AddCleanup( "npcs", ent )
 		end

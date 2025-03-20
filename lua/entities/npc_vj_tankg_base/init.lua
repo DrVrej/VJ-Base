@@ -56,7 +56,7 @@ ENT.Tank_FireShellSoundPitch = VJ.SET(90, 100)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_Init() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_OnThink() end -- Return true to disable the default base code (Its just the UpdateIdleParticles)
+function ENT:Tank_OnThink() end -- Return true to disable the default base code (Its just the Tank_UpdateIdleParticles)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_OnThinkActive() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -98,7 +98,7 @@ Called when the tank is firing its shell
 --]]
 function ENT:Tank_OnFireShell(status, statusData) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:UpdateIdleParticles()
+function ENT:Tank_UpdateIdleParticles()
 	-- Example:
 	//local effectData = EffectData()
 	//effectData:SetScale(1)
@@ -142,7 +142,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThink()
 	if self:Tank_OnThink() != true && vj_npc_reduce_vfx:GetInt() == 0 && self.Tank_NextIdleParticles < CurTime() then
-		self:UpdateIdleParticles()
+		self:Tank_UpdateIdleParticles()
 		self.Tank_NextIdleParticles = CurTime() + 0.1
 	end
 end
@@ -341,8 +341,8 @@ function ENT:Tank_FireShell()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpseEnt)
-	local corpsePhys = corpseEnt:GetPhysicsObject()
+function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpse)
+	local corpsePhys = corpse:GetPhysicsObject()
 	if IsValid(corpsePhys) then
 		corpsePhys:AddVelocity(Vector(math.Rand(-200, 200), math.Rand(-200, 200), math.Rand(200, 400)))
 		corpsePhys:AddAngleVelocity(Vector(math.Rand(-100, 100), math.Rand(-100, 100), math.Rand(-100, 100)))

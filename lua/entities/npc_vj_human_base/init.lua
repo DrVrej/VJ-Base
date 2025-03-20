@@ -704,7 +704,7 @@ function ENT:MeleeAttackTraceOrigin()
 	return (IsValid(self:GetEnemy()) and VJ.GetNearestPositions(self, self:GetEnemy(), true)) or self:GetPos() + self:GetForward() -- Override this to use a different position
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MeleeAttackKnockbackVelocity(hitEnt)
+function ENT:MeleeAttackKnockbackVelocity(ent)
 	return self:GetForward() * math.random(100, 140) + self:GetUp() * 10
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -883,7 +883,7 @@ function ENT:OnDeath(dmginfo, hitgroup, status) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnDeathWeaponDrop(dmginfo, hitgroup, wepEnt) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpseEnt) end
+function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpse) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1822,7 +1822,7 @@ local function ApplyBackwardsCompatibility(self)
 	if self.CustomOnWeaponReload then self.OnWeaponReload = function() self:CustomOnWeaponReload() end end
 	if self.CustomOnWeaponAttack then self.OnWeaponAttack = function() self:CustomOnWeaponAttack() end end
 	if self.CustomOnDropWeapon then self.OnDeathWeaponDrop = function(_, dmginfo, hitgroup, wepEnt) self:CustomOnDropWeapon(dmginfo, hitgroup, wepEnt) end end
-	if self.CustomOnDeath_AfterCorpseSpawned then self.OnCreateDeathCorpse = function(_, dmginfo, hitgroup, corpseEnt) self:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) end end
+	if self.CustomOnDeath_AfterCorpseSpawned then self.OnCreateDeathCorpse = function(_, dmginfo, hitgroup, corpse) self:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpse) end end
 	if self.HasHealthRegeneration then self.HealthRegenParams.Enabled = true end
 	if self.HealthRegenerationAmount then self.HealthRegenParams.Amount = self.HealthRegenerationAmount end
 	if self.HealthRegenerationDelay then self.HealthRegenParams.Delay = self.HealthRegenerationDelay end
@@ -2038,9 +2038,9 @@ local function ApplyBackwardsCompatibility(self)
 	end
 	if self.DeathCorpseSkin && self.DeathCorpseSkin != -1 then
 		local orgFunc = self.OnCreateDeathCorpse
-		self.OnCreateDeathCorpse = function(_, dmginfo, hitgroup, corpseEnt)
-			orgFunc(self, dmginfo, hitgroup, corpseEnt)
-			corpseEnt:SetSkin(self.DeathCorpseSkin)
+		self.OnCreateDeathCorpse = function(_, dmginfo, hitgroup, corpse)
+			orgFunc(self, dmginfo, hitgroup, corpse)
+			corpse:SetSkin(self.DeathCorpseSkin)
 		end
 	end
 	if self.CustomOnTouch then

@@ -87,7 +87,7 @@ Called when the tank is about to spawn death soldier model, death effects, and d
 =-=-=| PARAMETERS |=-=-=
 	1. dmginfo [object] = CTakeDamageInfo object
 	2. hitgroup [number] = The hitgroup that it hit
-	3. corpseEnt [entity] = The corpse entity of the tank
+	3. corpse [entity] = The corpse entity of the tank
 	4. status [string] : Type of update that is occurring, holds one of the following states:
 		-> "Override" : Right before anything is create, can be used to override the entire function
 				USAGE EXAMPLES -> Add extra gib pieces | Add extra blast
@@ -112,9 +112,9 @@ Called when the tank is about to spawn death soldier model, death effects, and d
 =-=-=| RETURNS |=-=-=
 	-> [nil | bool] : Depends on `status` value, refer to it for more details
 --]]
-function ENT:Tank_OnDeathCorpse(dmginfo, hitgroup, corpseEnt, status, statusData) end
+function ENT:Tank_OnDeathCorpse(dmginfo, hitgroup, corpse, status, statusData) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:UpdateIdleParticles()
+function ENT:Tank_UpdateIdleParticles()
 	-- Example:
 	//local effectData = EffectData()
 	//effectData:SetScale(1)
@@ -125,7 +125,7 @@ function ENT:UpdateIdleParticles()
 	//util.Effect("VJ_VehicleExhaust", effectData, true, true)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:UpdateMoveParticles()
+function ENT:Tank_UpdateMoveParticles()
 	-- Example:
 	//local effectData = EffectData()
 	//effectData:SetScale(1)
@@ -212,7 +212,7 @@ function ENT:OnThink()
 	if self:Tank_OnThink() != true && vj_npc_reduce_vfx:GetInt() == 0 then
 		local selfData = self:GetTable()
 		if selfData.Tank_NextIdleParticles < CurTime() then
-			self:UpdateIdleParticles()
+			self:Tank_UpdateIdleParticles()
 			selfData.Tank_NextIdleParticles = CurTime() + 0.1
 		end
 	
@@ -316,7 +316,7 @@ function ENT:OnThinkActive()
 				hasMoved = true
 				selfData.Tank_IsMoving = true
 				self:Tank_PlaySoundSystem("Movement")
-				self:UpdateMoveParticles()
+				self:Tank_UpdateMoveParticles()
 			end
 		end
 	end
@@ -397,15 +397,15 @@ end
 local vec500z = Vector(0, 0, 500)
 local colorGray = Color(90, 90, 90)
 --
-function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpseEnt)
+function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpse)
 	-- Spawn the gunner corpse
 	if IsValid(self.Gunner) then
 		self.Gunner.SavedDmgInfo = self.SavedDmgInfo
 		local gunCorpse = self.Gunner:CreateDeathCorpse(dmginfo, hitgroup)
-		if IsValid(gunCorpse) then corpseEnt.ChildEnts[#corpseEnt.ChildEnts + 1] = gunCorpse end
+		if IsValid(gunCorpse) then corpse.ChildEnts[#corpse.ChildEnts + 1] = gunCorpse end
 	end
 	
-	if self:Tank_OnDeathCorpse(dmginfo, hitgroup, corpseEnt, "Override") != true then
+	if self:Tank_OnDeathCorpse(dmginfo, hitgroup, corpse, "Override") != true then
 		local myPos = self:GetPos()
 		VJ.EmitSound(self, "VJ.Explosion")
 		util.BlastDamage(self, self, myPos, 400, 40)
@@ -424,17 +424,17 @@ function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpseEnt)
 				self:CreateExtraDeathCorpse("prop_ragdoll", soldierMDL, {Pos=myPos + self:GetUp()*90 + self:GetRight()*-30, Vel=Vector(math.Rand(-600, 600), math.Rand(-600, 600), 500)}, function(ent)
 					ent:Ignite(math.Rand(8, 10), 0)
 					ent:SetColor(colorGray)
-					self:Tank_OnDeathCorpse(dmginfo, hitgroup, corpseEnt, "Soldier", ent)
+					self:Tank_OnDeathCorpse(dmginfo, hitgroup, corpse, "Soldier", ent)
 				end)
 			end
 		end
 
 		-- Effects / Particles
-		if self.HasGibOnDeathEffects && self:Tank_OnDeathCorpse(dmginfo, hitgroup, corpseEnt, "Effects") != true then
+		if self.HasGibOnDeathEffects && self:Tank_OnDeathCorpse(dmginfo, hitgroup, corpse, "Effects") != true then
 			ParticleEffect("vj_explosion3", myPos, defAng)
 			ParticleEffect("vj_explosion2", myPos + self:GetForward()*-130, defAng)
 			ParticleEffect("vj_explosion2", myPos + self:GetForward()*130, defAng)
-			ParticleEffectAttach("smoke_burning_engine_01", PATTACH_ABSORIGIN_FOLLOW, corpseEnt, 0)
+			ParticleEffectAttach("smoke_burning_engine_01", PATTACH_ABSORIGIN_FOLLOW, corpse, 0)
 			local effectData = EffectData()
 			effectData:SetOrigin(myPos)
 			util.Effect("VJ_Medium_Explosion1", effectData)
