@@ -102,6 +102,13 @@ if CLIENT then
 		weight = 600,
 		antialias = true,
 	})
+	
+	surface.CreateFont("VJBaseTinySmall", {
+		font = fontName,
+		size = 14,
+		weight = 600,
+		antialias = true,
+	})
 
 	surface.CreateFont("VJBaseTiny", {
 		font = fontName,

@@ -74,7 +74,7 @@ function VJ.Corpse_Add(ent)
 	local count = #VJ.Corpse_Ents + 1
 	VJ.Corpse_Ents[count] = ent
 	
-	-- Check if we surpassed the limit, if we did, remove the oldest corpse
+	-- Check if we surpassed the limit then remove the oldest corpse
 	if count > vj_npc_corpse_limit:GetInt() then
 		local oldestCorpse = table_remove(VJ.Corpse_Ents, 1)
 		if IsValid(oldestCorpse) then

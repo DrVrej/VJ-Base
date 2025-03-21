@@ -14,7 +14,7 @@ if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
 -- Additional disposition types
 D_VJ_INTEREST						= 100 -- Potential target, only engage when necessary
 
--- Additional damage types | For use with "dmginfo:SetDamageCustom()"
+-- Additional damage types | For use with "dmginfo:SetDamageCustom"
 VJ.DMG_BLEED						= 123454 -- Bleeding damage, usually caused by melee attacks
 VJ.DMG_FORCE_FLINCH					= 123455 -- Causes NPCs to always flinch
 

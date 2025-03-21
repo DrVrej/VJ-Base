@@ -29,7 +29,7 @@ if SERVER then
 		npcs = "NPCs",
 		spawners = "Spawners",
 		corpses = "Corpses",
-		vjgibs = "Gibs",
+		gibs = "Gibs",
 		groundweapons = "Ground Weapons",
 		props = "Props",
 		decals = "Removed All Decals",
@@ -52,7 +52,7 @@ if SERVER then
 			ply:RemoveAllAmmo()
 		else
 			for _, v in ipairs(ents.GetAll()) do
-				if (v:IsNPC() && (cType == "npcs" or (cType == "vjnpcs" && v.IsVJBaseSNPC))) or (cType == "spawners" && v.IsVJBaseSpawner) or (cType == "corpses" && (v.IsVJBaseCorpse or v.IsVJBaseCorpse_Gib)) or (cType == "vjgibs" && v.IsVJBaseCorpse_Gib) or (cType == "groundweapons" && v:IsWeapon() && v:GetOwner() == NULL) or (cType == "props" && v:GetClass() == "prop_physics" && (v:GetParent() == NULL or (IsValid(v:GetParent()) && v:GetParent():Health() <= 0 && (v:GetParent():IsNPC() or v:GetParent():IsPlayer())))) then
+				if (v:IsNPC() && (cType == "npcs" or (cType == "vjnpcs" && v.IsVJBaseSNPC))) or (cType == "spawners" && v.IsVJBaseSpawner) or (cType == "corpses" && (v.IsVJBaseCorpse or v.IsVJBaseCorpse_Gib)) or (cType == "gibs" && v.IsVJBaseCorpse_Gib) or (cType == "groundweapons" && v:IsWeapon() && v:GetOwner() == NULL) or (cType == "props" && v:GetClass() == "prop_physics" && (v:GetParent() == NULL or (IsValid(v:GetParent()) && v:GetParent():Health() <= 0 && (v:GetParent():IsNPC() or v:GetParent():IsPlayer())))) then
 					//undo.ReplaceEntity(v, NULL)
 					v:Remove()
 					i = i + 1
@@ -132,12 +132,12 @@ else
 	end
 	----=================================----
 	local function VJ_MAIN_CLIENT(Panel)
-		Panel:AddControl("Label", {Text = "#vjbase.menu.clsettings.label"})
+		Panel:AddControl("Label", {Text = "#vjbase.menu.settings.client.label"})
 		
 		-- Icons: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 		local vj_combo_box = vgui.Create("DComboBox")
 			vj_combo_box:SetSize(100, 30)
-			vj_combo_box:SetValue("#vjbase.menu.clsettings.labellang")
+			vj_combo_box:SetValue("#vjbase.menu.settings.client.lang.label")
 			vj_combo_box:AddChoice("English", "english", false, "flags16/us.png")
 			vj_combo_box:AddChoice("简体中文", "schinese", false, "flags16/cn.png")
 			vj_combo_box:AddChoice("ՀայերԷն *", "armenian", false, "flags16/am.png")
@@ -156,13 +156,13 @@ else
 			vj_combo_box:AddChoice("tiếng Việt *", "vietnamese", false, "flags16/vn.png")
 			vj_combo_box.OnSelect = function(data, index, text)
 				RunConsoleCommand("vj_language", vj_combo_box:GetOptionData(index))
-				chat.AddText(colorYellow, "#vjbase.menu.clsettings.notify.lang", " ", colorDarkBlue, text)
+				chat.AddText(colorYellow, "#vjbase.menu.settings.client.lang.notify", " ", colorDarkBlue, text)
 				timer.Simple(0.2, function() VJ.RefreshLanguage(val) RunConsoleCommand("spawnmenu_reload") end) -- Bedke kichme espasenk minchevor command-e update ela
 			end
 		Panel:AddPanel(vj_combo_box)
 		Panel:ControlHelp("* stands for unfinished translation!")
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.clsettings.lang.auto", Command = "vj_language_auto"})
-		Panel:ControlHelp("#vjbase.menu.clsettings.lang.auto.label")
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.client.lang.auto", Command = "vj_language_auto"})
+		Panel:ControlHelp("#vjbase.menu.settings.client.lang.auto.label")
 	end
 	----=================================----
 	local function VJ_MAIN_CLEANUP(Panel)
@@ -173,23 +173,23 @@ else
 		end
 		Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 		Panel:Button("#vjbase.menu.cleanup.all", "vj_cleanup")
-		Panel:Button("#vjbase.menu.cleanup.stopsounds", "stopsound")
-		Panel:Button("#vjbase.menu.cleanup.remove.vjnpcs", "vj_cleanup", "vjnpcs")
+		Panel:Button("#vjbase.menu.cleanup.sounds", "stopsound")
+		Panel:Button("#vjbase.menu.cleanup.remove.npcs.vj", "vj_cleanup", "vjnpcs")
 		Panel:Button("#vjbase.menu.cleanup.remove.npcs", "vj_cleanup", "npcs")
 		Panel:Button("#vjbase.menu.cleanup.remove.spawners", "vj_cleanup", "spawners")
 		Panel:Button("#vjbase.menu.cleanup.remove.corpses", "vj_cleanup", "corpses")
-		Panel:Button("#vjbase.menu.cleanup.remove.vjgibs", "vj_cleanup", "vjgibs")
+		Panel:Button("#vjbase.menu.cleanup.remove.gibs", "vj_cleanup", "gibs")
 		Panel:Button("#vjbase.menu.cleanup.remove.groundweapons", "vj_cleanup", "groundweapons")
 		Panel:Button("#vjbase.menu.cleanup.remove.props", "vj_cleanup", "props")
 		Panel:Button("#vjbase.menu.cleanup.remove.decals", "vj_cleanup", "decals")
-		Panel:Button("#vjbase.menu.cleanup.remove.allweapons", "vj_cleanup", "allweapons")
-		Panel:Button("#vjbase.menu.cleanup.remove.allammo", "vj_cleanup", "allammo")
+		Panel:Button("#vjbase.menu.cleanup.remove.ply.weapons", "vj_cleanup", "allweapons")
+		Panel:Button("#vjbase.menu.cleanup.remove.ply.ammo", "vj_cleanup", "allammo")
 	end
 	----=================================----
 	local function VJ_MAIN_CONTACT(Panel)
 		local incomp = vgui.Create("DButton") -- Incompatible Addons
 		incomp:SetFont("CloseCaption_Bold")
-		incomp:SetText("#vjbase.menu.contact.incompatibleaddons")
+		incomp:SetText("#vjbase.menu.contact.incompatible")
 		incomp:SetSize(150, 35)
 		incomp:SetColor(Color(231, 76, 60))
 		incomp:SetFont("VJBaseSmallMedium")
@@ -307,7 +307,7 @@ else
 			return
 		end
 		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.only"})
-		Panel:AddControl("Label", {Text = "#vjbase.menu.svsettings.label"})
+		Panel:AddControl("Label", {Text = "#vjbase.menu.settings.server.label"})
 		local vj_resetadminmenu = {Options = {}, CVars = {}, Label = language.GetPhrase("#vjbase.menu.general.reset.everything")..":", MenuButton = "0"}
 		//vj_resetadminmenu:SetText("Select Default to reset everything")
 		vj_resetadminmenu.Options["#vjbase.menu.general.default"] = {
@@ -321,18 +321,18 @@ else
 		}
 		Panel:AddControl("ComboBox", vj_resetadminmenu)
 		Panel:ControlHelp(" ") -- Spacer
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.admin.npcproperties", Command = "vj_npc_admin_properties"})
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.noclip", Command = "sbox_noclip"})
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.weapons", Command = "sbox_weapons"})
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.pvp", Command = "sbox_playershurtplayers"})
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.godmode", Command = "sbox_godmode"})
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.bonemanip.npcs", Command = "sbox_bonemanip_npc"})
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.bonemanip.players", Command = "sbox_bonemanip_player"})
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.bonemanip.others", Command = "sbox_bonemanip_misc"})
-		Panel:AddControl("Slider", {Label = "#vjbase.menu.svsettings.timescale.general", Type = "Float", min = 0.1, max = 10, Command = "host_timescale"})
-		Panel:AddControl("Slider", {Label = "#vjbase.menu.svsettings.timescale.physics", Type = "Float", min = 0, max = 2, Command = "phys_timescale"})
-		Panel:AddControl("Slider", {Label = "#vjbase.menu.svsettings.gravity", Type = "Float", min = -200, max = 600, Command = "sv_gravity"})
-		Panel:AddControl("Label", {Text = "#vjbase.menu.svsettings.maxentsprops"})
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.server.admin.npcproperties", Command = "vj_npc_admin_properties"})
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.server.noclip", Command = "sbox_noclip"})
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.server.weapons", Command = "sbox_weapons"})
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.server.pvp", Command = "sbox_playershurtplayers"})
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.server.godmode", Command = "sbox_godmode"})
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.server.bonemanip.npcs", Command = "sbox_bonemanip_npc"})
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.server.bonemanip.players", Command = "sbox_bonemanip_player"})
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.server.bonemanip.others", Command = "sbox_bonemanip_misc"})
+		Panel:AddControl("Slider", {Label = "#vjbase.menu.settings.server.timescale.general", Type = "Float", min = 0.1, max = 10, Command = "host_timescale"})
+		Panel:AddControl("Slider", {Label = "#vjbase.menu.settings.server.timescale.physics", Type = "Float", min = 0, max = 2, Command = "phys_timescale"})
+		Panel:AddControl("Slider", {Label = "#vjbase.menu.settings.server.gravity", Type = "Float", min = -200, max = 600, Command = "sv_gravity"})
+		Panel:AddControl("Label", {Text = "#vjbase.menu.settings.server.max.header"})
 		for _, x in pairs(cleanup.GetTable()) do -- Simply receives all of the GMod limit convars
 			if (!GetConVar("sbox_max"..x)) then continue end
 			Panel:AddControl("Slider", {Label = "#max_"..x, Command = "sbox_max"..x, Min = "0", Max = "9999"})
@@ -344,27 +344,27 @@ else
 		
 		Panel:AddControl("Label", {Text = "#vjbase.menu.plugins.label"})
 		Panel:ControlHelp(language.GetPhrase("#vjbase.menu.plugins.version").." "..VJBASE_VERSION) -- Main Number / Version / Patches
-		Panel:ControlHelp(language.GetPhrase("#vjbase.menu.plugins.totalplugins").." "..numPlugins)
+		Panel:ControlHelp(language.GetPhrase("#vjbase.menu.plugins.total").." "..numPlugins)
 		
 		local pluginList = vgui.Create("DListView")
 		pluginList:SetTooltip(false)
 		//pluginList:Center() -- No need since Size does it already
 		pluginList:SetSize(100, 300) -- Size
 		pluginList:SetMultiSelect(false)
-		pluginList:AddColumn("#vjbase.menu.plugins.header1")
-		pluginList:AddColumn("#vjbase.menu.plugins.header2"):SetFixedWidth(50)
+		pluginList:AddColumn("#vjbase.menu.plugins.header.name")
+		pluginList:AddColumn("#vjbase.menu.plugins.header.type"):SetFixedWidth(50)
 		//Panel:SetName("Test") -- Renames the blue label
 		if VJ.Plugins != nil then
 			for _, v in SortedPairsByMemberValue(VJ.Plugins, "Name") do
 				pluginList:AddLine(v.Name, v.Type)
 			end
 		else
-			pluginList:AddLine("#vjbase.menu.plugins.notfound", "")
+			pluginList:AddLine("#vjbase.menu.plugins.none", "")
 		end
 		pluginList.OnRowSelected = function(panel, rowIndex, row)
 			//surface.PlaySound("vj_base/player/illuminati.mp3")
-			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.pluginname").." "..row:GetValue(1))
-			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.plugintypes").." "..row:GetValue(2))
+			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.name").." "..row:GetValue(1))
+			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.type").." "..row:GetValue(2))
 		end
 		Panel:AddItem(pluginList)
 		
@@ -434,9 +434,9 @@ else
 	hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_MAIN", function()
 		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_plugins", "#vjbase.menu.plugins", "", "", VJ_MAIN_PLUGINS)
 		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_info", "#vjbase.menu.info", "", "", VJ_MAIN_INFO, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_clsettings", "#vjbase.menu.clsettings", "", "", VJ_MAIN_CLIENT, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_settings_cl", "#vjbase.menu.settings.client", "", "", VJ_MAIN_CLIENT, {})
 		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_cleanup", "#vjbase.menu.cleanup", "", "", VJ_MAIN_CLEANUP, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_helpsupport", "#vjbase.menu.contact", "", "", VJ_MAIN_CONTACT, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_svsettings", "#vjbase.menu.svsettings", "", "", VJ_MAIN_SERVER, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_contact", "#vjbase.menu.contact", "", "", VJ_MAIN_CONTACT, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_settings_sv", "#vjbase.menu.settings.server", "", "", VJ_MAIN_SERVER, {})
 	end)
 end
