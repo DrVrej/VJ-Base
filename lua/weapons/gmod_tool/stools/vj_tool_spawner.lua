@@ -57,26 +57,26 @@ if CLIENT then
 		VJ_NPCSPAWNER_TblCurrentLines = VJ_NPCSPAWNER_TblCurrentLines or {}
 		VJ_NPCSPAWNER_TblCurrentLinesUsable = VJ_NPCSPAWNER_TblCurrentLinesUsable or {}
 		
-		panel:AddControl("Label", {Text = "#vjbase.tool.general.note.recommend"})
+		panel:Help("#vjbase.tool.general.note.recommend")
 		local selectnpc = vgui.Create("DTextEntry")
 			selectnpc:SetEditable(false)
 			local npcName = list.Get("NPC")[GetConVarString("vj_tool_spawner_spawnent")]
 			selectnpc:SetText(language.GetPhrase("#tool.vj_tool_spawner.selectednpc")..": "..(npcName and npcName.Name or "None").." ["..GetConVarString("vj_tool_spawner_spawnent").."]")
 			selectnpc.OnGetFocus = function() LocalPlayer():ConCommand("vj_npcspawner_opennpcselect") end
 		panel:AddItem(selectnpc)
-		panel:AddControl("TextBox", {Label = "#tool.vj_tool_spawner.spawnpos.forward", MaxLength = 10, Type = "Float", WaitForEnter = false, Command = "vj_tool_spawner_spawnpos_forward"})
-		panel:AddControl("TextBox", {Label = "#tool.vj_tool_spawner.spawnpos.right", MaxLength = 10, Type = "Float", WaitForEnter = false, Command = "vj_tool_spawner_spawnpos_right"})
-		panel:AddControl("TextBox", {Label = "#tool.vj_tool_spawner.spawnpos.up", MaxLength = 10, Type = "Float", WaitForEnter = false, Command = "vj_tool_spawner_spawnpos_up"})
+		panel:TextEntry("#tool.vj_tool_spawner.spawnpos.forward", "vj_tool_spawner_spawnpos_forward")
+		panel:TextEntry("#tool.vj_tool_spawner.spawnpos.right", "vj_tool_spawner_spawnpos_right")
+		panel:TextEntry("#tool.vj_tool_spawner.spawnpos.up", "vj_tool_spawner_spawnpos_up")
 		local selectwep = vgui.Create("DTextEntry")
 			selectwep:SetEditable(false)
 			local equipName = list.Get("NPCUsableWeapons")[GetConVarString("vj_tool_spawner_weaponequip")]
 			selectwep:SetText(language.GetPhrase("#tool.vj_tool_spawner.selectweapon")..": "..(equipName and equipName.Name or "None").." ["..GetConVarString("vj_tool_spawner_weaponequip").."]")
 			selectwep.OnGetFocus = function() LocalPlayer():ConCommand("vj_npcspawner_openwepselect") end
 		panel:AddItem(selectwep)
-		panel:AddControl("TextBox", {Label = "#tool.vj_tool_spawner.spawnnpclass", WaitForEnter = false, Command = "vj_tool_spawner_spawnnpclass"})
-		panel:AddControl("CheckBox", {Label = "#tool.vj_tool_spawner.fritoplyallies", Command = "vj_tool_spawner_fritoplyallies"})
+		panel:TextEntry("#tool.vj_tool_spawner.spawnnpclass", "vj_tool_spawner_spawnnpclass")
+		panel:CheckBox("#tool.vj_tool_spawner.fritoplyallies", "vj_tool_spawner_fritoplyallies")
 		panel:ControlHelp("#tool.vj_tool_spawner.label.fritoplyallies")
-		panel:AddControl("Button", {Label = "#tool.vj_tool_spawner.button.updatelist", Command = "vj_npcspawner_updatelist"})
+		panel:Button("#tool.vj_tool_spawner.button.updatelist", "vj_npcspawner_updatelist")
 		panel:ControlHelp("#tool.vj_tool_spawner.label1")
 		local CheckList = vgui.Create("DListView")
 			CheckList:SetTooltip(false)
@@ -112,9 +112,9 @@ if CLIENT then
 		for _, vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
 			table.insert(VJ_NPCSPAWNER_TblCurrentLinesUsable, {Entities=vLine:GetValue(4), SpawnPosition=vLine:GetValue(2), WeaponsList=vLine:GetValue(3), Relationship=vLine:GetValue(5)})
 		end
-		panel:AddControl("Label", {Text = language.GetPhrase("#tool.vj_tool_spawner.label2")..":"})
-		panel:AddControl("Checkbox", {Label = "#tool.vj_tool_spawner.toggle.spawnsound", Command = "vj_tool_spawner_playsound"})
-		panel:AddControl("Slider", {Label = "#tool.vj_tool_spawner.nextspawntime", min = 0, max = 1000, Command = "vj_tool_spawner_nextspawntime"})
+		panel:Help(language.GetPhrase("#tool.vj_tool_spawner.label2")..":")
+		panel:CheckBox("#tool.vj_tool_spawner.toggle.spawnsound", "vj_tool_spawner_playsound")
+		panel:NumSlider("#tool.vj_tool_spawner.nextspawntime", "vj_tool_spawner_nextspawntime", 0, 1000, 0)
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	concommand.Add("vj_npcspawner_opennpcselect", function(ply, cmd, args)

@@ -82,57 +82,57 @@ else
 	local colorDarkBlue = Color(30, 200, 255)
 	local colorYellow = Color(255, 215, 0)
 	--
-	local function VJ_MAIN_INFO(Panel)
+	local function VJ_MAIN_INFO(panel)
 		local client = LocalPlayer() -- Local Player
-		Panel:AddControl("Label", {Text = "About VJ Base:"})
-		Panel:ControlHelp("VJ Base is made by DrVrej. The main purpose of this base is for the sake of simplicity. It provides many types of bases including a very advanced artificial intelligent NPC base.")
+		panel:Help("About VJ Base:")
+		panel:ControlHelp("VJ Base is made by DrVrej. The main purpose of this base is for the sake of simplicity. It provides many types of bases including a very advanced artificial intelligent NPC base.")
 		--
 		--
-		Panel:AddControl("Label", {Text = "User Information:"})
-		Panel:ControlHelp("Date - "..os.date("%b %d, %Y - %I:%M %p")) -- Date
-		Panel:ControlHelp("Name - "..client:Nick().." ("..client:SteamID()..")") -- Name + Steam ID
-		Panel:ControlHelp("Session - "..(game.SinglePlayer() and "SinglePlayer" or "Multiplayer")..", "..gmod.GetGamemode().Name.." ("..game.GetMap()..")") -- Game Session
-		Panel:ControlHelp("VJ Base - "..VJBASE_VERSION..", "..#VJ.Plugins.." plugins, "..GetConVar("vj_language"):GetString()) -- VJ Base Information
-		Panel:ControlHelp("System - "..(system.IsLinux() and "Linux" or (system.IsOSX() and "OSX" or "Windows")).." ("..ScrW().."x"..ScrH()..")") // system.IsWindows() -- System
+		panel:Help("User Information:")
+		panel:ControlHelp("Date - "..os.date("%b %d, %Y - %I:%M %p")) -- Date
+		panel:ControlHelp("Name - "..client:Nick().." ("..client:SteamID()..")") -- Name + Steam ID
+		panel:ControlHelp("Session - "..(game.SinglePlayer() and "SinglePlayer" or "Multiplayer")..", "..gmod.GetGamemode().Name.." ("..game.GetMap()..")") -- Game Session
+		panel:ControlHelp("VJ Base - "..VJBASE_VERSION..", "..#VJ.Plugins.." plugins, "..GetConVar("vj_language"):GetString()) -- VJ Base Information
+		panel:ControlHelp("System - "..(system.IsLinux() and "Linux" or (system.IsOSX() and "OSX" or "Windows")).." ("..ScrW().."x"..ScrH()..")") // system.IsWindows() -- System
 		--
 		--
-		Panel:AddControl("Label", {Text = "Mounted Games:"})
-		Panel:ControlHelp("HL1S - "..tostring(IsMounted("hl1")))
-		Panel:ControlHelp("HL2 - "..tostring(IsMounted("hl2")))
-		Panel:ControlHelp("HL2Ep1 - "..tostring(IsMounted("episodic")))
-		Panel:ControlHelp("HL2Ep2 - "..tostring(IsMounted("ep2")))
-		Panel:ControlHelp("CSS - "..tostring(IsMounted("cstrike")))
-		Panel:ControlHelp("DoD - "..tostring(IsMounted("dod")))
-		Panel:ControlHelp("TF2 - "..tostring(IsMounted("tf")))
+		panel:Help("Mounted Games:")
+		panel:ControlHelp("HL1S - "..tostring(IsMounted("hl1")))
+		panel:ControlHelp("HL2 - "..tostring(IsMounted("hl2")))
+		panel:ControlHelp("HL2Ep1 - "..tostring(IsMounted("episodic")))
+		panel:ControlHelp("HL2Ep2 - "..tostring(IsMounted("ep2")))
+		panel:ControlHelp("CSS - "..tostring(IsMounted("cstrike")))
+		panel:ControlHelp("DoD - "..tostring(IsMounted("dod")))
+		panel:ControlHelp("TF2 - "..tostring(IsMounted("tf")))
 		--
 		--
-		Panel:AddControl("Label", {Text = "Convar Prefixes:"})
-		Panel:ControlHelp("NPCs - 'vj_npc_*'")
-		Panel:ControlHelp("Weapons - 'vj_wep_*'")
-		Panel:ControlHelp("HUD - 'vj_hud_*'")
-		Panel:ControlHelp("Crosshair - 'vj_hud_ch_*'")
+		panel:Help("Convar Prefixes:")
+		panel:ControlHelp("NPCs - 'vj_npc_*'")
+		panel:ControlHelp("Weapons - 'vj_wep_*'")
+		panel:ControlHelp("HUD - 'vj_hud_*'")
+		panel:ControlHelp("Crosshair - 'vj_hud_ch_*'")
 		--
 		--
-		Panel:AddControl("Label", {Text = "Credits:"})
-		Panel:ControlHelp("DrVrej (Me) - Author")
-		Panel:ControlHelp("Crowbar Collective - Original gib models, blood pool texture, Glock-17 model")
-		Panel:ControlHelp("Valve - Various assets")
-		Panel:ControlHelp("Orion - Helped create first version of the base (2011-2012)")
-		Panel:ControlHelp("Cpt. Hazama - Various contributions, suggestions, testing")
-		Panel:ControlHelp("Darkborn - Suggestions, testing")
-		Panel:ControlHelp("Oteek - Blood pool textures, testing")
-		Panel:ControlHelp("BOO342 - Original fireplace model")
-		Panel:ControlHelp("China-Mandem - Original K-3 Model")
+		panel:Help("Credits:")
+		panel:ControlHelp("DrVrej (Me) - Author")
+		panel:ControlHelp("Crowbar Collective - Original gib models, blood pool texture, Glock-17 model")
+		panel:ControlHelp("Valve - Various assets")
+		panel:ControlHelp("Orion - Helped create first version of the base (2011-2012)")
+		panel:ControlHelp("Cpt. Hazama - Various contributions, suggestions, testing")
+		panel:ControlHelp("Darkborn - Suggestions, testing")
+		panel:ControlHelp("Oteek - Blood pool textures, testing")
+		panel:ControlHelp("BOO342 - Original fireplace model")
+		panel:ControlHelp("China-Mandem - Original K-3 Model")
 		
-		Panel:ControlHelp("")
-		Panel:ControlHelp("============================")
+		panel:ControlHelp("")
+		panel:ControlHelp("============================")
 		
-		Panel:ControlHelp("Copyright (c) "..os.date("20%y").." by DrVrej, All rights reserved.")
-		Panel:ControlHelp("No parts of the code may be reproduced, copied, modified or adapted, without the prior written consent of the author.")
+		panel:ControlHelp("Copyright (c) "..os.date("20%y").." by DrVrej, All rights reserved.")
+		panel:ControlHelp("No parts of the code may be reproduced, copied, modified or adapted, without the prior written consent of the author.")
 	end
 	----=================================----
-	local function VJ_MAIN_CLIENT(Panel)
-		Panel:AddControl("Label", {Text = "#vjbase.menu.settings.client.label"})
+	local function VJ_MAIN_CLIENT(panel)
+		panel:Help("#vjbase.menu.settings.client.label")
 		
 		-- Icons: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 		local vj_combo_box = vgui.Create("DComboBox")
@@ -159,34 +159,34 @@ else
 				chat.AddText(colorYellow, "#vjbase.menu.settings.client.lang.notify", " ", colorDarkBlue, text)
 				timer.Simple(0.2, function() VJ.RefreshLanguage(val) RunConsoleCommand("spawnmenu_reload") end) -- Bedke kichme espasenk minchevor command-e update ela
 			end
-		Panel:AddPanel(vj_combo_box)
-		Panel:ControlHelp("* stands for unfinished translation!")
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.client.lang.auto", Command = "vj_language_auto"})
-		Panel:ControlHelp("#vjbase.menu.settings.client.lang.auto.label")
+		panel:AddPanel(vj_combo_box)
+		panel:ControlHelp("* stands for unfinished translation!")
+		panel:CheckBox("#vjbase.menu.settings.client.lang.auto", "vj_language_auto")
+		panel:ControlHelp("#vjbase.menu.settings.client.lang.auto.label")
 	end
 	----=================================----
-	local function VJ_MAIN_CLEANUP(Panel)
+	local function VJ_MAIN_CLEANUP(panel)
 		if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
-			Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
-			Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
+			panel:Help("#vjbase.menu.general.admin.not")
+			panel:Help("#vjbase.menu.general.admin.only")
 			return
 		end
-		Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
-		Panel:Button("#vjbase.menu.cleanup.all", "vj_cleanup")
-		Panel:Button("#vjbase.menu.cleanup.sounds", "stopsound")
-		Panel:Button("#vjbase.menu.cleanup.remove.npcs.vj", "vj_cleanup", "vjnpcs")
-		Panel:Button("#vjbase.menu.cleanup.remove.npcs", "vj_cleanup", "npcs")
-		Panel:Button("#vjbase.menu.cleanup.remove.spawners", "vj_cleanup", "spawners")
-		Panel:Button("#vjbase.menu.cleanup.remove.corpses", "vj_cleanup", "corpses")
-		Panel:Button("#vjbase.menu.cleanup.remove.gibs", "vj_cleanup", "gibs")
-		Panel:Button("#vjbase.menu.cleanup.remove.groundweapons", "vj_cleanup", "groundweapons")
-		Panel:Button("#vjbase.menu.cleanup.remove.props", "vj_cleanup", "props")
-		Panel:Button("#vjbase.menu.cleanup.remove.decals", "vj_cleanup", "decals")
-		Panel:Button("#vjbase.menu.cleanup.remove.ply.weapons", "vj_cleanup", "allweapons")
-		Panel:Button("#vjbase.menu.cleanup.remove.ply.ammo", "vj_cleanup", "allammo")
+		panel:Help("#vjbase.menu.general.admin.only")
+		panel:Button("#vjbase.menu.cleanup.all", "vj_cleanup")
+		panel:Button("#vjbase.menu.cleanup.sounds", "stopsound")
+		panel:Button("#vjbase.menu.cleanup.remove.npcs.vj", "vj_cleanup", "vjnpcs")
+		panel:Button("#vjbase.menu.cleanup.remove.npcs", "vj_cleanup", "npcs")
+		panel:Button("#vjbase.menu.cleanup.remove.spawners", "vj_cleanup", "spawners")
+		panel:Button("#vjbase.menu.cleanup.remove.corpses", "vj_cleanup", "corpses")
+		panel:Button("#vjbase.menu.cleanup.remove.gibs", "vj_cleanup", "gibs")
+		panel:Button("#vjbase.menu.cleanup.remove.groundweapons", "vj_cleanup", "groundweapons")
+		panel:Button("#vjbase.menu.cleanup.remove.props", "vj_cleanup", "props")
+		panel:Button("#vjbase.menu.cleanup.remove.decals", "vj_cleanup", "decals")
+		panel:Button("#vjbase.menu.cleanup.remove.ply.weapons", "vj_cleanup", "allweapons")
+		panel:Button("#vjbase.menu.cleanup.remove.ply.ammo", "vj_cleanup", "allammo")
 	end
 	----=================================----
-	local function VJ_MAIN_CONTACT(Panel)
+	local function VJ_MAIN_CONTACT(panel)
 		local incomp = vgui.Create("DButton") -- Incompatible Addons
 		incomp:SetFont("CloseCaption_Bold")
 		incomp:SetText("#vjbase.menu.contact.incompatible")
@@ -196,9 +196,9 @@ else
 		incomp.DoClick = function()
 			gui.OpenURL("https://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
 		end
-		Panel:AddPanel(incomp)
+		panel:AddPanel(incomp)
 
-		Panel:ControlHelp(" ") -- Spacer
+		panel:ControlHelp(" ") -- Spacer
 
 		local github = vgui.Create("DButton") -- GitHub
 		github:SetFont("TargetID")
@@ -209,7 +209,7 @@ else
 		github.DoClick = function()
 			gui.OpenURL("https://github.com/DrVrej/VJ-Base")
 		end
-		Panel:AddPanel(github)
+		panel:AddPanel(github)
 		
 		local documentation = vgui.Create("DButton") -- Documentation
 		documentation:SetFont("TargetID")
@@ -220,7 +220,7 @@ else
 		documentation.DoClick = function()
 			gui.OpenURL("https://drvrej.com/project/vjbase/")
 		end
-		Panel:AddPanel(documentation)
+		panel:AddPanel(documentation)
 		
 		local changelogs = vgui.Create("DButton") -- Change Logs
 		changelogs:SetFont("TargetID")
@@ -231,9 +231,9 @@ else
 		changelogs.DoClick = function()
 			gui.OpenURL("https://github.com/DrVrej/VJ-Base/releases")
 		end
-		Panel:AddPanel(changelogs)
+		panel:AddPanel(changelogs)
 		
-		Panel:ControlHelp(" ") -- Spacer
+		panel:ControlHelp(" ") -- Spacer
 
 		local discord = vgui.Create("DButton") -- Discord
 		discord:SetFont("TargetID")
@@ -244,7 +244,7 @@ else
 		discord.DoClick = function()
 			gui.OpenURL("https://discord.gg/zwQjrdG")
 		end
-		Panel:AddPanel(discord)
+		panel:AddPanel(discord)
 		
 		local steam = vgui.Create("DButton") -- Steam Group
 		steam:SetFont("TargetID")
@@ -255,7 +255,7 @@ else
 		steam.DoClick = function()
 			gui.OpenURL("http://steamcommunity.com/groups/vrejgaming")
 		end
-		Panel:AddPanel(steam)
+		panel:AddPanel(steam)
 
 		local youtube = vgui.Create("DButton") -- YouTube
 		youtube:SetFont("TargetID")
@@ -266,7 +266,7 @@ else
 		youtube.DoClick = function()
 			gui.OpenURL("http://www.youtube.com/user/gmod95")
 		end
-		Panel:AddPanel(youtube)
+		panel:AddPanel(youtube)
 
 		local twitter = vgui.Create("DButton") -- Twitter
 		twitter:SetFont("TargetID")
@@ -277,9 +277,9 @@ else
 		twitter.DoClick = function()
 			gui.OpenURL("http://twitter.com/vrejgaming")
 		end
-		Panel:AddPanel(twitter)
+		panel:AddPanel(twitter)
 
-		Panel:ControlHelp(" ") -- Spacer
+		panel:ControlHelp(" ") -- Spacer
 		
 		local patreon = vgui.Create("DButton") -- patreon
 		patreon:SetFont("TargetID")
@@ -290,24 +290,24 @@ else
 		patreon.DoClick = function()
 			gui.OpenURL("https://www.patreon.com/drvrej")
 		end
-		Panel:AddPanel(patreon)
-		Panel:ControlHelp("#vjbase.menu.contact.patreon.label")
+		panel:AddPanel(patreon)
+		panel:ControlHelp("#vjbase.menu.contact.patreon.label")
 
 		/*HTMLTest = vgui.Create("HTML")
 		HTMLTest:SetPos(50, 50)
 		HTMLTest:SetSize(ScrW() - 100, ScrH() - 100)
 		HTMLTest:OpenURL("http://steamcommunity.com/sharedfiles/filedetails/?id=131759821")	*/
-		//Panel:AddPanel(HTMLTest)
+		//panel:AddPanel(HTMLTest)
 	end
 	----=================================----
-	local function VJ_MAIN_SERVER(Panel)
+	local function VJ_MAIN_SERVER(panel)
 		if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
-			Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
-			Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
+			panel:Help("#vjbase.menu.general.admin.not")
+			panel:Help("#vjbase.menu.general.admin.only")
 			return
 		end
-		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.only"})
-		Panel:AddControl("Label", {Text = "#vjbase.menu.settings.server.label"})
+		panel:Help("#vjbase.menu.general.admin.only")
+		panel:Help("#vjbase.menu.settings.server.label")
 		local vj_resetadminmenu = {Options = {}, CVars = {}, Label = language.GetPhrase("#vjbase.menu.general.reset.everything")..":", MenuButton = "0"}
 		//vj_resetadminmenu:SetText("Select Default to reset everything")
 		vj_resetadminmenu.Options["#vjbase.menu.general.default"] = {
@@ -319,32 +319,33 @@ else
 			host_timescale = "1",
 			phys_timescale = "1",
 		}
-		Panel:AddControl("ComboBox", vj_resetadminmenu)
-		Panel:ControlHelp(" ") -- Spacer
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.server.admin.npcproperties", Command = "vj_npc_admin_properties"})
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.server.noclip", Command = "sbox_noclip"})
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.server.weapons", Command = "sbox_weapons"})
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.server.pvp", Command = "sbox_playershurtplayers"})
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.server.godmode", Command = "sbox_godmode"})
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.server.bonemanip.npcs", Command = "sbox_bonemanip_npc"})
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.server.bonemanip.players", Command = "sbox_bonemanip_player"})
-		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.settings.server.bonemanip.others", Command = "sbox_bonemanip_misc"})
-		Panel:AddControl("Slider", {Label = "#vjbase.menu.settings.server.timescale.general", Type = "Float", min = 0.1, max = 10, Command = "host_timescale"})
-		Panel:AddControl("Slider", {Label = "#vjbase.menu.settings.server.timescale.physics", Type = "Float", min = 0, max = 2, Command = "phys_timescale"})
-		Panel:AddControl("Slider", {Label = "#vjbase.menu.settings.server.gravity", Type = "Float", min = -200, max = 600, Command = "sv_gravity"})
-		Panel:AddControl("Label", {Text = "#vjbase.menu.settings.server.max.header"})
-		for _, x in pairs(cleanup.GetTable()) do -- Simply receives all of the GMod limit convars
-			if (!GetConVar("sbox_max"..x)) then continue end
-			Panel:AddControl("Slider", {Label = "#max_"..x, Command = "sbox_max"..x, Min = "0", Max = "9999"})
+		panel:AddControl("ComboBox", vj_resetadminmenu)
+		panel:ControlHelp(" ") -- Spacer
+		panel:CheckBox("#vjbase.menu.settings.server.admin.npcproperties", "vj_npc_admin_properties")
+		panel:CheckBox("#vjbase.menu.settings.server.noclip", "sbox_noclip")
+		panel:CheckBox("#vjbase.menu.settings.server.weapons", "sbox_weapons")
+		panel:CheckBox("#vjbase.menu.settings.server.pvp", "sbox_playershurtplayers")
+		panel:CheckBox("#vjbase.menu.settings.server.godmode", "sbox_godmode")
+		panel:CheckBox("#vjbase.menu.settings.server.bonemanip.npcs", "sbox_bonemanip_npc")
+		panel:CheckBox("#vjbase.menu.settings.server.bonemanip.players", "sbox_bonemanip_player")
+		panel:CheckBox("#vjbase.menu.settings.server.bonemanip.others", "sbox_bonemanip_misc")
+		panel:NumSlider("#vjbase.menu.settings.server.timescale.general", "host_timescale", 0.1, 10, 2)
+		panel:NumSlider("#vjbase.menu.settings.server.timescale.physics", "phys_timescale", 0, 2, 2)
+		panel:NumSlider("#vjbase.menu.settings.server.gravity", "sv_gravity", -200, 600, 2)
+		panel:Help("#vjbase.menu.settings.server.max.header")
+		for _, x in pairs(cleanup.GetTable()) do -- Gets all of the cleanup types
+			local typeName = "sbox_max" .. x
+			if (!GetConVar(typeName)) then continue end
+			panel:NumSlider("#max_" .. x, typeName, 0, 9999, 0)
 		end
 	end
 	----=================================----
-	local function VJ_MAIN_PLUGINS(Panel)
+	local function VJ_MAIN_PLUGINS(panel)
 		local numPlugins = #VJ.Plugins
 		
-		Panel:AddControl("Label", {Text = "#vjbase.menu.plugins.label"})
-		Panel:ControlHelp(language.GetPhrase("#vjbase.menu.plugins.version").." "..VJBASE_VERSION) -- Main Number / Version / Patches
-		Panel:ControlHelp(language.GetPhrase("#vjbase.menu.plugins.total").." "..numPlugins)
+		panel:Help("#vjbase.menu.plugins.label")
+		panel:ControlHelp(language.GetPhrase("#vjbase.menu.plugins.version").." "..VJBASE_VERSION) -- Main Number / Version / Patches
+		panel:ControlHelp(language.GetPhrase("#vjbase.menu.plugins.total").." "..numPlugins)
 		
 		local pluginList = vgui.Create("DListView")
 		pluginList:SetTooltip(false)
@@ -353,7 +354,7 @@ else
 		pluginList:SetMultiSelect(false)
 		pluginList:AddColumn("#vjbase.menu.plugins.header.name")
 		pluginList:AddColumn("#vjbase.menu.plugins.header.type"):SetFixedWidth(50)
-		//Panel:SetName("Test") -- Renames the blue label
+		//panel:SetName("Test") -- Renames the blue label
 		if VJ.Plugins != nil then
 			for _, v in SortedPairsByMemberValue(VJ.Plugins, "Name") do
 				pluginList:AddLine(v.Name, v.Type)
@@ -366,7 +367,7 @@ else
 			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.name").." "..row:GetValue(1))
 			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.type").." "..row:GetValue(2))
 		end
-		Panel:AddItem(pluginList)
+		panel:AddItem(pluginList)
 		
 		-- Changelog for VJ Base
 		local changelog = vgui.Create("DButton")
@@ -378,7 +379,7 @@ else
 		changelog.DoClick = function(x)
 			gui.OpenURL("https://github.com/DrVrej/VJ-Base/releases")
 		end
-		Panel:AddPanel(changelog)
+		panel:AddPanel(changelog)
 		
 		-- Github Wiki
 		local github = vgui.Create("DButton")
@@ -390,7 +391,7 @@ else
 		github.DoClick = function(x)
 			gui.OpenURL("https://drvrej.com/project/vjbase/")
 		end
-		Panel:AddPanel(github)
+		panel:AddPanel(github)
 		
 		-- Tutorial Video
 		local tutorialVid = vgui.Create("DButton")
@@ -402,7 +403,7 @@ else
 		tutorialVid.DoClick = function(x)
 			gui.OpenURL("https://www.youtube.com/watch?v=dGoqEpFZ5_M")
 		end
-		Panel:AddPanel(tutorialVid)
+		panel:AddPanel(tutorialVid)
 		
 		-- *insert lenny face*
 		if (LocalPlayer():SteamID() == "STEAM_0:0:22688298") then
@@ -416,7 +417,7 @@ else
 				net.Start("vj_meme")
 				net.SendToServer()
 			end
-			Panel:AddPanel(memeButton)
+			panel:AddPanel(memeButton)
 		end
 	end
 	---------------------------------------------------------------------------------------------------------------------------------------------

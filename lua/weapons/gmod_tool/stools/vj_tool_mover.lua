@@ -12,7 +12,7 @@ if CLIENT then
 		VJ_MOVE_TblCurrentValues = VJ_MOVE_TblCurrentValues or {}
 		VJ_MOVE_TblCurrentLines = VJ_MOVE_TblCurrentLines or {}
 		
-		panel:AddControl("Label", {Text = "#vjbase.tool.general.note.recommend"})
+		panel:Help("#vjbase.tool.general.note.recommend")
 		local CheckList = vgui.Create("DListView")
 			CheckList:SetTooltip(false)
 			//CheckList:Center() -- No need since Size does it already
@@ -71,7 +71,7 @@ if CLIENT then
 			CheckList:Clear()
 		end
 		panel:AddPanel(unselectall)
-		//panel:AddControl("Checkbox", {Label = "Kill The Enemy", Command = "vjstool_npccontroller_killenemy"})
+		//panel:CheckBox("Kill The Enemy", "vjstool_npccontroller_killenemy")
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_tool_mover_cl_create", function(len)

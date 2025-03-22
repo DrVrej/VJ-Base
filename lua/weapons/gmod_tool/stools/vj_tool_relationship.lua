@@ -41,7 +41,7 @@ if CLIENT then
 		end
 		panel:AddPanel(tutorial)
 
-		panel:AddControl("Label", {Text = "#tool.vj_tool_relationship.header"})
+		panel:Help("#tool.vj_tool_relationship.header")
 		panel:ControlHelp("#tool.vj_tool_relationship.header.help")
 		
 		VJ_NPCRELATION_TblCurrentValues = VJ_NPCRELATION_TblCurrentValues or {}
@@ -148,7 +148,7 @@ if CLIENT then
 			InsertToTable("CLASS_PLAYER_ALLY")
 		end
 		panel:AddPanel(button)
-		panel:AddControl("Checkbox", {Label = "#tool.vj_tool_relationship.togglealliedply", Command = "vj_tool_relationship_allytoplyallies"})
+		panel:CheckBox("#tool.vj_tool_relationship.togglealliedply", "vj_tool_relationship_allytoplyallies")
 		panel:ControlHelp(language.GetPhrase("#tool.vj_tool_relationship.label3"))
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------

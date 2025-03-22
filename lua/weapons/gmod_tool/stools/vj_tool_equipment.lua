@@ -31,7 +31,7 @@ if CLIENT then
 		end
 		panel:AddPanel(reset)
 		
-		panel:AddControl("Label", {Text = "#tool.vj_tool_equipment.label"})
+		panel:Help("#tool.vj_tool_equipment.label")
 		
 		local selectwep = vgui.Create("DTextEntry")
 		selectwep:SetEditable(false)

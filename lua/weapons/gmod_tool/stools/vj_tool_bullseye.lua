@@ -42,10 +42,10 @@ if CLIENT then
 		end
 		panel:AddPanel(tutorial)
 		
-		panel:AddControl("Label", {Text = "#vjbase.tool.general.note.recommend"})
+		panel:Help("#vjbase.tool.general.note.recommend")
 		panel:ControlHelp("- "..language.GetPhrase("#tool.vj_tool_bullseye.menu.help1"))
 		panel:ControlHelp("- "..language.GetPhrase("#tool.vj_tool_bullseye.menu.help2"))
-		panel:AddControl("Label", {Text = language.GetPhrase("#tool.vj_tool_bullseye.menu.label1")..":"})
+		panel:Help(language.GetPhrase("#tool.vj_tool_bullseye.menu.label1")..":")
 		local typebox = vgui.Create("DComboBox")
 		//typebox:SetConVar("vj_tool_bullseye_type")
 		typebox:SetValue(GetConVarString("vj_tool_bullseye_type"))
@@ -56,13 +56,13 @@ if CLIENT then
 			LocalPlayer():ConCommand("vj_tool_bullseye_type "..value)
 		end
 		panel:AddPanel(typebox)
-		panel:AddControl("Label", {Text = language.GetPhrase("#tool.vj_tool_bullseye.menu.label2")..":"})
+		panel:Help(language.GetPhrase("#tool.vj_tool_bullseye.menu.label2")..":")
 		local modeldir = vgui.Create("DTextEntry")
 		modeldir:SetConVar("vj_tool_bullseye_model")
 		modeldir:SetMultiline(false)
 		panel:AddPanel(modeldir)
-		panel:AddControl("Checkbox", {Label = "#tool.vj_tool_bullseye.menu.toggleusestatus", Command = "vj_tool_bullseye_usecolor"})
-		panel:AddControl("Checkbox", {Label = "#tool.vj_tool_bullseye.menu.togglestartactivated", Command = "vj_tool_bullseye_startactivate"})
+		panel:CheckBox("#tool.vj_tool_bullseye.menu.toggleusestatus", "vj_tool_bullseye_usecolor")
+		panel:CheckBox("#tool.vj_tool_bullseye.menu.togglestartactivated", "vj_tool_bullseye_startactivate")
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(panel)

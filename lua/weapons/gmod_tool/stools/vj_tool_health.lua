@@ -45,13 +45,13 @@ if CLIENT then
 		end
 		panel:AddPanel(tutorial)
 		
-		panel:AddControl("Label", {Text = "#tool.vj_tool_health.adminonly"})
-		panel:AddControl("Slider", {Label = "#tool.vj_tool_health.sliderhealth", min = 0, max = 10000, Command = "vj_tool_health_health"})
-		panel:AddControl("Label", {Text = "#tool.vj_tool_health.label1"})
-		panel:AddControl("Checkbox", {Label = "#tool.vj_tool_health.togglegodmode", Command = "vj_tool_health_godmode"})
-		panel:AddControl("Checkbox", {Label = "#tool.vj_tool_health.togglehealthregen", Command = "vj_tool_health_healthregen"})
-		panel:AddControl("Slider", {Label = "#tool.vj_tool_health.sliderhealthregenamt", min = 0, max = 10000, Command = "vj_tool_health_healthregen_amt"})
-		panel:AddControl("Slider", {Label = "#tool.vj_tool_health.sliderhealthregendelay", min = 0, max = 10000, Command = "vj_tool_health_healthregen_delay"})
+		panel:Help("#tool.vj_tool_health.adminonly")
+		panel:NumSlider("#tool.vj_tool_health.sliderhealth", "vj_tool_health_health", 0, 10000, 0)
+		panel:Help("#tool.vj_tool_health.label1")
+		panel:CheckBox("#tool.vj_tool_health.togglegodmode", "vj_tool_health_godmode")
+		panel:CheckBox("#tool.vj_tool_health.togglehealthregen", "vj_tool_health_healthregen")
+		panel:NumSlider("#tool.vj_tool_health.sliderhealthregenamt", "vj_tool_health_healthregen_amt", 0, 10000, 0)
+		panel:NumSlider("#tool.vj_tool_health.sliderhealthregendelay", "vj_tool_health_healthregen_delay", 0, 10000, 0)
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(panel)

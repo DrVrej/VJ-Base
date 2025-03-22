@@ -9,7 +9,7 @@ TOOL.Information = {
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	function TOOL.BuildCPanel(panel)
-		panel:AddControl("Label", {Text = "#vjbase.tool.general.note.recommend"})
+		panel:Help("#vjbase.tool.general.note.recommend")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
