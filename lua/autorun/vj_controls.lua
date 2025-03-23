@@ -3,7 +3,7 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
-if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
+if !VJ then VJ = {} end
 
 if !VJ.Plugins then VJ.Plugins = {} end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -11,9 +11,10 @@ if !VJ.Plugins then VJ.Plugins = {} end
 	Registers the addon to the VJ Base plugin list
 		- name = Addon name
 		- type = Type of addon | EX: NPC, Weapon, etc.
+		- version = Plugin version | DEFAULT = "N/A"
 -----------------------------------------------------------]]
-VJ.AddPlugin = function(name, type)
-	table.insert(VJ.Plugins, {Name = name, Type = type})
+VJ.AddPlugin = function(name, type, version)
+	table.insert(VJ.Plugins, {Name = name or "Unknown", Type = type or "N/A", Version = version or "N/A"})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

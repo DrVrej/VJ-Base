@@ -44,7 +44,7 @@ ENT.Tank_CollisionBoundDown = -10
 ENT.Tank_DeathDriverCorpse = false -- Driver corpse to spawn on death | false = Don't spawn anything
 ENT.Tank_DeathDriverCorpseChance = 3 -- Chance that the driver corpse spawns | 1 = always
 ENT.Tank_DeathDecal = "Scorch" -- Decal to spawn under the tank's location on death
-	-- ====== Sound ====== --
+	-- ====== Sounds ====== --
 -- Driving movement sounds
 ENT.HasMoveSound = true
 ENT.Tank_SoundTbl_DrivingEngine = false

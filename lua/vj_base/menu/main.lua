@@ -354,18 +354,20 @@ else
 		pluginList:SetMultiSelect(false)
 		pluginList:AddColumn("#vjbase.menu.plugins.header.name")
 		pluginList:AddColumn("#vjbase.menu.plugins.header.type"):SetFixedWidth(50)
+		pluginList:AddColumn("#vjbase.menu.plugins.header.version"):SetFixedWidth(50)
 		//panel:SetName("Test") -- Renames the blue label
 		if VJ.Plugins != nil then
 			for _, v in SortedPairsByMemberValue(VJ.Plugins, "Name") do
-				pluginList:AddLine(v.Name, v.Type)
+				pluginList:AddLine(v.Name, v.Type, v.Version)
 			end
 		else
-			pluginList:AddLine("#vjbase.menu.plugins.none", "")
+			pluginList:AddLine("#vjbase.menu.plugins.none", "", "")
 		end
 		pluginList.OnRowSelected = function(panel, rowIndex, row)
 			//surface.PlaySound("vj_base/player/illuminati.mp3")
 			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.name").." "..row:GetValue(1))
 			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.type").." "..row:GetValue(2))
+			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.version").." "..row:GetValue(3))
 		end
 		panel:AddItem(pluginList)
 		

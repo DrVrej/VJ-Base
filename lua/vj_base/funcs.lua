@@ -3,8 +3,6 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
-if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
-
 -- Localized static values
 local CurTime = CurTime
 local IsValid = IsValid

@@ -3,10 +3,6 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
-include("autorun/vj_controls.lua")
-
-if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
-
 /*
 	HOW IT WORKS:
 		* Looks for the current set language and translates all the strings that are given.
@@ -118,11 +114,13 @@ local strings_english = {
 	["vjbase.menu.plugins.total"] = "Total Plugins:",
 	["vjbase.menu.plugins.header.name"] = "Name",
 	["vjbase.menu.plugins.header.type"] = "Type",
+	["vjbase.menu.plugins.header.version"] = "Version",
 	["vjbase.menu.plugins.none"] = "No Plugins Found",
 	["vjbase.menu.plugins.changelog"] = "Changelog",
 	["vjbase.menu.plugins.makeaddon"] = "Want to make an addon?",
 	["vjbase.menu.plugins.chat.name"] = "Plugin Name:",
 	["vjbase.menu.plugins.chat.type"] = "Plugin Type(s):",
+	["vjbase.menu.plugins.chat.version"] = "Plugin Version:",
 	
 	-- NPC AI Settings
 	["vjbase.menu.npc.settings.ai"] = "AI",

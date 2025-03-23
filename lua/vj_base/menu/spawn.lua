@@ -505,8 +505,6 @@ local function InternalSpawnNPC( NPCData, ply, Position, Normal, Class, Equipmen
 
 end
 -------------------------------------------------------------------------------------------------------------------------
-if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
---
 VJ.CreateDupe_NPC = function( ply, mdl, class, equipment, spawnflags, data )
 
 	-- Match the behavior of Spawn_NPC above - class should be the one in the list, NOT the entity class!

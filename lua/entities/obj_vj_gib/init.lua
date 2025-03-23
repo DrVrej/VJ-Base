@@ -6,10 +6,9 @@ include("shared.lua")
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 ENT.IsStinky = false -- Is this a disgusting stinky gib??
-ENT.BloodType = VJ.BLOOD_COLOR_RED -- Uses the same values as a VJ NPC
+ENT.BloodType = VJ.BLOOD_COLOR_RED
 ENT.CollisionDecal = "Default"
 ENT.CollisionDecalChance = 3
-	-- ====== Sound ====== --
 ENT.CollisionSound = {"physics/flesh/flesh_squishy_impact_hard1.wav", "physics/flesh/flesh_squishy_impact_hard2.wav", "physics/flesh/flesh_squishy_impact_hard3.wav", "physics/flesh/flesh_squishy_impact_hard4.wav"}
 ENT.CollisionSoundLevel = 60
 ENT.CollisionSoundPitch = VJ.SET(90, 100)
@@ -22,7 +21,7 @@ ENT.CollisionSoundPitch = VJ.SET(90, 100)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.NextStinkyTime = 0
 
-local stinkyMatTypes = {alienflesh=true, antlion=true, armorflesh=true, bloodyflesh=true, flesh=true, zombieflesh=true, player=true}
+local stinkyMatTypes = {alienflesh = true, antlion = true, armorflesh = true, bloodyflesh = true, flesh = true, zombieflesh = true, player = true}
 local defDecals = {
 	[VJ.BLOOD_COLOR_RED] = "VJ_Blood_Red",
 	[VJ.BLOOD_COLOR_YELLOW] = "VJ_Blood_Yellow",
@@ -33,12 +32,15 @@ local defDecals = {
 	[VJ.BLOOD_COLOR_WHITE] = "VJ_Blood_White",
 	[VJ.BLOOD_COLOR_OIL] = "VJ_Blood_Oil",
 }
+local vj_npc_gib_collision = GetConVar("vj_npc_gib_collision")
+local vj_npc_snd_gib = GetConVar("vj_npc_snd_gib")
+local vj_npc_gib_vfx = GetConVar("vj_npc_gib_vfx")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:PhysicsInit(MOVETYPE_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS) -- Use MOVETYPE_NONE for testing, makes the entity freeze!
 	self:SetSolid(MOVETYPE_VPHYSICS)
-	if GetConVar("vj_npc_gib_collision"):GetInt() == 0 then self:SetCollisionGroup(COLLISION_GROUP_DEBRIS) end
+	if vj_npc_gib_collision:GetInt() == 0 then self:SetCollisionGroup(COLLISION_GROUP_DEBRIS) end
 
 	-- Physics Functions
 	local physObj = self:GetPhysicsObject()
@@ -67,17 +69,19 @@ function ENT:Initialize()
 		self.BloodData = {Decal = self.CollisionDecal}
 	end
 	
-	if GetConVar("vj_npc_snd_gib"):GetInt() == 0 then self.CollisionSound = false end
-	if GetConVar("vj_npc_gib_vfx"):GetInt() == 0 then self.CollisionDecal = false end
+	if vj_npc_snd_gib:GetInt() == 0 then self.CollisionSound = false end
+	if vj_npc_gib_vfx:GetInt() == 0 then self.CollisionDecal = false end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	local selfData = self:GetTable()
+	local curTime = CurTime()
 	
 	-- Stinky gib! yuck!
-	if selfData.IsStinky && selfData.NextStinkyTime < CurTime() then
-		sound.EmitHint(SOUND_CARCASS, self:GetPos(), 400, 0.15, self) // SOUND_MEAT = Do NOT use this because we would need to call "GetLoudestSoundHint" twice for each sound type!
-		selfData.NextStinkyTime = CurTime() + 2
+	if selfData.IsStinky && selfData.NextStinkyTime < curTime then
+		// SOUND_MEAT = Do NOT use this because we would need to call "GetLoudestSoundHint" twice for each sound type!
+		sound.EmitHint(SOUND_CARCASS, self:GetPos(), 400, 0.15, self)
+		selfData.NextStinkyTime = curTime + 2
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

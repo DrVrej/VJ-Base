@@ -100,11 +100,14 @@ ENT.PaintedFinalDecal = false
 ENT.NextPersistCollisionT = 0
 
 local defVec = Vector(0, 0, 0)
+local PICK = VJ.PICK
+local PROJ_COLLISION_REMOVE = VJ.PROJ_COLLISION_REMOVE
+local PROJ_COLLISION_PERSIST = VJ.PROJ_COLLISION_PERSIST
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:PreInit()
 	if self.CustomOnPreInitialize then self:CustomOnPreInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
-	if self:GetModel() == "models/error.mdl" && VJ.PICK(self.Model) then self:SetModel(VJ.PICK(self.Model)) end
+	if self:GetModel() == "models/error.mdl" && PICK(self.Model) then self:SetModel(PICK(self.Model)) end
 	
 	local projType = self.ProjectileType
 	self:PhysicsInit(MOVETYPE_VPHYSICS)
@@ -156,14 +159,13 @@ function ENT:Initialize()
 	if self.CustomOnDoDamage_Direct then self.OnDealDamage = function(_, data, phys2, hitEnts) self:CustomOnDoDamage_Direct(data, phys2, hitEnts and hitEnts[1] or nil) end end
 	if self.DecalTbl_OnCollideDecals then self.CollisionDecal = self.DecalTbl_OnCollideDecals end
 	if self.DecalTbl_DeathDecals then self.CollisionDecal = self.DecalTbl_DeathDecals end
-	if self.RemoveOnHit then self.CollisionBehavior = VJ.PROJ_COLLISION_REMOVE end
-	if self.CollideCodeWithoutRemoving then self.CollisionBehavior = VJ.PROJ_COLLISION_PERSIST end
+	if self.RemoveOnHit then self.CollisionBehavior = PROJ_COLLISION_REMOVE end
+	if self.CollideCodeWithoutRemoving then self.CollisionBehavior = PROJ_COLLISION_PERSIST end
 	--
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	if self.Dead then VJ.STOPSOUND(self.CurrentIdleSound) return end
-	
 	//self:SetAngles(self:GetVelocity():GetNormal():Angle())
 	self:OnThink()
 	self:PlaySound("Idle")
@@ -294,12 +296,12 @@ function ENT:PhysicsCollide(data, phys)
 	if !self:OnCollision(data, phys) then
 		local colBehavior = selfData.CollisionBehavior
 		if !colBehavior then return end
-		if colBehavior == VJ.PROJ_COLLISION_REMOVE then
+		if colBehavior == PROJ_COLLISION_REMOVE then
 			selfData.Dead = true
 			self:DealDamage(data, phys)
 			self:PlaySound("OnCollide")
 			if !selfData.PaintedFinalDecal then
-				local decals = VJ.PICK(selfData.CollisionDecal)
+				local decals = PICK(selfData.CollisionDecal)
 				if decals then
 					selfData.PaintedFinalDecal = true
 					util.Decal(decals, data.HitPos + data.HitNormal * -15, data.HitPos - data.HitNormal * -2)
@@ -309,12 +311,12 @@ function ENT:PhysicsCollide(data, phys)
 			-- Remove the entity
 			if selfData.ShakeWorldOnDeath then util.ScreenShake(data.HitPos, selfData.ShakeWorldOnDeathAmplitude or 16, selfData.ShakeWorldOnDeathFrequency or 200, selfData.ShakeWorldOnDeathDuration or 1, selfData.ShakeWorldOnDeathRadius or 3000) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 			self:Destroy(data, phys)
-		elseif colBehavior == VJ.PROJ_COLLISION_PERSIST then
+		elseif colBehavior == PROJ_COLLISION_PERSIST then
 			if CurTime() < selfData.NextPersistCollisionT then return end
 			self:DealDamage(data, phys)
 			self:PlaySound("OnCollide")
 			if !selfData.PaintedFinalDecal then
-				local decals = VJ.PICK(selfData.CollisionDecal)
+				local decals = PICK(selfData.CollisionDecal)
 				if decals then
 					util.Decal(decals, data.HitPos + data.HitNormal * -15, data.HitPos - data.HitNormal * -2)
 				end

@@ -8,9 +8,6 @@ include("shared.lua")
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
-local PICK = VJ.PICK
-AccessorFunc(ENT, "m_iClass", "NPCClass", FORCE_NUMBER)
-AccessorFunc(ENT, "m_fMaxYawSpeed", "MaxYawSpeed", FORCE_NUMBER)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Main & Misc ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -202,7 +199,7 @@ ENT.FlinchDamageTypes = {DMG_BLAST} -- Which types of damage types should it fli
 ENT.FlinchChance = 14 -- Chance of flinching from 1 to x | 1 = Always flinch
 ENT.FlinchCooldown = 5 -- How much time until it can flinch again? | false = Base auto calculates the duration
 ENT.AnimTbl_Flinch = ACT_FLINCH_PHYSICS
-ENT.FlinchHitGroupMap = false -- EXAMPLES: {{HitGroup = {HITGROUP_HEAD}, Animation = {ACT_FLINCH_HEAD}}, {HitGroup = {HITGROUP_LEFTARM}, Animation = {ACT_FLINCH_LEFTARM}}, {HitGroup = {HITGROUP_RIGHTARM}, Animation = {ACT_FLINCH_RIGHTARM}}, {HitGroup = {HITGROUP_LEFTLEG}, Animation = {ACT_FLINCH_LEFTLEG}}, {HitGroup = {HITGROUP_RIGHTLEG}, Animation = {ACT_FLINCH_RIGHTLEG}}}
+ENT.FlinchHitGroupMap = false -- EXAMPLE: {{HitGroup = HITGROUP_HEAD, Animation = ACT_FLINCH_HEAD}, {HitGroup = HITGROUP_LEFTARM, Animation = ACT_FLINCH_LEFTARM}, {HitGroup = HITGROUP_RIGHTARM, Animation = ACT_FLINCH_RIGHTARM}, {HitGroup = HITGROUP_LEFTLEG, Animation = ACT_FLINCH_LEFTLEG}, {HitGroup = HITGROUP_RIGHTLEG, Animation = ACT_FLINCH_RIGHTLEG}}
 ENT.FlinchHitGroupPlayDefault = true -- Should it play "self.AnimTbl_Flinch" when none of the mapped hit groups hit?
 	-- ====== Non-Combat Damage Response Behaviors ====== --
 	-- For passive behavior NPC, these responses will run regardless if it has an active enemy or not
@@ -249,7 +246,7 @@ ENT.DeathLootChance = 14 -- If set to 1, it will always drop loot
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Melee Attack ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.HasMeleeAttack = true -- Can it melee attack?
+ENT.HasMeleeAttack = true
 ENT.MeleeAttackDamage = 10
 ENT.MeleeAttackDamageType = DMG_SLASH
 ENT.HasMeleeAttackKnockBack = false -- Should knockback be applied on melee hit? | Use "MeleeAttackKnockbackVelocity" function to edit the velocity
@@ -268,7 +265,7 @@ ENT.TimeUntilMeleeAttackDamage = 0.6 -- How much time until it executes the dama
 ENT.NextMeleeAttackTime = 0 -- How much time until it can use a melee attack? | number = Specific time | VJ.SET = Randomized between the 2 numbers
 ENT.NextAnyAttackTime_Melee = false -- How much time until it can do any attack again? | false = Base auto calculates the duration | number = Specific time | VJ.SET = Randomized between the 2 numbers
 ENT.MeleeAttackReps = 1 -- How many times does it run the melee attack code?
-ENT.MeleeAttackExtraTimers = false -- Extra melee attack timers, EX: {1, 1.4}
+ENT.MeleeAttackExtraTimers = false -- Extra melee attack timers | EX: {1, 1.4}
 ENT.MeleeAttackStopOnHit = false -- Should it stop executing the melee attack after it hits an enemy?
 	-- ====== Bleeding System ====== --
 	-- Causes the enemy to continue taking damage after it's hit based on the given parameters:
@@ -289,7 +286,7 @@ ENT.MeleeAttackDSPLimit = 60 -- Should it only apply if the damage surpasses the
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Range Attack ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.HasRangeAttack = false -- Can it range attack?
+ENT.HasRangeAttack = false
 ENT.RangeAttackProjectiles = "obj_vj_rocket" -- Entities that it can spawn when range attacking | table = Picks randomly
 	-- ====== Animation ====== --
 ENT.AnimTbl_RangeAttack = ACT_RANGE_ATTACK1 -- Animations to play when it range attacks | false = Don't play an animation
@@ -305,11 +302,11 @@ ENT.TimeUntilRangeAttackProjectileRelease = 1.5 -- How much time until the proje
 ENT.NextRangeAttackTime = 3 -- How much time until it can use a range attack? | number = Specific time | VJ.SET = Randomized between the 2 numbers
 ENT.NextAnyAttackTime_Range = false -- How much time until it can do any attack again? | false = Base auto calculates the duration | number = Specific time | VJ.SET = Randomized between the 2 numbers
 ENT.RangeAttackReps = 1 -- How many times does it throw a projectile?
-ENT.RangeAttackExtraTimers = false -- Extra range attack timers, EX: {1, 1.4}
+ENT.RangeAttackExtraTimers = false -- Extra range attack timers | EX: {1, 1.4}
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Leap Attack ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.HasLeapAttack = false -- Can it leap attack?
+ENT.HasLeapAttack = false
 ENT.LeapAttackDamage = 15
 ENT.LeapAttackDamageType = DMG_SLASH
 ENT.DisableDefaultLeapAttackDamageCode = false -- Disables the default leap attack damage code
@@ -324,11 +321,11 @@ ENT.LeapAttackDamageDistance = 100 -- How far does the damage go?
 ENT.LeapAttackAngleRadius = 60 -- What is the attack angle radius? | 100 = In front of it | 180 = All around it
 	-- ====== Timer ====== --
 ENT.TimeUntilLeapAttackDamage = 0.2 -- How much time until it executes the damage? | false = Make the attack event-based
-ENT.TimeUntilLeapAttackVelocity = 0.1 -- How much time until it runs the velocity code?
+ENT.TimeUntilLeapAttackVelocity = 0.1 -- How much time until it jumps and applies the velocity?
 ENT.NextLeapAttackTime = 3 -- How much time until it can use a leap attack? | number = Specific time | VJ.SET = Randomized between the 2 numbers
 ENT.NextAnyAttackTime_Leap = false -- How much time until it can do any attack again? | false = Base auto calculates the duration | number = Specific time | VJ.SET = Randomized between the 2 numbers
 ENT.LeapAttackReps = 1 -- How many times does it run the leap attack code?
-ENT.LeapAttackExtraTimers = false -- Extra leap attack timers, EX: {1, 1.4}
+ENT.LeapAttackExtraTimers = false -- Extra leap attack timers | EX: {1, 1.4}
 ENT.LeapAttackStopOnHit = true -- Should it stop executing the leap attack after it hits an enemy?
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Sound ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -952,6 +949,7 @@ local math_max = math.max
 local math_rad = math.rad
 local math_cos = math.cos
 local math_angApproach = math.ApproachAngle
+local PICK = VJ.PICK
 local VJ_STATE_NONE = VJ_STATE_NONE
 local VJ_STATE_FREEZE = VJ_STATE_FREEZE
 local VJ_STATE_ONLY_ANIMATION = VJ_STATE_ONLY_ANIMATION

@@ -9,8 +9,6 @@ local table_remove = table.remove
 if SERVER then
 	util.AddNetworkString("vj_music_run")
 elseif CLIENT then
-	if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
-	
 	VJ.Music_Queue = {}
 	
 	net.Receive("vj_music_run", function(len)

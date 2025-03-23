@@ -137,7 +137,7 @@ SWEP.Primary.Ammo = "SMG1" -- Ammo type
 SWEP.Primary.ClipSize = 30 -- Max amount of rounds per clip
 SWEP.Primary.PickUpAmmoAmount = "Default" -- How much ammo should the player get when the gun is picked up? | "Default" = 3 Clips
 SWEP.AnimTbl_PrimaryFire = ACT_VM_PRIMARYATTACK
-	-- ====== Sound ====== --
+	-- ====== Sounds ====== --
 SWEP.Primary.Sound = {}
 SWEP.Primary.SoundLevel = 80
 SWEP.Primary.SoundPitch	= VJ.SET(90, 110)
@@ -147,7 +147,7 @@ SWEP.Primary.HasDistantSound = true -- Does it have a distant sound when the gun
 SWEP.Primary.DistantSoundLevel = 140
 SWEP.Primary.DistantSoundPitch = VJ.SET(90, 110)
 SWEP.Primary.DistantSoundVolume = 1
-	-- ====== Effect ====== --
+	-- ====== Effects ====== --
 SWEP.PrimaryEffects_MuzzleFlash = true
 SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full"}
 SWEP.PrimaryEffects_MuzzleParticlesAsOne = false -- Should all the particles spawn together instead of picking only one?

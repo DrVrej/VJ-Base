@@ -17,6 +17,9 @@
 	debugoverlay.Line(self:EyePos() + self:GetEyeDirection(), self:EyePos() + self:GetEyeDirection() * 100, 0.2, VJ.COLOR_RED)
 */
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+AccessorFunc(ENT, "m_iClass", "NPCClass", FORCE_NUMBER)
+AccessorFunc(ENT, "m_fMaxYawSpeed", "MaxYawSpeed", FORCE_NUMBER)
+
 -- Localized static values
 local metaEntity = FindMetaTable("Entity")
 local funcSetSaveValue = metaEntity.SetSaveValue
@@ -2148,6 +2151,7 @@ function ENT:MaintainRelationships()
 							eneVisCount = eneVisCount + 1
 							funcAddEntityRelationship(self, ent, D_HT, 0)
 							calculatedDisp = D_HT
+							eneValid = true
 							-- If the detected enemy is closer than the previous enemies, the set this as the enemy!
 							if !nearestDist or (distanceToEnt < nearestDist) then
 								nearestDist = distanceToEnt

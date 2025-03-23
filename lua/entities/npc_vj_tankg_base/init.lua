@@ -32,7 +32,7 @@ ENT.Tank_Shell_Entity = "obj_vj_rocket" -- Shell entity to spawn
 ENT.Tank_Shell_VelocitySpeed = 4000 -- How fast should the shell travel?
 ENT.Tank_Shell_MuzzleFlashPos = Vector(0, -235, 18)
 ENT.Tank_Shell_ParticlePos = Vector(-205, 0, 72)
-	-- ====== Sound ====== --
+	-- ====== Sounds ====== --
 -- Gun turning movement sound
 ENT.HasMoveSound = true
 ENT.Tank_SoundTbl_Turning = false
