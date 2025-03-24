@@ -73,12 +73,12 @@ Called when the tank is firing its shell
 					5. statusData [nil]
 				RETURNS
 					-> [nil | bool] : Returning true will NOT let the base shell execute, effectively overriding it entirely (Effects still run!)
-		-> "OnCreate" : Right after the shell is created but before it's spawned
+		-> "OnCreate" : Right after the shell is created but before anything is set
 				USAGE EXAMPLES -> Set an spawn value for the projectile, such various types of shells inside a single projectile class
 				PARAMETERS
 					5. statusData [entity] : The newly created shell entity (but not spawned!)
 				RETURNS
-					-> [nil]
+					-> [nil | vector] : Returning a vector to override the spawn position
 		-> "OnSpawn" : After the shell has spawned
 				USAGE EXAMPLES -> Override the default velocity
 				PARAMETERS
@@ -94,7 +94,7 @@ Called when the tank is firing its shell
 	2. statusData [nil | entity] : Depends on `status` value, refer to it for more details
 
 =-=-=| RETURNS |=-=-=
-	-> [nil | bool] : Depends on `status` value, refer to it for more details
+	-> [nil | bool | vector] : Depends on `status` value, refer to it for more details
 --]]
 function ENT:Tank_OnFireShell(status, statusData) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -249,25 +249,30 @@ function ENT:Tank_FireShell()
 		self:Tank_PlaySoundSystem("ShellFire")
 		
 		if self:Tank_OnFireShell("Init") != true then
-			local spawnPos = self:LocalToWorld(selfData.Tank_Shell_SpawnPos)
+			local shell = ents.Create(selfData.Tank_Shell_Entity)
+			local spawnPos;
+			local onCreateCall = self:Tank_OnFireShell("OnCreate", shell)
+			if isvector(onCreateCall) then
+				spawnPos = onCreateCall
+			else
+				spawnPos = self:LocalToWorld(selfData.Tank_Shell_SpawnPos)
+			end
 			local calculatedVel = (ene:GetPos() + ene:OBBCenter() - spawnPos):GetNormal()*selfData.Tank_Shell_VelocitySpeed
 			-- If not facing, then just shoot straight ahead
 			if !selfData.Tank_FacingTarget then
 				calculatedVel = self:GetForward()
 				calculatedVel:Rotate(Angle(0, selfData.Tank_AngleOffset, 0))
-				calculatedVel = calculatedVel*selfData.Tank_Shell_VelocitySpeed
+				calculatedVel = calculatedVel * selfData.Tank_Shell_VelocitySpeed
 			end
-			local shell = ents.Create(selfData.Tank_Shell_Entity)
 			shell:SetPos(spawnPos)
 			shell:SetAngles(calculatedVel:Angle())
-			self:Tank_OnFireShell("OnCreate", shell)
 			shell:Spawn()
 			shell:Activate()
 			shell:SetOwner(self)
 			if self:Tank_OnFireShell("OnSpawn", shell) != true then
 				local phys = shell:GetPhysicsObject()
 				if IsValid(phys) then
-					phys:SetVelocity(Vector(calculatedVel.x, calculatedVel.y, math.Clamp(calculatedVel.z, selfData.Tank_Shell_SpawnPos.z - 735, selfData.Tank_Shell_SpawnPos.z + 335)))
+					phys:SetVelocity(calculatedVel)
 				end
 			end
 		end

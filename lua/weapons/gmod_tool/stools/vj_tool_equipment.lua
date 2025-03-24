@@ -33,56 +33,45 @@ if CLIENT then
 		
 		panel:Help("#tool.vj_tool_equipment.label")
 		
-		local selectwep = vgui.Create("DTextEntry")
-		selectwep:SetEditable(false)
-		selectwep:SetText(language.GetPhrase("#tool.vj_tool_equipment.selectedequipment")..": "..GetConVarString("vj_tool_equipment_weaponname").." ["..GetConVarString("vj_tool_equipment_weaponclass").."]")
-		selectwep.OnGetFocus = function() LocalPlayer():ConCommand("vj_npcequipment_openwepselect") end
-		panel:AddItem(selectwep)
+		local textEntry = vgui.Create("DTextEntry")
+		textEntry:SetEditable(false)
+		textEntry:SetText(language.GetPhrase("#tool.vj_tool_equipment.selected") .. ": " .. language.GetPhrase(GetConVarString("vj_tool_equipment_weaponname")) .. " [" .. GetConVarString("vj_tool_equipment_weaponclass") .. "]")
+		textEntry.OnGetFocus = function()
+			local wepSelFrame = vgui.Create('DFrame')
+				wepSelFrame:SetSize(420, 440)
+				wepSelFrame:SetPos(ScrW() * 0.6, ScrH() * 0.1)
+				wepSelFrame:SetTitle("#tool.vj_tool_equipment.print.doubleclick")
+				wepSelFrame:SetFocusTopLevel(true)
+				wepSelFrame:SetSizable(true)
+				wepSelFrame:ShowCloseButton(true)
+				wepSelFrame:MakePopup()
+			local wepSelList = vgui.Create("DListView")
+				wepSelList:SetTooltip(false)
+				wepSelList:SetParent(wepSelFrame)
+				wepSelList:SetPos(10, 30)
+				wepSelList:SetSize(400, 400)
+				wepSelList:SetMultiSelect(false)
+				wepSelList:AddColumn("#tool.vj_tool_equipment.header1")
+				wepSelList:AddColumn("#tool.vj_tool_equipment.header2")
+				wepSelList.OnRowSelected = function() chat.AddText(Color(0, 255, 0), "#tool.vj_tool_equipment.print.doubleclick") end
+				function wepSelList:DoDoubleClick(lineID, line)
+					chat.AddText(Color(0, 255, 0), "#tool.vj_tool_equipment.print.weaponselected1", Color(255, 100, 0), " " .. line:GetValue(1) .. " ", Color(0, 255, 0), "#tool.vj_tool_equipment.print.weaponselected2")
+					LocalPlayer():ConCommand("vj_tool_equipment_weaponname " .. line:GetValue(1))
+					LocalPlayer():ConCommand("vj_tool_equipment_weaponclass " .. line:GetValue(2))
+					wepSelFrame:Close()
+					textEntry:SetText(language.GetPhrase("#tool.vj_tool_equipment.selected") .. ": " .. line:GetValue(1) .. " [" .. line:GetValue(2) .. "]")
+				end
+			for _, v in pairs(list.Get("NPCUsableWeapons")) do
+				wepSelList:AddLine(v.title, v.class)
+			end
+			wepSelList:SortByColumn(1, false)
+		end
+		panel:AddItem(textEntry)
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(panel)
 		ControlPanel(panel)
 	end
----------------------------------------------------------------------------------------------------------------------------------------------
-	concommand.Add("vj_npcequipment_openwepselect", function(pl, cmd, args)
-		local MenuFrame = vgui.Create('DFrame')
-		MenuFrame:SetSize(420, 440)
-		MenuFrame:SetPos(ScrW()*0.6, ScrH()*0.1)
-		MenuFrame:SetTitle("#tool.vj_tool_equipment.print.doubleclick")
-		//MenuFrame:SetBackgroundBlur(true)
-		MenuFrame:SetFocusTopLevel(true)
-		MenuFrame:SetSizable(true)
-		MenuFrame:ShowCloseButton(true)
-		//MenuFrame:SetDeleteOnClose(false)
-		MenuFrame:MakePopup()
-		
-		local CheckList = vgui.Create("DListView")
-			CheckList:SetTooltip(false)
-			CheckList:SetParent(MenuFrame)
-			CheckList:SetPos(10, 30)
-			CheckList:SetSize(400, 400) -- Size
-			CheckList:SetMultiSelect(false)
-			CheckList:AddColumn("#tool.vj_tool_equipment.header1")
-			CheckList:AddColumn("#tool.vj_tool_equipment.header2")
-			CheckList.OnRowSelected = function() chat.AddText(Color(0, 255, 0), "#tool.vj_tool_equipment.print.doubleclick") end
-			function CheckList:DoDoubleClick(lineID, line)
-				chat.AddText(Color(0, 255, 0), "#tool.vj_tool_equipment.print.weaponselected1", Color(255, 100, 0), " "..line:GetValue(1).." ", Color(0, 255, 0), "#tool.vj_tool_equipment.print.weaponselected2")
-				LocalPlayer():ConCommand("vj_tool_equipment_weaponname "..line:GetValue(1))
-				LocalPlayer():ConCommand("vj_tool_equipment_weaponclass "..line:GetValue(2))
-				MenuFrame:Close()
-				timer.Simple(0.05, function() -- Otherwise it will not update the values in time
-					local getPanel = controlpanel.Get("vj_tool_equipment")
-					getPanel:Clear()
-					ControlPanel(getPanel)
-				end)
-			end
-		//MenuFrame:AddItem(CheckList)
-		//CheckList:SizeToContents()
-		for _, v in pairs(list.Get("NPCUsableWeapons")) do
-			CheckList:AddLine(v.title, v.class)
-		end
-		CheckList:SortByColumn(1, false)
-	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)

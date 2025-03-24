@@ -26,7 +26,7 @@ SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "SMG1"
 SWEP.Primary.Sound = "VJ.Weapon_MP40.Single"
 SWEP.PrimaryEffects_MuzzleAttachment = 1
-SWEP.PrimaryEffects_ShellType = "RifleShellEject"
+SWEP.PrimaryEffects_ShellType = "ShellEject"
 
 SWEP.HasDeploySound = false
 SWEP.Reload_TimeUntilAmmoIsSet	= 2.1
