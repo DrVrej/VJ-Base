@@ -656,7 +656,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 			animation = table_concat(finalString)
 		end
 		-- If animation is -1 then it's probably an activity, so turn it into an activity
-		-- EX: "vjges_"..ACT_MELEE_ATTACK1
+		-- EX: "vjges_" .. ACT_MELEE_ATTACK1
 		if isGesture && !isSequence && self:LookupSequence(animation) == -1 then
 			animation = tonumber(animation)
 			isString = false
@@ -752,7 +752,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 				self:SetLayerPlaybackRate(gesture, playbackRate * 0.5)
 			end
 		else -- Sequences & Activities
-			local schedule = vj_ai_schedule.New("PlayAnim_"..animation)
+			local schedule = vj_ai_schedule.New("PlayAnim_" .. animation)
 			
 			-- For humans NPCs, internally the base will set these variables back to true after this function if it's called by weapon attack animations!
 			self.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
@@ -1536,9 +1536,9 @@ function ENT:ResetFollowBehavior()
 	local followEnt = followData.Target
 	if IsValid(followEnt) && followEnt:IsPlayer() && self.CanChatMessage then
 		if self.Dead then
-			followEnt:PrintMessage(HUD_PRINTTALK, self:GetName().." has been killed.")
+			followEnt:PrintMessage(HUD_PRINTTALK, self:GetName() .. " has been killed.")
 		else
-			followEnt:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.")
+			followEnt:PrintMessage(HUD_PRINTTALK, self:GetName() .. " is no longer following you.")
 		end
 	end
 	self.IsFollowing = false
@@ -1573,17 +1573,17 @@ function ENT:Follow(ent, stopIfFollowing)
 		-- Refusals
 		if isLiving && self:GetClass() != ent:GetClass() && (self:Disposition(ent) == D_HT or self:Disposition(ent) == D_NU) then -- Check for enemy/neutral
 			if isPly && self.CanChatMessage then
-				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." isn't friendly so it won't follow you.")
+				ent:PrintMessage(HUD_PRINTTALK, self:GetName() .. " isn't friendly so it won't follow you.")
 			end
 			return false, 3
 		elseif self.IsFollowing && ent != followData.Target then -- Already following another entity
 			if isPly && self.CanChatMessage then
-				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is following another entity so it won't follow you.")
+				ent:PrintMessage(HUD_PRINTTALK, self:GetName() .. " is following another entity so it won't follow you.")
 			end
 			return false, 2
 		elseif self.MovementType == VJ_MOVETYPE_STATIONARY or self.MovementType == VJ_MOVETYPE_PHYSICS then
 			if isPly && self.CanChatMessage then
-				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is currently stationary so it can't follow you.")
+				ent:PrintMessage(HUD_PRINTTALK, self:GetName() .. " is currently stationary so it can't follow you.")
 			end
 			return false, 1
 		end
@@ -1591,7 +1591,7 @@ function ENT:Follow(ent, stopIfFollowing)
 		if !self.IsFollowing then
 			if isPly then
 				if self.CanChatMessage then
-					ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is now following you.")
+					ent:PrintMessage(HUD_PRINTTALK, self:GetName() .. " is now following you.")
 				end
 				self:PlaySoundSystem("FollowPlayer")
 				-- Reset the guarding data
@@ -1717,8 +1717,8 @@ function ENT:MaintainMedicBehavior()
 							if self:OnMedicBehavior("OnHeal", ally) != false then
 								local friCurHP = ally:Health()
 								ally:SetHealth(math_min(math_max(friCurHP + selfData.Medic_HealAmount, friCurHP), ally:GetMaxHealth()))
-								timer.Remove("timer_melee_bleed"..ally:EntIndex())
-								timer.Adjust("timer_melee_slowply"..ally:EntIndex(), 0)
+								timer.Remove("timer_melee_bleed" .. ally:EntIndex())
+								timer.Adjust("timer_melee_slowply" .. ally:EntIndex(), 0)
 								ally.VJ_SpeedEffectT = 0
 								ally:RemoveAllDecals()
 							end

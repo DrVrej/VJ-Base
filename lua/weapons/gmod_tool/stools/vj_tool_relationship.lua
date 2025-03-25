@@ -53,7 +53,7 @@ if CLIENT then
 			CheckList:AddColumn("#tool.vj_tool_relationship.tableheader")
 			CheckList.OnRowSelected = function(rowIndex, row) chat.AddText(Color(0, 255, 0), "Double click to ", Color(255, 100, 0), "remove ", Color(0, 255, 0), "a class") end
 			function CheckList:DoDoubleClick(lineID, line)
-				chat.AddText(Color(255, 100, 0), " "..line:GetValue(1).." ", Color(0, 255, 0), "removed!")
+				chat.AddText(Color(255, 100, 0), " " .. line:GetValue(1) .. " ", Color(0, 255, 0), "removed!")
 				CheckList:RemoveLine(lineID)
 				table.Empty(VJ_NPCRELATION_TblCurrentValues)
 				for _, vLine in pairs(CheckList:GetLines()) do
@@ -69,9 +69,9 @@ if CLIENT then
 			if string.len(val) > 0 then
 				val = string.upper(val)
 				if VJ.HasValue(VJ_NPCRELATION_TblCurrentValues, val) then
-					chat.AddText(Color(220, 20, 60), "ERROR! ", Color(255, 100, 0), val.." ", Color(220, 20, 60), "already exists in the table!")
+					chat.AddText(Color(220, 20, 60), "ERROR! ", Color(255, 100, 0), val .. " ", Color(220, 20, 60), "already exists in the table!")
 				else
-					chat.AddText(Color(0, 255, 0), "Added", Color(255, 100, 0), " "..val.." ", Color(0, 255, 0), "to the class list!")
+					chat.AddText(Color(0, 255, 0), "Added", Color(255, 100, 0), " " .. val .. " ", Color(0, 255, 0), "to the class list!")
 					table.insert(VJ_NPCRELATION_TblCurrentValues, val)
 					timer.Simple(0.05, function() -- Otherwise it will not update the values in time
 						local getPanel = controlpanel.Get("vj_tool_relationship")
@@ -163,7 +163,7 @@ if CLIENT then
 			local entname = net.ReadString()
 			//local hasclasstbl = net.ReadBool()
 			local classtbl = net.ReadTable()
-			chat.AddText(Color(0, 255, 0), "Obtained", Color(255, 100, 0), " "..entname.."'s ", Color(0, 255, 0), "relationship class list!")
+			chat.AddText(Color(0, 255, 0), "Obtained", Color(255, 100, 0), " " .. entname .. "'s ", Color(0, 255, 0), "relationship class list!")
 			//print(ent)
 			//print(hasclasstbl)
 			//PrintTable(classtbl)
@@ -185,7 +185,7 @@ if CLIENT then
 			local clicktype = net.ReadString()
 			local allynum = net.ReadFloat()
 			if clicktype == "ReloadClick" then entname = "Yourself" end
-			chat.AddText(Color(0, 255, 0), "#tool.vj_tool_relationship.print.applied", Color(255, 100, 0), " "..entname)
+			chat.AddText(Color(0, 255, 0), "#tool.vj_tool_relationship.print.applied", Color(255, 100, 0), " " .. entname)
 			net.Start("vj_tool_relationship_sv_apply")
 			net.WriteEntity(ent)
 			//net.WriteTable(self)

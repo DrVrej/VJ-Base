@@ -17,8 +17,8 @@ if CLIENT then
 		local welMsgs = {
 			"Welcome to my shop, how can I help you?",
 			"Hi!",
-			"Hello "..LocalPlayer():GetName()..", You need anything?",
-			"What can I do for you "..LocalPlayer():GetName().."?",
+			"Hello " .. LocalPlayer():GetName() .. ", You need anything?",
+			"What can I do for you " .. LocalPlayer():GetName() .. "?",
 			"This ain't cheap stuff, but it is good!",
 		}
 	

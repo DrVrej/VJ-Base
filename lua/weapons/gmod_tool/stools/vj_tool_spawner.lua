@@ -60,23 +60,98 @@ if CLIENT then
 		panel:Help("#vjbase.tool.general.note.recommend")
 		local selectnpc = vgui.Create("DTextEntry")
 			selectnpc:SetEditable(false)
-			local npcName = list.Get("NPC")[GetConVarString("vj_tool_spawner_spawnent")]
-			selectnpc:SetText(language.GetPhrase("#tool.vj_tool_spawner.selectednpc")..": "..(npcName and npcName.Name or "None").." ["..GetConVarString("vj_tool_spawner_spawnent").."]")
-			selectnpc.OnGetFocus = function() LocalPlayer():ConCommand("vj_npcspawner_opennpcselect") end
+			local npcName = "None"
+			local npcClass = GetConVarString("vj_tool_spawner_spawnent")
+			for _, v in pairs(list.Get("NPC")) do
+				if v.Class == npcClass then
+					npcName = language.GetPhrase(v.Name)
+					break
+				end
+			end
+			selectnpc:SetText(language.GetPhrase("#tool.vj_tool_spawner.selectednpc") .. ": " .. npcName .. " [" .. npcClass .. "]")
+			selectnpc.OnGetFocus = function()
+				local npcSelFrame = vgui.Create('DFrame')
+					npcSelFrame:SetSize(420, 440)
+					npcSelFrame:SetPos(ScrW()*0.6, ScrH()*0.1)
+					npcSelFrame:SetTitle("#tool.vj_tool_spawner.title1")
+					npcSelFrame:SetFocusTopLevel(true)
+					npcSelFrame:SetSizable(true)
+					npcSelFrame:ShowCloseButton(true)
+					npcSelFrame:MakePopup()
+				local npcSelList = vgui.Create("DListView")
+					npcSelList:SetTooltip(false)
+					npcSelList:SetParent(npcSelFrame)
+					npcSelList:SetPos(10, 30)
+					npcSelList:SetSize(400, 400)
+					npcSelList:SetMultiSelect(false)
+					npcSelList:AddColumn("#tool.vj_tool_spawner.popup.header1")
+					npcSelList:AddColumn("#tool.vj_tool_spawner.popup.header2")
+					npcSelList:AddColumn("#tool.vj_tool_spawner.popup.header3")
+					npcSelList.OnRowSelected = function() chat.AddText(Color(0, 255, 0), "#tool.vj_tool_spawner.title1") end
+					function npcSelList:DoDoubleClick(lineID, line)
+						chat.AddText(Color(0, 255, 0), "NPC", Color(255, 100, 0), " " .. language.GetPhrase(line:GetValue(1)) .. " ", Color(0, 255, 0), "selected!")
+						LocalPlayer():ConCommand("vj_tool_spawner_spawnent " .. line:GetValue(2))
+						npcSelFrame:Close()
+						selectnpc:SetText(language.GetPhrase("#tool.vj_tool_spawner.selectednpc") .. ": " .. language.GetPhrase(line:GetValue(1)) .. " [" .. line:GetValue(2) .. "]")
+					end
+				for _, v in pairs(list.Get("NPC")) do
+					local getcat = v.Category
+					if v.Category == "" then getcat = "Unknown" end
+					npcSelList:AddLine(v.Name, v.Class, getcat)
+				end
+				npcSelList:SortByColumn(1, false)
+			end
 		panel:AddItem(selectnpc)
 		panel:TextEntry("#tool.vj_tool_spawner.spawnpos.forward", "vj_tool_spawner_spawnpos_forward")
 		panel:TextEntry("#tool.vj_tool_spawner.spawnpos.right", "vj_tool_spawner_spawnpos_right")
 		panel:TextEntry("#tool.vj_tool_spawner.spawnpos.up", "vj_tool_spawner_spawnpos_up")
 		local selectwep = vgui.Create("DTextEntry")
 			selectwep:SetEditable(false)
-			local equipName = list.Get("NPCUsableWeapons")[GetConVarString("vj_tool_spawner_weaponequip")]
-			selectwep:SetText(language.GetPhrase("#tool.vj_tool_spawner.selectweapon")..": "..(equipName and equipName.Name or "None").." ["..GetConVarString("vj_tool_spawner_weaponequip").."]")
-			selectwep.OnGetFocus = function() LocalPlayer():ConCommand("vj_npcspawner_openwepselect") end
+			local equipName = "None"
+			local equipClass = GetConVarString("vj_tool_spawner_weaponequip")
+			for _, v in pairs(list.Get("NPCUsableWeapons")) do
+				if v.class == equipClass then
+					equipName = language.GetPhrase(v.title)
+					break
+				end
+			end
+			selectwep:SetText(language.GetPhrase("#tool.vj_tool_spawner.selectweapon") .. ": " .. equipName .. " [" .. equipClass .. "]")
+			selectwep.OnGetFocus = function()
+				local wepSelFrame = vgui.Create('DFrame')
+					wepSelFrame:SetSize(420, 440)
+					wepSelFrame:SetPos(ScrW()*0.6, ScrH()*0.1)
+					wepSelFrame:SetTitle("#tool.vj_tool_spawner.title2")
+					wepSelFrame:SetFocusTopLevel(true)
+					wepSelFrame:SetSizable(true)
+					wepSelFrame:ShowCloseButton(true)
+					wepSelFrame:MakePopup()
+				local wepSelList = vgui.Create("DListView")
+					wepSelList:SetTooltip(false)
+					wepSelList:SetParent(wepSelFrame)
+					wepSelList:SetPos(10, 30)
+					wepSelList:SetSize(400, 400)
+					wepSelList:SetMultiSelect(false)
+					wepSelList:AddColumn("#tool.vj_tool_spawner.popup.header1")
+					wepSelList:AddColumn("#tool.vj_tool_spawner.popup.header2")
+					wepSelList.OnRowSelected = function() chat.AddText(Color(0, 255, 0), "#tool.vj_tool_spawner.title2") end
+					function wepSelList:DoDoubleClick(lineID, line)
+						chat.AddText(Color(0, 255, 0), "Weapon", Color(255, 100, 0), " " .. language.GetPhrase(line:GetValue(1)) .. " ", Color(0, 255, 0), "selected!")
+						LocalPlayer():ConCommand("vj_tool_spawner_weaponequip " .. line:GetValue(2))
+						wepSelFrame:Close()
+						selectwep:SetText(language.GetPhrase("#tool.vj_tool_spawner.selectweapon") .. ": " .. language.GetPhrase(line:GetValue(1)) .. " [" .. line:GetValue(2) .. "]")
+					end
+				for _, v in pairs(list.Get("NPCUsableWeapons")) do
+					wepSelList:AddLine(v.title, v.class)
+				end
+				wepSelList:SortByColumn(1, false)
+				wepSelList:AddLine("None", "None")
+				wepSelList:AddLine("Default", "Default")
+			end
 		panel:AddItem(selectwep)
 		panel:TextEntry("#tool.vj_tool_spawner.spawnnpclass", "vj_tool_spawner_spawnnpclass")
 		panel:CheckBox("#tool.vj_tool_spawner.fritoplyallies", "vj_tool_spawner_fritoplyallies")
 		panel:ControlHelp("#tool.vj_tool_spawner.label.fritoplyallies")
-		panel:Button("#tool.vj_tool_spawner.button.updatelist", "vj_npcspawner_updatelist")
+		panel:Button("#tool.vj_tool_spawner.button.updatelist", "vj_tool_spawner_update")
 		panel:ControlHelp("#tool.vj_tool_spawner.label1")
 		local CheckList = vgui.Create("DListView")
 			CheckList:SetTooltip(false)
@@ -87,7 +162,7 @@ if CLIENT then
 			CheckList:AddColumn("#tool.vj_tool_spawner.header3")
 			CheckList.OnRowSelected = function(rowIndex, row) chat.AddText(Color(0, 255, 0), "Double click to ", Color(255, 100, 0), "remove ", Color(0, 255, 0), "a NPC") end
 			function CheckList:DoDoubleClick(lineID, line)
-				chat.AddText(Color(0, 255, 0), "NPC", Color(255, 100, 0), " "..line:GetValue(1).." ", Color(0, 255, 0), "removed!")
+				chat.AddText(Color(0, 255, 0), "NPC", Color(255, 100, 0), " " .. language.GetPhrase(line:GetValue(1)) .. " ", Color(0, 255, 0), "removed!")
 				CheckList:RemoveLine(lineID)
 				table.Empty(VJ_NPCSPAWNER_TblCurrentLinesUsable)
 				for _, vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
@@ -100,7 +175,7 @@ if CLIENT then
 			if v.Entities != "" && v.Entities != "none" && v.Entities != {} then
 				npcName = list.Get("NPC")[v.Entities]
 				CheckList:AddLine(npcName and npcName.Name or "None", v.SpawnPosition, v.WeaponsList, v.Entities, v.Relationship)
-				//CheckList:AddLine(v.Entities, "x:"..v.SpawnPosition.vForward.." y:"..v.SpawnPosition.vRight.." z:"..v.SpawnPosition.vUp)
+				//CheckList:AddLine(v.Entities, "x:" .. v.SpawnPosition.vForward .. " y:" .. v.SpawnPosition.vRight .. " z:" .. v.SpawnPosition.vUp)
 			end
 		end
 		table.Empty(VJ_NPCSPAWNER_TblCurrentValues)
@@ -112,98 +187,12 @@ if CLIENT then
 		for _, vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
 			table.insert(VJ_NPCSPAWNER_TblCurrentLinesUsable, {Entities=vLine:GetValue(4), SpawnPosition=vLine:GetValue(2), WeaponsList=vLine:GetValue(3), Relationship=vLine:GetValue(5)})
 		end
-		panel:Help(language.GetPhrase("#tool.vj_tool_spawner.label2")..":")
+		panel:Help(language.GetPhrase("#tool.vj_tool_spawner.label2") .. ":")
 		panel:CheckBox("#tool.vj_tool_spawner.toggle.spawnsound", "vj_tool_spawner_playsound")
 		panel:NumSlider("#tool.vj_tool_spawner.nextspawntime", "vj_tool_spawner_nextspawntime", 0, 1000, 0)
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	concommand.Add("vj_npcspawner_opennpcselect", function(ply, cmd, args)
-		local MenuFrame = vgui.Create('DFrame')
-		MenuFrame:SetSize(420, 440)
-		MenuFrame:SetPos(ScrW()*0.6, ScrH()*0.1)
-		MenuFrame:SetTitle("#tool.vj_tool_spawner.title1")
-		//MenuFrame:SetBackgroundBlur(true)
-		MenuFrame:SetFocusTopLevel(true)
-		MenuFrame:SetSizable(true)
-		MenuFrame:ShowCloseButton(true)
-		//MenuFrame:SetDeleteOnClose(false)
-		MenuFrame:MakePopup()
-		
-		local CheckList = vgui.Create("DListView")
-			CheckList:SetTooltip(false)
-			//CheckList:Center() -- No need since Size does it already
-			CheckList:SetParent(MenuFrame)
-			CheckList:SetPos(10, 30)
-			CheckList:SetSize(400, 400) -- Size
-			CheckList:SetMultiSelect(false)
-			CheckList:AddColumn("#tool.vj_tool_spawner.popup.header1")
-			CheckList:AddColumn("#tool.vj_tool_spawner.popup.header2")
-			CheckList:AddColumn("#tool.vj_tool_spawner.popup.header3")
-			CheckList.OnRowSelected = function() chat.AddText(Color(0, 255, 0), "#tool.vj_tool_spawner.title1") end
-			function CheckList:DoDoubleClick(lineID, line)
-				chat.AddText(Color(0, 255, 0), "NPC", Color(255, 100, 0), " "..line:GetValue(1).." ", Color(0, 255, 0), "selected!")
-				LocalPlayer():ConCommand("vj_tool_spawner_spawnent "..line:GetValue(2))
-				MenuFrame:Close()
-				timer.Simple(0.05, function() -- Otherwise it will not update the values in time
-					local getPanel = controlpanel.Get("vj_tool_spawner")
-					getPanel:Clear()
-					ControlPanel(getPanel)
-				end)
-			end
-		//MenuFrame:AddItem(CheckList)
-		//CheckList:SizeToContents()
-		for _, v in pairs(list.Get("NPC")) do
-			local getcat = v.Category
-			if v.Category == "" then getcat = "Unknown" end
-			CheckList:AddLine(v.Name, v.Class, getcat)
-		end
-		CheckList:SortByColumn(1, false)
-	end)
----------------------------------------------------------------------------------------------------------------------------------------------
-	concommand.Add("vj_npcspawner_openwepselect", function(ply, cmd, args)
-		local MenuFrame = vgui.Create('DFrame')
-		MenuFrame:SetSize(420, 440)
-		MenuFrame:SetPos(ScrW()*0.6, ScrH()*0.1)
-		MenuFrame:SetTitle("#tool.vj_tool_spawner.title2")
-		//MenuFrame:SetBackgroundBlur(true)
-		MenuFrame:SetFocusTopLevel(true)
-		MenuFrame:SetSizable(true)
-		MenuFrame:ShowCloseButton(true)
-		//MenuFrame:SetDeleteOnClose(false)
-		MenuFrame:MakePopup()
-		
-		local CheckList = vgui.Create("DListView")
-			CheckList:SetTooltip(false)
-			//CheckList:Center() -- No need since Size does it already
-			CheckList:SetParent(MenuFrame)
-			CheckList:SetPos(10, 30)
-			CheckList:SetSize(400, 400) -- Size
-			CheckList:SetMultiSelect(false)
-			CheckList:AddColumn("#tool.vj_tool_spawner.popup.header1")
-			CheckList:AddColumn("#tool.vj_tool_spawner.popup.header2")
-			CheckList.OnRowSelected = function() chat.AddText(Color(0, 255, 0), "#tool.vj_tool_spawner.title2") end
-			function CheckList:DoDoubleClick(lineID, line)
-				chat.AddText(Color(0, 255, 0), "Weapon", Color(255, 100, 0), " "..line:GetValue(1).." ", Color(0, 255, 0), "selected!")
-				//LocalPlayer():ConCommand("vj_tool_spawner_weaponequipname "..line:GetValue(1))
-				LocalPlayer():ConCommand("vj_tool_spawner_weaponequip "..line:GetValue(2))
-				MenuFrame:Close()
-				timer.Simple(0.05, function() -- Otherwise it will not update the values in time
-					local getPanel = controlpanel.Get("vj_tool_spawner")
-					getPanel:Clear()
-					ControlPanel(getPanel)
-				end)
-			end
-		//MenuFrame:AddItem(CheckList)
-		//CheckList:SizeToContents()
-		for _, v in pairs(list.Get("NPCUsableWeapons")) do
-			CheckList:AddLine(v.title, v.class)
-		end
-		CheckList:SortByColumn(1, false)
-		CheckList:AddLine("None", "None")
-		CheckList:AddLine("Default", "Default")
-	end)
----------------------------------------------------------------------------------------------------------------------------------------------
-	concommand.Add("vj_npcspawner_updatelist", function(ply, cmd, args)
+	concommand.Add("vj_tool_spawner_update", function(ply, cmd, args)
 		local spawnent = string.lower(GetConVarString("vj_tool_spawner_spawnent"))
 		local spawnposfor = GetConVarString("vj_tool_spawner_spawnpos_forward")
 		local spawnposright = GetConVarString("vj_tool_spawner_spawnpos_right")

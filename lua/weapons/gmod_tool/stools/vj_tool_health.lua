@@ -73,7 +73,7 @@ function TOOL:LeftClick(tr)
 		end
 		if heal then
 			ent:SetHealth(self:GetClientNumber("health"))
-			ply:ChatPrint("Set "..ent:GetClass().."'s health to "..self:GetClientNumber("health"))
+			ply:ChatPrint("Set " .. ent:GetClass() .. "'s health to " .. self:GetClientNumber("health"))
 			if ent:IsNPC() then
 				if self:GetClientNumber("godmode") == 1 then ent.GodMode = true else ent.GodMode = false end
 				if ent.IsVJBaseSNPC && self:GetClientNumber("healthregen") == 1 then
@@ -103,7 +103,7 @@ function TOOL:RightClick(tr)
 		if heal then
 			ent:SetHealth(self:GetClientNumber("health"))
 			ent:SetMaxHealth(self:GetClientNumber("health"))
-			ply:ChatPrint("Set "..ent:GetClass().."'s health and max health to "..self:GetClientNumber("health"))
+			ply:ChatPrint("Set " .. ent:GetClass() .. "'s health and max health to " .. self:GetClientNumber("health"))
 			if ent:IsNPC() then
 				if self:GetClientNumber("godmode") == 1 then ent.GodMode = true else ent.GodMode = false end
 				if ent.IsVJBaseSNPC && self:GetClientNumber("healthregen") == 1 then
@@ -132,7 +132,7 @@ function TOOL:Reload(tr)
 		end
 		if heal then
 			ent:SetHealth(ent:GetMaxHealth())
-			ply:ChatPrint("Healed "..ent:GetClass().." to its max health ("..ent:GetMaxHealth()..")")
+			ply:ChatPrint("Healed " .. ent:GetClass() .. " to its max health (" .. ent:GetMaxHealth() .. ")")
 			return true
 		end
 	end

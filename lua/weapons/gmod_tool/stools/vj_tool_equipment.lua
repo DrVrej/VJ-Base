@@ -7,7 +7,6 @@ TOOL.Information = {
 }
 TOOL.ClientConVar = {
 	weaponclass = "None",
-	weaponname = "Unknown"
 }
 
 local defaultConvars = TOOL:BuildConVarList()
@@ -35,7 +34,15 @@ if CLIENT then
 		
 		local textEntry = vgui.Create("DTextEntry")
 		textEntry:SetEditable(false)
-		textEntry:SetText(language.GetPhrase("#tool.vj_tool_equipment.selected") .. ": " .. language.GetPhrase(GetConVarString("vj_tool_equipment_weaponname")) .. " [" .. GetConVarString("vj_tool_equipment_weaponclass") .. "]")
+		local equipName = "None"
+		local equipClass = GetConVarString("vj_tool_equipment_weaponclass")
+		for _, v in pairs(list.Get("NPCUsableWeapons")) do
+			if v.class == equipClass then
+				equipName = language.GetPhrase(v.title)
+				break
+			end
+		end
+		textEntry:SetText(language.GetPhrase("#tool.vj_tool_equipment.selected") .. ": " .. equipName .. " [" .. equipClass .. "]")
 		textEntry.OnGetFocus = function()
 			local wepSelFrame = vgui.Create('DFrame')
 				wepSelFrame:SetSize(420, 440)
@@ -55,11 +62,10 @@ if CLIENT then
 				wepSelList:AddColumn("#tool.vj_tool_equipment.header2")
 				wepSelList.OnRowSelected = function() chat.AddText(Color(0, 255, 0), "#tool.vj_tool_equipment.print.doubleclick") end
 				function wepSelList:DoDoubleClick(lineID, line)
-					chat.AddText(Color(0, 255, 0), "#tool.vj_tool_equipment.print.weaponselected1", Color(255, 100, 0), " " .. line:GetValue(1) .. " ", Color(0, 255, 0), "#tool.vj_tool_equipment.print.weaponselected2")
-					LocalPlayer():ConCommand("vj_tool_equipment_weaponname " .. line:GetValue(1))
+					chat.AddText(Color(0, 255, 0), "#tool.vj_tool_equipment.print.weaponselected1", Color(255, 100, 0), " " .. language.GetPhrase(line:GetValue(1)) .. " ", Color(0, 255, 0), "#tool.vj_tool_equipment.print.weaponselected2")
 					LocalPlayer():ConCommand("vj_tool_equipment_weaponclass " .. line:GetValue(2))
 					wepSelFrame:Close()
-					textEntry:SetText(language.GetPhrase("#tool.vj_tool_equipment.selected") .. ": " .. line:GetValue(1) .. " [" .. line:GetValue(2) .. "]")
+					textEntry:SetText(language.GetPhrase("#tool.vj_tool_equipment.selected") .. ": " .. language.GetPhrase(line:GetValue(1)) .. " [" .. line:GetValue(2) .. "]")
 				end
 			for _, v in pairs(list.Get("NPCUsableWeapons")) do
 				wepSelList:AddLine(v.title, v.class)
@@ -76,12 +82,10 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
-	
 	local ent = tr.Entity
 	if !IsValid(ent) or !ent:IsNPC() then return end
-	local equipment = GetConVarString("vj_tool_equipment_weaponclass")
-	
 	if IsValid(ent:GetActiveWeapon()) then ent:GetActiveWeapon():Remove() end
+	local equipment = GetConVarString("vj_tool_equipment_weaponclass")
 	if equipment != "None" then
 		ent:Give(equipment)
 	end
@@ -90,10 +94,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
-	
 	local ent = tr.Entity
 	if !IsValid(ent) or !ent:IsNPC() then return end
-	
 	if IsValid(ent:GetActiveWeapon()) then ent:GetActiveWeapon():Remove() end
 	return true
 end

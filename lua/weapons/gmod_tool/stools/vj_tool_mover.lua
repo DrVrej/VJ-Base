@@ -39,7 +39,7 @@ if CLIENT then
 			end
 			CheckList.OnRowSelected = function(rowIndex, row) chat.AddText(Color(0, 255, 0), "Double click to ", Color(255, 100, 0), "unselect ", Color(0, 255, 0), "a NPC") end
 			function CheckList:DoDoubleClick(lineID, line)
-				chat.AddText(Color(0, 255, 0), "NPC", Color(255, 100, 0), " "..line:GetValue(1).." ", Color(0, 255, 0), "unselected!")
+				chat.AddText(Color(0, 255, 0), "NPC", Color(255, 100, 0), " " .. line:GetValue(1) .. " ", Color(0, 255, 0), "unselected!")
 				net.Start("vj_tool_mover_sv_remove")
 				net.WriteTable({line:GetValue(3)})
 				net.SendToServer()
@@ -85,13 +85,13 @@ if CLIENT then
 			for k, v in ipairs(VJ_MOVE_TblCurrentValues) do
 				if !IsValid(v) then table.remove(VJ_MOVE_TblCurrentValues, k) continue end -- Remove any NPCs that no longer exist!
 				if v == sventity then -- If the selected NPC already exists then unselect it!
-					chat.AddText(Color(0, 255, 0), "NPC", Color(255, 100, 0), " "..sventname.." ", Color(0, 255, 0), "unselected!")
+					chat.AddText(Color(0, 255, 0), "NPC", Color(255, 100, 0), " " .. sventname .. " ", Color(0, 255, 0), "unselected!")
 					changetype = 1
 					table.remove(VJ_MOVE_TblCurrentValues, k)
 				end
 			end
 			if changetype == 0 then -- Only if we are adding
-				chat.AddText(Color(0, 255, 0), "NPC", Color(255, 100, 0), " "..sventname.." ", Color(0, 255, 0), "selected!")
+				chat.AddText(Color(0, 255, 0), "NPC", Color(255, 100, 0), " " .. sventname .. " ", Color(0, 255, 0), "selected!")
 				table.insert(VJ_MOVE_TblCurrentValues, sventity)
 			end
 			-- Refresh the tool menu

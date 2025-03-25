@@ -2211,7 +2211,7 @@ function ENT:Initialize()
 					self.WeaponEntity = self:DoChangeWeapon() -- Setup the weapon
 					self.WeaponInventory.Primary = wep
 					if !wep.IsVJBaseWeapon && self.CanChatMessage && IsValid(self:GetCreator()) then
-						self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: "..self:GetName().." requires a VJ Base weapon to work properly!")
+						self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: " .. self:GetName() .. " requires a VJ Base weapon to work properly!")
 					end
 					local antiArmor = PICK(self.WeaponInventory_AntiArmorList)
 					if antiArmor && wep:GetClass() != antiArmor then -- If the list isn't empty and it's not the current active weapon
@@ -2228,7 +2228,7 @@ function ENT:Initialize()
 				else
 					self:UpdateAnimationTranslations()
 					if IsValid(self:GetCreator()) && self.CanChatMessage && !self.Weapon_IgnoreSpawnMenu then
-						self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: "..self:GetName().." requires a weapon!")
+						self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: " .. self:GetName() .. " requires a weapon!")
 					end
 				end
 			end
@@ -2606,9 +2606,9 @@ function ENT:Think()
 	if VJ_CVAR_AI_ENABLED && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
 		if selfData.VJ_DEBUG then
 			if GetConVar("vj_npc_debug_enemy"):GetInt() == 1 then VJ.DEBUG_Print(self, false, "Enemy -> " .. tostring(self:GetEnemy() or "NULL") .. " | Alerted? " .. tostring(selfData.Alerted))  end
-			if GetConVar("vj_npc_debug_takingcover"):GetInt() == 1 then if curTime > selfData.TakingCoverT then VJ.DEBUG_Print(self, false, "NOT taking cover") else VJ.DEBUG_Print(self, false, "Taking cover ("..selfData.TakingCoverT - curTime..")") end end
-			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - selfData.EnemyData.VisibleTime).." ("..self:GetName()..")") end
-			if IsValid(selfData.WeaponEntity) && GetConVar("vj_npc_debug_weapon"):GetInt() == 1 then VJ.DEBUG_Print(self, false, " : Weapon -> " .. tostring(selfData.WeaponEntity) .. " | Ammo: "..selfData.WeaponEntity:Clip1().." / "..selfData.WeaponEntity:GetMaxClip1().." | Accuracy: "..selfData.Weapon_Accuracy) end
+			if GetConVar("vj_npc_debug_takingcover"):GetInt() == 1 then if curTime > selfData.TakingCoverT then VJ.DEBUG_Print(self, false, "NOT taking cover") else VJ.DEBUG_Print(self, false, "Taking cover (" .. selfData.TakingCoverT - curTime .. ")") end end
+			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - selfData.EnemyData.VisibleTime) .. " (" .. self:GetName() .. ")") end
+			if IsValid(selfData.WeaponEntity) && GetConVar("vj_npc_debug_weapon"):GetInt() == 1 then VJ.DEBUG_Print(self, false, " : Weapon -> " .. tostring(selfData.WeaponEntity) .. " | Ammo: " .. selfData.WeaponEntity:Clip1() .. " / " .. selfData.WeaponEntity:GetMaxClip1() .. " | Accuracy: " .. selfData.Weapon_Accuracy) end
 		end
 		
 		//self:SetPlaybackRate(self.AnimationPlaybackRate)
@@ -2916,7 +2916,7 @@ function ENT:Think()
 							timer.Create("attack_melee_start" .. self:EntIndex(), selfData.TimeUntilMeleeAttackDamage / selfData.AnimPlaybackRate, selfData.MeleeAttackReps, function() if selfData.AttackSeed == seed then self:ExecuteMeleeAttack() end end)
 							if selfData.MeleeAttackExtraTimers then
 								for k, t in ipairs(selfData.MeleeAttackExtraTimers) do
-									self:AddExtraAttackTimer("attack_melee_start"..curTime + k, t, function() if selfData.AttackSeed == seed then self:ExecuteMeleeAttack() end end)
+									self:AddExtraAttackTimer("attack_melee_start" .. curTime + k, t, function() if selfData.AttackSeed == seed then self:ExecuteMeleeAttack() end end)
 								end
 							end
 						end
@@ -4045,7 +4045,7 @@ function ENT:OnTakeDamage(dmginfo)
 							self:SCHEDULE_FACE("TASK_FACE_TARGET")
 						end
 						if selfData.CanChatMessage then
-							dmgAttacker:PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.")
+							dmgAttacker:PrintMessage(HUD_PRINTTALK, self:GetName() .. " no longer likes you.")
 						end
 					end
 				end
@@ -4232,7 +4232,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 							ally:SetRelationshipMemory(dmgAttacker, VJ.MEM_OVERRIDE_DISPOSITION, D_HT)
 							ally:AddEntityRelationship(dmgAttacker, D_HT, 2)
 							if ally.CanChatMessage then
-								dmgAttacker:PrintMessage(HUD_PRINTTALK, ally:GetName().." no longer likes you.")
+								dmgAttacker:PrintMessage(HUD_PRINTTALK, ally:GetName() .. " no longer likes you.")
 							end
 							ally:PlaySoundSystem("BecomeEnemyToPlayer")
 						end

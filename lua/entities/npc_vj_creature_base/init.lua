@@ -1891,8 +1891,8 @@ function ENT:Think()
 	if VJ_CVAR_AI_ENABLED && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
 		if selfData.VJ_DEBUG then
 			if GetConVar("vj_npc_debug_enemy"):GetInt() == 1 then VJ.DEBUG_Print(self, false, "Enemy -> " .. tostring(self:GetEnemy() or "NULL") .. " | Alerted? " .. tostring(selfData.Alerted))  end
-			if GetConVar("vj_npc_debug_takingcover"):GetInt() == 1 then if curTime > selfData.TakingCoverT then VJ.DEBUG_Print(self, false, "NOT taking cover") else VJ.DEBUG_Print(self, false, "Taking cover ("..selfData.TakingCoverT - curTime..")") end end
-			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - selfData.EnemyData.VisibleTime).." ("..self:GetName()..")") end
+			if GetConVar("vj_npc_debug_takingcover"):GetInt() == 1 then if curTime > selfData.TakingCoverT then VJ.DEBUG_Print(self, false, "NOT taking cover") else VJ.DEBUG_Print(self, false, "Taking cover (" .. selfData.TakingCoverT - curTime .. ")") end end
+			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - selfData.EnemyData.VisibleTime) .. " (" .. self:GetName() .. ")") end
 		end
 		
 		//self:SetPlaybackRate(self.AnimationPlaybackRate)
@@ -2289,7 +2289,7 @@ function ENT:Think()
 								timer.Create("attack_melee_start" .. self:EntIndex(), selfData.TimeUntilMeleeAttackDamage / selfData.AnimPlaybackRate, selfData.MeleeAttackReps, function() if selfData.AttackSeed == seed then self:ExecuteMeleeAttack(atkType == 2) end end)
 								if selfData.MeleeAttackExtraTimers then
 									for k, t in ipairs(selfData.MeleeAttackExtraTimers) do
-										self:AddExtraAttackTimer("timer_melee_start_"..curTime + k, t, function() if selfData.AttackSeed == seed then self:ExecuteMeleeAttack(atkType == 2) end end)
+										self:AddExtraAttackTimer("timer_melee_start_" .. curTime + k, t, function() if selfData.AttackSeed == seed then self:ExecuteMeleeAttack(atkType == 2) end end)
 									end
 								end
 							end
@@ -2324,7 +2324,7 @@ function ENT:Think()
 							timer.Create("attack_range_start" .. self:EntIndex(), selfData.TimeUntilRangeAttackProjectileRelease / selfData.AnimPlaybackRate, selfData.RangeAttackReps, function() if selfData.AttackSeed == seed then self:ExecuteRangeAttack() end end)
 							if selfData.RangeAttackExtraTimers then
 								for k, t in ipairs(selfData.RangeAttackExtraTimers) do
-									self:AddExtraAttackTimer("timer_range_start_"..curTime + k, t, function() if selfData.AttackSeed == seed then self:ExecuteRangeAttack() end end)
+									self:AddExtraAttackTimer("timer_range_start_" .. curTime + k, t, function() if selfData.AttackSeed == seed then self:ExecuteRangeAttack() end end)
 								end
 							end
 						end
@@ -2360,7 +2360,7 @@ function ENT:Think()
 							timer.Create("attack_leap_start" .. self:EntIndex(), selfData.TimeUntilLeapAttackDamage / selfData.AnimPlaybackRate, selfData.LeapAttackReps, function() if selfData.AttackSeed == seed then self:ExecuteLeapAttack() end end)
 							if selfData.LeapAttackExtraTimers then
 								for k, t in ipairs(selfData.LeapAttackExtraTimers) do
-									self:AddExtraAttackTimer("timer_leap_start_"..curTime + k, t, function() if selfData.AttackSeed == seed then self:ExecuteLeapAttack() end end)
+									self:AddExtraAttackTimer("timer_leap_start_" .. curTime + k, t, function() if selfData.AttackSeed == seed then self:ExecuteLeapAttack() end end)
 								end
 							end
 						end
@@ -2644,7 +2644,7 @@ function ENT:DoMeleeAttackPlayerSpeed(ent, walkSpeed, runSpeed, speedTime, sdDat
 	end
 	local pickedSD = self.CurrentMeleeAttackPlayerSpeedSound
 	local sdFadeTime = vSD_FadeOutTime
-	local timerName = "timer_melee_slowply"..ent:EntIndex()
+	local timerName = "timer_melee_slowply" .. ent:EntIndex()
 	
 	if timer.Exists(timerName) && timer.TimeLeft(timerName) > speedTime then
 		return
@@ -3108,7 +3108,7 @@ function ENT:OnTakeDamage(dmginfo)
 							self:SCHEDULE_FACE("TASK_FACE_TARGET")
 						end
 						if selfData.CanChatMessage then
-							dmgAttacker:PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.")
+							dmgAttacker:PrintMessage(HUD_PRINTTALK, self:GetName() .. " no longer likes you.")
 						end
 					end
 				end
@@ -3273,7 +3273,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 							ally:SetRelationshipMemory(dmgAttacker, VJ.MEM_OVERRIDE_DISPOSITION, D_HT)
 							ally:AddEntityRelationship(dmgAttacker, D_HT, 2)
 							if ally.CanChatMessage then
-								dmgAttacker:PrintMessage(HUD_PRINTTALK, ally:GetName().." no longer likes you.")
+								dmgAttacker:PrintMessage(HUD_PRINTTALK, ally:GetName() .. " no longer likes you.")
 							end
 							ally:PlaySoundSystem("BecomeEnemyToPlayer")
 						end

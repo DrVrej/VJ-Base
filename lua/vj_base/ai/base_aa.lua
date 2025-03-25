@@ -69,8 +69,8 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 		moveSpeed = (moveType == "Calm" and selfData.Aquatic_SwimmingSpeed_Calm) or selfData.Aquatic_SwimmingSpeed_Alerted
 		if debug then
 			print("----------------")
-			print("[MoveTo] My WaterLevel: "..self:WaterLevel())
-			if !destVec then print("[MoveTo] dest WaterLevel: "..dest:WaterLevel()) end
+			print("[MoveTo] My WaterLevel: " .. self:WaterLevel())
+			if !destVec then print("[MoveTo] dest WaterLevel: " .. dest:WaterLevel()) end
 		end
 		-- NPC not fully in water, so forget the destination, instead wander OR go deeper into the war
 		if self:WaterLevel() <= 2 then self:MaintainIdleBehavior(1) return end

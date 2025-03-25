@@ -482,7 +482,7 @@ function VJ.GetPoseParameters(ent, prt)
 	for i = 0, ent:GetNumPoseParameters() - 1 do
 		if prt != false then
 			local min, max = ent:GetPoseParameterRange(i)
-			print(ent:GetPoseParameterName(i)..' '..min.." / "..max)
+			print(ent:GetPoseParameterName(i) .. ' ' .. min .. " / " .. max)
 		end
 		table.insert(result, ent:GetPoseParameterName(i))
 	end

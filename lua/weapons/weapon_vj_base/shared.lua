@@ -410,7 +410,7 @@ function SWEP:Equip(newOwner)
 		end
 		//newOwner:RemoveAmmo(self.Primary.DefaultClip, self.Primary.Ammo)
 		if self.MadeForNPCsOnly then
-			newOwner:PrintMessage(HUD_PRINTTALK, self.PrintName.." removed! It's made for NPCs only!")
+			newOwner:PrintMessage(HUD_PRINTTALK, self.PrintName .. " removed! It's made for NPCs only!")
 			self:Remove()
 		end
 	elseif newOwner:IsNPC() then

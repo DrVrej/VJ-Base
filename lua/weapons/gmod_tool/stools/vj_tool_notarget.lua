@@ -14,32 +14,31 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
-	local Ply = self:GetOwner()
-	if Ply:IsFlagSet(FL_NOTARGET) != true then
-		Ply:ChatPrint("#tool.vj_tool_notarget.print.yourselfon")
-		Ply:AddFlags(FL_NOTARGET)
+	local owner = self:GetOwner()
+	if owner:IsFlagSet(FL_NOTARGET) != true then
+		owner:ChatPrint("#tool.vj_tool_notarget.print.yourselfon")
+		owner:AddFlags(FL_NOTARGET)
 		return true
 	else
-		Ply:ChatPrint("#tool.vj_tool_notarget.print.yourselfoff")
-		Ply:RemoveFlags(FL_NOTARGET)
+		owner:ChatPrint("#tool.vj_tool_notarget.print.yourselfoff")
+		owner:RemoveFlags(FL_NOTARGET)
 		return true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
-	if !IsValid(tr.Entity) then return false end
-	local Ply = self:GetOwner()
-	local Ent = tr.Entity
-	
-	local name = Ent:IsPlayer() and Ent:Nick() or Ent:GetClass()
-	if Ent:IsFlagSet(FL_NOTARGET) != true then
-		Ply:ChatPrint("Set no target to "..name..": ON")
-		Ent:AddFlags(FL_NOTARGET)
+	local ent = tr.Entity
+	if !IsValid(ent) then return false end
+	local owner = self:GetOwner()
+	local name = ent:IsPlayer() and ent:Nick() or ent:GetClass()
+	if ent:IsFlagSet(FL_NOTARGET) != true then
+		owner:ChatPrint("Set no target to " .. name .. ": ON")
+		ent:AddFlags(FL_NOTARGET)
 		return true
 	else
-		Ply:ChatPrint("Set no target to "..name..": OFF")
-		Ent:RemoveFlags(FL_NOTARGET)
+		owner:ChatPrint("Set no target to " .. name .. ": OFF")
+		ent:RemoveFlags(FL_NOTARGET)
 		return true
 	end
 end

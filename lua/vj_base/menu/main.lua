@@ -5,7 +5,7 @@
 --------------------------------------------------*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if SERVER then
-	concommand.Add("vj_dev_numnpcs", function(ply, cmd, args)
+	concommand.Add("vj_run_npc_num", function(ply, cmd, args)
 		if IsValid(ply) && ply:IsAdmin() then
 			local numNPC = 0
 			local numVJ = 0
@@ -22,7 +22,7 @@ if SERVER then
 			end
 			ply:ChatPrint("Total NPCs: " .. numNPC .. " | VJ NPCs: " .. numVJ .. " | NextBots: " .. numNextBot)
 		end
-	end)
+	end, nil, "Prints the number of NPCs in the map. It's admin only!")
 	--
 	local cTypes = {
 		vjnpcs = "VJ NPCs",
@@ -36,7 +36,7 @@ if SERVER then
 		allweapons = "Removed All Your Weapons",
 		allammo = "Removed All Your Ammo",
 	}
-	concommand.Add("vj_cleanup", function(ply, cmd, args)
+	concommand.Add("vj_run_cleanup", function(ply, cmd, args)
 		if IsValid(ply) && !ply:IsAdmin() then return end
 		local cType = args[1]
 		local i = 0
@@ -68,13 +68,13 @@ if SERVER then
 			if !cType then
 				ply:SendLua("GAMEMODE:AddNotify(\"Cleaned Up Everything!\", NOTIFY_CLEANUP, 5)")
 			elseif cType == "decals" or cType == "allweapons" or cType == "allammo" then
-				ply:SendLua("GAMEMODE:AddNotify(\""..cTypes[cType].."\", NOTIFY_CLEANUP, 5)")
+				ply:SendLua("GAMEMODE:AddNotify(\"" .. cTypes[cType] .. "\", NOTIFY_CLEANUP, 5)")
 			else
-				ply:SendLua("GAMEMODE:AddNotify(\"Removed "..i.." "..cTypes[cType].."\", NOTIFY_CLEANUP, 5)")
+				ply:SendLua("GAMEMODE:AddNotify(\"Removed " .. i .. " " .. cTypes[cType] .. "\", NOTIFY_CLEANUP, 5)")
 			end
 			ply:EmitSound("buttons/button15.wav")
 		end
-	end, nil, "", FCVAR_DONTRECORD)
+	end, nil, "Used to cleanup various things in the map. It's admin only!", FCVAR_DONTRECORD)
 else
 	//local colorOrange = Color(243, 101, 35)
 	local colorWhite = Color(255, 255, 255)
@@ -89,21 +89,21 @@ else
 		--
 		--
 		panel:Help("User Information:")
-		panel:ControlHelp("Date - "..os.date("%b %d, %Y - %I:%M %p")) -- Date
-		panel:ControlHelp("Name - "..client:Nick().." ("..client:SteamID()..")") -- Name + Steam ID
-		panel:ControlHelp("Session - "..(game.SinglePlayer() and "SinglePlayer" or "Multiplayer")..", "..gmod.GetGamemode().Name.." ("..game.GetMap()..")") -- Game Session
-		panel:ControlHelp("VJ Base - "..VJBASE_VERSION..", "..#VJ.Plugins.." plugins, "..GetConVar("vj_language"):GetString()) -- VJ Base Information
-		panel:ControlHelp("System - "..(system.IsLinux() and "Linux" or (system.IsOSX() and "OSX" or "Windows")).." ("..ScrW().."x"..ScrH()..")") // system.IsWindows() -- System
+		panel:ControlHelp("Date - " .. os.date("%b %d, %Y - %I:%M %p")) -- Date
+		panel:ControlHelp("Name - " .. client:Nick() .. " (" .. client:SteamID() .. ")") -- Name + Steam ID
+		panel:ControlHelp("Session - " .. (game.SinglePlayer() and "SinglePlayer" or "Multiplayer") .. ", " .. gmod.GetGamemode().Name .. " (" .. game.GetMap() .. ")") -- Game Session
+		panel:ControlHelp("VJ Base - " .. VJBASE_VERSION .. ", " .. #VJ.Plugins .. " plugins, " .. GetConVar("vj_language"):GetString()) -- VJ Base Information
+		panel:ControlHelp("System - " .. (system.IsLinux() and "Linux" or (system.IsOSX() and "OSX" or "Windows")) .. " (" .. ScrW() .. "x" .. ScrH() .. ")") // system.IsWindows() -- System
 		--
 		--
 		panel:Help("Mounted Games:")
-		panel:ControlHelp("HL1S - "..tostring(IsMounted("hl1")))
-		panel:ControlHelp("HL2 - "..tostring(IsMounted("hl2")))
-		panel:ControlHelp("HL2Ep1 - "..tostring(IsMounted("episodic")))
-		panel:ControlHelp("HL2Ep2 - "..tostring(IsMounted("ep2")))
-		panel:ControlHelp("CSS - "..tostring(IsMounted("cstrike")))
-		panel:ControlHelp("DoD - "..tostring(IsMounted("dod")))
-		panel:ControlHelp("TF2 - "..tostring(IsMounted("tf")))
+		panel:ControlHelp("HL1S - " .. tostring(IsMounted("hl1")))
+		panel:ControlHelp("HL2 - " .. tostring(IsMounted("hl2")))
+		panel:ControlHelp("HL2Ep1 - " .. tostring(IsMounted("episodic")))
+		panel:ControlHelp("HL2Ep2 - " .. tostring(IsMounted("ep2")))
+		panel:ControlHelp("CSS - " .. tostring(IsMounted("cstrike")))
+		panel:ControlHelp("DoD - " .. tostring(IsMounted("dod")))
+		panel:ControlHelp("TF2 - " .. tostring(IsMounted("tf")))
 		--
 		--
 		panel:Help("Convar Prefixes:")
@@ -127,7 +127,7 @@ else
 		panel:ControlHelp("")
 		panel:ControlHelp("============================")
 		
-		panel:ControlHelp("Copyright (c) "..os.date("20%y").." by DrVrej, All rights reserved.")
+		panel:ControlHelp("Copyright (c) " .. os.date("20%y") .. " by DrVrej, All rights reserved.")
 		panel:ControlHelp("No parts of the code may be reproduced, copied, modified or adapted, without the prior written consent of the author.")
 	end
 	----=================================----
@@ -172,18 +172,18 @@ else
 			return
 		end
 		panel:Help("#vjbase.menu.general.admin.only")
-		panel:Button("#vjbase.menu.cleanup.all", "vj_cleanup")
+		panel:Button("#vjbase.menu.cleanup.all", "vj_run_cleanup")
 		panel:Button("#vjbase.menu.cleanup.sounds", "stopsound")
-		panel:Button("#vjbase.menu.cleanup.remove.npcs.vj", "vj_cleanup", "vjnpcs")
-		panel:Button("#vjbase.menu.cleanup.remove.npcs", "vj_cleanup", "npcs")
-		panel:Button("#vjbase.menu.cleanup.remove.spawners", "vj_cleanup", "spawners")
-		panel:Button("#vjbase.menu.cleanup.remove.corpses", "vj_cleanup", "corpses")
-		panel:Button("#vjbase.menu.cleanup.remove.gibs", "vj_cleanup", "gibs")
-		panel:Button("#vjbase.menu.cleanup.remove.groundweapons", "vj_cleanup", "groundweapons")
-		panel:Button("#vjbase.menu.cleanup.remove.props", "vj_cleanup", "props")
-		panel:Button("#vjbase.menu.cleanup.remove.decals", "vj_cleanup", "decals")
-		panel:Button("#vjbase.menu.cleanup.remove.ply.weapons", "vj_cleanup", "allweapons")
-		panel:Button("#vjbase.menu.cleanup.remove.ply.ammo", "vj_cleanup", "allammo")
+		panel:Button("#vjbase.menu.cleanup.remove.npcs.vj", "vj_run_cleanup", "vjnpcs")
+		panel:Button("#vjbase.menu.cleanup.remove.npcs", "vj_run_cleanup", "npcs")
+		panel:Button("#vjbase.menu.cleanup.remove.spawners", "vj_run_cleanup", "spawners")
+		panel:Button("#vjbase.menu.cleanup.remove.corpses", "vj_run_cleanup", "corpses")
+		panel:Button("#vjbase.menu.cleanup.remove.gibs", "vj_run_cleanup", "gibs")
+		panel:Button("#vjbase.menu.cleanup.remove.groundweapons", "vj_run_cleanup", "groundweapons")
+		panel:Button("#vjbase.menu.cleanup.remove.props", "vj_run_cleanup", "props")
+		panel:Button("#vjbase.menu.cleanup.remove.decals", "vj_run_cleanup", "decals")
+		panel:Button("#vjbase.menu.cleanup.remove.ply.weapons", "vj_run_cleanup", "allweapons")
+		panel:Button("#vjbase.menu.cleanup.remove.ply.ammo", "vj_run_cleanup", "allammo")
 	end
 	----=================================----
 	local function VJ_MAIN_CONTACT(panel)
@@ -308,19 +308,7 @@ else
 		end
 		panel:Help("#vjbase.menu.general.admin.only")
 		panel:Help("#vjbase.menu.settings.server.label")
-		local vj_resetadminmenu = {Options = {}, CVars = {}, Label = language.GetPhrase("#vjbase.menu.general.reset.everything")..":", MenuButton = "0"}
-		//vj_resetadminmenu:SetText("Select Default to reset everything")
-		vj_resetadminmenu.Options["#vjbase.menu.general.default"] = {
-			sbox_noclip = "1",
-			sbox_weapons =	"1",
-			sbox_playershurtplayers = "1",
-			sbox_godmode = "0",
-			sv_gravity = "600",
-			host_timescale = "1",
-			phys_timescale = "1",
-		}
-		panel:AddControl("ComboBox", vj_resetadminmenu)
-		panel:ControlHelp(" ") -- Spacer
+		panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_admin_properties 0\n sbox_noclip 1\n sbox_weapons 1\n sbox_playershurtplayers 1\n sbox_godmode 0\n sv_gravity 600\n host_timescale 1\n phys_timescale 1"})
 		panel:CheckBox("#vjbase.menu.settings.server.admin.npcproperties", "vj_npc_admin_properties")
 		panel:CheckBox("#vjbase.menu.settings.server.noclip", "sbox_noclip")
 		panel:CheckBox("#vjbase.menu.settings.server.weapons", "sbox_weapons")
@@ -332,20 +320,14 @@ else
 		panel:NumSlider("#vjbase.menu.settings.server.timescale.general", "host_timescale", 0.1, 10, 2)
 		panel:NumSlider("#vjbase.menu.settings.server.timescale.physics", "phys_timescale", 0, 2, 2)
 		panel:NumSlider("#vjbase.menu.settings.server.gravity", "sv_gravity", -200, 600, 2)
-		panel:Help("#vjbase.menu.settings.server.max.header")
-		for _, x in pairs(cleanup.GetTable()) do -- Gets all of the cleanup types
-			local typeName = "sbox_max" .. x
-			if (!GetConVar(typeName)) then continue end
-			panel:NumSlider("#max_" .. x, typeName, 0, 9999, 0)
-		end
 	end
 	----=================================----
 	local function VJ_MAIN_PLUGINS(panel)
 		local numPlugins = #VJ.Plugins
 		
 		panel:Help("#vjbase.menu.plugins.label")
-		panel:ControlHelp(language.GetPhrase("#vjbase.menu.plugins.version").." "..VJBASE_VERSION) -- Main Number / Version / Patches
-		panel:ControlHelp(language.GetPhrase("#vjbase.menu.plugins.total").." "..numPlugins)
+		panel:ControlHelp(language.GetPhrase("#vjbase.menu.plugins.version") .. " " .. VJBASE_VERSION) -- Main Number / Version / Patches
+		panel:ControlHelp(language.GetPhrase("#vjbase.menu.plugins.total") .. " " .. numPlugins)
 		
 		local pluginList = vgui.Create("DListView")
 		pluginList:SetTooltip(false)
@@ -363,11 +345,11 @@ else
 		else
 			pluginList:AddLine("#vjbase.menu.plugins.none", "", "")
 		end
-		pluginList.OnRowSelected = function(panel, rowIndex, row)
+		pluginList.OnRowSelected = function(_, rowIndex, row)
 			//surface.PlaySound("vj_base/player/illuminati.mp3")
-			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.name").." "..row:GetValue(1))
-			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.type").." "..row:GetValue(2))
-			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.version").." "..row:GetValue(3))
+			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.name") .. " " .. row:GetValue(1))
+			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.type") .. " " .. row:GetValue(2))
+			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.version") .. " " .. row:GetValue(3))
 		end
 		panel:AddItem(pluginList)
 		
@@ -408,7 +390,7 @@ else
 		panel:AddPanel(tutorialVid)
 		
 		-- *insert lenny face*
-		if (LocalPlayer():SteamID() == "STEAM_0:0:22688298") then
+		if LocalPlayer():SteamID() == "STEAM_0:0:22688298" then
 			local memeButton = vgui.Create("DButton")
 			memeButton:SetFont("TargetID")
 			memeButton:SetText("HELLO")
@@ -423,23 +405,23 @@ else
 		end
 	end
 	---------------------------------------------------------------------------------------------------------------------------------------------
-	local function doWelcomeMsg()
-		//print("Notice: This server is running VJ Base.")
+	net.Receive("vj_welcome", function(len)
 		chat.AddText(colorLightBlue, "VJ Base ", colorDarkBlue, VJBASE_VERSION, colorWhite, " : Navigate to the ", colorYellow, "DrVrej", colorWhite, " tab in the spawn menu for settings.")
-	end
-	net.Receive("vj_welcome_msg", doWelcomeMsg)
+	end)
 	---------------------------------------------------------------------------------------------------------------------------------------------
-	concommand.Add("vj_iamhere", function(ply, cmd, args)
-		net.Start("vj_meme")
-		net.SendToServer()
+	concommand.Add("vj_run_meme", function(ply, cmd, args)
+		if ply:SteamID() == "STEAM_0:0:22688298" then
+			net.Start("vj_meme")
+			net.SendToServer()
+		end
 	end)
 	----=================================----
 	hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_MAIN", function()
 		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_plugins", "#vjbase.menu.plugins", "", "", VJ_MAIN_PLUGINS)
-		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_info", "#vjbase.menu.info", "", "", VJ_MAIN_INFO, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_settings_cl", "#vjbase.menu.settings.client", "", "", VJ_MAIN_CLIENT, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_cleanup", "#vjbase.menu.cleanup", "", "", VJ_MAIN_CLEANUP, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_contact", "#vjbase.menu.contact", "", "", VJ_MAIN_CONTACT, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_settings_sv", "#vjbase.menu.settings.server", "", "", VJ_MAIN_SERVER, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_info", "#vjbase.menu.info", "", "", VJ_MAIN_INFO)
+		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_settings_cl", "#vjbase.menu.settings.client", "", "", VJ_MAIN_CLIENT)
+		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_cleanup", "#vjbase.menu.cleanup", "", "", VJ_MAIN_CLEANUP)
+		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_contact", "#vjbase.menu.contact", "", "", VJ_MAIN_CONTACT)
+		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_settings_sv", "#vjbase.menu.settings.server", "", "", VJ_MAIN_SERVER)
 	end)
 end

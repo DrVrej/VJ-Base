@@ -158,7 +158,7 @@ if CLIENT then
 			surface.SetDrawColor(hp_r, hp_g, hp_b, 255)
 			surface.DrawOutlinedRect( ScrW() / 2.21, ScrH()-95, 180, 20)
 			
-			local finalhp = tostring(string.format("%.0f", lerp_hp).."/"..maxhp)
+			local finalhp = tostring(string.format("%.0f", lerp_hp) .. "/" .. maxhp)
 			local distlen = string.len(finalhp)
 			local move = 0
 			if distlen > 1 then

@@ -13,12 +13,10 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
-	
 	local ent = tr.Entity
 	if !IsValid(ent) then return false end
 	local ply = self:GetOwner()
 	local phys = ent:GetPhysicsObject()
-	
 	ply:PrintMessage(HUD_PRINTCONSOLE, "-----------------------------------------------------------------------------------------------")
 	ply:PrintMessage(HUD_PRINTCONSOLE, "====> " .. tostring(ent) .. " / " .. ent:GetName() .. " <==== \n\n")
 	ply:PrintMessage(HUD_PRINTCONSOLE, "MODEL    ==> " .. ent:GetModel() .. " ;;; Skin = " .. ent:GetSkin() .. "\n\n")

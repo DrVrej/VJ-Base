@@ -94,7 +94,6 @@ local strings_english = {
 	["vjbase.menu.settings.server.timescale.general"] = "General TimeScale",
 	["vjbase.menu.settings.server.timescale.physics"] = "Physics TimeScale",
 	["vjbase.menu.settings.server.gravity"] = "General Gravity",
-	["vjbase.menu.settings.server.max.header"] = "Max Props/Entities:",
 	
 	-- Client Settings
 	["vjbase.menu.settings.client"] = "Client Settings",
@@ -556,7 +555,6 @@ local strings_russian = {
 	["vjbase.menu.settings.server.timescale.general"] = "Общее время игры",
 	["vjbase.menu.settings.server.timescale.physics"] = "Физическое время игры",
 	["vjbase.menu.settings.server.gravity"] = "Общая гравитация",
-	["vjbase.menu.settings.server.max.header"] = "Максимум объектов/энтити:",
 
 	["vjbase.menu.settings.client"] = "Настройки клиента",
 	["vjbase.menu.settings.client.label"] = "Используйте это меню для настройки параметров клиента, администраторы сервера не могут изменить эти параметры!",
@@ -982,7 +980,6 @@ local strings_lithuanian = {
 	["vjbase.menu.settings.server.timescale.general"] = "Bendroji laiko skalė",
 	["vjbase.menu.settings.server.timescale.physics"] = "Fizikos laiko skalė",
 	["vjbase.menu.settings.server.gravity"] = "Bendroji gravitacija",
-	["vjbase.menu.settings.server.max.header"] = "Daugiausia objektų/esybių:",
 
 	["vjbase.menu.settings.client"] = "Kliento nustatymai",
 	["vjbase.menu.settings.client.label"] = "Naudokite šį meniu kiento nustatymų tinkinimui. Serveriai negali keisti šių nustatymų!",
@@ -1368,7 +1365,6 @@ local strings_spanish_latin = {
 	["vjbase.menu.settings.server.timescale.general"] = "TimeScale General",
 	["vjbase.menu.settings.server.timescale.physics"] = "TimeScale de Físicas",
 	["vjbase.menu.settings.server.gravity"] = "Gravedad General",
-	["vjbase.menu.settings.server.max.header"] = "Máximo de Props/Entidades",
 			
 	["vjbase.menu.settings.client"] = "Ajustes del Cliente",
 	["vjbase.menu.settings.client.label"] = "Utiliza este menú para personalizar tus ajustes del Cliente, ¡los servidores no pueden cambiar estos ajustes!",
@@ -1453,7 +1449,6 @@ local strings_chinese_simplified = {
 	["vjbase.menu.settings.server.timescale.general"] = "全局时间倍率",
 	["vjbase.menu.settings.server.timescale.physics"] = "物理时间倍率",
 	["vjbase.menu.settings.server.gravity"] = "全局重力",
-	["vjbase.menu.settings.server.max.header"] = "最大道具/实体数量：",
 	
 	["vjbase.menu.settings.client"] = "客户端设置",
 	["vjbase.menu.settings.client.label"] = "使用此菜单来自定义你的客户端设置，服务器无法更改这里的设置！",
@@ -1882,7 +1877,6 @@ local strings_turkish = {
 	["vjbase.menu.settings.server.timescale.general"] = "Genel Zaman Ölçeği",
 	["vjbase.menu.settings.server.timescale.physics"] = "Fizik Zaman Ölçeği",
 	["vjbase.menu.settings.server.gravity"] = "Genel Yer Çekimi",
-	["vjbase.menu.settings.server.max.header"] = "Maks Prop/Entity:",
 	
 	["vjbase.menu.settings.client"] = "İstemci Ayarları",
 	["vjbase.menu.settings.client.label"] = "Bu menüyü istemci ayarlarınızı özelleştirmek için kullanabilirsiniz, sunucular bu ayarları değiştiremez!",

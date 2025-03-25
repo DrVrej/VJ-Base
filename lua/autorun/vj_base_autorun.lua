@@ -144,13 +144,11 @@ VJ.AddNPCWeapon("VJ_K-3", "weapon_vj_k3")
 VJ.AddNPCWeapon("VJ_Crossbow", "weapon_vj_crossbow")
 VJ.AddNPCWeapon("VJ_SSG-08", "weapon_vj_ssg08")
 VJ.AddNPCWeapon("VJ_Crowbar", "weapon_vj_crowbar")
-//VJ.AddNPCWeapon("VJ_Package", "weapon_citizenpackage")
-//VJ.AddNPCWeapon("VJ_Suitcase", "weapon_citizensuitcase")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Main Hooks / Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if SERVER then
-	util.AddNetworkString("vj_welcome_msg")
+	util.AddNetworkString("vj_welcome")
 	util.AddNetworkString("vj_meme")
 	
 	-- Initialize AI Schedule and Task systems
@@ -176,7 +174,7 @@ if SERVER then
 	end)
 elseif CLIENT then
 	hook.Add("AddToolMenuTabs", "VJ_CREATETOOLTAB", function()
-		spawnmenu.AddToolTab("DrVrej", "DrVrej", "vj_base/icons/vrejgaming.png") // "icon16/plugin.png"
+		spawnmenu.AddToolTab("DrVrej", "DrVrej", "vj_base/icons/vrejgaming.png")
 		spawnmenu.AddToolCategory("DrVrej", "Main", "#vjbase.menu.tabs.main")
 		spawnmenu.AddToolCategory("DrVrej", "NPCs", "#vjbase.menu.tabs.npc")
 		spawnmenu.AddToolCategory("DrVrej", "Weapons", "#vjbase.menu.tabs.weapon")
@@ -187,24 +185,23 @@ elseif CLIENT then
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn_Msg", function(ply, transition)
-	-- Simple message for the users
 	timer.Simple(1, function()
-		net.Start("vj_welcome_msg")
+		net.Start("vj_welcome")
 		net.Send(ply)
+		
+		if !game.SinglePlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
+			PrintMessage(HUD_PRINTTALK, "DrVrej has joined the game!")
+			PrintMessage(HUD_PRINTCENTER, "DrVrej has joined the game!")
+			local sd = CreateSound(game.GetWorld(), "vj_base/player/illuminati.mp3", VJ_RecipientFilter)
+			sd:SetSoundLevel(0)
+			sd:Play()
+			timer.Simple(10, function() if sd then sd:Stop() end end)
+		end
 	end)
-	
-	if !game.SinglePlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
-		PrintMessage(HUD_PRINTTALK, "DrVrej Has Joined The Game!")
-		PrintMessage(HUD_PRINTCENTER, "DrVrej Has Joined The Game!")
-		local sd = CreateSound(game.GetWorld(), "vj_base/player/illuminati.mp3", VJ_RecipientFilter)
-		sd:SetSoundLevel(0)
-		sd:Play()
-		timer.Simple(10, function() if sd then sd:Stop() end end)
-	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-net.Receive("vj_meme", function(len, pl)
-	if pl:IsPlayer() && pl:SteamID() == "STEAM_0:0:22688298" then
+net.Receive("vj_meme", function(len, ply)
+	if ply:IsPlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
 		PrintMessage(HUD_PRINTTALK, "DrVrej is in the server!")
 		local sd = CreateSound(game.GetWorld(), "vj_base/player/illuminati.mp3", VJ_RecipientFilter)
 		sd:SetSoundLevel(0)
@@ -212,7 +209,7 @@ net.Receive("vj_meme", function(len, pl)
 	end
 end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Outdated Game Version Check ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Outdated Game Check ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if SERVER && (!isfunction(FindMetaTable("Entity").SetSurroundingBoundsType) or !isfunction(FindMetaTable("NPC").GetMoveDelay)) then
 	timer.Simple(1, function()
@@ -229,7 +226,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Confliction Check ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if (SLVBase) then
+if SLVBase then
 	timer.Simple(1, function()
 		if !VJBASE_ERROR_CONFLICT then
 			VJBASE_ERROR_CONFLICT = true
