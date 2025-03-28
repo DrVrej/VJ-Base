@@ -635,6 +635,9 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 		result = result * (1.0 / time)
 		result.z = result.z + (gravity * time * 0.5) -- Adjust upward toss to compensate for gravity loss
 		predictProjSpeed = strength
+	else
+		VJ.DEBUG_Print(self, "CalculateTrajectory", "error", "Called without a valid algorithm type!")
+		return false
 	end
 	
 	-- Return the result and redo it with prediction if needed!
@@ -789,5 +792,86 @@ function VJ.DamageSpecialEnts(attacker, ent, dmgInfo)
 			phys:EnableMotion(true)
 			phys:ApplyForceCenter(attacker:GetForward() * 1000)
 		end
+	end
+end
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Meta Edits ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+local metaEntity = FindMetaTable("Entity")
+local metaNPC = FindMetaTable("NPC")
+--
+if !metaNPC.IsVJBaseEdited then
+	metaNPC.IsVJBaseEdited = true
+	---------------------------------------------------------------------------------------------------------------------------------------------
+	local orgSetMaxLookDistance = metaNPC.SetMaxLookDistance
+	-- Override to make sure all 3 values are on par at all times!
+	function metaNPC:SetMaxLookDistance(dist)
+		//self:Fire("SetMaxLookDistance", dist) -- Original "SetMaxLookDistance" handles it now (below)
+		orgSetMaxLookDistance(self, dist) -- For engine sight & sensing distance
+		self:SetSaveValue("m_flDistTooFar", dist) -- For certain engine attacks, weapons, and condition distances
+		self.SightDistance = dist -- For VJ Base
+	end
+	---------------------------------------------------------------------------------------------------------------------------------------------
+	local orgSetPlaybackRate = metaEntity.SetPlaybackRate
+	-- Need this because "ai_blended_movement" will override it constantly and we won't know what the actual playback is supposed to be
+	function metaNPC:SetPlaybackRate(num, skipTrueRate)
+		if !skipTrueRate then
+			self.AnimPlaybackRate = num
+		end
+		orgSetPlaybackRate(self, num)
+	end
+end
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Meta Additions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Variable:		self.VJ_NPC_Class
+-- Access: 			self.VJ_NPC_Class.CLASS_COMBINE
+-- Remove: 			self.VJ_NPC_Class.CLASS_COMBINE = nil
+-- Add: 			self:VJ_CLASS_ADD("CLASS_COMBINE", "CLASS_ZOMBIE", ...)
+--
+/*local numericClasses = self.VJ_NPC_Class
+self.VJ_NPC_Class = {}
+for _, class in ipairs(numericClasses) do
+	self:VJ_CLASS_ADD(class)
+end*/
+
+/*function metaEntity:VJ_CLASS_ADD(...)
+	//PrintTable({...})
+	for _, class in ipairs({...}) do
+		self.VJ_NPC_Class[class] = true
+	end
+end*/
+--[[---------------------------------------------------------
+	Overrides how a VJ NPC should feel towards towards the calling entity (otherEnt)
+	1. otherEnt [entity] : The other entity that is testing to see how it should feel towards us
+	2. distance [nil | number] : Calculated distance from this entity to the other entity
+	3. isFriendly [boolean] : Whether or not the other entity has calculated us as friendly
+	Returns
+		- [boolean | Disposition enum] : Return false to not override anything | Return a disposition enum to set as an override
+-----------------------------------------------------------]]
+-- Apply directly to the entity to use it
+--function metaEntity:HandlePerceivedRelationship(otherEnt, distance, isFriendly)
+--	VJ.DEBUG_Print(self, "HandlePerceivedRelationship", otherEnt, distance, isFriendly)
+--	return
+--end
+--[[---------------------------------------------------------
+	Determines whether or not this entity should be engaged by an enemy
+	1. otherEnt [entity] : The other entity that is testing to see if it can engage this entity
+	2. distance [nil | number] : Calculated distance from this entity to the other entity
+	Returns
+		- [boolean] : Return true if it should be engaged
+-----------------------------------------------------------]]
+-- Apply directly to the entity to use it
+--function metaEntity:CanBeEngaged(otherEnt, distance)
+--	VJ.DEBUG_Print(self, "CanBeEngaged", otherEnt, distance)
+--	return true
+--end
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+function metaEntity:CalculateProjectile(algorithmType, startPos, targetPos, strength)
+	if algorithmType == "Line" then
+		return VJ.CalculateTrajectory(self, (self.IsVJBaseSNPC and IsValid(self:GetEnemy())) and self:GetEnemy() or NULL, "Line", startPos, self.IsVJBaseSNPC and 1 or targetPos, strength)
+	elseif algorithmType == "Curve" then
+		return VJ.CalculateTrajectory(self, (self.IsVJBaseSNPC and IsValid(self:GetEnemy())) and self:GetEnemy() or NULL, "CurveOld", startPos, targetPos, strength)
 	end
 end

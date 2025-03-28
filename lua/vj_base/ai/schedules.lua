@@ -10,7 +10,7 @@ function ENT:SCHEDULE_FACE(faceTask, customFunc)
 	if self.MovementType == VJ_MOVETYPE_STATIONARY && !self.CanTurnWhileStationary then return end
 	local schedule = vj_ai_schedule.New("SCHEDULE_FACE")
 	schedule:EngTask(faceTask or "TASK_FACE_TARGET", 0)
-	if (customFunc) then customFunc(schedule) end
+	if customFunc then customFunc(schedule) end
 	self:StartSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -26,7 +26,7 @@ function ENT:SCHEDULE_GOTO_POSITION(moveTask, customFunc)
 	schedule:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
 	schedule:EngTask(moveTask or "TASK_RUN_PATH", 0)
 	schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	if (customFunc) then customFunc(schedule) end
+	if customFunc then customFunc(schedule) end
 	self:StartSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -41,7 +41,7 @@ function ENT:SCHEDULE_GOTO_TARGET(moveTask, customFunc)
 	schedule:EngTask(moveTask or "TASK_RUN_PATH", 0)
 	schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	schedule:EngTask("TASK_FACE_TARGET", 1)
-	if (customFunc) then customFunc(schedule) end
+	if customFunc then customFunc(schedule) end
 	self:StartSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -58,10 +58,10 @@ function ENT:SCHEDULE_COVER_ENEMY(moveTask, customFunc)
 		schedFail:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
 		schedFail:EngTask(moveTask or "TASK_RUN_PATH", 0)
 		schedFail:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-		if (customFunc) then customFunc(schedFail) end
+		if customFunc then customFunc(schedFail) end
 		self:StartSchedule(schedFail)
 	end
-	if (customFunc) then customFunc(schedule) end
+	if customFunc then customFunc(schedule) end
 	self:StartSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -77,10 +77,10 @@ function ENT:SCHEDULE_COVER_ORIGIN(moveTask, customFunc)
 		schedFail:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
 		schedFail:EngTask(moveTask or "TASK_RUN_PATH", 0)
 		schedFail:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-		if (customFunc) then customFunc(schedFail) end
+		if customFunc then customFunc(schedFail) end
 		self:StartSchedule(schedFail)
 	end
-	if (customFunc) then customFunc(schedule) end
+	if customFunc then customFunc(schedule) end
 	self:StartSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

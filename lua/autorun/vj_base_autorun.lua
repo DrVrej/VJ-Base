@@ -38,14 +38,12 @@ AddCSLuaFile("vj_base/convars.lua")
 AddCSLuaFile("vj_base/debug.lua")
 AddCSLuaFile("vj_base/funcs.lua")
 AddCSLuaFile("vj_base/hooks.lua")
-AddCSLuaFile("vj_base/meta.lua")
 
 include("vj_base/convars.lua")
 include("vj_base/debug.lua")
 include("vj_base/enums.lua")
 include("vj_base/funcs.lua")
 include("vj_base/hooks.lua")
-include("vj_base/meta.lua")
 
 	-- ====== Menu ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 AddCSLuaFile("vj_base/menu/main.lua")

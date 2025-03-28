@@ -286,6 +286,8 @@ function ENT:StartTouch(ent)
 	trace.TheirOldVelocity = entVel
 	trace.TheirOldAngularVelocity = entAngVel
 	trace.TheirNewVelocity = entVel
+	trace.HitPos = self:GetPos() -- Fake it until you make it
+	
 	self:PhysicsCollide(trace, myPhys)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

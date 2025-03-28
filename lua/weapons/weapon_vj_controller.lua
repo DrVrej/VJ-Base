@@ -63,15 +63,12 @@ function SWEP:PrimaryAttack()
 		elseif !tr.Entity:IsNPC() then
 			owner:ChatPrint("This isn't an NPC, therefore you can't control it.")
 			return
-		elseif tr.Entity:IsNPC() && tr.Entity:Health() <= 0 then
-			owner:ChatPrint("This NPC's health is 0 or below, therefore you can't control.")
-			return
 		elseif tr.Entity.VJ_IsBeingControlled == true then
 			owner:ChatPrint("You can't control this NPC, it's already being controlled by someone else.")
 			return
 		end
-		if (!tr.Entity.IsVJBaseSNPC) then
-			owner:ChatPrint("NOTE: NPC Controller is mainly made for VJ Base SNPCs!")
+		if !tr.Entity.IsVJBaseSNPC then
+			owner:ChatPrint("NOTE: NPC Controller is mainly made for VJ Base NPCs!")
 		end
 		local SpawnControllerObject = ents.Create("obj_vj_controller")
 		SpawnControllerObject.VJCE_Player = owner

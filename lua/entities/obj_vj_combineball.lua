@@ -64,12 +64,16 @@ function ENT:Init()
 
 	util.SpriteTrail(self, 0, colorWhite, true, 15, 0, 0.1, 1 / 6 * 0.5, "sprites/combineball_trail_black_1.vmt")
 
-	hook.Add("GravGunOnPickedUp", self, function(self, ply, ent)
-		self:SetCoreType(true)
+	hook.Add("GravGunOnPickedUp", self, function(_, ply, ent)
+		if ent == self then
+			self:SetCoreType(true)
+		end
 	end)
 
-	hook.Add("GravGunOnDropped", self, function(self, ply, ent)
-		self:SetCoreType(false)
+	hook.Add("GravGunOnDropped", self, function(_, ply, ent)
+		if ent == self then
+			self:SetCoreType(false)
+		end
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

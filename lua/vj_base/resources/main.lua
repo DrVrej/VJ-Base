@@ -29,7 +29,7 @@ list.Add("PaintMaterials", "VJ_Blood_Oil")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Model Precaching ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- Alien Gibs --
+	-- Alien Gibs
 util.PrecacheModel("models/vj_base/gibs/alien/gib1.mdl")
 util.PrecacheModel("models/vj_base/gibs/alien/gib2.mdl")
 util.PrecacheModel("models/vj_base/gibs/alien/gib3.mdl")
@@ -40,7 +40,7 @@ util.PrecacheModel("models/vj_base/gibs/alien/gib7.mdl")
 util.PrecacheModel("models/vj_base/gibs/alien/gib_small1.mdl")
 util.PrecacheModel("models/vj_base/gibs/alien/gib_small2.mdl")
 util.PrecacheModel("models/vj_base/gibs/alien/gib_small3.mdl")
-	-- Human Gibs --
+	-- Human Gibs
 util.PrecacheModel("models/vj_base/gibs/human/brain.mdl")
 util.PrecacheModel("models/vj_base/gibs/human/eye.mdl")
 util.PrecacheModel("models/vj_base/gibs/human/heart.mdl")
@@ -56,7 +56,7 @@ util.PrecacheModel("models/vj_base/gibs/human/gib7.mdl")
 util.PrecacheModel("models/vj_base/gibs/human/gib_small1.mdl")
 util.PrecacheModel("models/vj_base/gibs/human/gib_small2.mdl")
 util.PrecacheModel("models/vj_base/gibs/human/gib_small3.mdl")
-	-- Projectiles --
+	-- Projectiles
 util.PrecacheModel("models/vj_base/projectiles/spit_acid_large.mdl")
 util.PrecacheModel("models/vj_base/projectiles/spit_acid_medium.mdl")
 util.PrecacheModel("models/vj_base/projectiles/spit_acid_small.mdl")

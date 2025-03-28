@@ -8,7 +8,3 @@ ENT.Category		= "VJ Base"
 ENT.IsVJBaseSNPC_Tank = true
 ENT.IsVJBaseSNPC_TankGun = true
 ENT.VJ_ID_Vehicle = true
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PhysicsCollide(data, physobj) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PhysicsUpdate(physobj) end
