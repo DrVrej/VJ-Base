@@ -12,7 +12,7 @@ local isstring = isstring
 local isnumber = isnumber
 local tonumber = tonumber
 local string_find = string.find
-local string_Replace = string.Replace
+local string_gsub = string.gsub
 local math_round = math.Round
 local math_floor = math.floor
 local math_min = math.min
@@ -23,7 +23,7 @@ local math_sin = math.sin
 local bShiftL = bit.lshift
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Takes a table and returns a random value from it
+	Takes a table and returns a random value from it | Expects the table to be sequentially indexed
 		- tbl = The table to pick randomly from
 	Returns
 		- false, Table is empty or value is non existent
@@ -90,8 +90,8 @@ end
 function VJ.CreateSound(ent, sdFile, sdLevel, sdPitch, customFunc)
 	if !sdFile then return end
 	if istable(sdFile) then
-		if #sdFile < 1 then return end -- If the table is empty then end it
 		sdFile = sdFile[math.random(1, #sdFile)]
+		if !sdFile then return end -- If the table is empty then end it
 	end
 	local funcCustom = ent.OnPlaySound; if funcCustom then sdFile = funcCustom(ent, sdFile) end -- Will allow people to alter sounds before they are played
 	local sdID = CreateSound(ent, sdFile, VJ_RecipientFilter)
@@ -105,8 +105,8 @@ end
 function VJ.EmitSound(ent, sdFile, sdLevel, sdPitch, sdVolume, sdChannel)
 	if !sdFile then return end
 	if istable(sdFile) then
-		if #sdFile < 1 then return end -- If the table is empty then end it
 		sdFile = sdFile[math.random(1, #sdFile)]
+		if !sdFile then return end -- If the table is empty then end it
 	end
 	local funcCustom = ent.OnPlaySound; if funcCustom then sdFile = funcCustom(ent, sdFile) end -- Will allow people to alter sounds before they are played
 	ent:EmitSound(sdFile, sdLevel, sdPitch, sdVolume, sdChannel, 0, 0, VJ_RecipientFilter)
@@ -141,8 +141,8 @@ end
 -----------------------------------------------------------]]
 function VJ.GetMoveDirection(ent, ignoreZ)
 	if !ent:IsMoving() then return false end
-	local myPos = ent:GetPos()
-	local dir = ((ent:GetCurWaypointPos() or myPos) - myPos)
+	local entPos = ent:GetPos()
+	local dir = ((ent:GetCurWaypointPos() or entPos) - entPos)
 	if ignoreZ then dir.z = 0 end
 	return (ent:GetAngles() - dir:Angle()):Forward()
 end
@@ -169,24 +169,24 @@ end
 function VJ.TraceDirections(ent, trType, maxDist, requireFullDist, returnAsDict, numDirections, excludeForward, excludeBack, excludeLeft, excludeRight)
     maxDist = maxDist or 200
     numDirections = numDirections or 4
-    local myPos = ent:GetPos()
-    local myPosZ = myPos.z
-    local myPosCentered = myPos + ent:OBBCenter()
+    local entPos = ent:GetPos()
+    local entPosZ = entPos.z
+    local entPosCentered = entPos + ent:OBBCenter()
 	local myForward = ent:GetForward()
     local myRight = ent:GetRight()
-	local trData = {start = myPosCentered, endpos = myPosCentered, filter = ent} -- For optimization purposes
+	local trData = {start = entPosCentered, endpos = entPosCentered, filter = ent} -- For optimization purposes
 	local resultIndex = 1 -- For optimization purposes
 	if trType == "Quick" then
 		local result = returnAsDict and {Forward=false, Back=false, Left=false, Right=false, ForwardLeft=false, ForwardRight=false, BackLeft=false, BackRight=false} or {}
 		
 		-- Helper function for tracing a direction
 		local function runTrace(dir, dirName)
-			trData.endpos = myPosCentered + (dir * maxDist)
+			trData.endpos = entPosCentered + (dir * maxDist)
 			local tr = util.TraceLine(trData)
 			local hitPos = tr.HitPos
-			if !requireFullDist or myPos:Distance(hitPos) >= maxDist then
+			if !requireFullDist or entPos:Distance(hitPos) >= maxDist then
 				//VJ.DEBUG_TempEnt(hitPos)
-				hitPos.z = myPosZ -- Reset it to ent:GetPos() z-axis
+				hitPos.z = entPosZ -- Reset it to ent:GetPos() z-axis
 				if returnAsDict then
 					result[dirName] = hitPos
 				else
@@ -234,12 +234,12 @@ function VJ.TraceDirections(ent, trType, maxDist, requireFullDist, returnAsDict,
 				continue
 			end
 
-			trData.endpos = myPosCentered + (dir * maxDist)
+			trData.endpos = entPosCentered + (dir * maxDist)
 			local tr = util.TraceLine(trData)
 			local hitPos = tr.HitPos
-			if !requireFullDist or myPos:Distance(hitPos) >= maxDist then
+			if !requireFullDist or entPos:Distance(hitPos) >= maxDist then
 				//VJ.DEBUG_TempEnt(hitPos)
-				hitPos.z = myPosZ -- Reset it to ent:GetPos() z-axis
+				hitPos.z = entPosZ -- Reset it to ent:GetPos() z-axis
 				if returnAsDict then
 					if forwardDot > 0.7 then
 						local resultForward = result.Forward
@@ -335,7 +335,7 @@ function VJ.AnimExists(ent, anim)
 	
 	-- Get rid of the gesture prefix
 	if animType == 2 && string_find(anim, "vjges_") then
-		anim = string_Replace(anim, "vjges_", "")
+		anim = string_gsub(anim, "vjges_", "")
 		-- Convert to activity if possible
 		if ent:LookupSequence(anim) == -1 then
 			anim = tonumber(anim)
@@ -349,7 +349,7 @@ function VJ.AnimExists(ent, anim)
 			return false
 		end
 	else -- Sequence
-		if string_find(anim, "vjseq_") then anim = string_Replace(anim, "vjseq_", "") end
+		if string_find(anim, "vjseq_") then anim = string_gsub(anim, "vjseq_", "") end
 		if ent:LookupSequence(anim) == -1 then return false end
 	end
 	return true
@@ -371,13 +371,13 @@ function VJ.AnimDuration(ent, anim)
 	elseif isstring(anim) then -- Sequence / Gesture
 		-- Get rid of the gesture prefix
 		if string_find(anim, "vjges_") then
-			anim = string_Replace(anim, "vjges_", "")
+			anim = string_gsub(anim, "vjges_", "")
 			if ent:LookupSequence(anim) == -1 then
 				return ent:SequenceDuration(ent:SelectWeightedSequence(tonumber(anim)))
 			end
 		end
 		if string_find(anim, "vjseq_") then
-			anim = string_Replace(anim, "vjseq_", "")
+			anim = string_gsub(anim, "vjseq_", "")
 		end
 		return ent:SequenceDuration(ent:LookupSequence(anim))
 	end
@@ -480,9 +480,9 @@ end
 function VJ.GetPoseParameters(ent, prt)
 	local result = {}
 	for i = 0, ent:GetNumPoseParameters() - 1 do
-		if prt != false then
+		if prt then
 			local min, max = ent:GetPoseParameterRange(i)
-			print(ent:GetPoseParameterName(i) .. ' ' .. min .. " / " .. max)
+			print(ent:GetPoseParameterName(i) .. " " .. min .. " / " .. max)
 		end
 		table.insert(result, ent:GetPoseParameterName(i))
 	end
@@ -754,7 +754,7 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 							if IsValid(phys) then
 								if forceUp == false then forceUp = force / 9.4 end
 								if ent:GetClass() == "prop_ragdoll" then force = force * 1.5 end
-								phys:ApplyForceCenter(((ent:GetPos() + ent:OBBCenter() + ent:GetUp() * forceUp) - startPos) * force) // + attacker:GetForward()*vForcePropPhysics
+								phys:ApplyForceCenter(((ent:GetPos() + ent:OBBCenter() + ent:GetUp() * forceUp) - startPos) * force)
 							end
 						else
 							force = force * 1.2
@@ -767,10 +767,10 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 				end
 			end
 			-- Self
-			if ent:EntIndex() == attacker:EntIndex() then
+			if ent == attacker then
 				if extraOptions.DamageAttacker then DealDamage() end -- If it can't self hit, then skip
 			-- Other entities
-			elseif (ignoreInnocents == false) or (!ent:IsNPC() && !ent:IsPlayer()) or (ent:IsNPC() && ent:GetClass() != attacker:GetClass() && ent:Health() > 0 && (attacker:IsPlayer() or (attacker:IsNPC() && attacker:Disposition(ent) != D_LI))) or (ent:IsPlayer() && ent:Alive() && (attacker:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !ent:IsFlagSet(FL_NOTARGET)))) then
+			elseif (ignoreInnocents == false) or (!ent:IsNPC() && !ent:IsPlayer()) or (ent:IsNPC() && ent:GetClass() != attacker:GetClass() && ent:Alive() && (attacker:IsPlayer() or (attacker:IsNPC() && attacker:Disposition(ent) != D_LI))) or (ent:IsPlayer() && ent:Alive() && (attacker:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !ent:IsFlagSet(FL_NOTARGET)))) then
 				DealDamage()
 			end
 		end

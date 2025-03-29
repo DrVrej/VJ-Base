@@ -629,6 +629,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 	::recheck::
 	-- Handle "vjges_" and "vjseq_"
 	if isString then
+		// animation = string.gsub(animation, "[vjges_|vjseq_]", "") -- Too slow
 		local finalString; -- Only define a table if we need to!
 		local posCur = 1
 		for i = 1, #animation do

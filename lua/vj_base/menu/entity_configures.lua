@@ -10,7 +10,6 @@ local function VJ_NPC_SETTINGS_AI(panel)
 		panel:Help("#vjbase.menu.general.admin.only")
 		return
 	end
-
 	panel:Help("#vjbase.menu.general.admin.only")
 	panel:Help("#vjbase.menu.general.npc.note.future")
 	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_sight_distance 0\n vj_npc_sight_xray 0\n vj_npc_wander 1\n vj_npc_chase 1\n vj_npc_flinch 1\n vj_npc_investigate 1\n vj_npc_callhelp 1\n vj_npc_ply_follow 1\n vj_npc_medic 1\n vj_npc_eat 1\n vj_npc_dangerdetection 1\n vj_npc_human_jump 1\n vj_npc_creature_opendoor 1\n vj_npc_allies 1\n vj_npc_ply_betray 1\n vj_npc_fri_base 0\n vj_npc_fri_player 0\n vj_npc_fri_zombie 0\n vj_npc_fri_antlion 0\n vj_npc_fri_combine 0"})
@@ -49,7 +48,6 @@ local function VJ_NPC_SETTINGS_ATTACKS(panel)
 		panel:Help("#vjbase.menu.general.admin.only")
 		return
 	end
-
 	panel:Help("#vjbase.menu.general.admin.only")
 	panel:Help("#vjbase.menu.general.npc.note.future")
 	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_wep_ply_pickup 1\n vj_npc_wep_drop 1\n vj_npc_wep_reload 1\n vj_npc_wep 1\n vj_npc_grenade 1\n vj_npc_melee_ply_dsp 1\n vj_npc_melee_propint 1\n vj_npc_melee_bleed 1\n vj_npc_melee_ply_speed 1\n vj_npc_melee 1\n vj_npc_range 1\n vj_npc_leap 1"})
@@ -81,7 +79,6 @@ local function VJ_NPC_SETTINGS_GENERAL(panel)
 		panel:Help("#vjbase.menu.general.admin.only")
 		return
 	end
-
 	panel:Help("#vjbase.menu.general.admin.only")
 	panel:Help("#vjbase.menu.general.npc.note.future")
 	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_corpse 1\n vj_npc_corpse_limit 32\n vj_npc_corpse_collision 0\n vj_npc_corpse_fade 0\n vj_npc_corpse_fadetime 10\n vj_npc_corpse_undo 0\n vj_npc_gib 1\n vj_npc_gib_vfx 1\n vj_npc_gib_collision 0\n vj_npc_gib_fade 1\n vj_npc_gib_fadetime 90\n vj_npc_god 0\n vj_npc_health 0\n vj_npc_blood 1\n vj_npc_blood_pool 1\n vj_npc_blood_gmod 0\n vj_npc_anim_death 1\n vj_npc_loot 1\n vj_npc_difficulty 0\n vj_npc_ply_frag 1\n vj_npc_ply_chat 1"})
@@ -149,10 +146,10 @@ local function VJ_NPC_SETTINGS_SOUND(panel)
 		panel:Help("#vjbase.menu.general.admin.only")
 		return
 	end
-	
 	panel:Help("#vjbase.menu.general.admin.only")
 	panel:Help("#vjbase.menu.general.npc.note.future")
 	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_snd 1\n vj_npc_snd_idle 1\n vj_npc_snd_alert 1\n vj_npc_snd_pain 1\n vj_npc_snd_death 1\n vj_npc_snd_footstep 1\n vj_npc_snd_track 1\n vj_npc_snd_melee 1\n vj_npc_snd_range 1\n vj_npc_snd_leap 1\n vj_npc_snd_danger 1\n vj_npc_snd_plysight 1\n vj_npc_snd_plydamage 1\n vj_npc_snd_plyspeed 1\n vj_npc_snd_gib 1\n vj_npc_snd_breath 1\n vj_npc_snd_plyfollow 1\n vj_npc_snd_plybetrayal 1\n vj_npc_snd_medic 1\n vj_npc_snd_wep_reload 1\n vj_npc_snd_grenade 1\n vj_npc_snd_wep_suppressing 1\n vj_npc_snd_callhelp 1\n vj_npc_snd_receiveorder 1"})
+	
 	panel:CheckBox("#vjbase.menu.npc.settings.snd.toggle", "vj_npc_snd")
 	panel:CheckBox("#vjbase.menu.npc.settings.snd.track", "vj_npc_snd_track")
 	panel:CheckBox("#vjbase.menu.npc.settings.snd.idle", "vj_npc_snd_idle")
@@ -193,11 +190,11 @@ local function VJ_NPC_SETTINGS_DEV(panel)
 		panel:Help("#vjbase.menu.general.admin.only")
 		return
 	end
-	
 	panel:Help("#vjbase.menu.general.admin.only")
 	panel:Help("#vjbase.menu.npc.settings.dev.header.main")
 	panel:Help("#vjbase.menu.npc.settings.dev.header.warning")
 	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_debug_weapon 0\n vj_npc_debug_damage 0\n vj_npc_debug_touch 0\n vj_npc_debug_attack 0\n vj_npc_debug_takingcover 0\n vj_npc_debug_resetenemy 0\n vj_npc_debug_lastseenenemytime 0\n vj_npc_debug 0\n vj_npc_debug_enemy 0\n vj_npc_debug_engine 0"})
+	
 	panel:CheckBox("#vjbase.menu.npc.settings.dev.debug.toggle", "vj_npc_debug")
 	panel:ControlHelp("#vjbase.menu.npc.settings.dev.debug.toggle.label")
 	panel:CheckBox("#vjbase.menu.npc.settings.dev.debug.engine", "vj_npc_debug_engine")
@@ -221,6 +218,7 @@ end
 local function VJ_NPC_SETTINGS_CONTROLLER(panel)
 	panel:Help("#vjbase.menu.npc.settings.con.header")
 	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_cont_hud 1\n vj_npc_cont_cam_zoom_dist 5\n vj_npc_cont_debug 0\n vj_npc_cont_cam_speed 6\n vj_npc_cont_cam_zoom_speed 10\n vj_npc_cont_diewithnpc 0"})
+	
 	panel:CheckBox("#vjbase.menu.npc.settings.con.hud", "vj_npc_cont_hud")
 	panel:NumSlider("#vjbase.menu.npc.settings.con.cam.zoomdist", "vj_npc_cont_cam_zoom_dist", 5, 300, 0)
 	panel:NumSlider("#vjbase.menu.npc.settings.con.cam.zoomspeed", "vj_npc_cont_cam_zoom_speed", 1, 200, 0)
@@ -228,9 +226,7 @@ local function VJ_NPC_SETTINGS_CONTROLLER(panel)
 	panel:ControlHelp("#vjbase.menu.npc.settings.con.cam.speed.label")
 	panel:CheckBox("#vjbase.menu.npc.settings.con.diewithnpc", "vj_npc_cont_diewithnpc")
 	panel:CheckBox("#vjbase.menu.npc.settings.con.devmode", "vj_npc_cont_debug")
-	
 	panel:Help("#vjbase.menu.npc.settings.con.bind.header")
-	
 	local bindList = vgui.Create("DListView")
 		bindList:SetTooltip(false)
 		bindList:SetSize(100, 320)
@@ -266,7 +262,6 @@ local function VJ_NPC_SETTINGS_PERFORMANCE(panel)
 		panel:Help("#vjbase.menu.general.admin.only")
 		return
 	end
-	
 	panel:Help("#vjbase.menu.general.admin.only")
 	panel:Help("#vjbase.menu.general.npc.note.future")
 	panel:Help("#vjbase.menu.npc.settings.perf.header.main")
@@ -293,6 +288,7 @@ end
 local function VJ_WEAPON_SETTINGS_CLIENT(panel)
 	panel:Help("#vjbase.menu.wep.settings.client.notice")
 	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_wep_muzzleflash 1\n vj_wep_shells 1\n vj_wep_muzzleflash_light 1"})
+	
 	panel:CheckBox("#vjbase.menu.wep.settings.client.toggle.muzzle", "vj_wep_muzzleflash")
 	panel:CheckBox("#vjbase.menu.wep.settings.client.toggle.muzzlelight", "vj_wep_muzzleflash_light")
 	panel:ControlHelp("#vjbase.menu.wep.settings.client.toggle.muzzlelight.label")
