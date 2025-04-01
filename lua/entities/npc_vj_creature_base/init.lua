@@ -2760,7 +2760,7 @@ function ENT:LeapAttackJump()
 	if !IsValid(ene) then return end
 	self:SetGroundEntity(NULL)
 	self.LeapAttackHasJumped = true
-	-- Classic velocity, useful for more straight line type of jumps
+	-- Classic velocity, useful for more straight line jumps
 	//return ((ene:GetPos() + ene:OBBCenter()) - (self:GetPos() + self:OBBCenter())):GetNormal() * 400 + self:GetForward() * 200 + self:GetUp() * 100
 	self:SetLocalVelocity(self:OnLeapAttack("Jump", ene) or VJ.CalculateTrajectory(self, ene, "Curve", self:GetPos() + self:OBBCenter(), ene:GetPos() + ene:OBBCenter(), 1))
 	self:PlaySoundSystem("LeapAttackJump")

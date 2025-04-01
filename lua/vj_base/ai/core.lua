@@ -1965,7 +1965,7 @@ function ENT:MaintainRelationships()
 		else
 			it = it + 1
 			
-			-- Handle no target and health below 0
+			-- Handle no target and dead entities
 			if ent:IsFlagSet(FL_NOTARGET) or !ent:Alive() then
 				-- If ent is our current enemy then reset it!
 				if self:GetEnemy() == ent then
@@ -2149,10 +2149,10 @@ function ENT:MaintainRelationships()
 						-- SetEnemy: In order - Can find enemy + Not neutral or alerted + Is visible + In sight cone
 						if selfData.EnemyDetection && (notIsNeutral or selfData.Alerted == ALERT_STATE_ENEMY) && (selfData.EnemyXRayDetection or funcVisible(self, ent)) && funcIsInViewCone(self, entPos) then
 							//print("MaintainRelationships 2 - set enemy")
-							eneVisCount = eneVisCount + 1
 							funcAddEntityRelationship(self, ent, D_HT, 0)
 							calculatedDisp = D_HT
 							eneValid = true
+							eneVisCount = eneVisCount + 1
 							-- If the detected enemy is closer than the previous enemies, the set this as the enemy!
 							if !nearestDist or (distanceToEnt < nearestDist) then
 								nearestDist = distanceToEnt

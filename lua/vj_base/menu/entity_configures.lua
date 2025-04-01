@@ -60,11 +60,11 @@ local function VJ_NPC_SETTINGS_ATTACKS(panel)
 	panel:CheckBox("#vjbase.menu.npc.settings.atk.melee.bleed", "vj_npc_melee_bleed")
 	panel:CheckBox("#vjbase.menu.npc.settings.atk.melee.ply.dsp", "vj_npc_melee_ply_dsp")
 	panel:CheckBox("#vjbase.menu.npc.settings.atk.melee.ply.speed", "vj_npc_melee_ply_speed")
-	local propCombo = {Options = {}, CVars = {}, Label = "#vjbase.menu.npc.settings.atk.melee.propCombo.header", MenuButton = "0"}
-		propCombo.Options["#vjbase.menu.npc.settings.atk.melee.propCombo.disable"] = {vj_npc_melee_propint = "0"}
-		propCombo.Options["#vjbase.menu.npc.settings.atk.melee.propCombo.all"] = {vj_npc_melee_propint = "1"}
-		propCombo.Options["#vjbase.menu.npc.settings.atk.melee.propCombo.onlydamage"] = {vj_npc_melee_propint = "2"}
-		propCombo.Options["#vjbase.menu.npc.settings.atk.melee.propCombo.onlypush"] = {vj_npc_melee_propint = "3"}
+	local propCombo = {Options = {}, CVars = {}, Label = "#vjbase.menu.npc.settings.atk.melee.propint.header", MenuButton = "0"}
+		propCombo.Options["#vjbase.menu.npc.settings.atk.melee.propint.disable"] = {vj_npc_melee_propint = "0"}
+		propCombo.Options["#vjbase.menu.npc.settings.atk.melee.propint.all"] = {vj_npc_melee_propint = "1"}
+		propCombo.Options["#vjbase.menu.npc.settings.atk.melee.propint.onlydamage"] = {vj_npc_melee_propint = "2"}
+		propCombo.Options["#vjbase.menu.npc.settings.atk.melee.propint.onlypush"] = {vj_npc_melee_propint = "3"}
 	panel:AddControl("ComboBox", propCombo)
 	panel:Help("#vjbase.menu.npc.settings.atk.wep.label")
 	panel:CheckBox("#vjbase.menu.npc.settings.atk.wep", "vj_npc_wep")
