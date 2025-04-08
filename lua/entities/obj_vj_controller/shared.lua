@@ -62,7 +62,7 @@ if CLIENT then
 					filter = {ply, camera, npc},
 					mins = Vector(-5, -5, -5),
 					maxs = Vector(5, 5, 5),
-					mask = MASK_SHOT,
+					mask = MASK_BLOCKLOS,
 				})
 				pos = tr.HitPos + tr.HitNormal*2
 			end
@@ -73,7 +73,15 @@ if CLIENT then
         viewLerpAng = (lerpSpeed != 0 && LerpAngle(FrameTime()*lerpSpeed, viewLerpAng, ang) or ang)
 		
 		-- Send the player's hit position to the controller entity
-		local tr = util.TraceLine({start = viewLerpVec, endpos = viewLerpVec + viewLerpAng:Forward()*32768, filter = {ply, camera, npc}})
+		local tr = util.TraceLine({
+			start = viewLerpVec,
+			endpos = viewLerpVec + viewLerpAng:Forward()*32768,
+			filter = function(ent) //{ply, camera, npc}
+				if ent == ply or ent == camera or ent == npc then return false end
+				if ent:GetClass() == "phys_bone_follower" && ent:GetOwner() == npc then return false end
+				return true
+			end,
+		})
 		//ParticleEffect("vj_impact_dirty", tr.HitPos, Angle(0, 0, 0), npc)
 		net.Start("vj_controller_cldata")
 			net.WriteVector(tr.HitPos)
@@ -125,13 +133,13 @@ if CLIENT then
 	local atk_col_red = Color(255, 60, 60, 255)
 	local atk_col_orange = Color(204, 123, 60, 255)
 	local atk_col_green = Color(60, 220, 60, 255)
-	local mat_icon_melee = Material("vj_base/hud_controller/melee.png")
-	local mat_icon_range = Material("vj_base/hud_controller/range.png")
-	local mat_icon_leap = Material("vj_base/hud_controller/leap.png")
-	local mat_icon_grenade = Material("vj_base/hud_controller/grenade.png")
-	local mat_icon_gun = Material("vj_base/hud_controller/gun.png")
-	local mat_icon_camera = Material("vj_base/hud_controller/camera.png")
-	local mat_icon_zoom = Material("vj_base/hud_controller/camera_zoom.png")
+	local mat_icon_melee = Material("vj_base/hud/melee.png")
+	local mat_icon_range = Material("vj_base/hud/range.png")
+	local mat_icon_leap = Material("vj_base/hud/leap.png")
+	local mat_icon_grenade = Material("vj_base/hud/grenade.png")
+	local mat_icon_gun = Material("vj_base/hud/gun.png")
+	local mat_icon_camera = Material("vj_base/hud/camera.png")
+	local mat_icon_zoom = Material("vj_base/hud/camera_zoom.png")
 	net.Receive("vj_controller_hud", function(len)
 		//print(len)
 		local enabled = net.ReadBool()

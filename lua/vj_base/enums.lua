@@ -151,8 +151,8 @@ VJ.PROJ_COLLISION_PERSIST			= 2 -- Deal damage, paint decal, play sound, etc, bu
 VJ.KILLICON_TYPE_FONT				= -2 -- Use this to make a font-based kill icon
 VJ.KILLICON_TYPE_ALIAS				= -1 -- Use this to make it use another class's kill icon
 VJ.KILLICON_DEFAULT					= "HUD/killicons/default"
-VJ.KILLICON_PROJECTILE				= "vj_base/hud_controller/range.png"
-VJ.KILLICON_GRENADE					= "vj_base/hud_controller/grenade.png"
+VJ.KILLICON_PROJECTILE				= "vj_base/hud/range.png"
+VJ.KILLICON_GRENADE					= "vj_base/hud/grenade.png"
 
 -- Colors
 VJ.COLOR_LOGO_ORANGE				= Color(244, 102, 34)

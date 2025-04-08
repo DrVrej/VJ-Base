@@ -26,7 +26,7 @@ local funcSetSaveValue = metaEntity.SetSaveValue
 local funcGetCycle = metaEntity.GetCycle
 local funcGetSequenceActivity = metaEntity.GetSequenceActivity
 local funcVisible = metaEntity.Visible
---
+
 local metaNPC = FindMetaTable("NPC")
 local funcGetIdealActivity = metaNPC.GetIdealActivity
 local funcGetActivity = metaNPC.GetActivity
@@ -2227,7 +2227,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Checks allies around the NPC and call them to come to help the NPC
-		- dist = How far to check for allies | DEFAULT: 800
+		- dist = Radius of the call | DEFAULT: 800
 -----------------------------------------------------------]]
 function ENT:Allies_CallHelp(dist)
 	local ene = self:GetEnemy()
