@@ -1,6 +1,6 @@
 "DecalModulate"
 {
-	"$basetexture" "vj_base/particle/vj_bloodpool_red"
+	"$basetexture" "vj_base/particles/bloodpool/red"
 	"$decal" 1
 	"$decalscale" 0.25
 }

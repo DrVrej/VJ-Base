@@ -1,6 +1,6 @@
 Unlitgeneric
 {
-	$basetexture "vj_base/particle/smoke_nmrih/smoke_nmrih_1"
+	$basetexture "vj_base/particles/smoke_nmrih_1"
 	$vertexcolor 1
 	$vertexalpha 1
 	$translucent 1
