@@ -1741,7 +1741,8 @@ function ENT:MaintainMedicBehavior()
 			selfData.NextIdleTime = CurTime() + 4
 			selfData.NextChaseTime = CurTime() + 4
 			self:SetTarget(ally)
-			self:SCHEDULE_GOTO_TARGET()
+			self:SetMovementActivity(ACT_RUN) -- We run this constantly, set the movement activity constantly in case it never reaches "TASK_RUN_PATH"
+			self:SCHEDULE_GOTO_TARGET("TASK_RUN_PATH")
 		end
 	end
 end

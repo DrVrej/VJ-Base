@@ -134,7 +134,7 @@ local entInfos = {
 			if otherEnt.IsVJBaseSNPC_Human then
 				return distance <= 800
 			else
-				return (otherEnt.HasRangeAttack && distance <= 800) or (distance <= 100)
+				return (otherEnt.HasRangeAttack && distance <= 800) or (distance <= math.max(otherEnt.MeleeAttackDamageDistance or 120))
 			end
 		end
 	end},
@@ -143,7 +143,7 @@ local entInfos = {
 			if otherEnt.IsVJBaseSNPC_Human then
 				return distance <= 800
 			else
-				return (otherEnt.HasRangeAttack && distance <= 800) or (distance <= 100)
+				return (otherEnt.HasRangeAttack && distance <= 800) or (distance <= math.max(otherEnt.MeleeAttackDamageDistance or 120))
 			end
 		end
 	end},

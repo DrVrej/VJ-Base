@@ -478,6 +478,8 @@ function ENT:StartMovement(Dir, Rot)
 		end
 		npc:SetLastPosition(finalPos)
 		npc:SCHEDULE_GOTO_POSITION(ply:KeyDown(IN_SPEED) and "TASK_RUN_PATH" or "TASK_WALK_PATH", function(x)
+			-- Since are constantly setting the schedule, we need to manually update the movement activity every time to avoid stuttering between walk/run
+			npc:SetMovementActivity(ply:KeyDown(IN_SPEED) and ACT_RUN or ACT_WALK)
 			if ply:KeyDown(IN_ATTACK2) && npc.IsVJBaseSNPC_Human then
 				x.TurnData = {Type = VJ.FACE_ENEMY}
 				x.CanShootWhenMoving = true
