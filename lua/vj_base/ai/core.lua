@@ -1367,24 +1367,36 @@ function ENT:ScaleByDifficulty(num)
 	local dif = self.SelectedDifficulty
 	if dif == 0 then
 		return num
+	elseif dif == -5 then
+		return math_max(num * 0.01, 1)
+	elseif dif == -4 then
+		return math_max(num * 0.10, 1)
 	elseif dif == -3 then
-		return math_min(math_max(num - (num * 0.99), 1), num)
+		return math_max(num * 0.25, 1)
 	elseif dif == -2 then
-		return math_min(math_max(num - (num * 0.75), 1), num)
+		return math_max(num * 0.50, 1)
 	elseif dif == -1 then
-		return num * 0.5
+		return math_max(num * 0.75, 1)
 	elseif dif == 1 then
-		return num * 1.5
+		return num * 1.25
 	elseif dif == 2 then
-		return num * 2
+		return num * 1.5
 	elseif dif == 3 then
-		return num * 2.5
+		return num * 1.75
 	elseif dif == 4 then
-		return num * 3.5
+		return num * 2
 	elseif dif == 5 then
-		return num * 4.5
+		return num * 2.5
 	elseif dif == 6 then
+		return num * 3
+	elseif dif == 7 then
+		return num * 3.5
+	elseif dif == 8 then
+		return num * 4.5
+	elseif dif == 9 then
 		return num * 6
+	elseif dif == 10 then
+		return num * 10
 	end
 	return num -- Normal (default)
 end
@@ -3322,6 +3334,7 @@ function ENT:LeapDamageCode() self:ExecuteLeapAttack() end
 function ENT:DecideAnimationLength(anim, override, decrease) return VJ.AnimDurationEx(self, anim, override, decrease) end
 ENT.LatestEnemyDistance = 0 -- Only here to avoid errors
 ENT.NearestPointToEnemyDistance = 0 -- Only here to avoid errors
+ENT.FootStepPitch = VJ.SET(80, 100) -- Only here to avoid errors
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Checks all 4 sides around the NPC
