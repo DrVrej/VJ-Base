@@ -3332,6 +3332,9 @@ function ENT:MeleeAttackCode(isPropAttack) self:ExecuteMeleeAttack(isPropAttack)
 function ENT:RangeAttackCode() self:ExecuteRangeAttack() end
 function ENT:LeapDamageCode() self:ExecuteLeapAttack() end
 function ENT:DecideAnimationLength(anim, override, decrease) return VJ.AnimDurationEx(self, anim, override, decrease) end
+function ENT:StopAllCommonSpeechSounds() self:StopAllSounds() end
+function ENT:GetFaceAngle(ang) return self:GetTurnAngle(ang) end
+function ENT:DoFlinch(dmginfo, hitgroup) self:Flinch(dmginfo, hitgroup) end
 ENT.LatestEnemyDistance = 0 -- Only here to avoid errors
 ENT.NearestPointToEnemyDistance = 0 -- Only here to avoid errors
 ENT.FootStepPitch = VJ.SET(80, 100) -- Only here to avoid errors

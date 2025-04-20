@@ -407,6 +407,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 function ENT:OnCollideSoundCode() self:PlaySound("OnCollide") end
+function ENT:DoDamageCode(data, phys) self:DealDamage(data, phys) end
 function ENT:SetDeathVariablesTrue(data, phys, runOnDestroy)
 	self.Dead = true
 	self:StopParticles()
