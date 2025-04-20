@@ -110,6 +110,14 @@ function ENT:OnGrenadeAttackExecute(status, grenade, overrideEnt, landDir, landi
 		redTrail:SetKeyValue("renderfx", "0") -- kRenderFxNone
 		grenade.SoundTbl_Idle = "Grenade.Blip"
 		grenade.IdleSoundPitch = VJ.SET(100, 100)
+		grenade.NextBeepSoundT = 0
+		function grenade:OnThink()
+			if CurTime() > self.NextBeepSoundT then
+				VJ.STOPSOUND(self.CurrentIdleSound)
+				self:PlaySound("Idle")
+				self.NextBeepSoundT = CurTime() + 0.5
+			end
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

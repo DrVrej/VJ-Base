@@ -513,7 +513,7 @@ function ENT:MaintainIdleAnimation(force)
 	if force then
 		//VJ.DEBUG_Print(self, "MaintainIdleAnimation", "force")
 		self.LastAnimSeed = 0
-		self:ResetIdealActivity(ACT_IDLE)
+		self:SetIdealActivity(ACT_IDLE) // ResetIdealActivity
 		-- Need this check otherwise it may quickly repeat the last animation that was NOT an ACT_IDLE !
 		if funcGetIdealActivity(self) == ACT_IDLE && funcGetActivity(self) == ACT_IDLE then
 			self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L2987
@@ -524,7 +524,7 @@ function ENT:MaintainIdleAnimation(force)
 		if (funcGetCycle(self) >= 0.98) or (self:TranslateActivity(ACT_IDLE) != funcGetSequenceActivity(self, funcGetIdealSequence(self))) then
 			//VJ.DEBUG_Print(self, "MaintainIdleAnimation", "auto")
 			self.LastAnimSeed = 0
-			self:ResetIdealActivity(ACT_IDLE)
+			self:SetIdealActivity(ACT_IDLE) // ResetIdealActivity
 			self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L2987
 			funcSetSaveValue(self, "m_bSequenceLoops", false) -- Otherwise it will stutter and play an idle sequence at 999x playback speed for 0.001 second when changing from one idle to another!
 		else

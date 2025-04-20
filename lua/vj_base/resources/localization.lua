@@ -2301,6 +2301,11 @@ function VJ.RefreshLanguage()
 		langTable = strings_turkish
 	end
 	
+	-- First set the English strings in case some aren't overridden by the current language
+	for k, v in pairs(strings_english) do
+		add(k, v)
+	end
+	
 	-- Set the current language's strings to the game
 	for k, v in pairs(langTable) do
 		add(k, v)

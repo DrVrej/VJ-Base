@@ -40,7 +40,7 @@ ENT.HasOnCollideSounds = true -- Should it play a sound when it collides somethi
 ENT.HasOnRemoveSounds = true -- Should it play a sound when it gets removed?
 	-- ====== Sound Paths ====== --
 ENT.SoundTbl_Startup = false
-ENT.SoundTbl_Idle = false
+ENT.SoundTbl_Idle = false -- Recommendation: Use looped wav files, otherwise use "OnThink" to control when it plays again
 ENT.SoundTbl_OnCollide = false
 ENT.SoundTbl_OnRemove = false
 	-- ====== Sound Chance ====== --
