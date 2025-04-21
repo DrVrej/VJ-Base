@@ -2885,8 +2885,8 @@ function ENT:SelectSchedule()
 					-- Ignore dangers produced by vehicles driven by an allies
 					if sdSrc.type == SOUND_DANGER && sdOwner:IsVehicle() && IsValid(sdOwner:GetDriver()) && self:Disposition(sdOwner:GetDriver()) == D_LI then
 						allowed = false
-					-- Ignore bullet impacts by allies
-					elseif self:Disposition(sdOwner) == D_LI then
+					-- Ignore dangers by allies and combat sounds (such as death sounds) from dead NPCs
+					elseif self:Disposition(sdOwner) == D_LI or (sdSrc.type == SOUND_COMBAT && sdOwner:IsNPC() && !sdOwner:Alive()) then
 						allowed = false
 					end
 				end
