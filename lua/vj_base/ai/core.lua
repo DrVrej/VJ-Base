@@ -239,7 +239,7 @@ function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 	if extraOptions.HasVel != false then
 		local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
 		if self.DeathAnimationCodeRan then
-			dmgForce = self:GetMoveVelocity() == defPos and self:GetGroundSpeedVelocity() or self:GetMoveVelocity()
+			dmgForce = self:GetGroundSpeedVelocity()
 		end
 		ent:GetPhysicsObject():AddVelocity(extraOptions.Vel or dmgForce)
 	end
@@ -3281,7 +3281,7 @@ function ENT:CreateDeathLoot(dmginfo, hitgroup)
 			if IsValid(phys) then
 				local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
 				if self.DeathAnimationCodeRan then
-					dmgForce = self:GetMoveVelocity() == defPos and self:GetGroundSpeedVelocity() or self:GetMoveVelocity()
+					dmgForce = self:GetGroundSpeedVelocity()
 				end
 				phys:SetMass(1)
 				phys:ApplyForceCenter(dmgForce)

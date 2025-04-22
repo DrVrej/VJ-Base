@@ -3415,7 +3415,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
 		if self.DeathAnimationCodeRan then
 			useLocalVel = false
-			dmgForce = self:GetMoveVelocity() == defPos and self:GetGroundSpeedVelocity() or self:GetMoveVelocity()
+			dmgForce = self:GetGroundSpeedVelocity()
 		end
 		local totalSurface = 0
 		local physCount = corpse:GetPhysicsObjectCount()
