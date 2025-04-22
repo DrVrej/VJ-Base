@@ -266,6 +266,7 @@ IsVJBaseCorpse_Gib				bool		It's spawned as a gib from a VJ NPC or inherited fro
 IsVJBaseSpawner					bool		It's inherited from "obj_vj_spawner_base"
 IsVJBaseBullseye				bool		It's inherited from "obj_vj_bullseye"
 IsVJBaseEdited					bool		its meta table has been edited by VJ Base
+IsDefaultNPC					bool		It's a default HL1, HL2, Portal NPC
 
 -- States
 VJ_ST_Grabbed					bool		It's currently grabbed by an NPC and most likely throwing it away (Ex: Grenades)

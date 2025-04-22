@@ -14,6 +14,8 @@ ENT.Information 	= "Sets an spawn point for all the players.\nPress USE to toggl
 ENT.Category		= "VJ Base"
 ENT.Spawnable		= true
 ENT.AdminOnly		= true
+
+scripted_ents.Alias("sent_vj_ply_spawnpoint", "sent_vj_ply_spawn") -- !! Backwards Compatibility !!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	function ENT:Draw()

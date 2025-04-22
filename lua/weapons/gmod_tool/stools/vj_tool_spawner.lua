@@ -255,7 +255,9 @@ else
 			spawner:SetAngles(angs)
 			for _, v in pairs(svgetlines) do
 				//if v.IsVJBaseSpawner == true then ply:ChatPrint("Can't be spawned because it's a spawner") end
-				table.insert(spawner.EntitiesToSpawn, {SpawnPosition=v.SpawnPosition, Entities={v.Entities}, WeaponsList={v.WeaponsList}, NPC_Class = v.Relationship.Class, FriToPlyAllies = tobool(v.Relationship.FriToPlyAllies)})
+				local relClass = v.Relationship.Class
+				if relClass == "" then relClass = nil end
+				table.insert(spawner.EntitiesToSpawn, {SpawnPosition=v.SpawnPosition, Entities={v.Entities}, WeaponsList={v.WeaponsList}, NPC_Class = relClass, FriToPlyAllies = tobool(v.Relationship.FriToPlyAllies)})
 			end
 			if convartbl.vj_tool_spawner_playsound == 1 then
 				spawner.SoundTbl_SpawnEntity = spawnSounds
