@@ -172,6 +172,8 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 			local entIsVJ = ent.IsVJBaseSNPC
 			if entIsVJ then
 				ent.NextProcessT = CurTime() + math.Rand(0.15, 1)
+			elseif entInfo then
+				ent.IsDefaultNPC = true
 			end
 			-- Wait 0.1 seconds to make sure the NPC is initialized properly (key values, spawn flags, etc.)
 			timer.Simple(0.1, function()
