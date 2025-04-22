@@ -2679,35 +2679,6 @@ function ENT:Think()
 				self:ResetFollowBehavior()
 			end
 		end
-
-		-- Handle main parts of the turning system
-		local turnData = selfData.TurnData
-		if turnData.Type then
-			-- If StopOnFace flag is set AND (Something has requested to take over by checking "ideal yaw != last set yaw") OR (we are facing ideal) then finish it!
-			if turnData.StopOnFace && (self:GetIdealYaw() != turnData.LastYaw or self:IsFacingIdealYaw()) then
-				self:ResetTurnTarget()
-			else
-				turnData.LastYaw = 0 -- To make sure the turning maintain works correctly
-				local turnTarget = turnData.Target
-				if turnData.Type == VJ.FACE_POSITION or (turnData.Type == VJ.FACE_POSITION_VISIBLE && self:VisibleVec(turnTarget)) then
-					local resultAng = self:GetTurnAngle((turnTarget - self:GetPos()):Angle())
-					if selfData.TurningUseAllAxis then
-						local myAng = self:GetAngles()
-						self:SetAngles(LerpAngle(FrameTime()*selfData.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
-					end
-					self:SetIdealYawAndUpdate(resultAng.y)
-					turnData.LastYaw = resultAng.y
-				elseif IsValid(turnTarget) && (turnData.Type == VJ.FACE_ENTITY or (turnData.Type == VJ.FACE_ENTITY_VISIBLE && self:Visible(turnTarget))) then
-					local resultAng = self:GetTurnAngle((turnTarget:GetPos() - self:GetPos()):Angle())
-					if selfData.TurningUseAllAxis then
-						local myAng = self:GetAngles()
-						self:SetAngles(LerpAngle(FrameTime()*selfData.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
-					end
-					self:SetIdealYawAndUpdate(resultAng.y)
-					turnData.LastYaw = resultAng.y
-				end
-			end
-		end
 		
 		//print("MAX CLIP: ", selfData.WeaponEntity:GetMaxClip1())
 		//print("CLIP: ", selfData.WeaponEntity:Clip1())
@@ -2862,18 +2833,6 @@ function ENT:Think()
 				elseif firingWep then
 					selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 				end
-				
-				-- Turning / Facing Enemy
-				if selfData.ConstantlyFaceEnemy then self:MaintainConstantlyFaceEnemy() end
-				if turnData.Type == VJ.FACE_ENEMY or (turnData.Type == VJ.FACE_ENEMY_VISIBLE && eneIsVisible) then
-					local resultAng = self:GetTurnAngle((enePos - myPos):Angle())
-					if selfData.TurningUseAllAxis then
-						local myAng = self:GetAngles()
-						self:SetAngles(LerpAngle(FrameTime()*selfData.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
-					end
-					self:SetIdealYawAndUpdate(resultAng.y)
-					turnData.LastYaw = resultAng.y
-				end
 
 				-- Call for help
 				if selfData.CallForHelp && curTime > selfData.NextCallForHelpT && !selfData.AttackType then
@@ -2940,11 +2899,6 @@ function ENT:Think()
 							selfData.NextThrowGrenadeT = curTime + self:GetAttackTimer(selfData.NextGrenadeAttackTime)
 						end
 					end
-				end
-				
-				-- Face enemy for stationary types OR attacks
-				if (selfData.MovementType == VJ_MOVETYPE_STATIONARY && selfData.CanTurnWhileStationary) or (selfData.AttackType && ((selfData.MeleeAttackAnimationFaceEnemy && selfData.AttackType == VJ.ATTACK_TYPE_MELEE) or (selfData.GrenadeAttackAnimationFaceEnemy && selfData.AttackType == VJ.ATTACK_TYPE_GRENADE && eneIsVisible))) then
-					self:SetTurnTarget("Enemy")
 				end
 			else -- No Enemy
 				selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE

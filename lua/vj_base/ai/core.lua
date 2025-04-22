@@ -146,6 +146,7 @@ ENT.AttackAnimDuration = 0
 ENT.AttackAnimTime = 0
 ENT.NextDoAnyAttackT = 0
 ENT.IsAbleToMeleeAttack = true
+ENT.MeleeAttack_IsPropAttack = false
 ENT.NextIdleTime = 0
 ENT.NextWanderTime = 0
 ENT.NextChaseTime = 0
@@ -1768,6 +1769,7 @@ function ENT:MaintainConstantlyFaceEnemy()
 		local postures = selfData.ConstantlyFaceEnemy_Postures
 		if (postures == "Both") or (postures == "Moving" && self:IsMoving()) or (postures == "Standing" && !self:IsMoving()) then
 			self:SetTurnTarget("Enemy")
+			return true
 		end
 	end
 end

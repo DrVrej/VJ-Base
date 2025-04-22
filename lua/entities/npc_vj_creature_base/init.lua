@@ -971,7 +971,6 @@ local funcSetPoseParameter = metaEntity.SetPoseParameter
 local metaNPC = FindMetaTable("NPC")
 local funcHasCondition = metaNPC.HasCondition
 
-ENT.MeleeAttack_IsPropAttack = false
 ENT.PropInteraction_Found = false
 ENT.PropInteraction_NextCheckT = 0
 ENT.IsAbleToRangeAttack = true
@@ -2004,34 +2003,6 @@ function ENT:Think()
 			end
 		end
 
-		-- Handle main parts of the turning system
-		local turnData = selfData.TurnData
-		if turnData.Type then
-			-- If StopOnFace flag is set AND (Something has requested to take over by checking "ideal yaw != last set yaw") OR (we are facing ideal) then finish it!
-			if turnData.StopOnFace && (self:GetIdealYaw() != turnData.LastYaw or self:IsFacingIdealYaw()) then
-				self:ResetTurnTarget()
-			else
-				turnData.LastYaw = 0 -- To make sure the turning maintain works correctly
-				local turnTarget = turnData.Target
-				if turnData.Type == VJ.FACE_POSITION or (turnData.Type == VJ.FACE_POSITION_VISIBLE && self:VisibleVec(turnTarget)) then
-					local resultAng = self:GetTurnAngle((turnTarget - self:GetPos()):Angle())
-					if selfData.TurningUseAllAxis then
-						local myAng = self:GetAngles()
-						self:SetAngles(LerpAngle(FrameTime()*selfData.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
-					end
-					self:SetIdealYawAndUpdate(resultAng.y)
-					turnData.LastYaw = resultAng.y
-				elseif IsValid(turnTarget) && (turnData.Type == VJ.FACE_ENTITY or (turnData.Type == VJ.FACE_ENTITY_VISIBLE && self:Visible(turnTarget))) then
-					local resultAng = self:GetTurnAngle((turnTarget:GetPos() - self:GetPos()):Angle())
-					if selfData.TurningUseAllAxis then
-						local myAng = self:GetAngles()
-						self:SetAngles(LerpAngle(FrameTime()*selfData.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
-					end
-					self:SetIdealYawAndUpdate(resultAng.y)
-					turnData.LastYaw = resultAng.y
-				end
-			end
-		end
 		
 		if !selfData.Dead then
 			-- Health Regeneration System
@@ -2184,18 +2155,6 @@ function ENT:Think()
 					eneData.VisiblePosReal = ene:EyePos() -- Use EyePos because "Visible" uses it to run the trace in the engine! | For origin, use "self:GetEnemyLastSeenPos()"
 				end
 				
-				-- Turning / Facing Enemy
-				if selfData.ConstantlyFaceEnemy then self:MaintainConstantlyFaceEnemy() end
-				if turnData.Type == VJ.FACE_ENEMY or (turnData.Type == VJ.FACE_ENEMY_VISIBLE && eneIsVisible) then
-					local resultAng = self:GetTurnAngle((enePos - myPos):Angle())
-					if selfData.TurningUseAllAxis then
-						local myAng = self:GetAngles()
-						self:SetAngles(LerpAngle(FrameTime()*selfData.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
-					end
-					self:SetIdealYawAndUpdate(resultAng.y)
-					turnData.LastYaw = resultAng.y
-				end
-
 				-- Call for help
 				if selfData.CallForHelp && curTime > selfData.NextCallForHelpT && !selfData.AttackType then
 					self:Allies_CallHelp(selfData.CallForHelpDistance)
@@ -2218,7 +2177,7 @@ function ENT:Think()
 						if selfData.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" then self:StopMoving() end -- Interrupt enemy chasing because we are in range!
 						if moveType == VJ_MOVETYPE_GROUND then
 							if !self:IsMoving() && self:OnGround() then
-								self:SetTurnTarget("Enemy")
+								self:SetTurnTarget("Enemy", 0.5)
 							end
 						elseif moveTypeAA then
 							if selfData.AA_CurrentMoveType == 3 then self:AA_StopMoving() end -- Interrupt enemy chasing because we are in range!
@@ -2367,11 +2326,6 @@ function ENT:Think()
 						end
 						self:OnLeapAttack("PostInit", ene)
 					end
-				end
-				
-				-- Face enemy for stationary types OR attacks
-				if (moveType == VJ_MOVETYPE_STATIONARY && selfData.CanTurnWhileStationary) or (selfData.AttackType && ((selfData.MeleeAttackAnimationFaceEnemy && !selfData.MeleeAttack_IsPropAttack && selfData.AttackType == VJ.ATTACK_TYPE_MELEE) or (selfData.RangeAttackAnimationFaceEnemy && selfData.AttackType == VJ.ATTACK_TYPE_RANGE) or ((selfData.LeapAttackAnimationFaceEnemy or (selfData.LeapAttackAnimationFaceEnemy == 2 && !selfData.LeapAttackHasJumped)) && selfData.AttackType == VJ.ATTACK_TYPE_LEAP))) then
-					self:SetTurnTarget("Enemy")
 				end
 			else -- No enemy
 				if !plyControlled then

@@ -201,6 +201,58 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 	//if !selfData.VJ_PlayingSequence then -- No longer needed for sequences as it is handled by ACT_DO_NOT_DISTURB
 	self:MaintainActivity()
 	//end
+	
+	-- Handle turning / facing
+	local turnData = selfData.TurnData
+	local ene = self:GetEnemy()
+	local eneValid = IsValid(ene)
+	
+	if eneValid && !selfData.Dead then
+		-- Handle "ConstantlyFaceEnemy"
+		if selfData.ConstantlyFaceEnemy && self:MaintainConstantlyFaceEnemy() then
+			return
+		end
+		-- Face enemy for stationary types OR attacks
+		if (selfData.MovementType == VJ_MOVETYPE_STATIONARY && selfData.CanTurnWhileStationary) or (selfData.AttackType && ((selfData.MeleeAttackAnimationFaceEnemy && !selfData.MeleeAttack_IsPropAttack && selfData.AttackType == VJ.ATTACK_TYPE_MELEE) or (selfData.GrenadeAttackAnimationFaceEnemy && selfData.AttackType == VJ.ATTACK_TYPE_GRENADE && selfData.EnemyData.Visible) or (selfData.RangeAttackAnimationFaceEnemy && selfData.AttackType == VJ.ATTACK_TYPE_RANGE) or ((selfData.LeapAttackAnimationFaceEnemy or (selfData.LeapAttackAnimationFaceEnemy == 2 && !selfData.LeapAttackHasJumped)) && selfData.AttackType == VJ.ATTACK_TYPE_LEAP))) then
+			self:SetTurnTarget("Enemy")
+			return
+		end
+	end
+	
+	if turnData.Type then
+		-- If StopOnFace flag is set AND (Something has requested to take over by checking "ideal yaw != last set yaw") OR (we are facing ideal) then finish it!
+		if turnData.StopOnFace && (self:GetIdealYaw() != turnData.LastYaw or self:IsFacingIdealYaw()) then
+			self:ResetTurnTarget()
+		else
+			turnData.LastYaw = 0 -- To make sure the turning maintain works correctly
+			local turnTarget = turnData.Target
+			if turnData.Type == VJ.FACE_POSITION or (turnData.Type == VJ.FACE_POSITION_VISIBLE && self:VisibleVec(turnTarget)) then
+				local resultAng = self:GetTurnAngle((turnTarget - self:GetPos()):Angle())
+				if selfData.TurningUseAllAxis then
+					local myAng = self:GetAngles()
+					self:SetAngles(LerpAngle(FrameTime()*selfData.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+				end
+				self:SetIdealYawAndUpdate(resultAng.y)
+				turnData.LastYaw = resultAng.y
+			elseif IsValid(turnTarget) && (turnData.Type == VJ.FACE_ENTITY or (turnData.Type == VJ.FACE_ENTITY_VISIBLE && self:Visible(turnTarget))) then
+				local resultAng = self:GetTurnAngle((turnTarget:GetPos() - self:GetPos()):Angle())
+				if selfData.TurningUseAllAxis then
+					local myAng = self:GetAngles()
+					self:SetAngles(LerpAngle(FrameTime()*selfData.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+				end
+				self:SetIdealYawAndUpdate(resultAng.y)
+				turnData.LastYaw = resultAng.y
+			elseif eneValid && !selfData.Dead && (turnData.Type == VJ.FACE_ENEMY or (turnData.Type == VJ.FACE_ENEMY_VISIBLE && selfData.EnemyData.Visible)) then
+				local resultAng = self:GetTurnAngle((ene:GetPos() - self:GetPos()):Angle())
+				if selfData.TurningUseAllAxis then
+					local myAng = self:GetAngles()
+					self:SetAngles(LerpAngle(FrameTime()*selfData.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+				end
+				self:SetIdealYawAndUpdate(resultAng.y)
+				turnData.LastYaw = resultAng.y
+			end
+		end
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
