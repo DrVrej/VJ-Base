@@ -350,6 +350,121 @@ hook.Add("PlayerCanPickupWeapon", "VJ_PlayerCanPickupWeapon", function(ply, wep)
 		return vj_npc_wep_ply_pickup:GetInt() == 1 && ply:KeyPressed(IN_USE) && ply:GetEyeTrace().Entity == wep
 	end
 end)
+---------------------------------------------------------------------------------------------------------------------------------------------
+if CLIENT then
+	hook.Add("SpawnmenuIconMenuOpen", "VJ_SpawnmenuIconMenuOpen", function(menu, icon, contentType)
+		if contentType == "npc" then
+			//PrintTable(icon:GetTable())
+			local NPCinfo = scripted_ents.Get(icon:GetSpawnName())
+			if NPCinfo && (NPCinfo.IsVJBaseSNPC or NPCinfo.IsVJBaseSpawner) then
+				//PrintTable(NPCinfo)
+				menu:AddSpacer()
+				menu:AddSpacer()
+				menu:AddSpacer()
+				menu:AddSpacer()
+				menu:AddSpacer()
+				
+				local titleText = ""
+				-- Add Information
+				local entInfo = NPCinfo.Information
+				if entInfo && entInfo != "" then
+					titleText = entInfo .. "\n \n"
+				end
+				-- Add Author
+				local entAuthor = NPCinfo.Author
+				if entAuthor && entAuthor != "" then
+					titleText = titleText .. "⁃ Author: " .. entAuthor .. "\n"
+				end
+				-- Add base type
+				if NPCinfo.IsVJBaseSNPC_Creature then
+					titleText = titleText .. "⁃ Base: Creature\n"
+				elseif NPCinfo.IsVJBaseSNPC_Human then
+					titleText = titleText .. "⁃ Base: Human\n"
+				elseif NPCinfo.IsVJBaseSpawner then
+					titleText = titleText .. "⁃ Base: Spawner\n"
+				end
+				-- Add parent (actual base)
+				if NPCinfo.Base != "npc_vj_creature_base" && NPCinfo.Base != "npc_vj_human_base" && NPCinfo.Base != "obj_vj_spawner_base" then
+					titleText = titleText .. "⁃ Parent: " .. NPCinfo.Base .. "\n"
+				end
+				-- Add weapons list
+				if !table.IsEmpty(icon:GetNPCWeapon()) then
+					titleText = titleText .. "⁃ Weapons (" .. #icon:GetNPCWeapon() .. "):\n  • " .. table.concat(icon:GetNPCWeapon(), "\n  • ")
+				end
+				local title = vgui.Create("RichText")
+					title:SetText(titleText)
+					//title:SetDark(true)
+					//title:SetTextInset(10, 10)
+					title:SetWrap(true)
+					title:SetContentAlignment(7)
+					title:SetTooltip("Entity's information")
+					title:SetVerticalScrollbarEnabled(false)
+					-- Wait until the internals of RichText have initialized
+					function title:PerformLayout()
+						if self:GetFont() != "VJBaseTinySmall" then self:SetFontInternal("VJBaseTinySmall") end
+						self:SetFGColor(1, 1, 1, 255)
+						
+						surface.SetFont("VJBaseTinySmall")
+						local textWidth = self:GetWide()
+						local _, textHeight = surface.GetTextSize("hello") -- Get the height of the font (give a random text to calculate it)
+						local lines = 0
+						for word in string.gmatch(self:GetText(), "[^\n,]+") do
+							local w = surface.GetTextSize(word) * 1.2
+							textWidth = math.max(textWidth, w)
+							lines = lines + 1
+						end
+						//print("textWidth", textWidth)
+						self:SetSize(math.min(textWidth, 400), math.min((lines * textHeight) + 5, 200))
+						local _, height = self:GetSize()
+						if height >= 200 then
+							self:SetVerticalScrollbarEnabled(true)
+						end
+					end
+				menu:AddPanel(title)
+				
+				menu:AddSpacer()
+				
+				menu:AddOption("Open Documentation", function()
+					gui.OpenURL("https://drvrej.com/" .. icon:GetSpawnName())
+				end):SetIcon("icon16/help.png")
+				
+				menu:AddOption("Copy Name", function()
+					SetClipboardText(icon.m_NiceName)
+				end):SetIcon("icon16/tag_blue_add.png")
+				
+				menu:AddSpacer()
+				
+				menu:AddOption("Spawn a Squad", function()
+					SetClipboardText(icon.m_NiceName)
+				end):SetIcon("icon16/tag_blue_add.png")
+				
+				local ply = LocalPlayer()
+				local wep = ply:GetWeapon("gmod_tool")
+				if !IsValid(wep) then return end
+				
+				menu:AddOption("Select in NPC Spawner", function()
+					RunConsoleCommand("vj_tool_spawner_spawnent", icon:GetSpawnName())
+					timer.Simple(0.05, function() -- Otherwise it will not update the values in time
+						local getPanel = controlpanel.Get("vj_tool_spawner")
+						getPanel:Clear()
+						ply:GetTool("vj_tool_spawner").BuildCPanel(getPanel)
+					end)
+				end):SetIcon("icon16/report_user.png")
+				
+				menu:AddOption("Quick add to NPC Spawner", function()
+					RunConsoleCommand("vj_tool_spawner_spawnent", icon:GetSpawnName())
+					if !table.IsEmpty(icon:GetNPCWeapon()) then
+						local wepOverride = GetConVar("gmod_npcweapon"):GetString()
+						RunConsoleCommand("vj_tool_spawner_weaponequip", wepOverride == "" and "Default" or wepOverride)
+					end
+					RunConsoleCommand("vj_tool_spawner_update")
+					RunConsoleCommand("vj_tool_spawner_spawnent", "None")
+					RunConsoleCommand("vj_tool_spawner_weaponequip", "None")
+				end):SetIcon("icon16/user_go.png")
+			end
+		end
+	end)
+end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Convar Callbacks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
