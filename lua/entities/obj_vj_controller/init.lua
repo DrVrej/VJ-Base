@@ -408,7 +408,7 @@ function ENT:Think()
 		end
 	end
 	
-	if npc.IsVJBaseSNPC && npc.AttackAnimTime < CurTime() && curTime > npc.NextChaseTime && !npc.IsVJBaseSNPC_Tank then
+	if npc.IsVJBaseSNPC && npc.AttackAnimTime < curTime && curTime > npc.NextChaseTime && !npc.IsVJBaseSNPC_Tank then
 		-- Turning
 		if !npc:IsMoving() && canTurn && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ.WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
 			npc:SCHEDULE_IDLE_STAND()
@@ -419,7 +419,7 @@ function ENT:Think()
 				elseif npc:GetActivity() == ACT_IDLE && npc:GetIdealActivity() == ACT_IDLE && npc:DeltaIdealYaw() <= -45 or npc:DeltaIdealYaw() >= 45 then -- Check both current act AND ideal act because certain activities only change the current act (Ex: UpdateTurnActivity function)
 					npc:UpdateTurnActivity()
 					if npc:GetIdealActivity() != ACT_IDLE then -- If ideal act is no longer idle, then we have selected a turn activity!
-						npc.NextIdleTime = CurTime() + VJ.AnimDurationEx(npc, npc:GetIdealActivity())
+						npc.NextIdleTime = curTime + VJ.AnimDurationEx(npc, npc:GetIdealActivity())
 					end
 				end
 			end

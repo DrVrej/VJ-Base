@@ -7,6 +7,7 @@
 -- TANK BASE --
 ENT.VJ_ID_Boss = true
 ENT.SightAngle = 360
+ENT.TurningSpeed = 0 -- Tanks shouldn't use Source Engine turning!
 ENT.HullType = HULL_LARGE
 ENT.HasMeleeAttack = false
 ENT.DisableWandering = true

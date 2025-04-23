@@ -2344,7 +2344,7 @@ function ENT:Think()
 			end
 			
 			-- Guarding Behavior
-			if selfData.IsGuard && !selfData.IsFollowing then
+			if selfData.IsGuard && !selfData.IsFollowing && !selfData.IsVJBaseSNPC_Tank then
 				local guardData = selfData.GuardData
 				if !guardData.Position then -- If we don't have a position, then set it!
 					guardData.Position = myPos

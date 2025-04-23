@@ -2041,7 +2041,7 @@ function ENT:MaintainRelationships()
 								-- Since we both have "CLASS_PLAYER_ALLY" then we need to do a special check if we both also have "self.AlliedWithPlayerAllies"
 								-- If we both do NOT have that, then we both like players but not each other!
 								if friClass == "CLASS_PLAYER_ALLY" then
-									if (myFriPlyAllies && ent.AlliedWithPlayerAllies) or (ent.IsDefaultNPC) then
+									if (myFriPlyAllies && ent.AlliedWithPlayerAllies) or ent.IsDefaultNPC then
 										calculatedDisp = D_LI
 									end
 								else
