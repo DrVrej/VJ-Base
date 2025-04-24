@@ -83,24 +83,32 @@ local function VJ_NPC_SETTINGS_GENERAL(panel)
 	panel:Help("#vjbase.menu.general.npc.note.future")
 	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_corpse 1\n vj_npc_corpse_limit 32\n vj_npc_corpse_collision 0\n vj_npc_corpse_fade 0\n vj_npc_corpse_fadetime 10\n vj_npc_corpse_undo 0\n vj_npc_gib 1\n vj_npc_gib_vfx 1\n vj_npc_gib_collision 0\n vj_npc_gib_fade 1\n vj_npc_gib_fadetime 90\n vj_npc_god 0\n vj_npc_health 0\n vj_npc_blood 1\n vj_npc_blood_pool 1\n vj_npc_blood_gmod 0\n vj_npc_anim_death 1\n vj_npc_loot 1\n vj_npc_difficulty 0\n vj_npc_ply_frag 1\n vj_npc_ply_chat 1"})
 	
-	local difCombo = {Options = {}, CVars = {}, Label = "#vjbase.menu.npc.settings.gen.difficulty.header", MenuButton = "0"}
-		difCombo.Options["#vjbase.menu.npc.settings.gen.difficulty.neanderthal"] = {vj_npc_difficulty = "-5"}
-		difCombo.Options["#vjbase.menu.npc.settings.gen.difficulty.puny"] = {vj_npc_difficulty = "-4"}
-		difCombo.Options["#vjbase.menu.npc.settings.gen.difficulty.childs_play"] = {vj_npc_difficulty = "-3"}
-		difCombo.Options["#vjbase.menu.npc.settings.gen.difficulty.easy"] = {vj_npc_difficulty = "-2"}
-		difCombo.Options["#vjbase.menu.npc.settings.gen.difficulty.beginner"] = {vj_npc_difficulty = "-1"}
-		difCombo.Options["#vjbase.menu.npc.settings.gen.difficulty.normal"] = {vj_npc_difficulty = "0"}
-		difCombo.Options["#vjbase.menu.npc.settings.gen.difficulty.difficult"] = {vj_npc_difficulty = "1"}
-		difCombo.Options["#vjbase.menu.npc.settings.gen.difficulty.hard"] = {vj_npc_difficulty = "2"}
-		difCombo.Options["#vjbase.menu.npc.settings.gen.difficulty.intermediate"] = {vj_npc_difficulty = "3"}
-		difCombo.Options["#vjbase.menu.npc.settings.gen.difficulty.insane"] = {vj_npc_difficulty = "4"}
-		difCombo.Options["#vjbase.menu.npc.settings.gen.difficulty.impossible"] = {vj_npc_difficulty = "5"}
-		difCombo.Options["#vjbase.menu.npc.settings.gen.difficulty.crazy"] = {vj_npc_difficulty = "6"}
-		difCombo.Options["#vjbase.menu.npc.settings.gen.difficulty.nightmare"] = {vj_npc_difficulty = "7"}
-		difCombo.Options["#vjbase.menu.npc.settings.gen.difficulty.hell_on_earth"] = {vj_npc_difficulty = "8"}
-		difCombo.Options["#vjbase.menu.npc.settings.gen.difficulty.total_annihilation"] = {vj_npc_difficulty = "9"}
-		difCombo.Options["#vjbase.menu.npc.settings.gen.difficulty.human_eradication"] = {vj_npc_difficulty = "10"}
-	panel:AddControl("ComboBox", difCombo)
+	local difList_Text = vgui.Create("DLabel", panel)
+		difList_Text:SetText("#vjbase.menu.npc.settings.gen.difficulty.header")
+		difList_Text:SetDark(true)
+	local difList = vgui.Create("CtrlListBox", panel)
+		difList:SetHeight(25)
+		difList:Dock(TOP)
+		difList:SetSortItems(false)
+		difList:AddOption("#vjbase.menu.npc.settings.gen.difficulty.neanderthal", {vj_npc_difficulty = "-5"})
+		difList:AddOption("#vjbase.menu.npc.settings.gen.difficulty.puny", {vj_npc_difficulty = "-4"})
+		difList:AddOption("#vjbase.menu.npc.settings.gen.difficulty.childs_play", {vj_npc_difficulty = "-3"})
+		difList:AddOption("#vjbase.menu.npc.settings.gen.difficulty.easy", {vj_npc_difficulty = "-2"})
+		difList:AddOption("#vjbase.menu.npc.settings.gen.difficulty.beginner", {vj_npc_difficulty = "-1"})
+		difList:AddSpacer()
+		difList:AddOption("#vjbase.menu.npc.settings.gen.difficulty.normal", {vj_npc_difficulty = "0"})
+		difList:AddSpacer()
+		difList:AddOption("#vjbase.menu.npc.settings.gen.difficulty.difficult", {vj_npc_difficulty = "1"})
+		difList:AddOption("#vjbase.menu.npc.settings.gen.difficulty.hard", {vj_npc_difficulty = "2"})
+		difList:AddOption("#vjbase.menu.npc.settings.gen.difficulty.intermediate", {vj_npc_difficulty = "3"})
+		difList:AddOption("#vjbase.menu.npc.settings.gen.difficulty.insane", {vj_npc_difficulty = "4"})
+		difList:AddOption("#vjbase.menu.npc.settings.gen.difficulty.impossible", {vj_npc_difficulty = "5"})
+		difList:AddOption("#vjbase.menu.npc.settings.gen.difficulty.crazy", {vj_npc_difficulty = "6"})
+		difList:AddOption("#vjbase.menu.npc.settings.gen.difficulty.nightmare", {vj_npc_difficulty = "7"})
+		difList:AddOption("#vjbase.menu.npc.settings.gen.difficulty.hell_on_earth", {vj_npc_difficulty = "8"})
+		difList:AddOption("#vjbase.menu.npc.settings.gen.difficulty.total_annihilation", {vj_npc_difficulty = "9"})
+		difList:AddOption("#vjbase.menu.npc.settings.gen.difficulty.human_eradication", {vj_npc_difficulty = "10"})
+	panel:AddItem(difList_Text, difList)
 	panel:CheckBox("#vjbase.menu.npc.settings.gen.deathanim", "vj_npc_anim_death")
 	panel:CheckBox("#vjbase.menu.npc.settings.gen.lootdrops", "vj_npc_loot")
 	

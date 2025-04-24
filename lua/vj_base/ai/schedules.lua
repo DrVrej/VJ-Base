@@ -230,7 +230,7 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 				local resultAng = self:GetTurnAngle((turnTarget - self:GetPos()):Angle())
 				if selfData.TurningUseAllAxis then
 					local myAng = self:GetAngles()
-					self:SetAngles(LerpAngle(FrameTime()*selfData.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+					self:SetAngles(LerpAngle(FrameTime() * self:GetMaxYawSpeed(), myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
 				end
 				self:SetIdealYawAndUpdate(resultAng.y)
 				turnData.LastYaw = resultAng.y
@@ -238,7 +238,7 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 				local resultAng = self:GetTurnAngle((turnTarget:GetPos() - self:GetPos()):Angle())
 				if selfData.TurningUseAllAxis then
 					local myAng = self:GetAngles()
-					self:SetAngles(LerpAngle(FrameTime()*selfData.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+					self:SetAngles(LerpAngle(FrameTime() * self:GetMaxYawSpeed(), myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
 				end
 				self:SetIdealYawAndUpdate(resultAng.y)
 				turnData.LastYaw = resultAng.y
@@ -246,7 +246,7 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 				local resultAng = self:GetTurnAngle((ene:GetPos() - self:GetPos()):Angle())
 				if selfData.TurningUseAllAxis then
 					local myAng = self:GetAngles()
-					self:SetAngles(LerpAngle(FrameTime()*selfData.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+					self:SetAngles(LerpAngle(FrameTime() * self:GetMaxYawSpeed(), myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
 				end
 				self:SetIdealYawAndUpdate(resultAng.y)
 				turnData.LastYaw = resultAng.y

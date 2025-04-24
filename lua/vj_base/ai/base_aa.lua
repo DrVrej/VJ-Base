@@ -355,14 +355,16 @@ end
 		- moveType = Type of movement animation it should do | DEFAULT: "Alert"
 -----------------------------------------------------------]]
 function ENT:AA_ChaseEnemy(playAnim, moveType)
-	if self.Dead or (self.NextChaseTime > CurTime()) or !IsValid(self:GetEnemy()) then return end
-	self:AA_MoveTo(self:GetEnemy(), playAnim != false, moveType or "Alert", {FaceDestTarget=true, ChaseEnemy=true})
+	if self.Dead or (self.NextChaseTime > CurTime()) then return false end
+	local ene = self:GetEnemy()
+	if !IsValid(ene) then return false end
+	self:AA_MoveTo(ene, playAnim != false, moveType or "Alert", {FaceDestTarget=true, ChaseEnemy=true})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Internal function, handles the movement animations
 -----------------------------------------------------------]]
--- Activities that should be played as sequences otherwise the engine will override it and set it back to idle | Issue: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L3050
+-- Activities that should be played as sequences otherwise the engine will override it and set it back to idle | Issue: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L3023
 local badACTs = {[ACT_WALK] = true, [ACT_WALK_AIM] = true, [ACT_RUN] = true, [ACT_RUN_AIM] = true}
 --
 function ENT:AA_MoveAnimation()

@@ -268,10 +268,10 @@ function ENT:OnThinkActive()
 	if tr.Hit && selfData.Tank_Status == 0 then
 		local phys = self:GetPhysicsObject()
 		if IsValid(phys) && #phys:GetFrictionSnapshot() > 0 then
-			local ene = self:GetEnemy()
+			local eneData = selfData.EnemyData
+			local ene = eneData.Target
 			if IsValid(ene) then
 				local enePos = ene:GetPos()
-				local eneData = selfData.EnemyData
 				local angEne = (enePos - myPos + vec80z):Angle()
 				local angDiffuse = self:Tank_AngleDiffuse(angEne.y, self:GetAngles().y + selfData.Tank_AngleOffset)
 				local heightRatio = (enePos.z - myPos.z) / myPos:Distance(Vector(enePos.x, enePos.y, myPos.z))

@@ -110,6 +110,7 @@ ENT.FollowData = {
 	NextUpdateT = 0
 }
 ENT.EnemyData = {
+	Target = NULL, -- Enemy entity | Cached value of "self:GetEnemy()", use it when you're already retrieving the "EnemyData"
 	Distance = 0, -- Distance to the enemy
 	DistanceNearest = 0, -- Nearest position distance to the enemy
 	TimeSet = 0, -- Last time an enemy was set | Updated whenever "ForceSetEnemy" is ran successfully
@@ -1066,7 +1067,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 		if updateTurn then
 			if self.TurningUseAllAxis then
 				local myAng = self:GetAngles()
-				self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+				self:SetAngles(LerpAngle(FrameTime() * self:GetMaxYawSpeed(), myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
 			end
 			self:SetIdealYawAndUpdate(resultAng.y)
 			//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
@@ -1123,7 +1124,7 @@ function ENT:OverrideMoveFacing(flInterval, move)
 		local resultAng = self:GetTurnAngle((self:GetCurWaypointPos() - self:GetPos()):Angle())
 		if selfData.TurningUseAllAxis then
 			local myAng = self:GetAngles()
-			self:SetAngles(LerpAngle(FrameTime()*selfData.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+			self:SetAngles(LerpAngle(FrameTime() * self:GetMaxYawSpeed(), myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
 		end
 		self:SetIdealYawAndUpdate(resultAng.y)
 		return true -- Disable engine move facing
@@ -1179,6 +1180,7 @@ function ENT:GetAimPosition(target, aimOrigin, predictionRate, projectileSpeed)
 	end
 	return result
 end
+---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Calculate the aim spread of the NPC depending on the given factors (Useful for bullets!)
 		- target = When given, it will apply more modifiers based on the given entity (Assumes its an enemy!) | DEFAULT: NULL

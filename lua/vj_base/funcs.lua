@@ -869,9 +869,10 @@ end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 function metaEntity:CalculateProjectile(algorithmType, startPos, targetPos, strength)
+	local ene = self:GetEnemy()
 	if algorithmType == "Line" then
-		return VJ.CalculateTrajectory(self, (self.IsVJBaseSNPC and IsValid(self:GetEnemy())) and self:GetEnemy() or NULL, "Line", startPos, self.IsVJBaseSNPC and 1 or targetPos, strength)
+		return VJ.CalculateTrajectory(self, (self.IsVJBaseSNPC and IsValid(ene)) and ene or NULL, "Line", startPos, self.IsVJBaseSNPC and 1 or targetPos, strength)
 	elseif algorithmType == "Curve" then
-		return VJ.CalculateTrajectory(self, (self.IsVJBaseSNPC and IsValid(self:GetEnemy())) and self:GetEnemy() or NULL, "CurveOld", startPos, targetPos, strength)
+		return VJ.CalculateTrajectory(self, (self.IsVJBaseSNPC and IsValid(ene)) and ene or NULL, "CurveOld", startPos, targetPos, strength)
 	end
 end
