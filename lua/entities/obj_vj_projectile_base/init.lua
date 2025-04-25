@@ -143,6 +143,8 @@ function ENT:Initialize()
 		self:SetTrigger(true)
 		self:SetCollisionGroup(COLLISION_GROUP_PROJECTILE)
 	end
+	self:AddEFlags(EFL_DONTBLOCKLOS)
+	self:AddEFlags(EFL_DONTWALKON)
 	self:AddSolidFlags(FSOLID_NOT_STANDABLE)
 	self:SetUseType(SIMPLE_USE)
 	self:PlaySound("Startup")

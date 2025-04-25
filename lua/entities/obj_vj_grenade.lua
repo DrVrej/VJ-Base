@@ -39,6 +39,7 @@ ENT.SoundTbl_OnCollide = "weapons/hegrenade/he_bounce-1.wav"
 ENT.FuseTime = 3
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
+	self:AddFlags(FL_GRENADE)
 	timer.Simple(self.FuseTime, function()
 		if IsValid(self) then
 			self:Destroy()
