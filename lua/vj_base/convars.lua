@@ -41,11 +41,11 @@ CreateConVar("vj_npc_human_jump", 1, defFlags, "Can the human NPCs jump?")
 CreateConVar("vj_npc_creature_opendoor", 1, defFlags, "Should Creatures open doors?")
 CreateConVar("vj_npc_allies", 1, defFlags, "Can NPCs ally with other entities?")
 CreateConVar("vj_npc_ply_betray", 1, defFlags, "Can friendly NPCs become enemy to allied players?")
-CreateConVar("vj_npc_fri_base", 0, FCVAR_NONE, "Makes all VJ NPCs friendly to other VJ NPCs")
-CreateConVar("vj_npc_fri_player", 0, FCVAR_NONE, "Makes all VJ NPCs friendly to Players")
-CreateConVar("vj_npc_fri_zombie", 0, FCVAR_NONE, "Makes all VJ NPCs friendly to Zombies")
-CreateConVar("vj_npc_fri_antlion", 0, FCVAR_NONE, "Makes all VJ NPCs friendly to Antlion")
-CreateConVar("vj_npc_fri_combine", 0, FCVAR_NONE, "Makes all VJ NPCs friendly to Combine")
+CreateConVar("vj_npc_fri_base", 0, defFlags, "Makes all VJ NPCs friendly to other VJ NPCs")
+CreateConVar("vj_npc_fri_player", 0, defFlags, "Makes all VJ NPCs friendly to Players")
+CreateConVar("vj_npc_fri_zombie", 0, defFlags, "Makes all VJ NPCs friendly to Zombies")
+CreateConVar("vj_npc_fri_antlion", 0, defFlags, "Makes all VJ NPCs friendly to Antlion")
+CreateConVar("vj_npc_fri_combine", 0, defFlags, "Makes all VJ NPCs friendly to Combine")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ General Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

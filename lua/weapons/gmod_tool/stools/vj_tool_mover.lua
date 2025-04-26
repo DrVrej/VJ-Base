@@ -149,6 +149,8 @@ else
 				//print("fully added")
 				sventity.VJ_IsBeingControlled_Tool = true
 				sventity:StopMoving()
+				sventity.VJ_MoverToolOrg_Wander = sventity.DisableWandering
+				sventity.VJ_MoverToolOrg_Chase = sventity.DisableChasingEnemy
 				if sventity.IsVJBaseSNPC then
 					sventity.DisableWandering = true
 					sventity.DisableChasingEnemy = true
@@ -157,8 +159,8 @@ else
 				//print("fully removed")
 				sventity.VJ_IsBeingControlled_Tool = false
 				if sventity.IsVJBaseSNPC then
-					sventity.DisableWandering = false
-					sventity.DisableChasingEnemy = false
+					sventity.DisableWandering = sventity.VJ_MoverToolOrg_Wander != nil and sventity.VJ_MoverToolOrg_Wander or false
+					sventity.DisableChasingEnemy = sventity.VJ_MoverToolOrg_Chase != nil and sventity.VJ_MoverToolOrg_Chase or false
 					sventity:SelectSchedule()
 				end
 			end
@@ -172,8 +174,8 @@ else
 			for _, v in ipairs(brahtbl) do
 				v.VJ_IsBeingControlled_Tool = false
 				if v.IsVJBaseSNPC then
-					v.DisableWandering = false
-					v.DisableChasingEnemy = false
+					v.DisableWandering = v.VJ_MoverToolOrg_Wander != nil and v.VJ_MoverToolOrg_Wander or false
+					v.DisableChasingEnemy = v.VJ_MoverToolOrg_Chase != nil and v.VJ_MoverToolOrg_Chase or false
 					v:SelectSchedule()
 				end
 			end

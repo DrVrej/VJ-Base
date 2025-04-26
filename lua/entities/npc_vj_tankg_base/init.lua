@@ -150,12 +150,14 @@ end
 function ENT:OnThinkActive()
 	local selfData = self:GetTable()
 	if selfData.Dead then return end
-	self:SetEnemy(self:GetParent():GetEnemy())
+	local parent = self:GetParent()
+	if !IsValid(parent) then return end
+	local ene = parent:GetEnemy()
+	self:SetEnemy(ene)
 	self:Tank_OnThinkActive()
 	self:SelectSchedule()
 	
 	if selfData.Tank_Status == 0 then
-		local ene = self:GetEnemy()
 		if IsValid(ene) then
 			selfData.Tank_GunnerIsTurning = false
 			local myPos = self:GetPos()
