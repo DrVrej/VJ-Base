@@ -133,6 +133,7 @@ function ENT:Initialize()
 				phys:EnableDrag(true)
 				phys:EnableGravity(true)
 			end
+			//phys:AddGameFlag(FVPHYSICS_NO_IMPACT_DMG)
 			phys:SetBuoyancyRatio(0)
 		end
 	end

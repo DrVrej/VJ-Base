@@ -152,6 +152,9 @@ function ENT:OnThinkActive()
 	if selfData.Dead then return end
 	local parent = self:GetParent()
 	if !IsValid(parent) then return end
+	if selfData.VJ_NPC_Class != parent.VJ_NPC_Class then
+		selfData.VJ_NPC_Class = parent.VJ_NPC_Class
+	end
 	local ene = parent:GetEnemy()
 	self:SetEnemy(ene)
 	self:Tank_OnThinkActive()

@@ -109,8 +109,6 @@ VJ.AddEntity("Wooden Board", "prop_vj_board", "DrVrej", false, 0, true, spawnCat
 VJ.AddEntity("Grenade", "obj_vj_grenade", "DrVrej", false, 0, true, spawnCategory)
 VJ.AddEntity("Flare Round", "obj_vj_flareround", "DrVrej", false, 0, true, spawnCategory)
 VJ.AddEntity("Flag", "prop_vj_flag", "DrVrej", false, 0, true, spawnCategory)
-//VJ.AddEntity("Supply Box", "item_dynamic_resupply", "DrVrej", false, 0, true, spawnCategory)
-//VJ.AddEntity("Supply Crate", "item_ammo_crate", "DrVrej", false, 0, true, spawnCategory)
 	-- ====== Weapons ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 VJ.AddWeapon("AK-47", "weapon_vj_ak47", false, spawnCategory)
 VJ.AddWeapon("Glock 17", "weapon_vj_glock17", false, spawnCategory)

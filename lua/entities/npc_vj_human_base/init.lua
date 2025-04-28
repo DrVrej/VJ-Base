@@ -699,7 +699,12 @@ Called when melee attack is triggered
 function ENT:OnMeleeAttack(status, enemy) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackTraceOrigin()
-	return (IsValid(self:GetEnemy()) and VJ.GetNearestPositions(self, self:GetEnemy(), true)) or self:GetPos() + self:GetForward() -- Override this to use a different position
+	return (IsValid(self:GetEnemy()) and VJ.GetNearestPositions(self, self:GetEnemy(), true)) or self:GetPos() + self:GetForward()
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- "self.MeleeAttackDamageAngleRadius" uses this to determine the direction of the attack and if something is within the angle radius
+function ENT:MeleeAttackTraceDirection()
+	return self:GetHeadDirection()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackKnockbackVelocity(ent)
@@ -2983,7 +2988,7 @@ function ENT:ExecuteMeleeAttack()
 		for _, ent in ipairs(ents.FindInSphere(self:MeleeAttackTraceOrigin(), selfData.MeleeAttackDamageDistance)) do
 			if ent == self or ent:GetClass() == myClass or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then continue end
 			if ent:IsPlayer() && (ent.VJ_IsControllingNPC or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
-			if ((ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible) && self:GetHeadDirection():Dot((Vector(ent:GetPos().x, ent:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackDamageAngleRadius)) then
+			if ((ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible) && self:MeleeAttackTraceDirection():Dot((Vector(ent:GetPos().x, ent:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackDamageAngleRadius)) then
 				local isProp = ent.VJ_ID_Attackable
 				if self:OnMeleeAttackExecute("PreDamage", ent, isProp) == true then continue end
 				local dmgAmount = self:ScaleByDifficulty(selfData.MeleeAttackDamage)

@@ -1873,8 +1873,8 @@ function ENT:ForceSetEnemy(ent, stopMoving, maxPerf, hasEnemy)
 	self:IgnoreEnemyUntil(ent, 0)
 	self:SetNPCState(NPC_STATE_COMBAT)
 	self.EnemyData.TimeSet = CurTime()
-	if !hasEnemy or !self.Alerted then
-		if stopMoving then
+	if !hasEnemy or self.Alerted != ALERT_STATE_ENEMY then
+		if stopMoving && !self.Alerted then
 			self:ClearGoal()
 			self:StopMoving()
 		end

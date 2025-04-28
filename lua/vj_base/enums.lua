@@ -61,7 +61,7 @@ VJ.FACE_POSITION_VISIBLE			= 6 -- Currently attempting to face a specific positi
 
 -- NPC alert state
 VJ.ALERT_STATE_NONE					= false -- Not currently facing anything | DEFAULT
-VJ.ALERT_STATE_READY				= 1 -- Alerted but no enemy was ever seen since it got alerted
+VJ.ALERT_STATE_READY				= 1 -- Alerted but no enemy was ever seen since it got alerted usually because it heard or sensed something
 VJ.ALERT_STATE_ENEMY				= true -- Has seen an enemy since it got alerted
 
 -- NPC danger detected type (Used by human NPCs)
