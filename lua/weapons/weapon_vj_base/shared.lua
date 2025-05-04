@@ -571,7 +571,7 @@ function SWEP:NPC_CanFire(selfData, owner)
 		end
 		-- Check to make sure the enemy is within the firing cone!
 		if IsValid(ene) && ((!isControlled) or (isControlled && owner.VJ_TheController:KeyDown(IN_ATTACK2))) then
-			local spawnPos = metaEntity.GetPos( self ) //self:GetBulletPos() -- Because "GetBulletPos" is VERY costly sadly =(
+			local spawnPos = metaEntity.GetPos(self) //self:GetBulletPos() -- Because "GetBulletPos" is VERY costly sadly =(
 			local aimPos = ownerData.IsVJBaseSNPC and ownerData.GetAimPosition(owner, ene, spawnPos, 0) or ene:BodyTarget(spawnPos)
 			local aimDir = aimPos - spawnPos
 			local sightDir = owner:GetHeadDirection() // owner:GetForward() -- Owner's sight direction
@@ -772,15 +772,15 @@ function SWEP:PrimaryAttack(UseAlt)
 					end
 				elseif owner.IsVJBaseSNPC then
 					local ene = owner:GetEnemy()
-					local spawnPos = selfData.GetBulletPos( self )
-					local aimPos = owner:GetAimPosition(ene, spawnPos, 0)
-					local spread = owner:GetAimSpread(ene, aimPos, selfData.NPC_CustomSpread or 1) // owner:GetPos():Distance(owner.VJ_TheController:GetEyeTrace().HitPos) -- Was used when NPC was being controlled
+					local spawnPos = selfData.GetBulletPos(self)
+					local aimPos = ownerData.GetAimPosition(owner, ene, spawnPos, 0)
+					local spread = ownerData.GetAimSpread(owner, ene, aimPos, selfData.NPC_CustomSpread or 1) // owner:GetPos():Distance(owner.VJ_TheController:GetEyeTrace().HitPos) -- Was used when NPC was being controlled
 					bullet.Spread = Vector(spread, spread, 0)
 					bullet.Dir = (aimPos - spawnPos):GetNormal()
 					bullet.Src = spawnPos
-					bullet.Damage = owner:ScaleByDifficulty(selfData.Primary.Damage)
+					bullet.Damage = ownerData.ScaleByDifficulty(owner, selfData.Primary.Damage)
 				else
-					local spawnPos = selfData.GetBulletPos( self )
+					local spawnPos = selfData.GetBulletPos(self)
 					bullet.Spread = Vector(0.05, 0.05, 0)
 					bullet.Dir = (owner:GetEnemy():BodyTarget(spawnPos) - spawnPos):GetNormal()
 					bullet.Src = spawnPos
@@ -829,7 +829,7 @@ function SWEP:PrimaryAttackEffects(owner)
 	
 	if vj_wep_muzzleflash:GetInt() == 1 then
 		owner:MuzzleFlash()
-
+		
 		-- MUZZLE FLASH
 		if selfData.PrimaryEffects_MuzzleFlash then
 			local muzzleAttach = selfData.PrimaryEffects_MuzzleAttachment
