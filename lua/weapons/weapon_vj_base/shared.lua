@@ -285,6 +285,7 @@ SWEP.InitTime = 0 -- Holds the CurTime that it was spawned at, used to make sure
 
 local metaEntity = FindMetaTable("Entity")
 local funcDrawModel = metaEntity.DrawModel
+local funcGetTable = metaEntity.GetTable
 
 local vj_wep_muzzleflash = GetConVar("vj_wep_muzzleflash")
 local vj_wep_muzzleflash_light = GetConVar("vj_wep_muzzleflash_light")
@@ -533,7 +534,7 @@ function SWEP:NPC_Think()
 	local owner = metaEntity.GetOwner(self)
 	if !IsValid(owner) or !owner:IsNPC() or owner:GetActiveWeapon() != self then return end
 
-	local selfData = metaEntity.GetTable(self)
+	local selfData = funcGetTable(self)
 	selfData.MaintainWorldModel(self, selfData, owner)
 	selfData.OnThink(self)
 
@@ -543,9 +544,9 @@ function SWEP:NPC_Think()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_CanFire(selfData, owner)
-	selfData = selfData or metaEntity.GetTable(self)
+	selfData = selfData or funcGetTable(self)
 	owner = owner or metaEntity.GetOwner(self)
-	local ownerData = metaEntity.GetTable(owner)
+	local ownerData = funcGetTable(owner)
 	local ene = owner:GetEnemy()
 	local isVJHuman = ownerData.IsVJBaseSNPC_Human
 	if (isVJHuman && IsValid(ene) && !ownerData.CanFireWeapon(owner, true, true)) or (selfData.NPC_StandingOnly && owner:IsMoving()) then
@@ -651,9 +652,9 @@ function SWEP:PrimaryAttack(UseAlt)
 	//self:GetOwner():SetFOV(45, 0.3)
 	//if !IsFirstTimePredicted() then return end
 
-	local selfData = metaEntity.GetTable(self)
+	local selfData = funcGetTable(self)
 	local owner = metaEntity.GetOwner(self)
-	local ownerData = metaEntity.GetTable(owner)
+	local ownerData = funcGetTable(owner)
 
 	local curTime = CurTime()
 	self:SetNextPrimaryFire(curTime + selfData.Primary.Delay)
@@ -709,7 +710,7 @@ function SWEP:PrimaryAttack(UseAlt)
 		local meleeHitEnt = false
 		local ownersClass = metaEntity.GetClass(owner)
 		for _, v in ipairs(ents.FindInSphere(ownersPos, selfData.MeleeWeaponDistance + 20)) do
-			local vData = metaEntity.GetTable(v)
+			local vData = funcGetTable(v)
 			local vsClass = metaEntity.GetClass(v)
 
 			if (vData.IsVJBaseBullseye && vData.VJ_IsBeingControlled) or (v:IsPlayer() && vData.VJ_IsControllingNPC) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
@@ -819,7 +820,7 @@ function SWEP:PrimaryAttack(UseAlt)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttackEffects(owner)
-	local selfData = metaEntity.GetTable(self)
+	local selfData = funcGetTable(self)
 	if selfData.IsMeleeWeapon then return end
 	owner = owner or metaEntity.GetOwner(self)
 	if selfData.CustomOnPrimaryAttackEffects && selfData.CustomOnPrimaryAttackEffects(self, owner) == false then return end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -928,9 +929,9 @@ function SWEP:DoIdleAnimation()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:TranslateActivity(act)
-	local selfData = metaEntity.GetTable(self)
+	local selfData = funcGetTable(self)
 	local owner = metaEntity.GetOwner(self)
-	local ownerData = metaEntity.GetTable(owner)
+	local ownerData = funcGetTable(owner)
 	if ownerData.IsVJBaseSNPC then
 		local translation = ownerData.AnimationTranslations[act]
 		if translation then
@@ -1036,7 +1037,7 @@ function SWEP:GetWeaponCustomPosition(owner)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:MaintainWorldModel(selfData, owner)
-	selfData = selfData or metaEntity.GetTable(self)
+	selfData = selfData or funcGetTable(self)
 	owner = owner or metaEntity.GetOwner(self)
 	if IsValid(owner) && selfData.WorldModel_UseCustomPosition then
 		local wepPos, wepAng = selfData.GetWeaponCustomPosition(self, owner)
