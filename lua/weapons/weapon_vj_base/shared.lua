@@ -287,6 +287,8 @@ local metaEntity = FindMetaTable("Entity")
 local funcDrawModel = metaEntity.DrawModel
 local funcGetTable = metaEntity.GetTable
 
+local metaAngle = FindMetaTable("Angle")
+
 local vj_wep_muzzleflash = GetConVar("vj_wep_muzzleflash")
 local vj_wep_muzzleflash_light = GetConVar("vj_wep_muzzleflash_light")
 local vj_wep_shells = GetConVar("vj_wep_shells")
@@ -1022,17 +1024,17 @@ function SWEP:CanBePickedUpByNPCs()
 	return self.NPC_CanBePickedUp
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:GetWeaponCustomPosition(owner)
-	local selfData = self:GetTable()
-	local boneID = owner:LookupBone(selfData.WorldModel_CustomPositionBone)
+function SWEP:GetWeaponCustomPosition(owner, selfData)
+	selfData = selfData or funcGetTable(self)
+	local boneID = metaEntity.LookupBone(owner, selfData.WorldModel_CustomPositionBone)
 	if !boneID then return false end
 	local customPos = selfData.WorldModel_CustomPositionOrigin
 	local customAng = selfData.WorldModel_CustomPositionAngle
-	local pos, ang = owner:GetBonePosition(boneID)
-	ang:RotateAroundAxis(ang:Right(), customAng.x)
-	ang:RotateAroundAxis(ang:Up(), customAng.y)
-	ang:RotateAroundAxis(ang:Forward(), customAng.z)
-	pos = pos + (customPos.x * ang:Right() + customPos.y * ang:Forward() + customPos.z * ang:Up())
+	local pos, ang = metaEntity.GetBonePosition(owner, boneID)
+	metaAngle.RotateAroundAxis(ang, metaAngle.Right(ang), customAng.x)
+	metaAngle.RotateAroundAxis(ang, metaAngle.Up(ang), customAng.y)
+	metaAngle.RotateAroundAxis(ang, metaAngle.Forward(ang), customAng.z)
+	pos = pos + (customPos.x * metaAngle.Right(ang) + customPos.y * metaAngle.Forward(ang) + customPos.z * metaAngle.Up(ang))
 	return pos, ang
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1040,7 +1042,7 @@ function SWEP:MaintainWorldModel(selfData, owner)
 	selfData = selfData or funcGetTable(self)
 	owner = owner or metaEntity.GetOwner(self)
 	if IsValid(owner) && selfData.WorldModel_UseCustomPosition then
-		local wepPos, wepAng = selfData.GetWeaponCustomPosition(self, owner)
+		local wepPos, wepAng = selfData.GetWeaponCustomPosition(self, owner, selfData)
 		if wepPos then
 			metaEntity.SetPos(self, wepPos)
 			metaEntity.SetAngles(self, wepAng)
