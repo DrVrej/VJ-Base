@@ -3,14 +3,12 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
-VJ.AddPlugin("Addon name, Example: Dummy SNPCs", "Addon type(s), Example: NPC")
+VJ.AddPlugin("Addon name, Example: Dummy SNPCs", "Addon type(s), Example: NPC", "Version, Example: 1.0.0 OR just remove this parameter to not have a version")
 
 local spawnCategory = "VJ Dummy Category" -- Category, you can also set a category individually by replacing the spawnCategory with a string value
 	
-/* -- Comment box start
--- The following code is commented out so the game doesn't run it!
--- When copying one of the options below, make sure to put it outside of the comment box!
--- For more options / information navigate to the "lua/autorun/vj_controls.lua" file in VJ Base
+/* -- Example Registerations
+-- For full list of registeration functions and options, navigate to the "lua/autorun/vj_controls.lua" file in VJ Base
 
 VJ.AddNPC("Dummy SNPC", "npc_vj_dum_dummy", spawnCategory) -- Adds a NPC to the spawnmenu
 	-- Parameters:
@@ -58,4 +56,4 @@ util.PrecacheModel("models/example_model.mdl")
 -- ConVars --
 VJ.AddConVar("vj_example_convarname", 100)
 
-*/  -- Comment box end
+*/
