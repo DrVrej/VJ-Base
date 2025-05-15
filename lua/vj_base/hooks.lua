@@ -157,8 +157,9 @@ local entInfos = {
 }
 
 local ignoredNPCs = {npc_cranedriver = true, npc_missiledefense = true, monster_generic = true, monster_furniture = true, npc_furniture = true, npc_helicoptersensor = true, monster_gman = true, npc_grenade_frag = true, bullseye_strider_focus = true, npc_bullseye = true, npc_enemyfinder = true, hornet = true}
-local grenadeEnts = {npc_grenade_frag = true, grenade_hand = true, obj_spore = true, obj_grenade = true, obj_handgrenade = true, doom3_grenade = true, fas2_thrown_m67 = true, cw_grenade_thrown = true, obj_cpt_grenade = true, cw_flash_thrown = true, ent_hl1_grenade = true, rtbr_grenade_frag = true}
-local grenadeGrabbableEnts = {npc_grenade_frag = true, obj_spore = true, obj_handgrenade = true, obj_cpt_grenade = true, cw_grenade_thrown = true, cw_flash_thrown = true, cw_smoke_thrown = true, ent_hl1_grenade = true, rtbr_grenade_frag = true}
+local dangerEnts = {m9k_thrown_nitrox = true, m9k_nitro_vapor = true, m9k_nervegasnade = true, m9k_released_poison = true, m9k_mad_c4 = true}
+local grenadeEnts = {npc_grenade_frag = true, grenade_hand = true, obj_spore = true, obj_grenade = true, obj_handgrenade = true, doom3_grenade = true, fas2_thrown_m67 = true, cw_grenade_thrown = true, obj_cpt_grenade = true, cw_flash_thrown = true, ent_hl1_grenade = true, rtbr_grenade_frag = true, ent_ins_m67 = true, ent_ins_rgd5 = true, csgo_hegrenade_projectile = true, csgo_incgrenade_projectile = true, bb_throwncssfrag = true, ent_doimills = true, ent_doimk2 = true, ent_doino69 = true, ent_doistielhandgranate = true, m9k_thrown_m61 = true, m9k_thrown_sticky_grenade = true, sent_uh_grenade = true, stalker_grenade_f1_ent = true, stalker_grenade_rgd_ent = true}
+local grenadeGrabbableEnts = {npc_grenade_frag = true, obj_spore = true, obj_handgrenade = true, obj_cpt_grenade = true, cw_grenade_thrown = true, cw_flash_thrown = true, cw_smoke_thrown = true, ent_hl1_grenade = true, rtbr_grenade_frag = true, ent_ins_m67 = true, ent_ins_rgd5 = true, csgo_hegrenade_projectile = true, bb_throwncssfrag = true, ent_doimills = true, ent_doimk2 = true, ent_doino69 = true, ent_doistielhandgranate = true, m9k_thrown_m61 = true, sent_uh_grenade = true, stalker_grenade_f1_ent = true, stalker_grenade_rgd_ent = true}
 local attackableEnts = {prop_physics = true, prop_physics_multiplayer = true, prop_physics_respawnable = true, func_breakable = true, func_physbox = true, prop_door_rotating = true, item_item_crate = true, prop_glados_core = true, weapon_striderbuster = true}
 local destructibleEnts = {func_breakable_surf = true, sent_sakariashelicopter = true}
 --
@@ -230,6 +231,9 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 		end
 	else
 		-- Run for server AND client to make sure the tags are shared!
+		if dangerEnts[entClass] then
+			ent.VJ_ID_Danger = true
+		end
 		if grenadeEnts[entClass] then
 			ent.VJ_ID_Grenade = true
 			if grenadeGrabbableEnts[entClass] then
