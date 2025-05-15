@@ -166,9 +166,8 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 		self:AutoMovement(self:GetAnimTimeInterval())
 	end
 	
+	-- If we are currently running a schedule then run it otherwise call "SelectSchedule" to decide what to do next
 	local curSchedule = selfData.CurrentSchedule
-	
-	-- If we are currently running a schedule then run it otherwise call SelectSchedule to decide what to do next
 	if curSchedule then
 		-- Handle movement animations
 			-- 1. Make sure the movement activity is the current activity

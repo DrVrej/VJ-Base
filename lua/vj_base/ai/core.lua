@@ -22,11 +22,12 @@ AccessorFunc(ENT, "m_fMaxYawSpeed", "MaxYawSpeed", FORCE_NUMBER)
 
 -- Localized static values
 local metaEntity = FindMetaTable("Entity")
+local funcGetTable = metaEntity.GetTable
 local funcSetSaveValue = metaEntity.SetSaveValue
 local funcGetCycle = metaEntity.GetCycle
 local funcGetSequenceActivity = metaEntity.GetSequenceActivity
 local funcVisible = metaEntity.Visible
-local funcGetTable = metaEntity.GetTable
+local funcGetClass = metaEntity.GetClass
 
 local metaNPC = FindMetaTable("NPC")
 local funcGetIdealActivity = metaNPC.GetIdealActivity
@@ -247,7 +248,7 @@ function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 	end
 	if extraOptions.ShouldFade == true then
 		local fadeTime = extraOptions.ShouldFadeTime or 0
-		if ent:GetClass() == "prop_ragdoll" then
+		if funcGetClass(ent) == "prop_ragdoll" then
 			ent:Fire("FadeAndRemove", "", fadeTime)
 		else
 			ent:Fire("kill", "", fadeTime)
@@ -320,7 +321,7 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 	gib:SetModel(models)
 	gib:SetPos(extraOptions.Pos or (self:GetPos() + self:OBBCenter()))
 	gib:SetAngles(extraOptions.Ang or Angle(math.Rand(-180, 180), math.Rand(-180, 180), math.Rand(-180, 180)))
-	if gib:GetClass() == "obj_vj_gib" then
+	if funcGetClass(gib) == "obj_vj_gib" then
 		gib.BloodType = bloodType
 		if extraOptions.CollisionDecal != nil then
 			gib.CollisionDecal = extraOptions.CollisionDecal
@@ -344,9 +345,10 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 		phys:AddAngleVelocity(extraOptions.AngVel or Vector(math.Rand(-200, 200), math.Rand(-200, 200), math.Rand(-200, 200)))
 	end
 	if extraOptions.NoFade != true && vj_npc_gib_fade:GetInt() == 1 then
-		if gib:GetClass() == "obj_vj_gib" then timer.Simple(vj_npc_gib_fadetime:GetInt(), function() SafeRemoveEntity(gib) end)
-		elseif gib:GetClass() == "prop_ragdoll" then gib:Fire("FadeAndRemove", "", vj_npc_gib_fadetime:GetInt())
-		elseif gib:GetClass() == "prop_physics" then gib:Fire("kill", "", vj_npc_gib_fadetime:GetInt()) end
+		local gibClass = funcGetClass(gib)
+		if gibClass == "obj_vj_gib" then timer.Simple(vj_npc_gib_fadetime:GetInt(), function() SafeRemoveEntity(gib) end)
+		elseif gibClass == "prop_ragdoll" then gib:Fire("FadeAndRemove", "", vj_npc_gib_fadetime:GetInt())
+		elseif gibClass == "prop_physics" then gib:Fire("kill", "", vj_npc_gib_fadetime:GetInt()) end
 	end
 	if removeOnCorpseDelete then //self.Corpse:DeleteOnRemove(extraent)
 		if !self.DeathCorpse_ChildEnts then self.DeathCorpse_ChildEnts = {} end -- If it doesn't exist, then create it!
@@ -1495,7 +1497,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
 	local selfData = self:GetTable()
-	if selfData.VJ_DEBUG && GetConVar("vj_npc_debug_touch"):GetInt() == 1 then VJ.DEBUG_Print(self, "Touch", entity:GetClass()) end
+	if selfData.VJ_DEBUG && GetConVar("vj_npc_debug_touch"):GetInt() == 1 then VJ.DEBUG_Print(self, "Touch", funcGetClass(entity)) end
 	local funcCustom = self.OnTouch; if funcCustom then funcCustom(self, entity) end
 	if !VJ_CVAR_AI_ENABLED or selfData.VJ_IsBeingControlled then return end
 	
@@ -1588,7 +1590,7 @@ function ENT:Follow(ent, stopIfFollowing)
 	if (!isLiving) or (ent:Alive() && ((isPly && !VJ_CVAR_IGNOREPLAYERS) or (!isPly))) then
 		local followData = self.FollowData
 		-- Refusals
-		if isLiving && self:GetClass() != ent:GetClass() && (self:Disposition(ent) == D_HT or self:Disposition(ent) == D_NU) then -- Check for enemy/neutral
+		if isLiving && funcGetClass(self) != funcGetClass(ent) && (self:Disposition(ent) == D_HT or self:Disposition(ent) == D_NU) then -- Check for enemy/neutral
 			if isPly && self.CanChatMessage then
 				ent:PrintMessage(HUD_PRINTTALK, self:GetName() .. " isn't friendly so it won't follow you.")
 			end
@@ -1931,7 +1933,7 @@ end
 -----------------------------------------------------------]]
 function ENT:CheckRelationship(ent)
 	if ent:IsFlagSet(FL_NOTARGET) or !ent:Alive() or (ent:IsPlayer() && VJ_CVAR_IGNOREPLAYERS) then return D_NU end
-	if self:GetClass() == ent:GetClass() then return D_LI end
+	if funcGetClass(self) == funcGetClass(ent) then return D_LI end
 	local myDisp = self:Disposition(ent)
 	if myDisp == D_VJ_INTEREST then return D_HT end
 	return myDisp
@@ -2250,14 +2252,13 @@ end
 function ENT:Allies_CallHelp(dist)
 	local selfData = funcGetTable(self)
 	local ene = metaNPC.GetEnemy(self)
-	local enemsPos = metaEntity.GetPos(ene)
-	local myClass = metaEntity.GetClass(self)
+	local myClass = funcGetClass(self)
 	local myPos = metaEntity.GetPos(self)
 	local curTime = CurTime()
 	local isFirst = true -- Is this the first ent that received a call?
 	for _, ent in ipairs(ents.FindInSphere(myPos, dist or 800)) do
 		local entData = funcGetTable(ent)
-		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && ent:Alive() && (metaEntity.GetClass(ent) == myClass or metaNPC.Disposition(ent, self) == D_LI) && entData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && metaEntity.GetClass(ene) != metaEntity.GetClass(ent) && !IsValid(ent:GetEnemy()) then
+		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && metaEntity.Alive(ent) && (funcGetClass(ent) == myClass or metaNPC.Disposition(ent, self) == D_LI) && entData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && funcGetClass(ene) != funcGetClass(ent) && !IsValid(metaNPC.GetEnemy(ent)) then
 			-- If it's guarding and enemy is not visible, then don't call!
 			if entData.IsGuard && !funcVisible(ent, ene) then continue end
 
@@ -2265,7 +2266,7 @@ function ENT:Allies_CallHelp(dist)
 			if ((!eneIsPlayer && metaNPC.Disposition(ent, ene) != D_LI) or eneIsPlayer) then
 				-- Enemy too far away for ent
 				local entsPos = metaEntity.GetPos(ent)
-				if entsPos:Distance(enemsPos) > metaNPC.GetMaxLookDistance(ent) then
+				if entsPos:Distance(metaEntity.GetPos(ene)) > metaNPC.GetMaxLookDistance(ent) then
 					-- See if you can move to the ent's location to get closer
 					if !entData.IsFollowing && !entData.IsBusy(ent) then
 						-- If it's wandering, then just override it as it's not important
@@ -2321,10 +2322,10 @@ function ENT:Allies_Check(dist)
 	local allies = {}
 	local alliesNum = 0
 	local isPassive = self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE
-	local myClass = self:GetClass()
+	local myClass = funcGetClass(self)
 	for _, ent in ipairs(ents.FindInSphere(self:GetPos(), dist or 800)) do
 		local entData = ent:GetTable()
-		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && ent:Alive() && (ent:GetClass() == myClass or (ent:Disposition(self) == D_LI or entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) then
+		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && ent:Alive() && (funcGetClass(ent) == myClass or (ent:Disposition(self) == D_LI or entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) then
 			if isPassive then
 				if entData.Behavior == VJ_BEHAVIOR_PASSIVE or entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 					alliesNum = alliesNum + 1
@@ -2357,13 +2358,13 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 	formType = formType or "Random"
 	dist = dist or 800
 	limit = limit or 3
-	local myClass = self:GetClass()
+	local myClass = funcGetClass(self)
 	local it = 0
 	local curTime = CurTime()
 	for _, ent in ipairs(entsTbl or ents.FindInSphere(myPos, dist)) do
 		local entData = ent:GetTable()
-		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && ent:Alive() && (ent:GetClass() == myClass or ent:Disposition(self) == D_LI) && entData.Behavior != VJ_BEHAVIOR_PASSIVE && entData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !entData.IsFollowing && !entData.IsGuard && curTime > entData.TakingCoverT then
-			if onlyVis && !ent:Visible(self) then continue end
+		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && ent:Alive() && (funcGetClass(ent) == myClass or ent:Disposition(self) == D_LI) && entData.Behavior != VJ_BEHAVIOR_PASSIVE && entData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !entData.IsFollowing && !entData.IsGuard && curTime > entData.TakingCoverT then
+			if onlyVis && !funcVisible(ent, self) then continue end
 			if !IsValid(ent:GetEnemy()) && myPos:Distance(ent:GetPos()) < dist then
 				self.NextWanderTime = curTime + 8
 				entData.NextWanderTime = curTime + 8
@@ -2605,7 +2606,7 @@ function ENT:SpawnBloodPool(dmginfo, hitgroup, corpse)
 				local tr = util.TraceLine({
 					start = pos,
 					endpos = pos - vecZ30,
-					filter = corpse, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
+					filter = corpse,
 					mask = CONTENTS_SOLID
 				})
 				if tr.HitWorld && (tr.HitNormal == vecZ1) then // (tr.Fraction <= 0.405)
@@ -2683,7 +2684,7 @@ function ENT:PlayIdleSound(customSD, sdType, combatIdle)
 							if self:CheckRelationship(ent) == D_LI && !self:OnIdleDialogue(ent, "CheckEnt", false) then
 								foundEnt = ent
 							end
-						elseif ent:IsNPC() && !ent.Dead && ((self:GetClass() == ent:GetClass()) or (self:CheckRelationship(ent) == D_LI)) && self:Visible(ent) then
+						elseif ent:IsNPC() && !ent.Dead && ((funcGetClass(self) == funcGetClass(ent)) or (self:CheckRelationship(ent) == D_LI)) && funcVisible(self, ent) then
 							local hasDialogueAnswer = (ent.IsVJBaseSNPC and PICK(ent.SoundTbl_IdleDialogueAnswer)) or false
 							if !self:OnIdleDialogue(ent, "CheckEnt", hasDialogueAnswer) then
 								foundEnt = ent
@@ -2727,7 +2728,7 @@ function ENT:PlayIdleSound(customSD, sdType, combatIdle)
 						-- For the other NPC to answer back:
 						timer.Simple(dur + 0.3, function()
 							if IsValid(self) && IsValid(foundEnt) && !foundEnt:OnIdleDialogue(self, "Answer") then
-								local response = foundEnt:PlaySoundSystem("IdleDialogueAnswer")
+								local response = foundEnt:PlaySoundSystem("IdleDialogueAnswer") or 0
 								if response > 0 then -- If the ally responded, then make sure both SNPCs stand still & don't play another idle sound until the whole conversation is finished!
 									local curTime2 = CurTime()
 									selfData.NextIdleSoundT = curTime2 + response + 0.5
@@ -3204,7 +3205,7 @@ end
 function ENT:ValidateNoCollide(ent)
 	local noCollTbl = self.EntitiesToNoCollide
 	if noCollTbl then
-		local entClass = ent:GetClass()
+		local entClass = funcGetClass(ent)
 		for i = 1, #noCollTbl do
 			if noCollTbl[i] == entClass then
 				constraint.NoCollide(self, ent, 0, 0)

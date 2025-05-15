@@ -61,7 +61,7 @@ VJ.FACE_POSITION_VISIBLE			= 6 -- Currently attempting to face a specific positi
 
 -- NPC alert state
 VJ.ALERT_STATE_NONE					= false -- Not currently facing anything | DEFAULT
-VJ.ALERT_STATE_READY				= 1 -- Alerted but no enemy was ever seen since it got alerted usually because it heard or sensed something
+VJ.ALERT_STATE_READY				= 1 -- Alerted but no enemy has been seen since it got alerted usually because it heard or sensed something
 VJ.ALERT_STATE_ENEMY				= true -- Has seen an enemy since it got alerted
 
 -- NPC danger detected type (Used by human NPCs)
@@ -90,12 +90,12 @@ VJ.WEP_INVENTORY_MELEE				= 3 -- Currently using its melee weapon
 VJ.WEP_INVENTORY_ANTI_ARMOR			= 4 -- Currently using its anti-armor weapon
 
 -- NPC relationship memory
-VJ.MEM_OVERRIDE_DISPOSITION			= "override_disposition" -- Override the disposition towards the another entity | D_* enums
-VJ.MEM_OVERRIDE_PRIORITY			= "override_priority" -- Override the disposition priority towards the another entity | number
+VJ.MEM_OVERRIDE_DISPOSITION			= "override_disposition" -- Override the disposition towards another entity | D_* enums
+VJ.MEM_OVERRIDE_PRIORITY			= "override_priority" -- Override the disposition priority towards another entity | number
 VJ.MEM_HOSTILITY_LEVEL				= "hostility" -- Use to keep track of the hostility level towards a friendly entity | number
 VJ.MEM_CACHE_CLASSES				= "cache_classes" -- Cached "self.VJ_NPC_Class" | table | WARNING: Avoid editing, used internally
 VJ.MEM_CACHE_DISPOSITION			= "cache_disposition" -- Cached disposition, used alongside VJ.MEM_CACHE_CLASSES | D_* enums | WARNING: Avoid editing, used internally
-VJ.MEM_CACHE_ENT_TYPE				= "cache_ent_type" -- Cached value that holds the type of entity it is | 0 = Other, 1 = NPC, 2 = Player, 3 = NextBot
+VJ.MEM_CACHE_ENT_TYPE				= "cache_ent_type" -- Cached value of the entity type | 0 = Other, 1 = NPC, 2 = Player, 3 = NextBot | WARNING: Avoid editing, used internally
 
 -- Animation type
 VJ.ANIM_TYPE_NONE					= false -- No type detected including fail cases and resets | DEFAULT
@@ -139,7 +139,7 @@ VJ.PROJ_TYPE_PROP					= 2
 	-- Gravity: Enabled
 	-- Mass: Model's mass
 	-- Collision Group: COLLISION_GROUP_NONE
-	-- Triggers: Disabled (Can't touch noclipping players, Certain flying NPCs, etc.)
+	-- Triggers: Disabled (Can't touch noclipping players, certain flying NPCs, etc.)
 	-- Examples: Grenade
 
 -- Projectile collision behavior
@@ -250,7 +250,7 @@ COND_WEAPON_SIGHT_OCCLUDED			= 45
 ------ Tags / Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
-[Variable]						[Type]		[Description]
+[Name]							[Type]		[Description]
 
 -- Base types
 IsVJBaseSNPC					bool		It's inherited from a VJ NPC base
@@ -286,7 +286,7 @@ VJ_ID_Grenade					bool		Should it be detected as a grenade type of danger by NPC
 VJ_ID_Boss						bool		Large and/or boss entities (Ex: It won't receive melee knock backs)
 VJ_ID_Police					bool		Police officers, metrocops, etc.
 VJ_ID_Civilian					bool		Civilians, citizens, etc.
-VJ_ID_Headcrab					bool		Headcrabs
+VJ_ID_Headcrab					bool		Headcrabs!
 VJ_ID_Turret					bool		Turrets, sentry guns, etc.
 VJ_ID_Vehicle					bool		Cars, tanks, APCs, helicopters, planes, boats, etc.
 VJ_ID_Aircraft					bool		Helicopters, jets, planes, etc.
