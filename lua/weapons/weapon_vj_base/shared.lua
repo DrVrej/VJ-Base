@@ -554,15 +554,16 @@ function SWEP:NPC_CanFire(selfData, owner)
 	if (isVJHuman && IsValid(ene) && !ownerData.CanFireWeapon(owner, true, true)) or (selfData.NPC_StandingOnly && owner:IsMoving()) then
 		return false
 	end
-	local humanReadyToFire = (isVJHuman && (ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE or (ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND && VJ.IsCurrentAnim(owner, ownerData.WeaponAttackAnim))))
-	if humanReadyToFire or (!isVJHuman) then
+	if (isVJHuman && (ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE or (ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND && VJ.IsCurrentAnim(owner, ownerData.WeaponAttackAnim)))) or (!isVJHuman) then
 		local isControlled = ownerData.VJ_IsBeingControlled
 		-- For VJ Humans only, ammo check
 		if isVJHuman && ownerData.Weapon_CanReload && self:Clip1() <= 0 then -- No ammo!
 			if isControlled then ownerData.VJ_TheController:PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
 			if selfData.HasDryFireSound && !selfData.IsMeleeWeapon && CurTime() > selfData.NPC_NextDrySoundT then
 				local sdTbl = VJ.PICK(selfData.DryFireSound)
-				if sdTbl != false then owner:EmitSound(sdTbl, 80, math.random(selfData.DryFireSoundPitch.a, selfData.DryFireSoundPitch.b), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter) end
+				if sdTbl then
+					owner:EmitSound(sdTbl, 80, math.random(selfData.DryFireSoundPitch.a, selfData.DryFireSoundPitch.b), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter)
+				end
 				if selfData.NPC_NextPrimaryFire != false then
 					selfData.NPC_NextDrySoundT = CurTime() + selfData.NPC_NextPrimaryFire
 				end
@@ -612,7 +613,7 @@ function SWEP:NPCShoot_Primary()
 					self:NPC_SecondaryFire()
 					if self.NPC_HasSecondaryFireSound then
 						local fireSd = VJ.PICK(self.NPC_SecondaryFireSound)
-						if fireSd != false then
+						if fireSd then
 							self:EmitSound(fireSd, self.NPC_SecondaryFireSoundLevel, math.random(90, 110), 1, CHAN_WEAPON, 0, 0, VJ_RecipientFilter)
 						end
 					end
@@ -649,7 +650,7 @@ function SWEP:NPCShoot_Primary()
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:PrimaryAttack(UseAlt)
+function SWEP:PrimaryAttack()
 	//if self:GetOwner():KeyDown(IN_RELOAD) then return end
 	//self:GetOwner():SetFOV(45, 0.3)
 	//if !IsFirstTimePredicted() then return end
@@ -675,7 +676,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	if !selfData.CanPrimaryAttack(self) then return end
 	if selfData.OnPrimaryAttack(self, "Init") == true then return end
 
-	local ownersPos = metaEntity.GetPos( owner )
+	local ownersPos = metaEntity.GetPos(owner)
 	
 	if isNPC && ownerData.IsVJBaseSNPC then
 		timer.Simple(selfData.NPC_ExtraFireSoundTime, function()
@@ -688,14 +689,14 @@ function SWEP:PrimaryAttack(UseAlt)
 	-- Firing Sounds
 	if SERVER then
 		local fireSd = VJ.PICK(selfData.Primary.Sound)
-		if fireSd != false then
+		if fireSd then
 			self:EmitSound(fireSd, selfData.Primary.SoundLevel, math.random(selfData.Primary.SoundPitch.a, selfData.Primary.SoundPitch.b), selfData.Primary.SoundVolume, CHAN_WEAPON, 0, 0, VJ_RecipientFilter)
 			//EmitSound(fireSd, ownersPos, owner:EntIndex(), CHAN_WEAPON, 1, 140, 0, 100, 0, filter)
 			//sound.Play(fireSd, ownersPos, self.Primary.SoundLevel, math.random(self.Primary.SoundPitch.a, self.Primary.SoundPitch.b), self.Primary.SoundVolume)
 		end
 		if selfData.Primary.HasDistantSound then
 			local fireFarSd = VJ.PICK(selfData.Primary.DistantSound)
-			if fireFarSd != false then
+			if fireFarSd then
 				-- Use "CHAN_AUTO" instead of "CHAN_WEAPON" otherwise it will override primary firing sound because it's also "CHAN_WEAPON"
 				self:EmitSound(fireFarSd, selfData.Primary.DistantSoundLevel, math.random(selfData.Primary.DistantSoundPitch.a, selfData.Primary.DistantSoundPitch.b), selfData.Primary.DistantSoundVolume, CHAN_AUTO, 0, 0, VJ_RecipientFilter)
 			end
@@ -709,41 +710,36 @@ function SWEP:PrimaryAttack(UseAlt)
 	
 	-- MELEE WEAPON
 	if selfData.IsMeleeWeapon then
-		local meleeHitEnt = false
-		local ownersClass = metaEntity.GetClass(owner)
-		for _, v in ipairs(ents.FindInSphere(ownersPos, selfData.MeleeWeaponDistance + 20)) do
-			local vData = funcGetTable(v)
-			local vsClass = metaEntity.GetClass(v)
-
-			if (vData.IsVJBaseBullseye && vData.VJ_IsBeingControlled) or (v:IsPlayer() && vData.VJ_IsControllingNPC) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
-
-			local hittingPlayerOwner = isPly && (v == owner)
-			local npcHittingInvalid = isNPC && (v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS) or v:IsNextBot()) && (owner:Disposition(v) != D_LI) && (v != owner) && (vsClass != ownersClass) or (vsClass == "prop_physics") or vData.VJ_ID_Attackable or vData.VJ_ID_Destructible && (owner:GetForward():Dot((v:GetPos() - ownersPos):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius)))
-			if !hittingPlayerOwner or !npcHittingInvalid then
+		local meleeHit = false
+		for _, ent in ipairs(ents.FindInSphere(ownersPos, selfData.MeleeWeaponDistance + 20)) do
+			local entData = funcGetTable(ent)
+			if (entData.IsVJBaseBullseye && entData.VJ_IsBeingControlled) or (ent:IsPlayer() && entData.VJ_IsControllingNPC) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
+			if ent != owner && (isPly or (isNPC && (ent:IsNPC() or (ent:IsPlayer() && ent:Alive() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot() or entData.VJ_ID_Attackable or entData.VJ_ID_Destructible) && owner:Disposition(ent) != D_LI && ent:GetClass() != owner:GetClass() && (owner:GetForward():Dot((ent:GetPos() - ownersPos):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius))))) then
 				local dmginfo = DamageInfo()
-				dmginfo:SetDamage(isNPC and ownerData.ScaleByDifficulty(owner, selfData.Primary.Damage) or selfData.Primary.Damage)
-				if v:IsNPC() or v:IsPlayer() then dmginfo:SetDamageForce(owner:GetForward() * ((dmginfo:GetDamage() + 100) * 70)) end
+				local dmgAmount = isNPC and ownerData.ScaleByDifficulty(owner, selfData.Primary.Damage) or selfData.Primary.Damage
+				dmginfo:SetDamage(dmgAmount)
+				if ent.VJ_ID_Living then dmginfo:SetDamageForce(owner:GetForward() * ((dmgAmount + 100) * 70)) end
 				dmginfo:SetInflictor(owner)
 				dmginfo:SetAttacker(owner)
 				dmginfo:SetDamageType(DMG_CLUB)
-				VJ.DamageSpecialEnts(owner, v, dmginfo)
-				v:TakeDamageInfo(dmginfo, owner)
-				if v:IsPlayer() then
-					v:ViewPunch(Angle(math.random(-1, 1) * 10, math.random(-1, 1) * 10, math.random(-1, 1) * 10))
+				VJ.DamageSpecialEnts(owner, ent, dmginfo)
+				ent:TakeDamageInfo(dmginfo, owner)
+				if ent:IsPlayer() then
+					ent:ViewPunch(Angle(math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount))
 				end
-				selfData.OnPrimaryAttack(self, "MeleeHit", v)
-				meleeHitEnt = true
+				selfData.OnPrimaryAttack(self, "MeleeHit", ent)
+				meleeHit = true
 			end
 		end
-		if meleeHitEnt then
+		if meleeHit then
 			local meleeSd = VJ.PICK(selfData.MeleeWeaponSound_Hit)
-			if meleeSd != false then
+			if meleeSd then
 				self:EmitSound(meleeSd, 70, math.random(90, 100), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter)
 			end
 		else
 			if owner.IsVJBaseSNPC then owner:OnMeleeAttackExecute("Miss") end
 			local meleeSd = VJ.PICK(selfData.MeleeWeaponSound_Miss)
-			if meleeSd != false then
+			if meleeSd then
 				self:EmitSound(meleeSd, 70, math.random(90, 100), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter)
 			end
 		end
