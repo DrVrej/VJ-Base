@@ -3820,7 +3820,7 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 		if getAllies then
 			for _, ally in ipairs(getAllies) do
 				local allyEne = ally:GetEnemy()
-				if IsValid(allyEne) && (curTime - ally.EnemyData.VisibleTime) < selfData.EnemyTimeout && allyEne:Alive() && self:CheckRelationship(allyEne) == D_HT then
+				if IsValid(allyEne) && (curTime - ally.EnemyData.VisibleTime) < selfData.EnemyTimeout && allyEne:Alive() && self:GetPos():Distance(allyEne:GetPos()) <= self:GetMaxLookDistance() && self:CheckRelationship(allyEne) == D_HT then
 					selfData.AllowWeaponOcclusionDelay = false
 					self:ForceSetEnemy(allyEne, false)
 					eneData.VisibleTime = curTime -- Reset the time otherwise it will run "ResetEnemy" none-stop!

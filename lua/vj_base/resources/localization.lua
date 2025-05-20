@@ -123,7 +123,7 @@ local strings_english = {
 	
 	-- NPC AI Settings
 	["vjbase.menu.npc.settings.ai"] = "AI",
-	["vjbase.menu.npc.settings.ai.sightdistance"] = "Sight Distance:",
+	["vjbase.menu.npc.settings.ai.sightdistance"] = "Sight Distance Override:",
 	["vjbase.menu.npc.settings.ai.sightdistance.label"] = "NPCs have their own distances, this will make them all the same! (0 = Original)",
 	["vjbase.menu.npc.settings.ai.sightxray"] = "X-Ray Vision",
 	["vjbase.menu.npc.settings.ai.sightxray.label"] = "They will see through walls & have a 360 FOV",
@@ -194,7 +194,7 @@ local strings_english = {
 	["vjbase.menu.npc.settings.gen.lootdrops"] = "Loot Drops On Death",
 	["vjbase.menu.npc.settings.gen.health.label"] = "Health Settings:",
 	["vjbase.menu.npc.settings.gen.health.god"] = "God Mode (Won't take any damage)",
-	["vjbase.menu.npc.settings.gen.health.override"] = "Health:",
+	["vjbase.menu.npc.settings.gen.health.override"] = "Health Override:",
 	["vjbase.menu.npc.settings.gen.health.override.label"] = "Default: 0 | Total: 9 digits",
 	["vjbase.menu.npc.settings.gen.health.blood.vfx"] = "Blood VFX",
 	["vjbase.menu.npc.settings.gen.health.blood.vfx.label"] = "Blood particles, decals, pools etc.",

@@ -173,9 +173,7 @@ end
 		- max = If set, the ConVar cannot be changed to a number higher than this value
 -----------------------------------------------------------]]
 VJ.AddConVar = function(name, defValue, flags, helpText, min, max)
-	if !ConVarExists(name) then
-		CreateConVar(name, defValue, flags or FCVAR_NONE, helpText or "", min, max)
-	end
+	return CreateConVar(name, defValue, flags or FCVAR_NONE, helpText or "", min, max)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -187,9 +185,7 @@ end
 		- max = If set, the ConVar cannot be changed to a number higher than this value
 -----------------------------------------------------------]]
 VJ.AddClientConVar = function(name, defValue, helpText, min, max)
-	if !ConVarExists(name) then
-		CreateClientConVar(name, defValue, true, true, helpText or "", min, max)
-	end
+	return CreateClientConVar(name, defValue, true, true, helpText or "", min, max)
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Backwards Compatibility ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

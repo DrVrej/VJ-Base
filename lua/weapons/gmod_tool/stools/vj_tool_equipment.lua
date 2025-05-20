@@ -80,6 +80,20 @@ if CLIENT then
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+-- For saves and duplications
+local function ApplyWeapon(ply, ent, data)
+	if data then
+		local className = data[1]
+		if className then
+			ent:Give(className)
+			if SERVER then
+				duplicator.StoreEntityModifier(ent, "vj_tool_equipment", data)
+			end
+		end
+	end
+end
+duplicator.RegisterEntityModifier("vj_tool_equipment", ApplyWeapon)
+---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
@@ -87,7 +101,7 @@ function TOOL:LeftClick(tr)
 	if IsValid(ent:GetActiveWeapon()) then ent:GetActiveWeapon():Remove() end
 	local equipment = GetConVarString("vj_tool_equipment_weaponclass")
 	if equipment != "None" then
-		ent:Give(equipment)
+		ApplyWeapon(self:GetOwner(), ent, {equipment})
 	end
 	return true
 end

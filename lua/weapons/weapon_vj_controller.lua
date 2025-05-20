@@ -32,50 +32,52 @@ SWEP.Secondary.Ammo = "none"
 
 SWEP.DeploySound = {"physics/flesh/flesh_squishy_impact_hard1.wav", "physics/flesh/flesh_squishy_impact_hard2.wav", "physics/flesh/flesh_squishy_impact_hard3.wav", "physics/flesh/flesh_squishy_impact_hard4.wav"}
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local fireAnim = ACT_VM_SECONDARYATTACK
+--
 function SWEP:PrimaryAttack()
 	local owner = self:GetOwner()
 	if CLIENT or owner:IsNPC() then return end
 	
 	owner:SetAnimation(PLAYER_ATTACK1)
-	local anim = ACT_VM_SECONDARYATTACK
-	local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
-	self:SendWeaponAnim(anim)
-	self.PLY_NextIdleAnimT = CurTime() + animTime
-	self.PLY_NextReloadT = CurTime() + animTime
-	self:SetNextPrimaryFire(CurTime() + animTime)
+	local delayTime = CurTime() + VJ.AnimDuration(owner:GetViewModel(), fireAnim)
+	self:SendWeaponAnim(fireAnim)
+	self.PLY_NextIdleAnimT = delayTime
+	self.PLY_NextReloadT = delayTime
+	self:SetNextPrimaryFire(delayTime)
 	
 	local fireSd = VJ.PICK(self.Primary.Sound)
 	if fireSd != false then
 		sound.Play(fireSd, owner:GetPos(), self.Primary.SoundLevel, math.random(self.Primary.SoundPitch.a, self.Primary.SoundPitch.b), self.Primary.SoundVolume)
 	end
 	
-	local tr =  util.TraceLine(util.GetPlayerTrace(owner))
-	if tr.Entity && IsValid(tr.Entity) then
-		if tr.Entity:IsPlayer() then
+	local tr = util.TraceLine(util.GetPlayerTrace(owner))
+	local trEnt = tr.Entity
+	if IsValid(trEnt) then
+		if trEnt:IsPlayer() then
 			owner:ChatPrint("That's a player dumbass.")
 			return
-		elseif tr.Entity:GetClass() == "prop_ragdoll" then
+		elseif trEnt:GetClass() == "prop_ragdoll" then
 			owner:ChatPrint("You are about to become that corpse.")
 			return
-		elseif tr.Entity:GetClass() == "prop_physics" then
+		elseif trEnt:GetClass() == "prop_physics" then
 			owner:ChatPrint("Uninstall your game. Now.")
 			return
-		elseif !tr.Entity:IsNPC() then
+		elseif !trEnt:IsNPC() then
 			owner:ChatPrint("This isn't an NPC, therefore you can't control it.")
 			return
-		elseif tr.Entity.VJ_IsBeingControlled == true then
+		elseif trEnt.VJ_IsBeingControlled then
 			owner:ChatPrint("You can't control this NPC, it's already being controlled by someone else.")
 			return
 		end
-		if !tr.Entity.IsVJBaseSNPC then
+		if !trEnt.IsVJBaseSNPC then
 			owner:ChatPrint("NOTE: NPC Controller is mainly made for VJ Base NPCs!")
 		end
-		local SpawnControllerObject = ents.Create("obj_vj_controller")
-		SpawnControllerObject.VJCE_Player = owner
-		SpawnControllerObject:SetControlledNPC(tr.Entity)
-		SpawnControllerObject:Spawn()
-		//SpawnControllerObject:Activate()
-		SpawnControllerObject:StartControlling()
+		local ent_controller = ents.Create("obj_vj_controller")
+		ent_controller.VJCE_Player = owner
+		ent_controller:SetControlledNPC(trEnt)
+		ent_controller:Spawn()
+		//ent_controller:Activate()
+		ent_controller:StartControlling()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
