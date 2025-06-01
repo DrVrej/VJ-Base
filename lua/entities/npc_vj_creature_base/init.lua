@@ -2891,7 +2891,6 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 			for _, ally in ipairs(getAllies) do
 				local allyEne = ally:GetEnemy()
 				if IsValid(allyEne) && (curTime - ally.EnemyData.VisibleTime) < selfData.EnemyTimeout && allyEne:Alive() && self:GetPos():Distance(allyEne:GetPos()) <= self:GetMaxLookDistance() && self:CheckRelationship(allyEne) == D_HT then
-					print(self, "ResetEnemy: Found an ally with a valid enemy")
 					self:ForceSetEnemy(allyEne, false)
 					eneData.VisibleTime = curTime -- Reset the time otherwise it will run "ResetEnemy" none-stop!
 					eneData.Reset = false
