@@ -14,6 +14,10 @@ local table_remove = table.remove
 
 local vj_npc_wep_ply_pickup = GetConVar("vj_npc_wep_ply_pickup")
 
+local metaEntity = FindMetaTable("Entity")
+local funcGetClass = metaEntity.GetClass
+local funcGetTable = metaEntity.GetTable
+
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local entInfos = {
 	-- Resistance NPCs
@@ -164,66 +168,70 @@ local attackableEnts = {prop_physics = true, prop_physics_multiplayer = true, pr
 local destructibleEnts = {func_breakable_surf = true, sent_sakariashelicopter = true}
 --
 hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
-	local entClass = ent:GetClass()
+	local entClass = funcGetClass(ent)
+	local entData = funcGetTable(ent)
 	local entInfo = entInfos[entClass]
-	
-	if ent:IsNPC() or ent:IsNextBot() then
-		ent.VJ_ID_Living = true
+
+	local isNPC = ent:IsNPC()
+
+	if isNPC or ent:IsNextBot() then
+		entData.VJ_ID_Living = true
 		if SERVER && !ignoredNPCs[entClass] then
-			local entIsVJ = ent.IsVJBaseSNPC
+			local entIsVJ = entData.IsVJBaseSNPC
 			if entIsVJ then
-				ent.NextProcessT = CurTime() + math.Rand(0.15, 1)
+				entData.NextProcessT = CurTime() + math.Rand(0.15, 1)
 			elseif entInfo then
-				ent.IsDefaultNPC = true
+				entData.IsDefaultNPC = true
 			end
 			-- Wait 0.1 seconds to make sure the NPC is initialized properly (key values, spawn flags, etc.)
 			timer.Simple(0.1, function()
-				if IsValid(ent) then
-					if entIsVJ then
-						if !ent.RelationshipEnts then ent.RelationshipEnts = {} end
-						if !ent.RelationshipMemory then ent.RelationshipMemory = {} end
-					-- Apply the appropriate class for non-VJ NPCs
-					else
-						local entInfoClass = false
-						if entInfo then
-							entInfoClass = entInfo.classNPC
-							if entInfo.func then
-								local classOverride = entInfo.func(ent)
-								if classOverride then
-									entInfoClass = classOverride
-								end
-							end
-						end
-						if !ent.VJ_NPC_Class && entInfoClass then
-							ent.VJ_NPC_Class = {entInfoClass}
-							if entInfoClass == "CLASS_PLAYER_ALLY" then
-								ent.AlliedWithPlayerAllies = true
+				if !IsValid(ent) then return end
+				if entIsVJ then
+					if !entData.RelationshipEnts then entData.RelationshipEnts = {} end
+					if !entData.RelationshipMemory then entData.RelationshipMemory = {} end
+				-- Apply the appropriate class for non-VJ NPCs
+				else
+					local entInfoClass = false
+					if entInfo then
+						entInfoClass = entInfo.classNPC
+						if entInfo.func then
+							local classOverride = entInfo.func(ent)
+							if classOverride then
+								entInfoClass = classOverride
 							end
 						end
 					end
-					
-					local cvSeePlys = !VJ_CVAR_IGNOREPLAYERS
-					local entEneCount = 1
-					local entIsNature = false
-					if ent:IsNPC() && ent.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
-						entIsNature = true
+					if !entData.VJ_NPC_Class && entInfoClass then
+						entData.VJ_NPC_Class = {entInfoClass}
+						if entInfoClass == "CLASS_PLAYER_ALLY" then
+							entData.AlliedWithPlayerAllies = true
+						end
 					end
-					for _, other in ipairs(ents.GetAll()) do
-						if other.VJ_ID_Living && !ignoredNPCs[other:GetClass()] then
-							-- Add enemies to the created entity if it's a VJ Base NPC
-							if entIsVJ then
-								ent:ValidateNoCollide(other)
-								if (other:IsNPC() && entClass != other:GetClass() && other.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) or (other:IsPlayer() && cvSeePlys) or (other:IsNextBot()) then
-									ent.RelationshipEnts[entEneCount] = other
-									if !ent.RelationshipMemory[other] then ent.RelationshipMemory[other] = {} end
-									entEneCount = entEneCount + 1
-								end
+				end
+
+				local cvSeePlys = !VJ_CVAR_IGNOREPLAYERS
+				local entEneCount = 1
+				local entIsNature = false
+				if isNPC && entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
+					entIsNature = true
+				end
+				for _, other in ents.Iterator() do
+					local otherClass = funcGetClass(other)
+					local otherData = funcGetTable(other)
+					if otherData.VJ_ID_Living && !ignoredNPCs[otherClass] then
+						-- Add enemies to the created entity if it's a VJ Base NPC
+						if entIsVJ then
+							entData.ValidateNoCollide(ent, other)
+							if (other:IsNPC() && entClass != otherClass && otherData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) or (other:IsPlayer() && cvSeePlys) or (other:IsNextBot()) then
+								entData.RelationshipEnts[entEneCount] = other
+								if !entData.RelationshipMemory[other] then entData.RelationshipMemory[other] = {} end
+								entEneCount = entEneCount + 1
 							end
-							-- Add the created entity to the list of possible enemies of existing VJ Base NPCs
-							if !entIsNature && other.IsVJBaseSNPC && entClass != other:GetClass() then
-								other.RelationshipEnts[#other.RelationshipEnts + 1] = ent
-								if !other.RelationshipMemory[ent] then other.RelationshipMemory[ent] = {} end
-							end
+						end
+						-- Add the created entity to the list of possible enemies of existing VJ Base NPCs
+						if !entIsNature && otherData.IsVJBaseSNPC && entClass != otherClass then
+							otherData.RelationshipEnts[#otherData.RelationshipEnts + 1] = ent
+							if !otherData.RelationshipMemory[ent] then otherData.RelationshipMemory[ent] = {} end
 						end
 					end
 				end
@@ -232,19 +240,19 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 	else
 		-- Run for server AND client to make sure the tags are shared!
 		if dangerEnts[entClass] then
-			ent.VJ_ID_Danger = true
+			entData.VJ_ID_Danger = true
 		end
 		if grenadeEnts[entClass] then
-			ent.VJ_ID_Grenade = true
+			entData.VJ_ID_Grenade = true
 			if grenadeGrabbableEnts[entClass] then
-				ent.VJ_ID_Grabbable = true
+				entData.VJ_ID_Grabbable = true
 			end
 		end
 		if attackableEnts[entClass] then
-			ent.VJ_ID_Attackable = true
+			entData.VJ_ID_Attackable = true
 		end
-		if destructibleEnts[entClass] or ent.IsScar then
-			ent.VJ_ID_Destructible = true
+		if destructibleEnts[entClass] or entData.IsScar then
+			entData.VJ_ID_Destructible = true
 		end
 	end
 end)
