@@ -258,6 +258,7 @@ function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 		self.Corpse.ChildEnts[#self.Corpse.ChildEnts + 1] = ent
 	end
 	if (customFunc) then customFunc(ent) end
+	return ent
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -355,6 +356,7 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 		self.DeathCorpse_ChildEnts[#self.DeathCorpse_ChildEnts + 1] = gib
 	end
 	if (customFunc) then customFunc(gib) end
+	return gib
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[

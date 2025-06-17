@@ -15,7 +15,6 @@ SWEP.ReplacementWeapon = "weapon_crowbar"
 SWEP.WorldModel = "models/weapons/w_crowbar.mdl"
 SWEP.HoldType = "melee"
 
-SWEP.NPC_NextPrimaryFire = 1
 SWEP.NPC_TimeUntilFire = 0.4
 
 SWEP.Primary.Damage = 20

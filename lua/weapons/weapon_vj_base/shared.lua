@@ -33,8 +33,7 @@ SWEP.WorldModel_CustomPositionBone = "ValveBiped.Bip01_R_Hand" -- The bone it wi
 ------ NPC Only ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- Set this to false to disable the timer automatically running the firing code, this allows for event-based NPCs to fire at their own pace:
-SWEP.NPC_NextPrimaryFire = 0.11 -- RPM of the weapon in seconds | Calculation: 60 / RPM
-	-- Note: Melee weapons automatically change this number!
+SWEP.NPC_NextPrimaryFire = 0.11 -- RPM of the weapon in seconds | Calculation: 60 / RPM | Melee weapons automatically change this number!
 SWEP.NPC_TimeUntilFire = 0 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_TimeUntilFireExtraTimers = {} -- Extra timers, which will make the gun fire again! | The seconds are counted after the self.NPC_TimeUntilFire!
 SWEP.NPC_CustomSpread = 1 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
@@ -540,7 +539,7 @@ function SWEP:NPC_Think()
 	selfData.MaintainWorldModel(self, selfData, owner)
 	selfData.OnThink(self)
 
-	if selfData.NPC_NextPrimaryFire && CurTime() > selfData.NPC_NextPrimaryFireT && selfData.NPC_CanFire(self, selfData, owner) then
+	if !selfData.IsMeleeWeapon && selfData.NPC_NextPrimaryFire && CurTime() > selfData.NPC_NextPrimaryFireT && selfData.NPC_CanFire(self, selfData, owner) then
 		selfData.NPCShoot_Primary(self)
 	end
 end
@@ -669,7 +668,10 @@ function SWEP:PrimaryAttack()
 	if isNPC && !ownerData.VJ_IsBeingControlled && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return end
 	if !selfData.IsMeleeWeapon && ((isPly && !selfData.Primary.AllowInWater && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then
 		if SERVER then
-			owner:EmitSound(VJ.PICK(selfData.DryFireSound), selfData.DryFireSoundLevel, math.random(selfData.DryFireSoundPitch.a, selfData.DryFireSoundPitch.b))
+			local dryFireSound = VJ.PICK(selfData.DryFireSound)
+			if dryFireSound then
+				owner:EmitSound(dryFireSound, selfData.DryFireSoundLevel, math.random(selfData.DryFireSoundPitch.a, selfData.DryFireSoundPitch.b))
+			end
 		end
 		return
 	end
@@ -687,19 +689,17 @@ function SWEP:PrimaryAttack()
 	end
 	
 	-- Firing Sounds
-	if SERVER then
-		local fireSd = VJ.PICK(selfData.Primary.Sound)
-		if fireSd then
-			self:EmitSound(fireSd, selfData.Primary.SoundLevel, math.random(selfData.Primary.SoundPitch.a, selfData.Primary.SoundPitch.b), selfData.Primary.SoundVolume, CHAN_WEAPON, 0, 0, VJ_RecipientFilter)
-			//EmitSound(fireSd, ownersPos, owner:EntIndex(), CHAN_WEAPON, 1, 140, 0, 100, 0, filter)
-			//sound.Play(fireSd, ownersPos, self.Primary.SoundLevel, math.random(self.Primary.SoundPitch.a, self.Primary.SoundPitch.b), self.Primary.SoundVolume)
-		end
-		if selfData.Primary.HasDistantSound then
-			local fireFarSd = VJ.PICK(selfData.Primary.DistantSound)
-			if fireFarSd then
-				-- Use "CHAN_AUTO" instead of "CHAN_WEAPON" otherwise it will override primary firing sound because it's also "CHAN_WEAPON"
-				self:EmitSound(fireFarSd, selfData.Primary.DistantSoundLevel, math.random(selfData.Primary.DistantSoundPitch.a, selfData.Primary.DistantSoundPitch.b), selfData.Primary.DistantSoundVolume, CHAN_AUTO, 0, 0, VJ_RecipientFilter)
-			end
+	local fireSd = VJ.PICK(selfData.Primary.Sound)
+	if fireSd then
+		self:EmitSound(fireSd, selfData.Primary.SoundLevel, math.random(selfData.Primary.SoundPitch.a, selfData.Primary.SoundPitch.b), selfData.Primary.SoundVolume, CHAN_WEAPON, 0, 0, VJ_RecipientFilter)
+		//EmitSound(fireSd, ownersPos, owner:EntIndex(), CHAN_WEAPON, 1, 140, 0, 100, 0, filter)
+		//sound.Play(fireSd, ownersPos, self.Primary.SoundLevel, math.random(self.Primary.SoundPitch.a, self.Primary.SoundPitch.b), self.Primary.SoundVolume)
+	end
+	if selfData.Primary.HasDistantSound then
+		local fireFarSd = VJ.PICK(selfData.Primary.DistantSound)
+		if fireFarSd then
+			-- Use "CHAN_AUTO" instead of "CHAN_WEAPON" otherwise it will override primary firing sound because it's also "CHAN_WEAPON"
+			self:EmitSound(fireFarSd, selfData.Primary.DistantSoundLevel, math.random(selfData.Primary.DistantSoundPitch.a, selfData.Primary.DistantSoundPitch.b), selfData.Primary.DistantSoundVolume, CHAN_AUTO, 0, 0, VJ_RecipientFilter)
 		end
 	end
 	
@@ -752,6 +752,8 @@ function SWEP:PrimaryAttack()
 				bullet.TracerName = selfData.Primary.TracerType
 				bullet.Force = selfData.Primary.Force
 				bullet.AmmoType = selfData.Primary.Ammo
+				bullet.Attacker = owner
+				bullet.Inflictor = self -- Sets both the GetInflictor and GetWeapon for the damage info
 
 				-- Bullet spawn position & spread & damage
 				if isPly then
@@ -785,8 +787,6 @@ function SWEP:PrimaryAttack()
 				
 				-- Callback
 				bullet.Callback = function(attacker, tr, dmginfo)
-					dmginfo:SetWeapon(self)
-					dmginfo:SetInflictor(self)
 					return selfData.OnPrimaryAttack_BulletCallback(self, attacker, tr, dmginfo)
 				end
 			owner:FireBullets(bullet)

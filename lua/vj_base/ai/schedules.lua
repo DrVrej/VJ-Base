@@ -275,7 +275,7 @@ function ENT:OnTaskFailed(failCode, failString)
 						//self:SelectSchedule()
 						//self:ClearCondition(COND_TASK_FAILED) -- Won't do anything, engine will set COND_TASK_FAILED right after
 					end
-					if failCode != 14 then -- Skip this part for "FAIL_NO_ROUTE_ILLEGAL" to allow things like player model movement to work
+					if failCode != 14 or (failCode == 14 && !self.UsePoseParameterMovement) then -- Skip this part for "FAIL_NO_ROUTE_ILLEGAL" to allow things like player model movement to work
 						self:ClearGoal() -- Otherwise we may get stuck in movement (if schedule had a movement!)
 						self:NextTask(curSchedule) -- Attempt to move on to the next task!
 					end

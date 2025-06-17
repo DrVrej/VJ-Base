@@ -3714,6 +3714,7 @@ function ENT:SelectSchedule()
 								if curTime > selfData.NextMeleeWeaponAttackT && VJ.AnimExists(self, finalAnim) then // && !VJ.IsCurrentAnim(self, finalAnim)
 									local animDur = VJ.AnimDuration(self, finalAnim)
 									wep.NPC_NextPrimaryFire = animDur -- Make melee weapons dynamically change the next primary fire
+									wep:NPCShoot_Primary()
 									VJ.EmitSound(self, wep.NPC_BeforeFireSound, wep.NPC_BeforeFireSoundLevel, math.Rand(wep.NPC_BeforeFireSoundPitch.a, wep.NPC_BeforeFireSoundPitch.b))
 									selfData.NextMeleeWeaponAttackT = curTime + animDur
 									selfData.WeaponAttackAnim = finalAnim
