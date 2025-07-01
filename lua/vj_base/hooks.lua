@@ -171,7 +171,6 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 	local entClass = funcGetClass(ent)
 	local entData = funcGetTable(ent)
 	local entInfo = entInfos[entClass]
-
 	local isNPC = ent:IsNPC()
 
 	if isNPC or ent:IsNextBot() then
@@ -229,7 +228,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 							end
 						end
 						-- Add the created entity to the list of possible enemies of existing VJ Base NPCs
-						if !entIsNature && otherData.IsVJBaseSNPC && entClass != otherClass then
+						if !entIsNature && entClass != otherClass && otherData.IsVJBaseSNPC then
 							otherData.RelationshipEnts[#otherData.RelationshipEnts + 1] = ent
 							if !otherData.RelationshipMemory[ent] then otherData.RelationshipMemory[ent] = {} end
 						end
