@@ -130,8 +130,8 @@ function ENT:Initialize()
 				phys:EnableGravity(true)
 				phys:EnableDrag(false)
 			elseif projType == VJ.PROJ_TYPE_PROP then
-				phys:EnableDrag(true)
 				phys:EnableGravity(true)
+				phys:EnableDrag(true)
 			end
 			//phys:AddGameFlag(FVPHYSICS_NO_IMPACT_DMG)
 			phys:SetBuoyancyRatio(0)

@@ -182,8 +182,10 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn_Msg", function(ply, transition)
 	timer.Simple(1, function()
-		net.Start("vj_welcome")
-		net.Send(ply)
+		if VJBASE_DISABLE_INIT_MESSAGE != true then
+			net.Start("vj_welcome")
+			net.Send(ply)
+		end
 		
 		if !game.SinglePlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
 			PrintMessage(HUD_PRINTTALK, "DrVrej has joined the game!")
@@ -209,9 +211,9 @@ end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if SERVER && (!isfunction(FindMetaTable("Entity").SetSurroundingBoundsType) or !isfunction(FindMetaTable("NPC").GetMoveDelay)) then
 	timer.Simple(1, function()
-		if !VJBASE_ERROR_GAME_OUTDATED then
-			VJBASE_ERROR_GAME_OUTDATED = true
-			timer.Create("VJBASE_ERROR_GAME_OUTDATED", 2, 1, function()
+		if !VJBASE_ERROR_OUTDATED_GAME then
+			VJBASE_ERROR_OUTDATED_GAME = true
+			timer.Create("VJBASE_ERROR_OUTDATED_GAME", 2, 1, function()
 				PrintMessage(HUD_PRINTTALK, "--- VJ Base Error! ---")
 				PrintMessage(HUD_PRINTTALK, "Game is running on an old unsupported version!")
 				PrintMessage(HUD_PRINTTALK, "Expect errors, bugs, and crashes!")
@@ -224,8 +226,8 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if SLVBase then
 	timer.Simple(1, function()
-		if !VJBASE_ERROR_CONFLICT then
-			VJBASE_ERROR_CONFLICT = true
+		if !VJBASE_ERROR_INCOMPATIBLE then
+			VJBASE_ERROR_INCOMPATIBLE = true
 			if CLIENT then
 				chat.AddText(Color(255, 100, 0), "Confliction Detected!",
 				Color(0, 255, 0), " VJ Base ",
@@ -271,7 +273,7 @@ if SLVBase then
 					frame:Close()
 				end
 			elseif SERVER then
-				timer.Create("VJBASE_ERROR_CONFLICT", 5, 0, function()
+				timer.Create("VJBASE_ERROR_INCOMPATIBLE", 5, 0, function()
 					MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base: ", VJ.COLOR_RED, "Error! Incompatible addon detected! Check this link for list of incompatible addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108\n")
 				end)
 			end

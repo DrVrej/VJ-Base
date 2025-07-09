@@ -227,22 +227,24 @@ if CLIENT then
 
 	--[-------------------------------------------------------]--
 	-- Create the main spawn menu tab, set it to be placed after the default "Vehicles" tab
-	spawnmenu.AddCreationTab("VJ Base", function()
-		local ctrl = vgui.Create("SpawnmenuContentPanel")
-		ctrl:EnableSearch("vjbase_npcs", "PopulateVJBaseMain")
-		ctrl:CallPopulateHook("PopulateVJBaseMain")
-		//ctrl:CallPopulateHook("PopulateVJBaseHome")
-		//ctrl:CallPopulateHook("PopulateVJBaseNPC")
-		//ctrl:CallPopulateHook("PopulateVJBaseWeapons")
-		//ctrl:CallPopulateHook("PopulateVJBaseEntities")
-		//ctrl:CallPopulateHook("PopulateVJBaseTools")
+	if VJBASE_DISABLE_MENU_SPAWN != true then
+		spawnmenu.AddCreationTab("VJ Base", function()
+			local ctrl = vgui.Create("SpawnmenuContentPanel")
+			ctrl:EnableSearch("vjbase_npcs", "PopulateVJBaseMain")
+			ctrl:CallPopulateHook("PopulateVJBaseMain")
+			//ctrl:CallPopulateHook("PopulateVJBaseHome")
+			//ctrl:CallPopulateHook("PopulateVJBaseNPC")
+			//ctrl:CallPopulateHook("PopulateVJBaseWeapons")
+			//ctrl:CallPopulateHook("PopulateVJBaseEntities")
+			//ctrl:CallPopulateHook("PopulateVJBaseTools")
+			
+			local sidebar = ctrl.ContentNavBar
+			sidebar.Options = vgui.Create( "VJ_SpawnmenuNPCSidebarToolbox", sidebar )
+			sidebar.Options:Dock( BOTTOM )
 		
-		local sidebar = ctrl.ContentNavBar
-		sidebar.Options = vgui.Create( "VJ_SpawnmenuNPCSidebarToolbox", sidebar )
-		sidebar.Options:Dock( BOTTOM )
-	
-		return ctrl
-	end, "vj_base/icons/vrejgaming.png", 60, "All VJ Base entities are located here!") // icon16/plugin.png
+			return ctrl
+		end, "vj_base/icons/vrejgaming.png", 60, "All VJ Base entities are located here!") // icon16/plugin.png
+	end
 	
 	--[-------------------------------------------------------]--
 	-- Based on GMod's SpawnmenuNPCSidebarToolbox but with some changes
