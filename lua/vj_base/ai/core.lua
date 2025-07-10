@@ -2168,7 +2168,7 @@ function ENT:MaintainRelationships()
 						funcAddEntityRelationship(self, ent, D_VJ_INTEREST, 0)
 						calculatedDisp = D_VJ_INTEREST
 					else
-						-- SetEnemy: In order - Can find enemy + Not neutral or alerted + Is visible + In sight cone
+						-- SetEnemy: In order - Can find enemy + Not neutral or Is alerted + Is visible + In sight cone
 						if selfData.EnemyDetection && (notIsNeutral or selfData.Alerted == ALERT_STATE_ENEMY) && (selfData.EnemyXRayDetection or funcVisible(self, ent)) && funcIsInViewCone(self, entPos) then
 							//print("MaintainRelationships 2 - set enemy")
 							funcAddEntityRelationship(self, ent, D_HT, 0)
@@ -2180,11 +2180,19 @@ function ENT:MaintainRelationships()
 								nearestDist = distanceToEnt
 								self:ForceSetEnemy(ent, true, true, eneValid)
 							end
-						-- If all else failed then check if we hate this entity, if not then set it as an interest
+						-- If all else failed then check if we hate this entity
 						elseif self:Disposition(ent) != D_HT then
-							//print("MaintainRelationships 2 - regular D_VJ_INTEREST")
-							funcAddEntityRelationship(self, ent, D_VJ_INTEREST, 0)
-							calculatedDisp = D_VJ_INTEREST
+							-- Neutral NPCs will not engage enemies without a reason, so keep it as neutral
+							if !notIsNeutral then
+								//print("MaintainRelationships 2 - regular D_NU")
+								funcAddEntityRelationship(self, ent, D_NU, 0)
+								calculatedDisp = D_NU
+							-- Everyone else will set potential enemies as interest
+							else
+								//print("MaintainRelationships 2 - regular D_VJ_INTEREST")
+								funcAddEntityRelationship(self, ent, D_VJ_INTEREST, 0)
+								calculatedDisp = D_VJ_INTEREST
+							end
 						end
 					end
 				else

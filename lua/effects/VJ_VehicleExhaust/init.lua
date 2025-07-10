@@ -43,4 +43,4 @@ function EFFECT:Think()
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function EFFECT:Render() end -- To avoid "ERROR" from appearing for single tick
+function EFFECT:Render() end -- To avoid "ERROR" from appearing for single a tick

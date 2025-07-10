@@ -4,38 +4,38 @@
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 -- Based off of the GMod lasertracer
-EFFECT.MainMat = Material("effects/spark")
-
+local beamMat = Material("effects/spark")
+local beamLength = 0.1
+local beamColor = Color(255, 0, 0, 255)
+---------------------------------------------------------------------------------------------------------------------------------------------
 function EFFECT:Init(data)
 	self.StartPos = data:GetStart()
 	self.EndPos = data:GetOrigin()
 	local ent = data:GetEntity()
 	local att = data:GetAttachment()
 
-	if ( IsValid( ent ) && att > 0 ) then
-		if (ent.Owner == LocalPlayer() && LocalPlayer():GetViewModel() != LocalPlayer()) then ent = ent.Owner:GetViewModel() end
+	if IsValid(ent) && att > 0 then
+		if ent:GetOwner() == LocalPlayer() && LocalPlayer():GetViewModel() != LocalPlayer() then ent = ent:GetOwner():GetViewModel() end
 		att = ent:GetAttachment(att)
-		if (att) then
+		if att then
 			self.StartPos = att.Pos
 		end
 	end
 
-	self.Dir = self.EndPos - self.StartPos
 	self:SetRenderBoundsWS(self.StartPos, self.EndPos)
+	self.Dir = self.EndPos - self.StartPos
 	self.TracerTime = math.min(1, self.StartPos:Distance(self.EndPos) / 10000) -- Calculate death time
-	self.Length = 0.1
-
-	-- Die when it reaches its target
-	self.DieTime = CurTime() + self.TracerTime
+	self.DieTime = CurTime() + self.TracerTime -- Time until it dies (when it reaches its target)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function EFFECT:Think()
-	if (CurTime() > self.DieTime) then -- If it's dead then...
-		util.Decal("fadingscorch", self.EndPos + self.Dir:GetNormalized(), self.EndPos - self.Dir:GetNormalized())
+	if CurTime() > self.DieTime then -- If it's dead then...
+		local dirNormalized = self.Dir:GetNormalized()
+		util.Decal("fadingscorch", self.EndPos + dirNormalized, self.EndPos - dirNormalized)
 
 		local effectData = EffectData()
-		effectData:SetOrigin(self.EndPos + self.Dir:GetNormalized() * -2)
-		effectData:SetNormal(self.Dir:GetNormalized() * -3)
+		effectData:SetOrigin(self.EndPos + dirNormalized * -2)
+		effectData:SetNormal(dirNormalized * -3)
 		effectData:SetMagnitude(0.1)
 		effectData:SetScale(0.8)
 		effectData:SetRadius(5)
@@ -46,13 +46,13 @@ function EFFECT:Think()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function EFFECT:Render()
-	local fDelta = (self.DieTime - CurTime()) / self.TracerTime
-	fDelta = math.Clamp(fDelta, 0, 1) ^ 0.5
-	render.SetMaterial(self.MainMat)
+	local fDelta = math.sqrt(math.Clamp((self.DieTime - CurTime()) / self.TracerTime, 0, 1))
 	local sinWave = math.sin(fDelta * math.pi)
+	local offset = sinWave * beamLength
+	render.SetMaterial(beamMat)
 	render.DrawBeam(
-		self.EndPos - self.Dir * (fDelta - sinWave * self.Length),
-		self.EndPos - self.Dir * (fDelta + sinWave * self.Length),
-		5 + sinWave * 35, 1, 0, Color(255, 0, 0, 255)
+		self.EndPos - self.Dir * (fDelta - offset), -- Start
+		self.EndPos - self.Dir * (fDelta + offset), -- End
+		5 + sinWave * 35, 1, 0, beamColor
 	)
 end

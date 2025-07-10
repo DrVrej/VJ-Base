@@ -4080,13 +4080,16 @@ function ENT:OnTakeDamage(dmginfo)
 						local sightDist = self:GetMaxLookDistance()
 						sightDist = math_min(math_max(sightDist / 2, sightDist <= 1000 and sightDist or 1000), sightDist)
 						-- IF normal sight dist is less than 1000 then change nothing, OR ELSE use half the distance with 1000 as minimum
-						if self:GetPos():Distance(dmgAttacker:GetPos()) <= sightDist && self:Visible(dmgAttacker) && self:CheckRelationship(dmgAttacker) == D_HT then
-							//self:AddEntityRelationship(dmgAttacker, D_HT, 10)
-							self:OnSetEnemyFromDamage(dmginfo, hitgroup)
-							selfData.NextCallForHelpT = curTime + 1
-							self:ForceSetEnemy(dmgAttacker, true)
-							self:MaintainAlertBehavior()
-							canMove = false
+						if self:GetPos():Distance(dmgAttacker:GetPos()) <= sightDist && self:Visible(dmgAttacker) then
+							local dispLvl = self:CheckRelationship(dmgAttacker)
+							if dispLvl == D_HT or dispLvl == D_NU then
+								//self:AddEntityRelationship(dmgAttacker, D_HT, 10)
+								self:OnSetEnemyFromDamage(dmginfo, hitgroup)
+								selfData.NextCallForHelpT = curTime + 1
+								self:ForceSetEnemy(dmgAttacker, true)
+								self:MaintainAlertBehavior()
+								canMove = false
+							end
 						end
 					end
 					
