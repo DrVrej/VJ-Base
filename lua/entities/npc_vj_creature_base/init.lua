@@ -1564,7 +1564,7 @@ function ENT:Initialize()
 	if !self.RelationshipEnts then self.RelationshipEnts = {} end
 	if !self.RelationshipMemory then self.RelationshipMemory = {} end
 	self.AnimationTranslations = {}
-	self.NextIdleSoundT_Reg = CurTime() + math.random(0.3, 6)
+	self.IdleSoundBlockTime = CurTime() + math.random(0.3, 6)
 	self.MainSoundPitchValue = (self.MainSoundPitchStatic and (istable(self.MainSoundPitch) and math.random(self.MainSoundPitch.a, self.MainSoundPitch.b) or self.MainSoundPitch)) or 0
 	local sightConvar = vj_npc_sight_distance:GetInt(); if sightConvar > 0 then self.SightDistance = sightConvar end
 	

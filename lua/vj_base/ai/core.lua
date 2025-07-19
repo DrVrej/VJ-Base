@@ -170,6 +170,7 @@ ENT.NextInvestigateSoundT = 0
 ENT.NextFootstepSoundT = 0
 ENT.NextBreathSoundT = 0
 ENT.NextIdleSoundT = 0
+ENT.IdleSoundBlockTime = 0 -- Set by other sounds, it keeps the actual idle sound delay intact while blocking it from playing until it expires
 ENT.NextAlertSoundT = 0
 ENT.NextCallForHelpT = 0
 ENT.NextCallForHelpAnimationT = 0
@@ -2661,7 +2662,7 @@ function ENT:PlayIdleSound(customSD, sdType, combatIdle)
 	if !selfData.HasSounds or !selfData.HasIdleSounds then return false end
 	
 	local curTime = CurTime()
-	if selfData.NextIdleSoundT_Reg < curTime && selfData.NextIdleSoundT < curTime then
+	if selfData.IdleSoundBlockTime < curTime && selfData.NextIdleSoundT < curTime then
 		local setTimer = true
 		if customSD then
 			customSD = PICK(customSD)
@@ -2779,7 +2780,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentExtraSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				selfData.NextIdleSoundT_Reg = CurTime() + math.random(2, 3)
+				selfData.IdleSoundBlockTime = CurTime() + math.random(2, 3)
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.IdleDialogueSoundLevel, self:GetSoundPitch(selfData.IdleDialogueSoundPitch))
 				return SoundDuration(pickedSD) -- Return the duration of the sound, which will be used to make the other NPC stand still
 			end
@@ -2793,7 +2794,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				selfData.NextIdleSoundT_Reg = CurTime() + math.random(3, 4)
+				selfData.IdleSoundBlockTime = CurTime() + math.random(3, 4)
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.FollowPlayerSoundLevel, self:GetSoundPitch(selfData.FollowPlayerPitch))
 			end
 		end
@@ -2804,7 +2805,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				selfData.NextIdleSoundT_Reg = CurTime() + math.random(3, 4)
+				selfData.IdleSoundBlockTime = CurTime() + math.random(3, 4)
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.FollowPlayerSoundLevel, self:GetSoundPitch(selfData.FollowPlayerPitch))
 			end
 		end
@@ -2827,7 +2828,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				selfData.NextIdleSoundT_Reg = CurTime() + math.random(3, 4)
+				selfData.IdleSoundBlockTime = CurTime() + math.random(3, 4)
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.YieldToPlayerSoundLevel, self:GetSoundPitch(selfData.YieldToPlayerSoundPitch))
 			end
 		end
@@ -2838,7 +2839,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				selfData.NextIdleSoundT_Reg = CurTime() + math.random(3, 4)
+				selfData.IdleSoundBlockTime = CurTime() + math.random(3, 4)
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.MedicBeforeHealSoundLevel, self:GetSoundPitch(selfData.MedicBeforeHealSoundPitch))
 			end
 		end
@@ -2847,7 +2848,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			local pickedSD = PICK(selfData.SoundTbl_MedicOnHeal)
 			if (pickedSD && math.random(1, selfData.MedicOnHealSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
-				selfData.NextIdleSoundT_Reg = CurTime() + math.random(3, 4)
+				selfData.IdleSoundBlockTime = CurTime() + math.random(3, 4)
 				selfData.CurrentMedicAfterHealSound = (sdType or VJ.EmitSound)(self, pickedSD, selfData.MedicOnHealSoundLevel, self:GetSoundPitch(selfData.MedicOnHealSoundPitch))
 			end
 		end
@@ -2858,7 +2859,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				selfData.NextIdleSoundT_Reg = CurTime() + math.random(3, 4)
+				selfData.IdleSoundBlockTime = CurTime() + math.random(3, 4)
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.MedicReceiveHealSoundLevel, self:GetSoundPitch(selfData.MedicReceiveHealSoundPitch))
 			end
 		end
@@ -2869,7 +2870,8 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				selfData.NextIdleSoundT_Reg = CurTime() + math.random(3, 4)
+				local dur = CurTime() + ((((SoundDuration(pickedSD) > 0) and SoundDuration(pickedSD)) or 3.5) + 1)
+				selfData.IdleSoundBlockTime = dur
 				selfData.NextAlertSoundT = CurTime() + math.random(1, 2)
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.OnPlayerSightSoundLevel, self:GetSoundPitch(selfData.OnPlayerSightSoundPitch))
 			end
@@ -2933,7 +2935,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentExtraSpeechSound)
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				selfData.NextIdleSoundT_Reg = CurTime() + 1
+				selfData.IdleSoundBlockTime = CurTime() + 1
 				selfData.CurrentExtraSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.BeforeMeleeAttackSoundLevel, self:GetSoundPitch(selfData.BeforeMeleeAttackSoundPitch))
 			end
 		end
@@ -2944,7 +2946,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				selfData.NextIdleSoundT_Reg = CurTime() + 1
+				selfData.IdleSoundBlockTime = CurTime() + 1
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.MeleeAttackSoundLevel, self:GetSoundPitch(selfData.MeleeAttackSoundPitch))
 			end
 			if selfData.HasExtraMeleeAttackSounds then
@@ -2962,7 +2964,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				StopSD(selfData.CurrentMeleeAttackMissSound)
-				selfData.NextIdleSoundT_Reg = CurTime() + 1
+				selfData.IdleSoundBlockTime = CurTime() + 1
 				selfData.CurrentMeleeAttackMissSound = (sdType or VJ.EmitSound)(self, pickedSD, selfData.MeleeAttackMissSoundLevel, self:GetSoundPitch(selfData.MeleeAttackMissSoundPitch))
 			end
 		end
@@ -2977,7 +2979,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				selfData.NextPainSoundT = dur
 				selfData.NextAlertSoundT = dur
 				selfData.NextInvestigateSoundT = CurTime() + 2
-				selfData.NextIdleSoundT_Reg = CurTime() + math.random(2, 3)
+				selfData.IdleSoundBlockTime = CurTime() + math.random(2, 3)
 				selfData.NextSuppressingSoundT = CurTime() + math.random(2.5, 4)
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.BecomeEnemyToPlayerSoundLevel, self:GetSoundPitch(selfData.BecomeEnemyToPlayerPitch))
 			end
@@ -3014,7 +3016,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				selfData.NextIdleSoundT_Reg = CurTime() + 1
+				selfData.IdleSoundBlockTime = CurTime() + 1
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.PainSoundLevel, self:GetSoundPitch(selfData.PainSoundPitch))
 				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
 			end
@@ -3038,7 +3040,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				StopSD(selfData.CurrentIdleSound)
 				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
 				selfData.NextPainSoundT = CurTime() + sdDur
-				selfData.NextIdleSoundT_Reg = CurTime() + sdDur
+				selfData.IdleSoundBlockTime = CurTime() + sdDur
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.DamageByPlayerSoundLevel, self:GetSoundPitch(selfData.DamageByPlayerPitch))
 			end
 			selfData.NextDamageByPlayerSoundT = CurTime() + sdDur
@@ -3072,7 +3074,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentExtraSpeechSound)
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				selfData.NextIdleSoundT_Reg = CurTime() + 1
+				selfData.IdleSoundBlockTime = CurTime() + 1
 				selfData.CurrentExtraSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.BeforeRangeAttackSoundLevel, self:GetSoundPitch(selfData.BeforeRangeAttackPitch))
 			end
 		end
@@ -3083,7 +3085,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				selfData.NextIdleSoundT_Reg = CurTime() + 1
+				selfData.IdleSoundBlockTime = CurTime() + 1
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.RangeAttackSoundLevel, self:GetSoundPitch(selfData.RangeAttackPitch))
 			end
 		end
@@ -3095,7 +3097,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentExtraSpeechSound)
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				selfData.NextIdleSoundT_Reg = CurTime() + 1
+				selfData.IdleSoundBlockTime = CurTime() + 1
 				selfData.CurrentExtraSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.BeforeLeapAttackSoundLevel, self:GetSoundPitch(selfData.BeforeLeapAttackSoundPitch))
 			end
 		end
@@ -3106,7 +3108,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				selfData.NextIdleSoundT_Reg = CurTime() + 1
+				selfData.IdleSoundBlockTime = CurTime() + 1
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.LeapAttackJumpSoundLevel, self:GetSoundPitch(selfData.LeapAttackJumpSoundPitch))
 			end
 		end
@@ -3117,7 +3119,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				StopSD(selfData.CurrentSpeechSound)
-				selfData.NextIdleSoundT_Reg = CurTime() + 1
+				selfData.IdleSoundBlockTime = CurTime() + 1
 				selfData.CurrentSpeechSound = (sdType or VJ.EmitSound)(self, pickedSD, selfData.LeapAttackDamageSoundLevel, self:GetSoundPitch(selfData.LeapAttackDamageSoundPitch))
 			end
 		end
@@ -3127,7 +3129,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			if (pickedSD && math.random(1, selfData.LeapAttackDamageMissSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				selfData.NextIdleSoundT_Reg = CurTime() + 1
+				selfData.IdleSoundBlockTime = CurTime() + 1
 				selfData.CurrentLeapAttackDamageMissSound = (sdType or VJ.EmitSound)(self, pickedSD, selfData.LeapAttackDamageMissSoundLevel, self:GetSoundPitch(selfData.LeapAttackDamageMissSoundPitch))
 			end
 		end
@@ -3139,7 +3141,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				selfData.NextIdleSoundT_Reg = CurTime() + 2
+				selfData.IdleSoundBlockTime = CurTime() + 2
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.SuppressingSoundLevel, self:GetSoundPitch(selfData.SuppressingPitch))
 			end
 			selfData.NextSuppressingSoundT = CurTime() + math.Rand(selfData.NextSoundTime_Suppressing.a, selfData.NextSoundTime_Suppressing.b)
@@ -3151,7 +3153,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				selfData.NextIdleSoundT_Reg = CurTime() + ((SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or 3.5)
+				selfData.IdleSoundBlockTime = CurTime() + ((SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or 3.5)
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.WeaponReloadSoundLevel, self:GetSoundPitch(selfData.WeaponReloadSoundPitch))
 			end
 		end
@@ -3162,7 +3164,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				selfData.NextIdleSoundT_Reg = CurTime() + math.random(3, 4)
+				selfData.IdleSoundBlockTime = CurTime() + math.random(3, 4)
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.GrenadeAttackSoundLevel, self:GetSoundPitch(selfData.GrenadeAttackSoundPitch))
 			end
 		end
@@ -3181,7 +3183,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
 				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
-				selfData.NextIdleSoundT_Reg = CurTime() + sdDur
+				selfData.IdleSoundBlockTime = CurTime() + sdDur
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.DangerSightSoundLevel, self:GetSoundPitch(selfData.DangerSightSoundPitch))
 			end
 			selfData.NextDangerSightSoundT = CurTime() + sdDur
@@ -3190,7 +3192,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 		if customSD then
 			StopSD(selfData.CurrentSpeechSound)
 			StopSD(selfData.CurrentIdleSound)
-			selfData.NextIdleSoundT_Reg = CurTime() + ((((SoundDuration(customSD) > 0) and SoundDuration(customSD)) or 2) + 1)
+			selfData.IdleSoundBlockTime = CurTime() + ((((SoundDuration(customSD) > 0) and SoundDuration(customSD)) or 2) + 1)
 			selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, customSD, 80, self:GetSoundPitch(false))
 		end
 	end
