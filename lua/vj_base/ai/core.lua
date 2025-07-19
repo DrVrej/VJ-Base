@@ -1042,7 +1042,11 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 		local ene = self:GetEnemy()
 		-- If enemy is valid do normal facing otherwise return my angles because we didn't actually face an enemy
 		if IsValid(ene) then
-			resultAng = self:GetTurnAngle((ene:GetPos() - self:GetPos()):Angle())
+			if self.TurningUseAllAxis then
+				resultAng = self:GetTurnAngle(((ene:GetPos() + ene:OBBCenter()) - self:GetPos()):Angle())
+			else
+				resultAng = self:GetTurnAngle((ene:GetPos() - self:GetPos()):Angle())
+			end
 		else
 			resultAng = self:GetTurnAngle(self:GetAngles())
 			updateTurn = false
@@ -1063,7 +1067,11 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 	elseif IsValid(target) then
 		//VJ.DEBUG_Print(self, "SetTurnTarget", "ENTITY")
 		self:ResetTurnTarget()
-		resultAng = self:GetTurnAngle((target:GetPos() - self:GetPos()):Angle())
+		if self.TurningUseAllAxis then
+			resultAng = self:GetTurnAngle(((target:GetPos() + target:OBBCenter()) - self:GetPos()):Angle())
+		else
+			resultAng = self:GetTurnAngle((target:GetPos() - self:GetPos()):Angle())
+		end
 		if faceTime != 0 then -- 0 = Face only this frame, so don't actually set turning data!
 			turnData.Type = visibleOnly and VJ.FACE_ENTITY_VISIBLE or VJ.FACE_ENTITY
 			turnData.Target = target

@@ -234,18 +234,24 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 				self:SetIdealYawAndUpdate(resultAng.y)
 				turnData.LastYaw = resultAng.y
 			elseif IsValid(turnTarget) && (turnData.Type == VJ.FACE_ENTITY or (turnData.Type == VJ.FACE_ENTITY_VISIBLE && self:Visible(turnTarget))) then
-				local resultAng = self:GetTurnAngle((turnTarget:GetPos() - self:GetPos()):Angle())
+				local resultAng;
 				if selfData.TurningUseAllAxis then
 					local myAng = self:GetAngles()
+					resultAng = self:GetTurnAngle(((turnTarget:GetPos() + turnTarget:OBBCenter()) - self:GetPos()):Angle())
 					self:SetAngles(LerpAngle(FrameTime() * self:GetMaxYawSpeed(), myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+				else
+					resultAng = self:GetTurnAngle((turnTarget:GetPos() - self:GetPos()):Angle())
 				end
 				self:SetIdealYawAndUpdate(resultAng.y)
 				turnData.LastYaw = resultAng.y
 			elseif eneValid && !selfData.Dead && (turnData.Type == VJ.FACE_ENEMY or (turnData.Type == VJ.FACE_ENEMY_VISIBLE && selfData.EnemyData.Visible)) then
-				local resultAng = self:GetTurnAngle((ene:GetPos() - self:GetPos()):Angle())
+				local resultAng;
 				if selfData.TurningUseAllAxis then
 					local myAng = self:GetAngles()
+					resultAng = self:GetTurnAngle(((ene:GetPos() + ene:OBBCenter()) - self:GetPos()):Angle())
 					self:SetAngles(LerpAngle(FrameTime() * self:GetMaxYawSpeed(), myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+				else
+					resultAng = self:GetTurnAngle((ene:GetPos() - self:GetPos()):Angle())
 				end
 				self:SetIdealYawAndUpdate(resultAng.y)
 				turnData.LastYaw = resultAng.y
