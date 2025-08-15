@@ -7,8 +7,8 @@ VJ.AddPlugin("Addon name, Example: Dummy SNPCs", "Addon type(s), Example: NPC", 
 
 local spawnCategory = "VJ Dummy Category" -- Category, you can also set a category individually by replacing the spawnCategory with a string value
 	
-/* -- Example Registerations
--- For full list of registeration functions and options, navigate to the "lua/autorun/vj_controls.lua" file in VJ Base
+/* -- Example Registrations
+-- For full list of registration functions and options, navigate to the "lua/autorun/vj_controls.lua" file in VJ Base
 
 VJ.AddNPC("Dummy SNPC", "npc_vj_dum_dummy", spawnCategory) -- Adds a NPC to the spawnmenu
 	-- Parameters:
