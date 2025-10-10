@@ -1,6 +1,6 @@
 ENT.Base 			= "base_anim"
 ENT.Type 			= "anim"
-ENT.PrintName		= "Gib Base"
+ENT.PrintName		= "VJ Base Gib"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Category		= "VJ Base"

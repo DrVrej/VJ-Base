@@ -7,7 +7,7 @@ AddCSLuaFile()
 
 ENT.Base 			= "base_entity"
 ENT.Type 			= "ai"
-ENT.PrintName 		= "Bullseye"
+ENT.PrintName 		= "VJ Base Bullseye"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Information 	= "Target for VJ NPCs."

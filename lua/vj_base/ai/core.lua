@@ -1380,42 +1380,59 @@ end
 	Returns
 		- number, the scaled number
 -----------------------------------------------------------]]
+local DIFFICULTY_NEANDERTHAL        = VJ.DIFFICULTY_NEANDERTHAL
+local DIFFICULTY_PUNY               = VJ.DIFFICULTY_PUNY
+local DIFFICULTY_TRIVIAL            = VJ.DIFFICULTY_TRIVIAL
+local DIFFICULTY_EASY               = VJ.DIFFICULTY_EASY
+local DIFFICULTY_BEGINNER           = VJ.DIFFICULTY_BEGINNER
+local DIFFICULTY_NORMAL             = VJ.DIFFICULTY_NORMAL
+local DIFFICULTY_DIFFICULT          = VJ.DIFFICULTY_DIFFICULT
+local DIFFICULTY_HARD               = VJ.DIFFICULTY_HARD
+local DIFFICULTY_EXPERT             = VJ.DIFFICULTY_EXPERT
+local DIFFICULTY_INSANE             = VJ.DIFFICULTY_INSANE
+local DIFFICULTY_IMPOSSIBLE         = VJ.DIFFICULTY_IMPOSSIBLE
+local DIFFICULTY_LUNATIC            = VJ.DIFFICULTY_LUNATIC
+local DIFFICULTY_NIGHTMARE          = VJ.DIFFICULTY_NIGHTMARE
+local DIFFICULTY_HELL_ON_EARTH      = VJ.DIFFICULTY_HELL_ON_EARTH
+local DIFFICULTY_TOTAL_ANNIHILATION = VJ.DIFFICULTY_TOTAL_ANNIHILATION
+local DIFFICULTY_EXTINCTION         = VJ.DIFFICULTY_EXTINCTION
+--
 function ENT:ScaleByDifficulty(num)
 	local dif = self.SelectedDifficulty
-	if dif == 0 then
+	if dif == DIFFICULTY_NORMAL then
 		return num
-	elseif dif == -5 then
+	elseif dif == DIFFICULTY_NEANDERTHAL then
 		return math_max(num * 0.01, 1)
-	elseif dif == -4 then
+	elseif dif == DIFFICULTY_PUNY then
 		return math_max(num * 0.10, 1)
-	elseif dif == -3 then
+	elseif dif == DIFFICULTY_TRIVIAL then
 		return math_max(num * 0.25, 1)
-	elseif dif == -2 then
+	elseif dif == DIFFICULTY_EASY then
 		return math_max(num * 0.50, 1)
-	elseif dif == -1 then
+	elseif dif == DIFFICULTY_BEGINNER then
 		return math_max(num * 0.75, 1)
-	elseif dif == 1 then
+	elseif dif == DIFFICULTY_DIFFICULT then
 		return num * 1.25
-	elseif dif == 2 then
+	elseif dif == DIFFICULTY_HARD then
 		return num * 1.5
-	elseif dif == 3 then
+	elseif dif == DIFFICULTY_EXPERT then
 		return num * 1.75
-	elseif dif == 4 then
+	elseif dif == DIFFICULTY_INSANE then
 		return num * 2
-	elseif dif == 5 then
+	elseif dif == DIFFICULTY_IMPOSSIBLE then
 		return num * 2.5
-	elseif dif == 6 then
+	elseif dif == DIFFICULTY_LUNATIC then
 		return num * 3
-	elseif dif == 7 then
+	elseif dif == DIFFICULTY_NIGHTMARE then
 		return num * 3.5
-	elseif dif == 8 then
+	elseif dif == DIFFICULTY_HELL_ON_EARTH then
 		return num * 4.5
-	elseif dif == 9 then
+	elseif dif == DIFFICULTY_TOTAL_ANNIHILATION then
 		return num * 6
-	elseif dif == 10 then
+	elseif dif == DIFFICULTY_EXTINCTION then
 		return num * 10
 	end
-	return num -- Normal (default)
+	return num -- Unknown difficulty
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local vecZN100 = Vector(0, 0, -100)

@@ -151,7 +151,7 @@ end
 	Runs traces around the entity based on the number of given directions
 		- trType [string] = Type of trace to perform
 			- "Quick" = High performance, but limited to 4 or 8 directions
-			- "Radial" = Traces in a circular pattern based on directionCount
+			- "Radial" = Traces in a circular pattern based on "numDirections"
 		- maxDist [number] = Max distance a trace can travel | DEFAULT = 200
 		- requireFullDist [boolean] = If true, only traces reaching "maxDist" or beyond are included | DEFAULT = false
 			- Useful for checking if a direction is obstructed

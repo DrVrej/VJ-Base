@@ -91,11 +91,12 @@ ENT.CanReceiveOrders = true -- Can it receive orders from allies? | Ex: Allies c
 ENT.Passive_RunOnTouch = true -- Should it run and make a alert sound when something collides with it?
 ENT.Passive_AlliesRunOnDamage = true -- Should its allies (other passive NPCs) also run when it's damaged?
 	-- ====== On Player Sight ====== --
-ENT.HasOnPlayerSight = false -- Should do something when it a player?
-ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
+	-- Plays the "SoundTbl_OnPlayerSight" sounds and executes the "OnPlayerSight" function
+ENT.HasOnPlayerSight = false
+ENT.OnPlayerSightDistance = 200 -- Min distance a player has to be for it execute the behavior
 ENT.OnPlayerSightDispositionLevel = 1 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
-ENT.OnPlayerSightOnlyOnce = true -- If true, it will only run it once | Sets "self.HasOnPlayerSight" to false after it runs!
-ENT.OnPlayerSightNextTime = VJ.SET(15, 20) -- How much time should it pass until it runs the code again?
+ENT.OnPlayerSightOnlyOnce = true -- Should it run this behavior only once? | Sets "self.HasOnPlayerSight" to false after it runs!
+ENT.OnPlayerSightNextTime = VJ.SET(15, 20) -- How long until it can run this behavior again?
 	-- ====== Call For Help ====== --
 ENT.CallForHelp = true -- Can it request allies for help while in combat?
 ENT.CallForHelpDistance = 2000 -- Max distance its request for help travels
@@ -233,29 +234,29 @@ ENT.HasGibOnDeathEffects = true -- Does it spawn particles on death or when it g
 ENT.DropWeaponOnDeath = true -- Should it drop its weapon on death?
 ENT.DropDeathLoot = true -- Should it drop loot on death?
 ENT.DeathLoot = {"weapon_frag", "item_healthvial"} -- List of entities it will randomly pick to drop | Leave it empty to drop nothing
-ENT.DeathLootChance = 14 -- If set to 1, it will always drop loot
+ENT.DeathLootChance = 14 -- Chance of loot dropping | 1 = Always
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Melee Attack ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasMeleeAttack = true
 ENT.MeleeAttackDamage = 10
 ENT.MeleeAttackDamageType = DMG_CLUB
-ENT.HasMeleeAttackKnockBack = true -- Should knockback be applied on melee hit? | Use "MeleeAttackKnockbackVelocity" function to edit the velocity
+ENT.HasMeleeAttackKnockBack = true -- Should a knockback be applied when an entity is damaged? | Use "MeleeAttackKnockbackVelocity" function to edit the velocity
 ENT.DisableDefaultMeleeAttackDamageCode = false -- Disables the default melee attack damage code
 	-- ====== Animation ====== --
 ENT.AnimTbl_MeleeAttack = ACT_MELEE_ATTACK1 -- Animations to play when it melee attacks | false = Don't play an animation
 ENT.MeleeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the melee attack animation?
-ENT.MeleeAttackAnimationDecreaseLengthAmount = 0 -- Decreases animation time | Use it to fix animations that have extra frames at the end
+ENT.MeleeAttackAnimationDecreaseLengthAmount = 0 -- Decreases animation time, useful to fix animations that have extra frames at the end
 	-- ====== Distance ====== --
-ENT.MeleeAttackDistance = false -- How close an enemy has to be to trigger a melee attack | false = Auto calculate on initialize based on its collision bounds
-ENT.MeleeAttackAngleRadius = 100 -- What is the attack angle radius? | 100 = In front of it | 180 = All around it
-ENT.MeleeAttackDamageDistance = false -- How far does the damage go? | false = Auto calculate on initialize based on its collision bounds
-ENT.MeleeAttackDamageAngleRadius = 100 -- What is the damage angle radius? | 100 = In front of it | 180 = All around it
+ENT.MeleeAttackDistance = false -- Max distance an enemy must be to initiate an attack | false = Auto calculate on initialize based on its collision bounds
+ENT.MeleeAttackAngleRadius = 100 -- Max angle from its sight direction within which an enemy must be to initiate an attack | 100 = In front of it | 180 = All around it
+ENT.MeleeAttackDamageDistance = false -- Max distance the damage travels from the attack's trace origin | false = Auto calculate on initialize based on its collision bounds
+ENT.MeleeAttackDamageAngleRadius = 100 -- Max angle from the attack's trace origin within which an entity can be damaged | 100 = In front of it | 180 = All around it
 	-- ====== Timer ====== --
 ENT.TimeUntilMeleeAttackDamage = 0.5 -- How much time until it executes the damage? | false = Make the attack event-based
 ENT.NextMeleeAttackTime = 0 -- How much time until it can use a melee attack? | number = Specific time | VJ.SET = Randomized between the 2 numbers
 ENT.NextAnyAttackTime_Melee = false -- How much time until it can do any attack again? | false = Base auto calculates the duration | number = Specific time | VJ.SET = Randomized between the 2 numbers
-ENT.MeleeAttackReps = 1 -- How many times does it run the melee attack code?
+ENT.MeleeAttackReps = 1 -- How many times should it execute the damage?
 ENT.MeleeAttackExtraTimers = false -- Extra melee attack timers | EX: {1, 1.4}
 ENT.MeleeAttackStopOnHit = false -- Should it stop executing the melee attack after it hits an enemy?
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -263,15 +264,15 @@ ENT.MeleeAttackStopOnHit = false -- Should it stop executing the melee attack af
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasGrenadeAttack = false
 ENT.GrenadeAttackEntity = "obj_vj_grenade" -- Entities that it can spawn when throwing a grenade | If set as a table, it picks a random entity | VJ: "obj_vj_grenade" | HL2: "npc_grenade_frag"
-ENT.GrenadeAttackMinDistance = 400 -- Min distance it can throw a grenade
-ENT.GrenadeAttackMaxDistance = 1500 -- Max distance it can throw a grenade
+ENT.GrenadeAttackMinDistance = 400 -- Min distance an enemy must be to initiate a grenade attack
+ENT.GrenadeAttackMaxDistance = 1500 -- Max distance an enemy must be to initiate a grenade attack
 ENT.GrenadeAttackChance = 4 -- 1 in x chance that it will throw a grenade when all the requirements are met | 1 = Throw it every time
 ENT.GrenadeAttackModel = false -- Overrides the grenade model | Can be string or table | Does NOT apply to picked up grenades and forced grenade attacks with custom entity
 ENT.GrenadeAttackAttachment = "anim_attachment_LH" -- The attachment that the grenade will be set to | -1 = Skip to use "self.GrenadeAttackBone" instead
 ENT.GrenadeAttackBone = "ValveBiped.Bip01_L_Finger1" -- The bone that the grenade will be set to | -1 = Skip to use fail safe instead
 	-- ====== Animation ====== --
 ENT.AnimTbl_GrenadeAttack = "grenThrow" -- Animations to play when it throws a grenade | false = Don't play an animation
-ENT.GrenadeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the grenade attack animation?
+ENT.GrenadeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing an grenade attack animation?
 	-- ====== Timer ====== --
 ENT.GrenadeAttackThrowTime = 0.72 -- Time until the grenade is thrown | false = Make the attack event-based
 ENT.NextGrenadeAttackTime = VJ.SET(10, 15) -- Time until it can do a grenade attack again | number = Specific time | VJ.SET = Randomized between the 2 numbers
@@ -312,7 +313,7 @@ ENT.Weapon_CanReload = true -- Can it reload weapons?
 ENT.Weapon_FindCoverOnReload = true -- Should it attempt to find cover before proceeding to reload?
 ENT.AnimTbl_WeaponReload = ACT_RELOAD
 ENT.AnimTbl_WeaponReloadCovered = ACT_RELOAD_LOW
-ENT.DisableWeaponReloadAnimation = false -- Disables the default reload animation code
+ENT.DisableWeaponReloadAnimation = false -- Disables the default reload animation
 	-- ====== Weapon Inventory ====== --
 	-- Weapons are given on spawn and it will only switch to those if the requirements are met
 	-- All are stored in "self.WeaponInventory" with the following keys:
@@ -328,7 +329,7 @@ ENT.HasSounds = true -- Can it play sounds? | false = Disable ALL sounds
 ENT.DamageByPlayerDispositionLevel = 1 -- When should it play "DamageByPlayer" sounds? | 0 = Always | 1 = ONLY when friendly to player | 2 = ONLY when enemy to player
 	-- ====== Footstep Sound ====== --
 ENT.HasFootstepSounds = true -- Can it play footstep sounds?
-ENT.DisableFootStepSoundTimer = false -- Disables the timer system, allowing to utilize model events
+ENT.DisableFootStepSoundTimer = false -- Disables the timer system, useful for model events
 ENT.FootstepSoundTimerWalk = 0.5 -- Delay between footstep sounds while it is walking | false = Disable while walking
 ENT.FootstepSoundTimerRun = 0.25 -- Delay between footstep sounds while it is running | false = Disable while running
 	-- ====== Idle Sound ====== --

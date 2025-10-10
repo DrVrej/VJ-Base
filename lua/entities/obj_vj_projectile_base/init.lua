@@ -110,7 +110,12 @@ function ENT:Initialize()
 	if self:GetModel() == "models/error.mdl" && PICK(self.Model) then self:SetModel(PICK(self.Model)) end
 	
 	local projType = self.ProjectileType
-	self:PhysicsInit(MOVETYPE_VPHYSICS)
+	-- Some models do NOT have a physics mesh, so let's initialize a basic sphere physics
+	if !self:PhysicsInit(MOVETYPE_VPHYSICS) then
+		local boundsMin, boundsMax = self:GetModelRenderBounds()
+		local radius = (boundsMax - boundsMin):Length() * 0.5
+		self:PhysicsInitSphere(radius, "metal_bouncy")
+	end
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetMoveCollide(MOVECOLLIDE_FLY_BOUNCE)
 	self:SetSolid(SOLID_BBOX)
@@ -142,6 +147,12 @@ function ENT:Initialize()
 		self:SetCollisionGroup(COLLISION_GROUP_NONE)
 	else
 		self:SetTrigger(true)
+		-- Set a trigger bound for models that do NOT have a physics mesh, otherwise they will not hit collision-based entities (ex: NPCs, players)
+		if !util.IsValidProp(self:GetModel()) then
+			local boundsMin, boundsMax = self:GetModelRenderBounds()
+			local radius = math.max(2, (boundsMax - boundsMin):Length() * 0.05)
+			self:UseTriggerBounds(true, radius)
+		end
 		self:SetCollisionGroup(COLLISION_GROUP_PROJECTILE)
 	end
 	self:AddEFlags(EFL_DONTBLOCKLOS)

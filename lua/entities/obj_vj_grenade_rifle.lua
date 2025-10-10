@@ -31,7 +31,6 @@ ENT.RadiusDamageForce = 90
 ENT.CollisionDecal = "Scorch"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:InitPhys()
-	self:PhysicsInitSphere(5, "metal_bouncy")
 	local phys = self:GetPhysicsObject()
 	if IsValid(phys) then
 		phys:AddAngleVelocity(Vector(0, math.random(300, 400), 0))

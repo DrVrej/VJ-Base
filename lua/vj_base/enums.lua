@@ -125,7 +125,7 @@ VJ.MEM_CACHE_CLASSES				= "cache_classes" -- Cached "self.VJ_NPC_Class" | table 
 VJ.MEM_CACHE_DISPOSITION			= "cache_disposition" -- Cached disposition, used alongside VJ.MEM_CACHE_CLASSES | D_* enums | WARNING: Avoid editing, used internally
 VJ.MEM_CACHE_ENT_TYPE				= "cache_ent_type" -- Cached value of the entity type | 0 = Other, 1 = NPC, 2 = Player, 3 = NextBot | WARNING: Avoid editing, used internally
 
--- Animation type
+-- Animation types
 VJ.ANIM_TYPE_NONE					= false -- No type detected including fail cases and resets | DEFAULT
 VJ.ANIM_TYPE_ACTIVITY				= 1 -- Animation is an activity
 VJ.ANIM_TYPE_SEQUENCE				= 2 -- Animation is a sequence
@@ -149,6 +149,24 @@ VJ.BLOOD_COLOR_BLUE					= "Blue"
 VJ.BLOOD_COLOR_PURPLE				= "Purple"
 VJ.BLOOD_COLOR_WHITE				= "White"
 VJ.BLOOD_COLOR_OIL					= "Oil"
+
+-- Difficulty values
+VJ.DIFFICULTY_NEANDERTHAL			= -5
+VJ.DIFFICULTY_PUNY					= -4
+VJ.DIFFICULTY_TRIVIAL				= -3
+VJ.DIFFICULTY_EASY					= -2
+VJ.DIFFICULTY_BEGINNER				= -1
+VJ.DIFFICULTY_NORMAL				= 0 -- Default
+VJ.DIFFICULTY_DIFFICULT				= 1
+VJ.DIFFICULTY_HARD					= 2
+VJ.DIFFICULTY_EXPERT				= 3
+VJ.DIFFICULTY_INSANE				= 4
+VJ.DIFFICULTY_IMPOSSIBLE			= 5
+VJ.DIFFICULTY_LUNATIC				= 6
+VJ.DIFFICULTY_NIGHTMARE				= 7
+VJ.DIFFICULTY_HELL_ON_EARTH			= 8
+VJ.DIFFICULTY_TOTAL_ANNIHILATION	= 9
+VJ.DIFFICULTY_EXTINCTION			= 10
 
 -- Projectile types
 VJ.PROJ_TYPE_LINEAR					= 0

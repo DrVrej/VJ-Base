@@ -283,22 +283,24 @@ if CLIENT then
 		DComboBox:SetConVar("gmod_npcweapon")
 		DComboBox:SetSortItems(false)
 
-		DComboBox:AddChoice("#menubar.npcs.defaultweapon", "")
-		DComboBox:AddChoice("#menubar.npcs.noweapon", "none")
+
+		DComboBox:AddChoice( "#menubar.npcs.defaultweapon", "", false, "icon16/gun.png" )
+		DComboBox:AddChoice( "#menubar.npcs.noweapon", "none", false, "icon16/cross.png" )
 		DComboBox:AddSpacer()
 
+		local CustomIcons = list.Get( "ContentCategoryIcons" )
 		-- Sort the items by name, and group by category
 		local groupedWeps = {}
 		for _, v in pairs( list.Get( "VJBASE_SPAWNABLE_NPC_WEAPON" ) ) do
 			local cat = (v.category or ""):lower()
 			groupedWeps[ cat ] = groupedWeps[ cat ] or {}
-			groupedWeps[ cat ][ v.class ] = language.GetPhrase( v.title )
+			groupedWeps[ cat ][ v.class ] = { title = language.GetPhrase( v.title ), icon = CustomIcons[ v.category or "" ] or "icon16/gun.png" }
 		end
 
 		for _, items in SortedPairs( groupedWeps ) do
 			DComboBox:AddSpacer()
-			for class, title in SortedPairsByValue( items ) do
-				DComboBox:AddChoice( title, class )
+			for class, info in SortedPairsByMemberValue( items, "title" ) do
+				DComboBox:AddChoice( info.title, class, false, info.icon )
 			end
 		end
 

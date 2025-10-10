@@ -213,69 +213,60 @@ if SERVER && (!isfunction(FindMetaTable("Entity").SetSurroundingBoundsType) or !
 	timer.Simple(1, function()
 		if !VJBASE_ERROR_OUTDATED_GAME then
 			VJBASE_ERROR_OUTDATED_GAME = true
-			timer.Create("VJBASE_ERROR_OUTDATED_GAME", 2, 1, function()
-				PrintMessage(HUD_PRINTTALK, "--- VJ Base Error! ---")
-				PrintMessage(HUD_PRINTTALK, "Game is running on an old unsupported version!")
-				PrintMessage(HUD_PRINTTALK, "Expect errors, bugs, and crashes!")
+			timer.Simple(2, function()
+				PrintMessage(HUD_PRINTTALK, "VJ Base: ERROR - Outdated game detected! Garry's Mod is running on an old unsupported version! Expect errors, bugs, and crashes!")
 			end)
 		end
 	end)
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Confliction Check ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Incompatible Mod Check ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if SLVBase then
 	timer.Simple(1, function()
 		if !VJBASE_ERROR_INCOMPATIBLE then
 			VJBASE_ERROR_INCOMPATIBLE = true
 			if CLIENT then
-				chat.AddText(Color(255, 100, 0), "Confliction Detected!",
-				Color(0, 255, 0), " VJ Base ",
-				Color(255, 255, 255), "is being overridden by another addon!")
-				chat.AddText(Color(0, 200, 200), "Incompatible Addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
+				chat.AddText(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base: ", VJ.COLOR_RED, "ERROR - Incompatible mod detected! Check here for list of incompatible addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
 
 				local frame = vgui.Create("DFrame")
-				frame:SetSize(600, 200)
+				frame:SetSize(600, 180)
 				frame:SetPos((ScrW() - frame:GetWide()) / 2, (ScrH() - frame:GetTall()) / 2)
-				frame:SetTitle("VJ Base Error: Confliction Detected!")
+				frame:SetTitle("VJ Base: ERROR - Incompatible Mod Detected!")
 				frame:SetBackgroundBlur(true)
 				frame:MakePopup()
 	
 				local labelTitle = vgui.Create("DLabel", frame)
-				labelTitle:SetPos(130, 30)
-				labelTitle:SetText("CONFLICTION DETECTED!")
 				labelTitle:SetFont("VJBaseLarge")
-				labelTitle:SetTextColor(Color(255, 128, 128))
+				labelTitle:SetPos(0, 30)
+				labelTitle:SetText("INCOMPATIBILITY DETECTED!")
+				labelTitle:SetTextColor(VJ.COLOR_RED_LIGHT)
 				labelTitle:SizeToContents()
+				labelTitle:CenterHorizontal()
 				
-				local label1 = vgui.Create("DLabel", frame)
-				label1:SetPos(70, 70)
-				label1:SetText("VJ Base is being overridden by another addon!")
-				label1:SetFont("VJBaseMedium")
-				label1:SizeToContents()
+				local labelDesc = vgui.Create("DLabel", frame)
+				labelDesc:SetFont("VJBaseMedium")
+				labelDesc:SetPos(15, 65)
+				labelDesc:SetText("VJ Base has detected an incompatible mod. Uninstall the\nincompatible mod and restart your game to fix it. Click the\nlink below to view all known incompatible mods.")
+				labelDesc:SizeToContents()
 				
-				local label2 = vgui.Create("DLabel", frame)
-				label2:SetPos(10, 100)
-				label2:SetText("You have an addon installed that is overriding something in VJ Base. Uninstall the conflicting addon, and then restart your\n game to fix it. Click the link below to view all known incompatible addons. If you find any addons that are conflicting with\n                    VJ Base, be sure to leave a comment in the collection with a link to the incompatible addon!")
-				label2:SizeToContents()
-				
-				local link = vgui.Create("DLabelURL", frame)
-				link:SetSize(300, 20)
-				link:SetPos(180, 140)
-				link:SetText("Incompatible_addons_(Steam_Workshop_Collection)")
-				link:SetURL("http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
+				local buttonLink = vgui.Create("DButton", frame)
+				buttonLink:SetFont("VJBaseMedium")
+				buttonLink:SetText("Incompatible Mods")
+				buttonLink:SetPos(155, 140)
+				buttonLink:SetSize(200, 35)
+				buttonLink.DoClick = function()
+					gui.OpenURL("http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
+				end
 				
 				local buttonClose = vgui.Create("DButton", frame)
-				buttonClose:SetText("UNDERSTOOD")
-				buttonClose:SetPos(260, 160)
+				buttonClose:SetFont("VJBaseMedium")
+				buttonClose:SetText("CLOSE")
+				buttonClose:SetPos(365, 140)
 				buttonClose:SetSize(80, 35)
 				buttonClose.DoClick = function()
 					frame:Close()
 				end
-			elseif SERVER then
-				timer.Create("VJBASE_ERROR_INCOMPATIBLE", 5, 0, function()
-					MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base: ", VJ.COLOR_RED, "Error! Incompatible addon detected! Check this link for list of incompatible addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108\n")
-				end)
 			end
 		end
 	end)
