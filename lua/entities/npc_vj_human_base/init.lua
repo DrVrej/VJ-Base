@@ -3466,10 +3466,20 @@ function ENT:CanFireWeapon(checkDistance, checkDistanceOnly)
 	if selfData.PauseAttacks or !IsValid(curWep) or self:GetWeaponState() != VJ.WEP_STATE_READY then return false end
 	if selfData.VJ_IsBeingControlled then
 		checkDistance = false
+		if checkDistanceOnly then
+			return true
+		end
 	else
 		local enemyDist = selfData.EnemyData.Distance
-		if checkDistance && CurTime() > selfData.NextWeaponAttackT && enemyDist < selfData.Weapon_MaxDistance && ((enemyDist > selfData.Weapon_MinDistance) or curWep.IsMeleeWeapon) then
-			hasDist = true
+		if checkDistance && CurTime() > selfData.NextWeaponAttackT then
+			if curWep.IsMeleeWeapon then
+				-- Melee weapons only check for distance if not already playing the attack animation
+				if VJ.IsCurrentAnim(self, selfData.WeaponAttackAnim) or enemyDist < selfData.Weapon_MaxDistance then
+					hasDist = true
+				end
+			elseif enemyDist < selfData.Weapon_MaxDistance && enemyDist > selfData.Weapon_MinDistance then
+				hasDist = true
+			end
 		end
 		if checkDistanceOnly then
 			return hasDist
@@ -3719,7 +3729,7 @@ function ENT:SelectSchedule()
 									VJ.EmitSound(self, wep.NPC_BeforeFireSound, wep.NPC_BeforeFireSoundLevel, math.Rand(wep.NPC_BeforeFireSoundPitch.a, wep.NPC_BeforeFireSoundPitch.b))
 									selfData.NextMeleeWeaponAttackT = curTime + animDur
 									selfData.WeaponAttackAnim = finalAnim
-									self:PlayAnim(finalAnim, false, false, true)
+									self:PlayAnim(finalAnim, "LetAttacks", false, true) -- "LetAttacks" so it won't cut off the animation just to chase when the enemy moves away
 									selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_FIRE_STAND
 								end
 							-- Ranged weapons

@@ -396,10 +396,23 @@ function ENT:Think()
 			//npc:SetAngles(Angle(0, math.ApproachAngle(npc:GetAngles().y, ply:GetAimVector():Angle().y, 100), 0))
 			npc:SetTurnTarget(bullseyePos, 0.2)
 			canTurn = false
-			if !VJ.IsCurrentAnim(npc, npc:TranslateActivity(npc.WeaponAttackAnim)) && !VJ.IsCurrentAnim(npc, npc.AnimTbl_WeaponAttack) then
+			if npcWeapon.IsMeleeWeapon then
+				if curTime > npc.NextMeleeWeaponAttackT then
+					npc:OnWeaponAttack()
+					local anim = npc:TranslateActivity(VJ.PICK(npc.AnimTbl_WeaponAttack))
+					local animDur = VJ.AnimDuration(npc, anim)
+					npc.NextMeleeWeaponAttackT = curTime + animDur
+					npc.WeaponAttackAnim = anim
+					npc:PlayAnim(anim, "LetAttacks", false, false)
+					npc.WeaponAttackState = VJ.WEP_ATTACK_STATE_FIRE_STAND
+					npcWeapon.NPC_NextPrimaryFire = animDur -- Make melee weapons dynamically change the next primary fire
+					npcWeapon:NPCShoot_Primary()
+				end
+			elseif !VJ.IsCurrentAnim(npc, npc:TranslateActivity(npc.WeaponAttackAnim)) && !VJ.IsCurrentAnim(npc, npc.AnimTbl_WeaponAttack) then
 				npc:OnWeaponAttack()
-				npc.WeaponAttackAnim = VJ.PICK(npc.AnimTbl_WeaponAttack)
-				npc:PlayAnim(npc.WeaponAttackAnim, false, 2, false)
+				local anim = npc:TranslateActivity(VJ.PICK(npc.AnimTbl_WeaponAttack))
+				npc.WeaponAttackAnim = anim
+				npc:PlayAnim(anim, false, 2, false)
 				npc.WeaponAttackState = VJ.WEP_ATTACK_STATE_FIRE_STAND
 			end
 		end
