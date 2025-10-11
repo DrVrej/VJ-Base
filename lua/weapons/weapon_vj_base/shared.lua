@@ -554,11 +554,12 @@ function SWEP:NPC_CanFire(selfData, owner)
 		return false
 	end
 	if (isVJHuman && (ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE or (ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND && VJ.IsCurrentAnim(owner, ownerData.WeaponAttackAnim)))) or (!isVJHuman) then
+		if selfData.IsMeleeWeapon then return true end
 		local isControlled = ownerData.VJ_IsBeingControlled
 		-- For VJ Humans only, ammo check
 		if isVJHuman && ownerData.Weapon_CanReload && self:Clip1() <= 0 then -- No ammo!
 			if isControlled then ownerData.VJ_TheController:PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
-			if selfData.HasDryFireSound && !selfData.IsMeleeWeapon && CurTime() > selfData.NPC_NextDrySoundT then
+			if selfData.HasDryFireSound && CurTime() > selfData.NPC_NextDrySoundT then
 				local sdTbl = VJ.PICK(selfData.DryFireSound)
 				if sdTbl then
 					owner:EmitSound(sdTbl, 80, math.random(selfData.DryFireSoundPitch.a, selfData.DryFireSoundPitch.b), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter)
