@@ -10,13 +10,14 @@ local spawnCategory = "VJ Dummy Category" -- Category, you can also set a catego
 /* -- Example Registrations
 -- For full list of registration functions and options, navigate to the "lua/autorun/vj_controls.lua" file in VJ Base
 
-VJ.AddNPC("Dummy SNPC", "npc_vj_dum_dummy", spawnCategory) -- Adds a NPC to the spawnmenu
+-- Entities --
+VJ.AddNPC("Dummy NPC", "npc_vj_dum_dummy", spawnCategory) -- Adds a NPC to the spawnmenu
 	-- Parameters:
 		-- First is the name
 		-- Second is the class name
 		-- Third is the category that it should be in
 		-- Fourth is optional, which is a boolean that defines whether or not it's an admin-only entity
-VJ.AddNPC_HUMAN("Dummy Human SNPC", "npc_vj_dum_dummy", {"weapon_vj_dummy"}, spawnCategory) -- Adds a NPC to the spawnmenu but with a list of default weapons it spawns with
+VJ.AddNPC_HUMAN("Dummy Human NPC", "npc_vj_dum_dummy", {"weapon_vj_dummy"}, spawnCategory) -- Adds a NPC to the spawnmenu but with a list of default weapons it spawns with
 	-- Parameters:
 		-- First is the name
 		-- Second is the class name
@@ -34,7 +35,7 @@ VJ.AddNPCWeapon("VJ_Dummy", "weapon_vj_dummy", spawnCategory) -- Adds a weapon t
 		-- First is the name
 		-- Second is the class name
 		-- Third is the category that it should be in
-VJ.AddEntity("Dummy Kit", "sent_vj_dummykit", "Author Name", false, 0, true, spawnCategory) -- Adds an entity to the spawnmenu
+VJ.AddEntity("Dummy Entity", "sent_vj_dummy", "Author Name", false, 0, true, spawnCategory) -- Adds an entity to the spawnmenu
 	-- Parameters: 
 		-- First is the name
 		-- Second is the class name
@@ -45,15 +46,15 @@ VJ.AddEntity("Dummy Kit", "sent_vj_dummykit", "Author Name", false, 0, true, spa
 		-- Seventh is the category that it should be in
 
 -- Particles --
-VJ.AddParticle("particles/example_particle.pcf",{
-	"example_particle_name1",
-	"example_particle_name2",
+VJ.AddParticle("particles/dummy_particle.pcf", {
+	"dummy_particle1",
+	"dummy_particle2",
 })
 
 -- Precache Models --
-util.PrecacheModel("models/example_model.mdl")
+util.PrecacheModel("models/dummy_model.mdl")
 
 -- ConVars --
-VJ.AddConVar("vj_example_convarname", 100)
+VJ.AddConVar("vj_dummy_convar", 100)
 
 */
