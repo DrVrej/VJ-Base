@@ -168,6 +168,25 @@ if SERVER then
 			end)
 		end
 	end)
+	---------------------------------------------------------------------------------------------------------------------------------------------
+	hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn_Msg", function(ply, transition)
+		timer.Simple(1, function()
+			if VJBASE_DISABLE_INIT_MESSAGE != true then
+				net.Start("vj_welcome")
+				net.Send(ply)
+			end
+		end)
+	end)
+	---------------------------------------------------------------------------------------------------------------------------------------------
+	net.Receive("vj_meme", function(len, ply)
+		if ply:IsPlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
+			local memeType = net.ReadUInt(1) -- 2 types total
+			PrintMessage(HUD_PRINTTALK, memeType == 1 and "Are you thirsty?" or "Hello from DrVrej! :D")
+			local sd = CreateSound(game.GetWorld(), memeType == 1 and "vj_base/player/areyouthristy.wav" or "vj_base/player/illuminati.mp3", VJ_RecipientFilter)
+			sd:SetSoundLevel(0)
+			sd:Play()
+		end
+	end)
 elseif CLIENT then
 	hook.Add("AddToolMenuTabs", "VJ_CREATETOOLTAB", function()
 		spawnmenu.AddToolTab("DrVrej", "DrVrej", "vj_base/icons/vrejgaming.png")
@@ -178,34 +197,13 @@ elseif CLIENT then
 		spawnmenu.AddToolCategory("DrVrej", "Tools", "#vjbase.menu.tabs.tool")
 		spawnmenu.AddToolCategory("DrVrej", "SNPC Configures", "#vjbase.menu.tabs.npc.plugins")
 	end)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn_Msg", function(ply, transition)
-	timer.Simple(1, function()
-		if VJBASE_DISABLE_INIT_MESSAGE != true then
-			net.Start("vj_welcome")
-			net.Send(ply)
-		end
-		
-		if !game.SinglePlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
-			PrintMessage(HUD_PRINTTALK, "DrVrej has joined the game!")
-			PrintMessage(HUD_PRINTCENTER, "DrVrej has joined the game!")
-			local sd = CreateSound(game.GetWorld(), "vj_base/player/illuminati.mp3", VJ_RecipientFilter)
-			sd:SetSoundLevel(0)
-			sd:Play()
-			timer.Simple(10, function() if sd then sd:Stop() end end)
-		end
+	---------------------------------------------------------------------------------------------------------------------------------------------
+	local colorDarkCyan = Color(30, 200, 255)
+	--
+	net.Receive("vj_welcome", function(len)
+		chat.AddText(VJ.COLOR_CYAN, "VJ Base ", colorDarkCyan, VJBASE_VERSION, VJ.COLOR_WHITE, " : Navigate to the ", VJ.COLOR_YELLOW, "DrVrej", VJ.COLOR_WHITE, " tab in the spawn menu for settings.")
 	end)
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
-net.Receive("vj_meme", function(len, ply)
-	if ply:IsPlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
-		PrintMessage(HUD_PRINTTALK, "DrVrej is in the server!")
-		local sd = CreateSound(game.GetWorld(), "vj_base/player/illuminati.mp3", VJ_RecipientFilter)
-		sd:SetSoundLevel(0)
-		sd:Play()
-	end
-end)
+end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Outdated Game Check ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

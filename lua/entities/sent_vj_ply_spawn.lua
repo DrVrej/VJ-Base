@@ -26,9 +26,6 @@ end
 if !SERVER then return end
 
 ENT.Active = true -- Is this spawn point active?
-
-local colorGreen = Color(0, 255, 0)
-local colorRed = Color(255, 0, 0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetModel("models/props_junk/sawblade001a.mdl")
@@ -43,7 +40,7 @@ function ENT:Initialize()
 		phys:Wake()
 	end
 
-	self:SetColor(colorGreen)
+	self:SetColor(VJ.COLOR_GREEN)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Use(activator, caller)
@@ -51,12 +48,12 @@ function ENT:Use(activator, caller)
 		if self.Active then
 			self.Active = false
 			self:EmitSound("hl1/fvox/deactivated.wav", 70, 100)
-			self:SetColor(colorRed)
+			self:SetColor(VJ.COLOR_RED)
 			activator:PrintMessage(HUD_PRINTTALK, "#vjbase.spawnpoint.print.deactivated")
 		else
 			self.Active = true
 			self:EmitSound("hl1/fvox/activated.wav", 70, 100)
-			self:SetColor(colorGreen)
+			self:SetColor(VJ.COLOR_GREEN)
 			activator:PrintMessage(HUD_PRINTTALK, "#vjbase.spawnpoint.print.activated")
 		end
 	end

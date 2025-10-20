@@ -3695,7 +3695,7 @@ function ENT:SelectSchedule()
 									if nearestPos:Distance(nearestEntPos) <= (selfData.IsGuard and 100 or 1000) then
 										if selfData.IsGuard then self.GuardData.Position = nearestEntPos; self.GuardData.Direction = nearestEntPos + self:GetForward() * 51 end -- Set the guard position to this new position that provides cover
 										self:SetLastPosition(nearestEntPos)
-										//VJ.DEBUG_TempEnt(nearestEntPos, self:GetAngles(), Color(0, 255, 255))
+										//VJ.DEBUG_TempEnt(nearestEntPos, self:GetAngles(), VJ.COLOR_CYAN)
 										local schedule = vj_ai_schedule.New("SCHEDULE_GOTO_POSITION")
 										schedule:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
 										local coverRunAnim = self:TranslateActivity(PICK(selfData.AnimTbl_MoveToCover))

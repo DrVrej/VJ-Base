@@ -30,7 +30,7 @@ SWEP.PrimaryEffects_MuzzleParticles = {"vj_muzzle_blaster_red"}
 SWEP.PrimaryEffects_MuzzleParticlesAsOne = true
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = false
-SWEP.PrimaryEffects_DynamicLightColor = Color(255, 0, 0)
+SWEP.PrimaryEffects_DynamicLightColor = VJ.COLOR_RED
 
 SWEP.HasReloadSound = true
 SWEP.ReloadSound = "vj_base/weapons/blaster/reload.wav"

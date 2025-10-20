@@ -216,6 +216,7 @@ VJ.COLOR_BLUE_SKY					= Color(135, 206, 235)
 VJ.COLOR_CYAN						= Color(0, 255, 255)
 VJ.COLOR_YELLOW						= Color(255, 255, 0)
 VJ.COLOR_ORANGE						= Color(255, 165, 0)
+VJ.COLOR_ORANGE_VIVID				= Color(255, 100, 0)
 VJ.COLOR_PURPLE						= Color(128, 0, 128)
 VJ.COLOR_PINK						= Color(255, 192, 203)
 

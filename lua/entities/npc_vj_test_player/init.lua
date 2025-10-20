@@ -105,7 +105,7 @@ function ENT:OnGrenadeAttackExecute(status, grenade, overrideEnt, landDir, landi
 		redGlow:Spawn()
 		redGlow:Activate()
 		grenade:DeleteOnRemove(redGlow)
-		local redTrail = util.SpriteTrail(grenade, 1, Color(255, 0, 0), true, 8, 1, 0.5, 0.0555, "sprites/bluelaser1.vmt")
+		local redTrail = util.SpriteTrail(grenade, 1, VJ.COLOR_RED, true, 8, 1, 0.5, 0.0555, "sprites/bluelaser1.vmt")
 		redTrail:SetKeyValue("rendermode", "5") -- kRenderTransAdd
 		redTrail:SetKeyValue("renderfx", "0") -- kRenderFxNone
 		grenade.SoundTbl_Idle = "Grenade.Blip"

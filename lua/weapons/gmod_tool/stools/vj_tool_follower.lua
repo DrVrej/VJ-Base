@@ -15,7 +15,6 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
-	
 	local ent = tr.Entity
 	if !IsValid(ent) or !ent:IsNPC() or !ent.IsVJBaseSNPC then return end
 	local ply = self:GetOwner()
@@ -37,7 +36,6 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
-	
 	local ent = tr.Entity
 	if !IsValid(ent) then return end
 	local ply = self:GetOwner()
@@ -69,7 +67,6 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:Reload(tr)
 	if CLIENT then return true end
-	
 	local ent = tr.Entity
 	if !IsValid(ent) or !ent:IsNPC() or !ent.IsVJBaseSNPC then return end
 	ent:ResetFollowBehavior()

@@ -1297,12 +1297,12 @@ function ENT:DoCoverTrace(startPos, endPos, acceptWorld, extraOptions)
 	local hitPos = tr.HitPos
 	local hitEnt = tr.Entity
 	if extraOptions.Debug then
-		debugoverlay.Box(startPos, Vector(-2, -2, -2), Vector(2, 2, 2), 1, Color(0, 255, 0))
+		debugoverlay.Box(startPos, Vector(-2, -2, -2), Vector(2, 2, 2), 1, VJ.COLOR_GREEN)
 		debugoverlay.Text(startPos, "DoCoverTrace - startPos", 1)
-		debugoverlay.Box(endPos, Vector(-2, -2, -2), Vector(2, 2, 2), 1, Color(255, 0, 0))
+		debugoverlay.Box(endPos, Vector(-2, -2, -2), Vector(2, 2, 2), 1, VJ.COLOR_RED)
 		debugoverlay.Text(endPos, "DoCoverTrace - endPos", 1)
-		debugoverlay.Box(hitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 1, Color(255, 255, 0))
-		debugoverlay.Line(startPos, hitPos, 1, Color(255, 255, 0))
+		debugoverlay.Box(hitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 1, VJ.COLOR_YELLOW)
+		debugoverlay.Line(startPos, hitPos, 1, VJ.COLOR_YELLOW)
 		debugoverlay.Text(hitPos, "DoCoverTrace - tr.HitPos", 1)
 	end
 	
@@ -1449,9 +1449,9 @@ function ENT:IsJumpLegal(startPos, apex, endPos)
 		start = endPos,
 		endpos = endPos + vecZN100,
 	})
-	/*VJ.DEBUG_TempEnt(startPos, Angle(0, 0, 0), Color(0, 255, 0))
+	/*VJ.DEBUG_TempEnt(startPos, Angle(0, 0, 0), VJ.COLOR_GREEN)
 	VJ.DEBUG_TempEnt(apex, Angle(0, 0, 0), Color(255, 115, 0))
-	VJ.DEBUG_TempEnt(endPos, Angle(0, 0, 0), Color(255, 0, 0))
+	VJ.DEBUG_TempEnt(endPos, Angle(0, 0, 0), VJ.COLOR_RED)
 	VJ.DEBUG_TempEnt(tr.HitPos, Angle(0, 0, 0), Color(132, 0, 255))*/
 	return tr.Hit
 end

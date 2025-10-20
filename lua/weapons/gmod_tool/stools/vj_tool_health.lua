@@ -19,30 +19,30 @@ local defaultConvars = TOOL:BuildConVarList()
 if CLIENT then
 	local function ControlPanel(panel)
 		local reset = vgui.Create("DButton")
-		reset:SetFont("DermaDefaultBold")
-		reset:SetText("#vjbase.menu.general.reset.everything")
-		reset:SetSize(150, 25)
-		reset:SetColor(VJ.COLOR_BLACK)
-		reset.DoClick = function()
-			for k, v in pairs(defaultConvars) do
-				LocalPlayer():ConCommand(k .. " " .. v)
+			reset:SetFont("DermaDefaultBold")
+			reset:SetText("#vjbase.menu.general.reset.everything")
+			reset:SetSize(150, 25)
+			reset:SetColor(VJ.COLOR_BLACK)
+			function reset:DoClick()
+				for k, v in pairs(defaultConvars) do
+					LocalPlayer():ConCommand(k .. " " .. v)
+				end
+				timer.Simple(0.05, function() -- Otherwise it will not update the values in time
+					local getPanel = controlpanel.Get("vj_tool_health")
+					getPanel:Clear()
+					ControlPanel(getPanel)
+				end)
 			end
-			timer.Simple(0.05, function() -- Otherwise it will not update the values in time
-				local getPanel = controlpanel.Get("vj_tool_health")
-				getPanel:Clear()
-				ControlPanel(getPanel)
-			end)
-		end
 		panel:AddPanel(reset)
 		
 		local tutorial = vgui.Create("DButton")
-		tutorial:SetFont("DermaDefaultBold")
-		tutorial:SetText("#vjbase.menu.general.tutorial.vid")
-		tutorial:SetSize(150, 20)
-		tutorial:SetColor(VJ.COLOR_BLUE)
-		tutorial.DoClick = function()
-			gui.OpenURL("http://www.youtube.com/watch?v=kLygPP-vbHY")
-		end
+			tutorial:SetFont("DermaDefaultBold")
+			tutorial:SetText("#vjbase.menu.general.tutorial.vid")
+			tutorial:SetSize(150, 20)
+			tutorial:SetColor(VJ.COLOR_BLUE)
+			function tutorial:DoClick()
+				gui.OpenURL("http://www.youtube.com/watch?v=kLygPP-vbHY")
+			end
 		panel:AddPanel(tutorial)
 		
 		panel:Help("#tool.vj_tool_health.adminonly")
@@ -61,7 +61,6 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
-	
 	local ent = tr.Entity
 	if !IsValid(ent) then return end
 	local ply = self:GetOwner()
@@ -90,7 +89,6 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
-	
 	local ent = tr.Entity
 	if !IsValid(ent) then return end
 	local ply = self:GetOwner()
@@ -120,7 +118,6 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:Reload(tr)
 	if CLIENT then return true end
-	
 	local ent = tr.Entity
 	if !IsValid(ent) then return end
 	local ply = self:GetOwner()

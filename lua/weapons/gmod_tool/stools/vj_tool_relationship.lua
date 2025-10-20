@@ -15,64 +15,66 @@ local defaultConvars = TOOL:BuildConVarList()
 if CLIENT then
 	local function ControlPanel(panel)
 		local reset = vgui.Create("DButton")
-		reset:SetFont("DermaDefaultBold")
-		reset:SetText("#vjbase.menu.general.reset.everything")
-		reset:SetSize(150, 25)
-		reset:SetColor(VJ.COLOR_BLACK)
-		reset.DoClick = function()
-			for k, v in pairs(defaultConvars) do
-				LocalPlayer():ConCommand(k .. " " .. v)
+			reset:SetFont("DermaDefaultBold")
+			reset:SetText("#vjbase.menu.general.reset.everything")
+			reset:SetSize(150, 25)
+			reset:SetColor(VJ.COLOR_BLACK)
+			function reset:DoClick()
+				for k, v in pairs(defaultConvars) do
+					LocalPlayer():ConCommand(k .. " " .. v)
+				end
+				timer.Simple(0.05, function() -- Otherwise it will not update the values in time
+					local getPanel = controlpanel.Get("vj_tool_relationship")
+					getPanel:Clear()
+					ControlPanel(getPanel)
+				end)
 			end
-			timer.Simple(0.05, function() -- Otherwise it will not update the values in time
-				local getPanel = controlpanel.Get("vj_tool_relationship")
-				getPanel:Clear()
-				ControlPanel(getPanel)
-			end)
-		end
 		panel:AddPanel(reset)
 
 		local tutorial = vgui.Create("DButton")
-		tutorial:SetFont("DermaDefaultBold")
-		tutorial:SetText("#vjbase.menu.general.tutorial.vid")
-		tutorial:SetSize(150, 20)
-		tutorial:SetColor(VJ.COLOR_BLUE)
-		tutorial.DoClick = function()
-			gui.OpenURL("http://www.youtube.com/watch?v=SnuQU8Sc4cg")
-		end
+			tutorial:SetFont("DermaDefaultBold")
+			tutorial:SetText("#vjbase.menu.general.tutorial.vid")
+			tutorial:SetSize(150, 20)
+			tutorial:SetColor(VJ.COLOR_BLUE)
+			function tutorial:DoClick()
+				gui.OpenURL("http://www.youtube.com/watch?v=SnuQU8Sc4cg")
+			end
 		panel:AddPanel(tutorial)
 
 		panel:Help("#tool.vj_tool_relationship.header")
 		panel:ControlHelp("#tool.vj_tool_relationship.header.help")
 		
-		VJ_NPCRELATION_TblCurrentValues = VJ_NPCRELATION_TblCurrentValues or {}
-		local CheckList = vgui.Create("DListView")
-			CheckList:SetTooltip(false)
-			//CheckList:Center() -- No need since Size does it already
-			CheckList:SetSize( 100, 300 ) -- Size
-			CheckList:SetMultiSelect(false)
-			CheckList:AddColumn("#tool.vj_tool_relationship.tableheader")
-			CheckList.OnRowSelected = function(rowIndex, row) chat.AddText(Color(0, 255, 0), "Double click to ", Color(255, 100, 0), "remove ", Color(0, 255, 0), "a class") end
-			function CheckList:DoDoubleClick(lineID, line)
-				chat.AddText(Color(255, 100, 0), " " .. line:GetValue(1) .. " ", Color(0, 255, 0), "removed!")
-				CheckList:RemoveLine(lineID)
-				table.Empty(VJ_NPCRELATION_TblCurrentValues)
-				for _, vLine in pairs(CheckList:GetLines()) do
-					table.insert(VJ_NPCRELATION_TblCurrentValues, vLine:GetValue(1))
+		VJ_TOOL_RELATIONSHIP_LIST = VJ_TOOL_RELATIONSHIP_LIST or {}
+		
+		local classList = vgui.Create("DListView")
+			//classList:Center() -- No need since Size does it already
+			classList:SetSize( 100, 300 )
+			classList:SetMultiSelect(false)
+			classList:AddColumn("#tool.vj_tool_relationship.tableheader")
+			function classList:OnRowSelected(rowIndex, row)
+				chat.AddText(VJ.COLOR_GREEN, "Double click to ", VJ.COLOR_ORANGE_VIVID, "remove ", VJ.COLOR_GREEN, "a class")
+			end
+			function classList:DoDoubleClick(lineID, line)
+				chat.AddText(VJ.COLOR_ORANGE_VIVID, line:GetValue(1) .. " ", VJ.COLOR_GREEN, "removed!")
+				classList:RemoveLine(lineID)
+				VJ_TOOL_RELATIONSHIP_LIST = {}
+				for _, vLine in pairs(classList:GetLines()) do
+					table.insert(VJ_TOOL_RELATIONSHIP_LIST, vLine:GetValue(1))
 				end
 			end
-		panel:AddItem(CheckList)
-		for _, v in pairs(VJ_NPCRELATION_TblCurrentValues) do
-			CheckList:AddLine(v)
+		panel:AddItem(classList)
+		for _, v in pairs(VJ_TOOL_RELATIONSHIP_LIST) do
+			classList:AddLine(v)
 		end
 		
 		local function InsertToTable(val)
 			if string.len(val) > 0 then
 				val = string.upper(val)
-				if VJ.HasValue(VJ_NPCRELATION_TblCurrentValues, val) then
-					chat.AddText(Color(220, 20, 60), "ERROR! ", Color(255, 100, 0), val .. " ", Color(220, 20, 60), "already exists in the table!")
+				if VJ.HasValue(VJ_TOOL_RELATIONSHIP_LIST, val) then
+					chat.AddText(Color(220, 20, 60), "ERROR! ", VJ.COLOR_ORANGE_VIVID, val .. " ", Color(220, 20, 60), "already exists in the table!")
 				else
-					chat.AddText(Color(0, 255, 0), "Added", Color(255, 100, 0), " " .. val .. " ", Color(0, 255, 0), "to the class list!")
-					table.insert(VJ_NPCRELATION_TblCurrentValues, val)
+					chat.AddText(VJ.COLOR_GREEN, "Added", VJ.COLOR_ORANGE_VIVID, " " .. val .. " ", VJ.COLOR_GREEN, "to the class list!")
+					table.insert(VJ_TOOL_RELATIONSHIP_LIST, val)
 					timer.Simple(0.05, function() -- Otherwise it will not update the values in time
 						local getPanel = controlpanel.Get("vj_tool_relationship")
 						getPanel:Clear()
@@ -81,73 +83,74 @@ if CLIENT then
 				end
 			end
 		end
-		local TextEntry = vgui.Create("DTextEntry")
-		//TextEntry:SetText("Press enter to add class...")
-		TextEntry.OnEnter = function()
-			InsertToTable(TextEntry:GetValue())
-		end
-		panel:AddItem(TextEntry)
-		panel:ControlHelp("#tool.vj_tool_relationship.label2")
+		
+		local textBox = vgui.Create("DTextEntry")
+			textBox:SetPlaceholderText(language.GetPhrase("#tool.vj_tool_relationship.label2") .. "...")
+			function textBox:OnEnter(value)
+				InsertToTable(value)
+			end
+		panel:AddItem(textBox)
 		
 		local button = vgui.Create("DButton")
-		button:SetFont("DermaDefaultBold")
-		button:SetText("#tool.vj_tool_relationship.button.antlion")
-		button:SetSize(50, 20)
-		button:SetColor(VJ.COLOR_BLACK)
-		button.DoClick = function()
-			InsertToTable("CLASS_ANTLION")
-		end
+			button:SetFont("DermaDefaultBold")
+			button:SetText("#tool.vj_tool_relationship.button.antlion")
+			button:SetSize(50, 20)
+			button:SetColor(VJ.COLOR_BLACK)
+			function button:DoClick()
+				InsertToTable("CLASS_ANTLION")
+			end
 		panel:AddPanel(button)
 		
 		button = vgui.Create("DButton")
-		button:SetFont("DermaDefaultBold")
-		button:SetText("#tool.vj_tool_relationship.button.combine")
-		button:SetSize(50, 20)
-		button:SetColor(VJ.COLOR_BLACK)
-		button.DoClick = function()
-			InsertToTable("CLASS_COMBINE")
-		end
+			button:SetFont("DermaDefaultBold")
+			button:SetText("#tool.vj_tool_relationship.button.combine")
+			button:SetSize(50, 20)
+			button:SetColor(VJ.COLOR_BLACK)
+			function button:DoClick()
+				InsertToTable("CLASS_COMBINE")
+			end
 		panel:AddPanel(button)
 		
 		button = vgui.Create("DButton")
-		button:SetFont("DermaDefaultBold")
-		button:SetText("#tool.vj_tool_relationship.button.hecu")
-		button:SetSize(50, 20)
-		button:SetColor(VJ.COLOR_BLACK)
-		button.DoClick = function()
-			InsertToTable("CLASS_UNITED_STATES")
-		end
+			button:SetFont("DermaDefaultBold")
+			button:SetText("#tool.vj_tool_relationship.button.hecu")
+			button:SetSize(50, 20)
+			button:SetColor(VJ.COLOR_BLACK)
+			function button:DoClick()
+				InsertToTable("CLASS_UNITED_STATES")
+			end
 		panel:AddPanel(button)
 		
 		button = vgui.Create("DButton")
-		button:SetFont("DermaDefaultBold")
-		button:SetText("#tool.vj_tool_relationship.button.xen")
-		button:SetSize(50, 20)
-		button:SetColor(VJ.COLOR_BLACK)
-		button.DoClick = function()
-			InsertToTable("CLASS_XEN")
-		end
+			button:SetFont("DermaDefaultBold")
+			button:SetText("#tool.vj_tool_relationship.button.xen")
+			button:SetSize(50, 20)
+			button:SetColor(VJ.COLOR_BLACK)
+			function button:DoClick()
+				InsertToTable("CLASS_XEN")
+			end
 		panel:AddPanel(button)
 		
 		button = vgui.Create("DButton")
-		button:SetFont("DermaDefaultBold")
-		button:SetText("#tool.vj_tool_relationship.button.zombie")
-		button:SetSize(50, 20)
-		button:SetColor(VJ.COLOR_BLACK)
-		button.DoClick = function()
-			InsertToTable("CLASS_ZOMBIE")
-		end
+			button:SetFont("DermaDefaultBold")
+			button:SetText("#tool.vj_tool_relationship.button.zombie")
+			button:SetSize(50, 20)
+			button:SetColor(VJ.COLOR_BLACK)
+			function button:DoClick()
+				InsertToTable("CLASS_ZOMBIE")
+			end
 		panel:AddPanel(button)
 		
 		button = vgui.Create("DButton")
-		button:SetFont("DermaDefaultBold")
-		button:SetText("#tool.vj_tool_relationship.button.player")
-		button:SetSize(50, 20)
-		button:SetColor(VJ.COLOR_BLACK)
-		button.DoClick = function()
-			InsertToTable("CLASS_PLAYER_ALLY")
-		end
+			button:SetFont("DermaDefaultBold")
+			button:SetText("#tool.vj_tool_relationship.button.player")
+			button:SetSize(50, 20)
+			button:SetColor(VJ.COLOR_BLACK)
+			function button:DoClick()
+				InsertToTable("CLASS_PLAYER_ALLY")
+			end
 		panel:AddPanel(button)
+		
 		panel:CheckBox("#tool.vj_tool_relationship.togglealliedply", "vj_tool_relationship_allytoplyallies")
 		panel:ControlHelp(language.GetPhrase("#tool.vj_tool_relationship.label3"))
 	end
@@ -163,12 +166,8 @@ if CLIENT then
 			local entname = net.ReadString()
 			//local hasclasstbl = net.ReadBool()
 			local classtbl = net.ReadTable()
-			chat.AddText(Color(0, 255, 0), "Obtained", Color(255, 100, 0), " " .. entname .. "'s ", Color(0, 255, 0), "relationship class list!")
-			//print(ent)
-			//print(hasclasstbl)
-			//PrintTable(classtbl)
-			//print(#classtbl)
-			VJ_NPCRELATION_TblCurrentValues = classtbl
+			chat.AddText(VJ.COLOR_GREEN, "Obtained", VJ.COLOR_ORANGE_VIVID, " " .. entname .. "'s ", VJ.COLOR_GREEN, "relationship class list!")
+			VJ_TOOL_RELATIONSHIP_LIST = classtbl
 			timer.Simple(0.05, function() -- Otherwise it will not update the values in time
 				local getPanel = controlpanel.Get("vj_tool_relationship")
 				getPanel:Clear()
@@ -185,13 +184,13 @@ if CLIENT then
 			local clicktype = net.ReadString()
 			local allynum = net.ReadFloat()
 			if clicktype == "ReloadClick" then entname = "Yourself" end
-			chat.AddText(Color(0, 255, 0), "#tool.vj_tool_relationship.print.applied", Color(255, 100, 0), " " .. entname)
+			chat.AddText(VJ.COLOR_GREEN, "#tool.vj_tool_relationship.print.applied", VJ.COLOR_ORANGE_VIVID, " " .. entname)
 			net.Start("vj_tool_relationship_sv_apply")
-			net.WriteEntity(ent)
-			//net.WriteTable(self)
-			//net.WriteString(clicktype)
-			net.WriteTable(VJ_NPCRELATION_TblCurrentValues)
-			net.WriteFloat(allynum)
+				net.WriteEntity(ent)
+				//net.WriteTable(self)
+				//net.WriteString(clicktype)
+				net.WriteTable(VJ_TOOL_RELATIONSHIP_LIST)
+				net.WriteFloat(allynum)
 			net.SendToServer()
 		end
 	end)
@@ -226,10 +225,10 @@ function TOOL:LeftClick(tr)
 		local entname = ent:GetName()
 		if entname == "" then entname = ent:GetClass() end
 		net.Start("vj_tool_relationship_cl_apply")
-		net.WriteEntity(ent)
-		net.WriteString(entname)
-		net.WriteString("LeftClick")
-		net.WriteFloat(self:GetClientNumber("allytoplyallies"))
+			net.WriteEntity(ent)
+			net.WriteString(entname)
+			net.WriteString("LeftClick")
+			net.WriteFloat(self:GetClientNumber("allytoplyallies"))
 		net.Send(self:GetOwner())
 		return true
 	end
@@ -253,28 +252,21 @@ function TOOL:RightClick(tr)
 		end
 		//PrintTable(ent.VJ_NPC_Class)
 		net.Start("vj_tool_relationship_cl_select")
-		//net.WriteEntity(ent)
-		net.WriteString(entname)
-		//net.WriteBool(hasclasstbl)
-		net.WriteTable(classtbl)
+			//net.WriteEntity(ent)
+			net.WriteString(entname)
+			//net.WriteBool(hasclasstbl)
+			net.WriteTable(classtbl)
 		net.Send(self:GetOwner())
 		return true
 	end
-	/*	local trent = tr.Entity
-		trent:SetHealth(self:GetClientNumber("health"))
-		if tr.Entity:IsNPC() then
-			if self:GetClientNumber("godmode") == 1 then trent.GodMode = true else trent.GodMode = false end
-		end
-		return true
-	end*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:Reload(tr)
 	if CLIENT then return true end
 	net.Start("vj_tool_relationship_cl_apply")
-	net.WriteEntity(self:GetOwner())
-	net.WriteString("Me")
-	net.WriteString("ReloadClick")
+		net.WriteEntity(self:GetOwner())
+		net.WriteString("Me")
+		net.WriteString("ReloadClick")
 	net.Send(self:GetOwner())
 	return true
 end

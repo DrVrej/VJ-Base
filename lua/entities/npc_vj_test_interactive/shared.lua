@@ -15,17 +15,17 @@ end
 if CLIENT then
 	net.Receive("vj_npc_testint_menu", function()
 		local welMsgs = {
-			"Welcome to my shop, how can I help you?",
 			"Hi!",
+			"Welcome to my shop, how can I help you?",
 			"Hello " .. LocalPlayer():GetName() .. ", You need anything?",
 			"What can I do for you " .. LocalPlayer():GetName() .. "?",
 			"This ain't cheap stuff, but it is good!",
 		}
 	
 		local frame = vgui.Create("DFrame")
-		frame:SetSize(600, 300)
-		frame:SetPos(ScrW()*0.5, ScrH()*0.5)
-		frame:SetTitle('VJ Test Menu')
+		frame:SetSize(450, 210)
+		frame:SetPos(ScrW() * 0.5, ScrH() * 0.5)
+		frame:SetTitle("VJ Test Menu")
 		//frame:SetBackgroundBlur(true)
 		frame:SetSizable(true)
 		frame:SetDeleteOnClose(false)
@@ -47,7 +47,7 @@ if CLIENT then
 		
 		local label_admin = vgui.Create("DLabel", frame)
 		label_admin:SetPos(10, 110)
-		label_admin:SetText("NOTE: Only admins can use these buttons! Most of this commands require 'sv_cheats' to be 1")
+		label_admin:SetText("Only admins can use the buttons below and they require require \"sv_cheats\" to be on!")
 		label_admin:SizeToContents()
 		
 		local button_god = vgui.Create("DButton", frame)
@@ -86,22 +86,14 @@ if CLIENT then
 			local button_vj = vgui.Create("DButton", frame)
 			button_vj:SetText("Illuminati")
 			button_vj:SetPos(10, 170)
-			button_vj:SetSize(50, 30)
-			button_vj.DoClick = function()
-				net.Start("vj_npc_testint_textsd")
-				net.WriteBool(false)
-				net.SendToServer()
-			end
+			button_vj:SetSize(100, 30)
+			button_vj:SetConsoleCommand("vj_run_meme", "0")
 			
 			local button_sd = vgui.Create("DButton", frame)
 			button_sd:SetText("THIRSTY")
 			button_sd:SetPos(120, 170 )
-			button_sd:SetSize(50, 30)
-			button_sd.DoClick = function()
-				net.Start("vj_npc_testint_textsd")
-				net.WriteBool(true)
-				net.SendToServer()
-			end
+			button_sd:SetSize(100, 30)
+			button_sd:SetConsoleCommand("vj_run_meme", "1")
 		end
 	end)
 end

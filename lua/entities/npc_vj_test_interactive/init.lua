@@ -18,7 +18,6 @@ ENT.HasFootstepSounds = false
 ENT.SoundTbl_Pain = {"vo/npc/male01/pain01.wav", "vo/npc/male01/pain02.wav", "vo/npc/male01/pain03.wav", "vo/npc/male01/pain04.wav", "vo/npc/male01/pain05.wav", "vo/npc/male01/pain06.wav", "vo/npc/male01/pain07.wav", "vo/npc/male01/pain08.wav", "vo/npc/male01/pain09.wav"}
 
 util.AddNetworkString("vj_npc_testint_menu")
-util.AddNetworkString("vj_npc_testint_textsd")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PreInit()
 	self.Model = "models/humans/group01/male_0" .. math.random(1, 9) .. ".mdl"
@@ -35,16 +34,3 @@ function ENT:OnInput(key, activator, caller, data)
 		self:SetTurnTarget(activator, -1)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
-net.Receive("vj_npc_testint_textsd", function(len, ply)
-	local msgType = net.ReadBool()
-	if (ply:IsPlayer() && ply:SteamID() == "STEAM_0:0:22688298") or game.SinglePlayer() then
-		local msg = (msgType == true and "Are you thirsty?") or "DrVrej is in this server, be aware!"
-		local sdFile = (msgType == true and "vj_base/player/areyouthristy.wav") or "vj_base/player/illuminati.mp3"
-		PrintMessage(HUD_PRINTTALK, msg)
-		PrintMessage(HUD_PRINTCENTER, msg)
-		local sd = CreateSound(game.GetWorld(), sdFile, VJ_RecipientFilter)
-		sd:SetSoundLevel(0)
-		sd:Play()
-	end
-end)

@@ -83,7 +83,7 @@ if CLIENT then
 			end,
 		})
 		//ParticleEffect("vj_impact_dirty", tr.HitPos, Angle(0, 0, 0), npc)
-		net.Start("vj_controller_cldata")
+		net.Start("vj_controller_data_cl")
 			net.WriteVector(tr.HitPos)
 		net.SendToServer()
 		
@@ -143,6 +143,7 @@ if CLIENT then
 	net.Receive("vj_controller_hud", function(len)
 		//print(len)
 		local enabled = net.ReadBool()
+		if enabled != true then hook.Remove("HUDPaint", "vj_controller_HUD") return end
 		local maxhp = net.ReadFloat()
 		local hp = net.ReadFloat()
 		local name = net.ReadString()
@@ -154,23 +155,23 @@ if CLIENT then
 		local atkGrenade = net.ReadInt(3)
 		local ply = LocalPlayer()
 		hook.Add("HUDPaint", "vj_controller_HUD", function()
-			draw.RoundedBox(1, ScrW() / 2.25, ScrH()-120, 220, 100, Color(0, 0, 0, 150))
-			draw.SimpleText(name, "VJBaseSmallMedium", ScrW() / 2.21, ScrH()-115, Color(255, 255, 255, 255), 0, 0)
+			draw.RoundedBox(1, ScrW() / 2.25, ScrH() - 120, 220, 100, Color(0, 0, 0, 150))
+			draw.SimpleText(name, "VJBaseSmallMedium", ScrW() / 2.21, ScrH() - 115, Color(255, 255, 255, 255), 0, 0)
 			
 			local hp_r = 255
 			local hp_g = 153
 			local hp_b = 0
-			lerp_hp = Lerp(5*FrameTime(), lerp_hp, hp)
-			draw.RoundedBox(0, ScrW() / 2.21, ScrH()-95, 180, 20, Color(hp_r, hp_g, hp_b, 40))
-			draw.RoundedBox(0, ScrW() / 2.21, ScrH()-95, (190*math.Clamp(lerp_hp, 0, maxhp))/maxhp, 20, Color(hp_r, hp_g, hp_b, 255))
+			lerp_hp = Lerp(5 * FrameTime(), lerp_hp, hp)
+			draw.RoundedBox(0, ScrW() / 2.21, ScrH() - 95, 180, 20, Color(hp_r, hp_g, hp_b, 40))
+			draw.RoundedBox(0, ScrW() / 2.21, ScrH() - 95, (190 * math.Clamp(lerp_hp, 0, maxhp))/maxhp, 20, Color(hp_r, hp_g, hp_b, 255))
 			surface.SetDrawColor(hp_r, hp_g, hp_b, 255)
-			surface.DrawOutlinedRect( ScrW() / 2.21, ScrH()-95, 180, 20)
+			surface.DrawOutlinedRect( ScrW() / 2.21, ScrH() - 95, 180, 20)
 			
 			local finalhp = tostring(string.format("%.0f", lerp_hp) .. "/" .. maxhp)
 			local distlen = string.len(finalhp)
 			local move = 0
 			if distlen > 1 then
-				move = move - (0.009*(distlen-1))
+				move = move - (0.009 * (distlen - 1))
 			end
 			draw.SimpleText(finalhp, "VJBaseSmallMedium", ScrW() / (2-move), ScrH()-94, Color(255, 255, 255, 255), 0, 0)
 			
@@ -199,15 +200,14 @@ if CLIENT then
 			-- Camera
 			surface.SetMaterial(mat_icon_camera)
 			surface.SetDrawColor(Color(255, 255, 255, 255))
-			surface.DrawTexturedRect(ScrW() / 2.21, ScrH()-45, 22, 22)
-			draw.SimpleText((ply.VJC_Camera_Mode == 1 and "Third") or "First", "VJBaseSmallMedium", ScrW() / 2.155, ScrH()-43, Color(255, 255, 255, 255), 0, 0) // VJBaseSmallMedium
+			surface.DrawTexturedRect(ScrW() / 2.21, ScrH() - 45, 22, 22)
+			draw.SimpleText((ply.VJC_Camera_Mode == 1 and "Third") or "First", "VJBaseSmallMedium", ScrW() / 2.155, ScrH() - 43, Color(255, 255, 255, 255), 0, 0) // VJBaseSmallMedium
 			
 			-- Zoom Camera
 			surface.SetMaterial(mat_icon_zoom)
 			surface.SetDrawColor(Color(255, 255, 255, 255))
-			surface.DrawTexturedRect(ScrW() / 2.065, ScrH()-45, 22, 22)
-			draw.SimpleText(ply.VJCE_Camera.Zoom, "VJBaseMedium", ScrW() / 2.005, ScrH()-45, Color(255, 255, 255, 255), 0, 0) // VJBaseSmallMedium
+			surface.DrawTexturedRect(ScrW() / 2.065, ScrH() - 45, 22, 22)
+			draw.SimpleText(ply.VJCE_Camera.Zoom, "VJBaseMedium", ScrW() / 2.005, ScrH() - 45, Color(255, 255, 255, 255), 0, 0) // VJBaseSmallMedium
 		end)
-		if enabled != true then hook.Remove("HUDPaint", "vj_controller_HUD") end
 	end)
 end

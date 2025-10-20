@@ -53,7 +53,7 @@ ENT.VJC_Removed = false
 */
 
 util.AddNetworkString("vj_controller_data")
-util.AddNetworkString("vj_controller_cldata")
+util.AddNetworkString("vj_controller_data_cl")
 util.AddNetworkString("vj_controller_hud")
 
 local vecDef = Vector(0, 0, 0)
@@ -303,7 +303,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Sadly no other way, this is the most reliable way to sync the position from client to server in time
 	-- Also avoids garbage positions that output from other methods
-net.Receive("vj_controller_cldata", function(len, ply)
+net.Receive("vj_controller_data_cl", function(len, ply)
 	-- Set the controller's bullseye position if the player is controlling an NPC AND controller entity exists AND Bullseye exists --> Protect against spam ?
 	if ply.VJ_IsControllingNPC && IsValid(ply.VJ_TheControllerEntity) && ply.VJ_TheControllerEntity.VJC_Bullseye_RefreshPos && IsValid(ply.VJ_TheControllerEntity.VJCE_Bullseye) then -- Added a var for toggling the bullseye positioning, this way if one wants to override it they can
 		ply.VJ_TheControllerEntity.VJCE_Bullseye:SetPos(net.ReadVector())
@@ -615,9 +615,5 @@ function ENT:OnRemove()
 	end
 	net.Start("vj_controller_hud")
 		net.WriteBool(false)
-		net.WriteFloat(0)
-		net.WriteFloat(0)
-		net.WriteString(" ")
-		net.WriteTable({})
 	net.Broadcast()
 end

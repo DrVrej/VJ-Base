@@ -287,7 +287,7 @@ function VJ.GetNearestPositions(ent1, ent2, centerEnt1)
 		//ent2NearPos.z = ent1Pos.z
 	end
 	local ent2NearPos = ent2:NearestPoint(ent1NearPos)
-	//VJ.DEBUG_TempEnt(ent1NearPos, Angle(0, 0, 0), Color(0, 255, 0))
+	//VJ.DEBUG_TempEnt(ent1NearPos, Angle(0, 0, 0), VJ.COLOR_GREEN)
 	//VJ.DEBUG_TempEnt(ent2NearPos)
 	return ent1NearPos, ent2NearPos
 end
@@ -310,7 +310,7 @@ function VJ.GetNearestDistance(ent1, ent2, centerEnt1)
 		ent1NearPos.y = ent1Pos.y
 	end
 	local ent2NearPos = ent2:NearestPoint(ent1NearPos)
-	//VJ.DEBUG_TempEnt(ent1NearPos, Angle(0, 0, 0), Color(0, 255, 0))
+	//VJ.DEBUG_TempEnt(ent1NearPos, Angle(0, 0, 0), VJ.COLOR_GREEN)
 	//VJ.DEBUG_TempEnt(ent2NearPos)
 	return ent2NearPos:Distance(ent1NearPos)
 end

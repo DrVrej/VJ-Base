@@ -527,9 +527,17 @@ function ENT:IsScheduleFinished(schedule)
 	return selfData.CurrentTaskComplete && (!selfData.CurrentTaskID or selfData.CurrentTaskID >= schedule:NumTasks())
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:StartTask(task) task:Start(self) end
-function ENT:RunTask(task) task:Run(self) end
-function ENT:TaskTime() return CurTime() - self.TaskStartTime end
+function ENT:StartTask(task)
+	task:Start(self)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:RunTask(task)
+	task:Run(self)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:TaskTime()
+	return CurTime() - self.TaskStartTime
+end
 -- Engine tasks / schedules ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartEngineTask(iTaskID, taskData) end
 function ENT:RunEngineTask(iTaskID, taskData) end

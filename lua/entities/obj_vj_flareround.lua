@@ -28,7 +28,6 @@ if !SERVER then return end
 
 ENT.FuseTime = 60
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local colorRed = Color(255, 0, 0)
 local colorTrailRed = Color(155, 0, 0, 150)
 --
 function ENT:Initialize()
@@ -36,7 +35,7 @@ function ENT:Initialize()
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetSolid(SOLID_VPHYSICS)
-	self:SetColor(colorRed)
+	self:SetColor(VJ.COLOR_RED)
 	self:SetUseType(SIMPLE_USE)
 	self:SetModelScale(0.5)
 
@@ -76,7 +75,7 @@ function ENT:Initialize()
 	envFlare:Fire("Start", tostring(self.FuseTime))
 	envFlare:SetOwner(self)
 	
-	envFlare:SetColor(colorRed)
+	envFlare:SetColor(VJ.COLOR_RED)
 
 	self.CurrentIdleSound = CreateSound(self, "weapons/flaregun/burn.wav")
 	self.CurrentIdleSound:SetSoundLevel(60)

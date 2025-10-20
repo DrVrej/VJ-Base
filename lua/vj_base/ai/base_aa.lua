@@ -84,7 +84,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 			})
 			if !tr_aquatic.Hit then self:MaintainIdleBehavior(1) return end
 			//print(tr_aquatic.Hit)
-			//debugoverlay.Box(tr_aquatic.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(255, 255, 0))
+			//debugoverlay.Box(tr_aquatic.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, VJ.COLOR_YELLOW)
 		-- If the destination is not a vector, then make sure it's reachable
 		else
 			if dest:WaterLevel() <= 1 then
@@ -96,7 +96,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 					filter = trFilter
 				})
 				//PrintTable(trene)
-				//debugoverlay.Box(trene.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(0, 255, 0))
+				//debugoverlay.Box(trene.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, VJ.COLOR_GREEN)
 				if trene.Hit == true then return end
 				//if IsValid(trene.Entity) && trene.Entity == dest then return end
 			end
@@ -298,7 +298,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 		local tr_check = util.TraceLine({start = finalPos, endpos = finalPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
 		if debug then
 			print("[IdleWander] checking...")
-			debugoverlay.Box(finalPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(255, 255, 255))
+			debugoverlay.Box(finalPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, VJ.COLOR_WHITE)
 			debugoverlay.Box(tr_check.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(255, 0, 255))
 		end
 		-- If it hit the world, then we are too close to the ground, replace "tr" with a new position!
@@ -313,7 +313,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 	if debug then
 		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam", tr.StartPos, finalPos, false, self:EntIndex(), 0)
 		ParticleEffect("vj_impact_dirty", finalPos, defAng, self)
-		debugoverlay.Box(finalPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(0, 255, 255))
+		debugoverlay.Box(finalPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, VJ.COLOR_CYAN)
 	end
 	
 	selfData.AA_CurrentMoveMaxSpeed = moveSpeed

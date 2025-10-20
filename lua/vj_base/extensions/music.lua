@@ -23,7 +23,7 @@ elseif CLIENT then
 				sdChan:EnableLooping(true)
 				sdChan:SetVolume(sdVol)
 				sdChan:SetPlaybackRate(sdPlayback)
-				table.insert(VJ.Music_Queue, {npc=ent, channel=sdChan})
+				table.insert(VJ.Music_Queue, {npc = ent, channel = sdChan})
 			else
 				print("[VJ Base Music] Error adding sound track!", errorID, errorName)
 			end

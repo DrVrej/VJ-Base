@@ -581,8 +581,8 @@ function SWEP:NPC_CanFire(selfData, owner)
 			sightDir.z = 0
 			sightDir:Normalize()
 			//print(sightDir:Dot(aimDir))
-			//debugoverlay.Line(spawnPos, spawnPos + aimDir * 10000, 2, Color(255, 0, 0), true) -- Red: Direction to enemy
-			//debugoverlay.Line(spawnPos, spawnPos + sightDir * 10000, 2, Color(0, 255, 0), true) -- Green: Aim direction
+			//debugoverlay.Line(spawnPos, spawnPos + aimDir * 10000, 2, VJ.COLOR_RED, true) -- Red: Direction to enemy
+			//debugoverlay.Line(spawnPos, spawnPos + sightDir * 10000, 2, VJ.COLOR_GREEN, true) -- Green: Aim direction
 			return sightDir:Dot(aimDir) > selfData.NPC_FiringCone
 		end
 	end

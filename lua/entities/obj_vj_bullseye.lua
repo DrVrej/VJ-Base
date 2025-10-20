@@ -24,8 +24,8 @@ end
 if !SERVER then return end
 
 ENT.SolidMovementType = "Dynamic" -- Physics type to use (Set in initialize)
-ENT.UseActivationSystem = false -- Mostly used for the Bullseye tool, allows you to activate/deactivate the bullseye
-ENT.ActivationSystemStatusColors = true -- Should it draw the status colors?
+ENT.CanToggle = false -- Mostly used for the Bullseye tool, allows you to activate/deactivate the bullseye
+ENT.ToggleDisplayColors = true -- Should it color the bullseye based on the toggle state?
 ENT.ForceEntAsEnemy = false -- Set this to an NPC that should always override all other enemies and target this bullseye instead
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -59,7 +59,6 @@ function ENT:Initialize()
 	self:SetUseType(SIMPLE_USE)
 	self:SetMaxHealth(999999)
 	self:SetHealth(999999) -- So SNPCs won't think it's dead
-	//self:SetColor(Color(255, 0, 0))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AcceptInput(key, activator, caller, data)
@@ -78,13 +77,13 @@ end
 function ENT:Think()
 	local selfData = self:GetTable()
 	if selfData.ForceEntAsEnemy then return end
-	if selfData.UseActivationSystem then
+	if selfData.CanToggle then
 		if !selfData.Activated then
 			self:AddFlags(FL_NOTARGET)
-			if selfData.ActivationSystemStatusColors then self:SetColor(Color(255, 0, 0)) end
+			if selfData.ToggleDisplayColors then self:SetColor(VJ.COLOR_RED) end
 		elseif selfData.Activated then
 			self:RemoveFlags(FL_NOTARGET)
-			if selfData.ActivationSystemStatusColors then self:SetColor(Color(0, 255, 0)) end
+			if selfData.ToggleDisplayColors then self:SetColor(VJ.COLOR_GREEN) end
 		end
 	end
 end

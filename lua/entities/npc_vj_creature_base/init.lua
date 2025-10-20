@@ -2456,8 +2456,8 @@ function ENT:ExecuteMeleeAttack(isPropAttack)
 	if !skip then
 		local myPos = self:GetPos()
 		local myClass = self:GetClass()
-		//debugoverlay.Cross(self:MeleeAttackTraceOrigin(), 5, 3, Color(255, 255, 0))
-		//debugoverlay.EntityTextAtPosition(self:MeleeAttackTraceOrigin(), 0, "Melee damage origin", 3, Color(255, 255, 0))
+		//debugoverlay.Cross(self:MeleeAttackTraceOrigin(), 5, 3, VJ.COLOR_YELLOW)
+		//debugoverlay.EntityTextAtPosition(self:MeleeAttackTraceOrigin(), 0, "Melee damage origin", 3, VJ.COLOR_YELLOW)
 		//debugoverlay.Cross(self:MeleeAttackTraceOrigin() + self:GetForward()*selfData.MeleeAttackDamageDistance, 5, 3, Color(238, 119, 222))
 		//debugoverlay.EntityTextAtPosition(self:MeleeAttackTraceOrigin() + self:GetForward()*selfData.MeleeAttackDamageDistance, 0, "Melee damage distance", 3, Color(238, 119, 222))
 		for _, ent in ipairs(ents.FindInSphere(self:MeleeAttackTraceOrigin(), selfData.MeleeAttackDamageDistance)) do

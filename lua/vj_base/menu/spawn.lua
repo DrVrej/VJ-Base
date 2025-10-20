@@ -271,18 +271,17 @@ if CLIENT then
 		self:AddCheckbox("#vjbase.menu.spawn.npc.keepcorpses", "ai_serverragdolls")
 		self:AddCheckbox("#vjbase.menu.spawn.npc.guard", "vj_npc_spawn_guard")
 		
-		local label = vgui.Create("DLabel", self)
-		label:Dock(TOP)
-		label:DockMargin(0, 5, 0, 0)
-		label:SetDark(true)
-		label:SetText("#menubar.npcs.weapon")
+		local label = vgui.Create( "DLabel", self )
+		label:Dock( TOP )
+		label:DockMargin( 0, 5, 0, 0 )
+		label:SetDark( true )
+		label:SetText( "#menubar.npcs.weapon" )
 
 		local DComboBox = vgui.Create( "DComboBox", self )
 		DComboBox:Dock( TOP )
-		DComboBox:DockMargin(0, 0, 0, 0)
-		DComboBox:SetConVar("gmod_npcweapon")
-		DComboBox:SetSortItems(false)
-
+		DComboBox:DockMargin( 0, 0, 0, 0 )
+		DComboBox:SetConVar( "gmod_npcweapon" )
+		DComboBox:SetSortItems( false )
 
 		DComboBox:AddChoice( "#menubar.npcs.defaultweapon", "", false, "icon16/gun.png" )
 		DComboBox:AddChoice( "#menubar.npcs.noweapon", "none", false, "icon16/cross.png" )
@@ -316,14 +315,15 @@ end
 ------ NPC Duplicator & Save Support ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Taken from: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/gamemodes/sandbox/gamemode/commands.lua
+--
 local function InternalSpawnNPC( NPCData, ply, Position, Normal, Class, Equipment, SpawnFlagsSaved, NoDropToFloor )
 
 	-- Don't let them spawn this entity if it isn't in our NPC Spawn list.
 	-- We don't want them spawning any entity they like!
-	if ( !NPCData ) then return end
+	if ( !NPCData ) then return NULL end
 
 	local isAdmin = ( IsValid( ply ) && ply:IsAdmin() ) or game.SinglePlayer()
-	if ( NPCData.AdminOnly && !isAdmin ) then return end
+	if ( NPCData.AdminOnly && !isAdmin ) then return NULL end
 
 	local bDropToFloor = false
 	local wasSpawnedOnCeiling = false
@@ -337,13 +337,13 @@ local function InternalSpawnNPC( NPCData, ply, Position, Normal, Class, Equipmen
 		local isOnFloor		= Vector( 0, 0,  1 ):Dot( Normal ) >= 0.95
 
 		-- Not on ceiling, and we can't be on floor
-		if ( !isOnCeiling && !NPCData.OnFloor ) then return end
+		if ( !isOnCeiling && !NPCData.OnFloor ) then return NULL end
 
 		-- Not on floor, and we can't be on ceiling
-		if ( !isOnFloor && !NPCData.OnCeiling ) then return end
+		if ( !isOnFloor && !NPCData.OnCeiling ) then return NULL end
 
 		-- We can be on either, and we are on neither
-		if ( !isOnFloor && !isOnCeiling ) then return end
+		if ( !isOnFloor && !isOnCeiling ) then return NULL end
 
 		wasSpawnedOnCeiling = isOnCeiling
 		wasSpawnedOnFloor = isOnFloor
@@ -355,7 +355,7 @@ local function InternalSpawnNPC( NPCData, ply, Position, Normal, Class, Equipmen
 
 	-- Create NPC
 	local NPC = ents.Create( NPCData.Class )
-	if ( !IsValid( NPC ) ) then return end
+	if ( !IsValid( NPC ) ) then return NULL end
 
 	--
 	-- Offset the position
@@ -476,7 +476,6 @@ local function InternalSpawnNPC( NPCData, ply, Position, Normal, Class, Equipmen
 
 	-- Store spawnmenu data for addons and stuff
 	NPC.NPCName = Class
-	NPC.NPCTable = NPCData
 	NPC._wasSpawnedOnCeiling = wasSpawnedOnCeiling
 
 	-- For those NPCs that set their model/skin in Spawn function
@@ -514,11 +513,9 @@ VJ.CreateDupe_NPC = function( ply, mdl, class, equipment, spawnflags, data )
 	-- Match the behavior of Spawn_NPC above - class should be the one in the list, NOT the entity class!
 	if ( data.NPCName ) then class = data.NPCName end
 
-	if ( IsValid( ply ) && !gamemode.Call( "PlayerSpawnNPC", ply, class, equipment ) ) then return end
+	if ( IsValid( ply ) && !gamemode.Call( "PlayerSpawnNPC", ply, class, equipment ) ) then return NULL end
 
-	local NPCData = list.Get( "NPC" )[ class ]
-	-- I don't think we are ready for this
-	-- if ( !NPCData ) then NPCData = data.NPCTable end
+	local NPCData = list.GetEntry( "NPC", class )
 
 	local normal = Vector( 0, 0, 1 )
 	if ( NPCData && NPCData.OnCeiling && ( NPCData.OnFloor && data._wasSpawnedOnCeiling or !NPCData.OnFloor ) ) then
