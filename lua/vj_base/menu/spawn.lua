@@ -542,10 +542,77 @@ VJ.CreateDupe_NPC = function( ply, mdl, class, equipment, spawnflags, data )
 		if ( data.CurHealth ) then ent:SetHealth( data.CurHealth ) end
 		if ( data.MaxHealth ) then ent:SetMaxHealth( data.MaxHealth ) end
 
+		ent:OnEntityCopyTableFinish(data) -- Here to allow old saves to work properly
+		
 		table.Merge( ent:GetTable(), data )
 
 	end
 
 	return ent
 
+end
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Entity & Weapon Duplicator & Save Support ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Taken from: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/lua/autorun/game_hl2.lua
+--
+VJ.CreateDupe_Entity = function( ply, data )
+	if ( IsValid( ply ) && !gamemode.Call( "PlayerSpawnSENT", ply, data.Class ) ) then return NULL end
+
+	local ent = ents.Create( data.Class )
+	if ( !IsValid( ent ) ) then return NULL end -- Must've hit edict limit
+
+	-- Remove certain fields we do not want dupes to manipulate
+	data.Model = nil
+
+	-- Restore the keyvalues
+	local entTable = list.GetEntry( "SpawnableEntities", data.EntityName )
+	if ( entTable && entTable.ClassName == data.Class && entTable.KeyValues ) then
+		for k, v in pairs( entTable.KeyValues ) do
+			ent:SetKeyValue( k, v )
+		end
+	end
+
+	duplicator.DoGeneric( ent, data )
+
+	ent:Spawn()
+
+	--duplicator.DoGenericPhysics( ent, ply, data )
+
+	ent:Activate()
+
+	-- For hacked combine mines, they reset their skin
+	if ( data.Skin ) then ent:SetSkin( data.Skin ) end
+
+	if ( IsValid( ply ) ) then
+		ent:SetCreator( ply )
+		gamemode.Call( "PlayerSpawnedSENT", ply, ent )
+	end
+
+	return ent
+end
+-------------------------------------------------------------------------------------------------------------------------
+VJ.CreateDupe_Weapon = function( ply, data )
+	if ( IsValid( ply ) && !gamemode.Call( "PlayerSpawnSWEP", ply, data.Class, list.GetEntry( "Weapon", data.Class ) ) ) then return NULL end
+
+	local ent = ents.Create( data.Class )
+	if ( !IsValid( ent ) ) then return NULL end -- Must've hit edict limit
+
+	-- Remove certain fields we do not want dupes to manipulate
+	data.Model = nil
+
+	duplicator.DoGeneric( ent, data )
+
+	ent:Spawn()
+
+	--duplicator.DoGenericPhysics( ent, ply, data )
+
+	ent:Activate()
+
+	if ( IsValid( ply ) ) then
+		ent:SetCreator( ply )
+		gamemode.Call( "PlayerSpawnedSWEP", ply, ent )
+	end
+
+	return ent
 end

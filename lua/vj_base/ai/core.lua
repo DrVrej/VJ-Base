@@ -1463,6 +1463,7 @@ function ENT:OnChangeActivity(newAct)
 	//end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+-- When engine saves or map transitions are loaded
 function ENT:OnRestore()
 	//VJ.DEBUG_Print(self, "OnRestore")
 	self:StopMoving()
@@ -1479,6 +1480,142 @@ function ENT:OnRestore()
 	if IsValid(wep) then
 		hook.Add("Think", wep, wep.NPC_Think)
 	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- When GMod saves or duplicator tool are loaded
+function ENT:OnDuplicated(entTable)
+	//VJ.DEBUG_Print(self, "OnDuplicated")
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- When GMod saves or duplicator tool are used to copy this NPC
+function ENT:OnEntityCopyTableFinish(data)
+	//VJ.DEBUG_Print(self, "OnEntityCopyTableFinish")
+	data.CurrentSchedule = nil
+	data.CurrentScheduleName = nil
+	data.CurrentTask = nil
+	data.CurrentTaskID = nil
+	data.RelationshipEnts = nil
+	data.RelationshipMemory = nil
+	data.PoseParameterLooking_Names = nil
+	data.NextProcessT = nil
+	data.TurnData = nil
+	data.GuardData = nil
+	data.PauseAttacks = nil
+	data.AnimLockTime = nil
+	data.AnimPlaybackRate = nil
+	data.AnimModelSet = nil
+	data.LastAnimSeed = nil
+	data.LastAnimType = nil
+	data.AttackSeed = nil
+	data.AttackType = nil
+	data.AttackState = nil
+	data.AttackAnim = nil
+	data.AttackAnimDuration = nil
+	data.AttackAnimTime = nil
+	data.NextDoAnyAttackT = nil
+	data.IsAbleToMeleeAttack = nil
+	data.MeleeAttack_IsPropAttack = nil
+	data.NextIdleTime = nil
+	data.NextWanderTime = nil
+	data.NextChaseTime = nil
+	data.EnemyData = nil
+	data.Alerted = nil
+	data.Flinching = nil
+	data.NextFlinchT = nil
+	data.HealthRegenDelayT = nil
+	data.NextCombineBallDmgT = nil
+	data.Dead = nil
+	data.GibbedOnDeath = nil
+	data.DeathAnimationCodeRan = nil
+	data.TakingCoverT = nil
+	data.NextOnPlayerSightT = nil
+	data.LastHiddenZone_CanWander = nil
+	data.LastHiddenZoneT = nil
+	data.NextInvestigationMove = nil
+	data.NextInvestigateSoundT = nil
+	data.NextFootstepSoundT = nil
+	data.NextBreathSoundT = nil
+	data.NextIdleSoundT = nil
+	data.IdleSoundBlockTime = nil
+	data.NextAlertSoundT = nil
+	data.NextCallForHelpT = nil
+	data.NextCallForHelpAnimationT = nil
+	data.NextLostEnemySoundT = nil
+	data.NextAllyDeathSoundT = nil
+	data.NextKilledEnemySoundT = nil
+	data.NextDamageAllyResponseT = nil
+	data.NextDamageByPlayerSoundT = nil
+	data.NextPainSoundT = nil
+	data.TimersToRemove = nil
+	
+	-- Creature
+	data.PropInteraction_Found = nil
+	data.PropInteraction_NextCheckT = nil
+	data.IsAbleToRangeAttack = nil
+	data.IsAbleToLeapAttack = nil
+	data.LeapAttackHasJumped = nil
+	data.EatingData = nil
+	
+	-- Human
+	data.WeaponInventory = nil
+	data.UpdatedPoseParam = nil
+	data.Weapon_UnarmedBehavior_Active = nil
+	data.WeaponEntity = nil
+	data.WeaponState = nil
+	data.WeaponInventoryStatus = nil
+	data.AllowWeaponOcclusionDelay = nil
+	data.WeaponLastShotTime = nil
+	data.WeaponAttackState = nil
+	data.WeaponAttackAnim = nil
+	data.Weapon_AimTurnDiff_Def = nil
+	data.NextWeaponAttackT = nil
+	data.NextWeaponAttackT_Base = nil
+	data.NextWeaponStrafeT = nil
+	data.NextMeleeWeaponAttackT = nil
+	data.NextMoveOnGunCoveredT = nil
+	data.NextThrowGrenadeT = nil
+	data.NextGrenadeAttackSoundT = nil
+	data.NextSuppressingSoundT = nil
+	data.NextDangerDetectionT = nil
+	data.NextDangerSightSoundT = nil
+	data.NextCombatDamageResponseT = nil
+	
+	-- AA move types
+	data.AA_NextMoveAnimTime = nil
+	data.AA_CurrentMoveAnim = nil
+	data.AA_CurrentMoveAnimType = nil
+	data.AA_CurrentMoveMaxSpeed = nil
+	data.AA_CurrentMoveTime = nil
+	data.AA_CurrentMoveType = nil
+	data.AA_CurrentMovePos = nil
+	data.AA_CurrentMovePosDir = nil
+	data.AA_CurrentMoveDist = nil
+	data.AA_LastChasePos = nil
+	data.AA_DoingLastChasePos = nil
+	
+	-- Tank bases
+	data.Tank_IsMoving = nil
+	data.Tank_Status = nil
+	data.Tank_NextLowHealthSparkT = nil
+	data.Tank_NextRunOverSoundT = nil
+	data.Tank_NextIdleParticles = nil
+	data.Tank_FacingTarget = nil
+	data.Tank_ProperHeightShoot = nil
+	data.Tank_GunnerIsTurning = nil
+	data.Tank_Shell_NextFireT = nil
+	data.Tank_Shell_Status = nil
+	data.Tank_TurningLerp = nil
+	data.Gunner = nil
+
+
+	-- Following should be saved because:
+		-- Duplicator: Useful for duplicating NPCs without needing to set the behavior values individually (Ex: following another entity)
+		-- Saves: Usually intended targets will be NULL, and so the respective systems will reset without errors
+	//data.MedicData = nil
+	//data.IsFollowing = nil
+	//data.FollowData = nil
+	//data.MainSoundPitchValue = nil
+	//data.AnimationTranslations = nil
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:KeyValue(k, v)

@@ -490,14 +490,14 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:NextTask(schedule)
 	//VJ.DEBUG_Print(self, "NextTask", schedule)
-	local taksID = self.CurrentTaskID
-	taksID = taksID + 1
-	if (taksID > schedule:NumTasks()) then -- If this was the last task then finish up
+	local taskID = self.CurrentTaskID
+	taskID = taskID + 1
+	if taskID > schedule:NumTasks() then -- If this was the last task then finish up
 		self:ScheduleFinished(schedule)
 		return
 	end
-	self.CurrentTaskID = taksID
-	self:SetTask(schedule:GetTask(taksID)) -- Switch to the next task
+	self.CurrentTaskID = taskID
+	self:SetTask(schedule:GetTask(taskID)) -- Switch to the next task
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

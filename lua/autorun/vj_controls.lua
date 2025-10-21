@@ -83,6 +83,7 @@ VJ.AddNPC = function(name, class, category, adminOnly, customFunc)
 	if CLIENT && !killicon.Exists(class) then
 		addKillIcon(class, name, KILLICON_DEFAULT)
 	end
+	duplicator.RegisterEntityClass(class, VJ.CreateDupe_NPC, "Model", "Class", "Equipment", "SpawnFlags", "Data")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -102,6 +103,7 @@ VJ.AddNPC_HUMAN = function(name, class, weapons, category, adminOnly, customFunc
 	if CLIENT && !killicon.Exists(class) then
 		addKillIcon(class, name, KILLICON_DEFAULT)
 	end
+	duplicator.RegisterEntityClass(class, VJ.CreateDupe_NPC, "Model", "Class", "Equipment", "SpawnFlags", "Data")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -129,7 +131,7 @@ VJ.AddWeapon = function(name, class, adminOnly, category, customFunc)
 	if (customFunc) then customFunc(property) end
 	list.Set("Weapon", class, property)
 	list.Set("VJBASE_SPAWNABLE_WEAPON", class, property)
-	duplicator.Allow(class)
+	duplicator.RegisterEntityClass(class, VJ.CreateDupe_Weapon, "Data")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -148,7 +150,7 @@ VJ.AddEntity = function(name, class, author, adminOnly, offset, dropToFloor, cat
 	if (customFunc) then customFunc(Ent) end
 	list.Set("SpawnableEntities", class, Ent)
 	list.Set("VJBASE_SPAWNABLE_ENTITIES", class, Ent)
-	duplicator.Allow(class)
+	duplicator.RegisterEntityClass(class, VJ.CreateDupe_Entity, "Data")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

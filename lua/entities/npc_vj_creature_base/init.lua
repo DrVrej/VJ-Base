@@ -1599,7 +1599,6 @@ function ENT:Initialize()
 	self:SetupBloodColor(self.BloodColor) -- Collision bounds dependent
 	
 	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
-	duplicator.RegisterEntityClass(self:GetClass(), VJ.CreateDupe_NPC, "Model", "Class", "Equipment", "SpawnFlags", "Data")
 	
 	-- Delayed init
 	timer.Simple(0.1, function()
@@ -3188,6 +3187,7 @@ local vecZ4 = Vector(0, 0, 4)
 --
 function ENT:BeginDeath(dmginfo, hitgroup)
 	self.Dead = true
+	self.DoNotDuplicate = true -- Prevent duplicating or saving dead NPCs!
 	self:SetSaveValue("m_lifeState", 1) -- LIFE_DYING
 	self:OnDeath(dmginfo, hitgroup, "Init")
 	if self.MedicData.Status then self:ResetMedicBehavior() end
