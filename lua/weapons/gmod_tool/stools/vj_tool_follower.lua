@@ -19,17 +19,16 @@ function TOOL:LeftClick(tr)
 	if !IsValid(ent) or !ent:IsNPC() or !ent.IsVJBaseSNPC then return end
 	local ply = self:GetOwner()
 	local selectedNPC = self:GetEnt(1)
-	local npcName = list.Get("NPC")[ent:GetClass()].Name
 	
 	-- Unselect the NPC
 	if IsValid(selectedNPC) && selectedNPC == ent then
 		self:ClearObjects()
-		ply:ChatPrint(npcName .. " Has been unselected!")
+		ply:ChatPrint(VJ.GetName(ent) .. " Has been unselected!")
 	-- Select the NPC
 	else
 		self:ClearObjects()
 		self:SetObject(1, ent, tr.HitPos, nil, tr.PhysicsBone, tr.HitNormal)
-		ply:ChatPrint(npcName .. " Has been selected!")
+		ply:ChatPrint(VJ.GetName(ent) .. " Has been selected!")
 	end
 	return true
 end
@@ -42,22 +41,21 @@ function TOOL:RightClick(tr)
 	local selectedNPC = self:GetEnt(1)
 	
 	if IsValid(selectedNPC) then
-		local npcName = list.Get("NPC")[selectedNPC:GetClass()].Name
 		local followed, failureReason = selectedNPC:Follow(ent, false)
 		
 		-- SUCCESS
 		if followed then
 			self:ClearObjects()
-			ply:ChatPrint(npcName .. " is now following " .. ent:GetClass())
+			ply:ChatPrint(VJ.GetName(selectedNPC) .. " is now following " .. VJ.GetName(ent))
 		-- FAILURES
 		elseif failureReason == 1 then
-			ply:ChatPrint("ERROR: " .. npcName .. " NPC is stationary and currently unable to follow!")
+			ply:ChatPrint("ERROR: " .. VJ.GetName(selectedNPC) .. " NPC is stationary and currently unable to follow!")
 		elseif failureReason == 2 then
-			ply:ChatPrint("ERROR: " .. npcName .. " is already following another entity!")
+			ply:ChatPrint("ERROR: " .. VJ.GetName(selectedNPC) .. " is already following another entity!")
 		elseif failureReason == 3 then
-			ply:ChatPrint("ERROR: " .. npcName .. " is NOT friendly to the other entity!")
+			ply:ChatPrint("ERROR: " .. VJ.GetName(selectedNPC) .. " is NOT friendly to the other entity!")
 		else
-			ply:ChatPrint("ERROR: " .. npcName .. " is currently unable to follow!")
+			ply:ChatPrint("ERROR: " .. VJ.GetName(selectedNPC) .. " is currently unable to follow!")
 		end
 	else
 		ply:ChatPrint("#tool.vj_tool_follower.print.noselection")

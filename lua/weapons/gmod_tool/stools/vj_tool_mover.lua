@@ -17,11 +17,11 @@ if CLIENT then
 		local selectedList = vgui.Create("DListView")
 			selectedList:SetSize(100, 300)
 			selectedList:SetMultiSelect(false)
-			selectedList:AddColumn("#tool.vj_tool_mover.list.name")
-			selectedList:AddColumn("#tool.vj_tool_mover.list.info")
+			selectedList:AddColumn("#tool.vj_tool_mover.menu.header.name")
+			selectedList:AddColumn("#tool.vj_tool_mover.menu.header.info")
 			for _, npc in ipairs(VJ_TOOL_MOVER_ENTS) do
 				if IsValid(npc) then
-					selectedList:AddLine(list.Get("NPC")[npc:GetClass()].Name or "Unknown", npc)
+					selectedList:AddLine(VJ.GetName(npc, false) or "Unknown", npc)
 				end
 			end
 			-- Help text on single click
@@ -47,7 +47,7 @@ if CLIENT then
 		-- Unselect all button
 		local unselectButton = vgui.Create("DButton")
 			unselectButton:SetFont("DermaDefaultBold")
-			unselectButton:SetText("#tool.vj_tool_mover.button.unselectall")
+			unselectButton:SetText("#tool.vj_tool_mover.menu.button.unselectall")
 			unselectButton:SetSize(150, 25)
 			unselectButton:SetColor(VJ.COLOR_BLACK)
 			function unselectButton:DoClick()
@@ -74,7 +74,7 @@ if CLIENT then
 		local wep = LocalPlayer():GetActiveWeapon()
 		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_mover" && hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_mover") then
 			local ent = net.ReadEntity()
-			local entName = net.ReadString()
+			local entName = language.GetPhrase(net.ReadString())
 			VJ_TOOL_MOVER_ENTS = VJ_TOOL_MOVER_ENTS or {}
 			local editType = 0 -- Check if we are removing or adding an NPC | 0 = Add, 1 = Remove
 			for k, v in ipairs(VJ_TOOL_MOVER_ENTS) do
@@ -199,11 +199,7 @@ function TOOL:LeftClick(tr)
 	if !ent:IsNPC() then return end
 	net.Start("vj_tool_mover_cl_select")
 		net.WriteEntity(ent)
-		if ent:GetName() == "" then
-			net.WriteString(list.Get("NPC")[ent:GetClass()].Name)
-		else
-			net.WriteString(ent:GetName())
-		end
+		net.WriteString(VJ.GetName(ent))
 	net.Send(self:GetOwner())
 	return true
 end

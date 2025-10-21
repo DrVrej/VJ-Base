@@ -7,7 +7,7 @@ TOOL.Information = {
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	function TOOL.BuildCPanel(panel)
-		panel:Help("#tool.vj_tool_scanner.label")
+		panel:Help("#tool.vj_tool_scanner.menu.label")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ function TOOL:LeftClick(tr)
 	local ply = self:GetOwner()
 	local phys = ent:GetPhysicsObject()
 	ply:PrintMessage(HUD_PRINTCONSOLE, "-----------------------------------------------------------------------------------------------")
-	ply:PrintMessage(HUD_PRINTCONSOLE, "====> " .. tostring(ent) .. " / " .. ent:GetName() .. " <==== \n\n")
+	ply:PrintMessage(HUD_PRINTCONSOLE, "====> " .. tostring(ent) .. " / " .. VJ.GetName(ent) .. " <==== \n\n")
 	ply:PrintMessage(HUD_PRINTCONSOLE, "MODEL    ==> " .. ent:GetModel() .. " ;;; Skin = " .. ent:GetSkin() .. "\n\n")
 	ply:PrintMessage(HUD_PRINTCONSOLE, "POSITION ==> Vector(" .. ent:GetPos().x .. ", " .. ent:GetPos().y .. ", " .. ent:GetPos().z .. ")\n\n")
 	ply:PrintMessage(HUD_PRINTCONSOLE, "ANGLE    ==> Angle(" .. ent:GetAngles().p .. ", " .. ent:GetAngles().y .. ", " .. ent:GetAngles().r .. ")\n\n")

@@ -67,18 +67,6 @@ function VJ.HasValue(tbl, val)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ.RoundToMultiple(num, multiple) -- Credits to Bizzclaw for pointing me to the right direction!
-	if math_round(num / multiple) == num / multiple then
-		return num
-	else
-		return math_round(num / multiple) * multiple
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function VJ.Color2Byte(color)
-	return bShiftL(math_floor(color.r * 7 / 255), 5) + bShiftL(math_floor(color.g * 7 / 255), 2) + math_floor(color.b * 3 / 255)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Takes a sound and stops it, usually ones created by "CreateSound"
 		- sdName = The CSoundPatch ID
@@ -145,6 +133,57 @@ function VJ.GetMoveDirection(ent, ignoreZ)
 	local dir = ((ent:GetCurWaypointPos() or entPos) - entPos)
 	if ignoreZ then dir.z = 0 end
 	return (ent:GetAngles() - dir:Angle()):Forward()
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Finds the nearest position from the ent1 to ent2 AND from ent2 to the nearest ent1 position found previously, then returns both positions
+		- ent1 = Entity 1 to find the nearest position of in respect to ent2
+		- ent2 = Entity 2 to find the nearest position of in respect to ent1
+		- centerEnt1 = Should the X & Y axis for the ent1 stay at its origin with ONLY the Z-axis changing? | DEFAULT: false
+			- Example: Melee attacks only changing the Z-axis of the NPC to keep the attack at the same height as the target
+	Returns
+		1:
+			- Vector, ent1's nearest position to ent2
+		2:
+			- Vector, ent2's nearest position to the ent1's nearest position
+-----------------------------------------------------------]]
+function VJ.GetNearestPositions(ent1, ent2, centerEnt1)
+	local ent1NearPos = ent1:NearestPoint(ent2:GetPos() + ent2:OBBCenter())
+	if centerEnt1 then
+		local ent1Pos = ent1:GetPos()
+		ent1NearPos.x = ent1Pos.x
+		ent1NearPos.y = ent1Pos.y
+	//elseif groundedZ then -- No need to have it built-in, can just be grounded after the function call
+		//ent1NearPos.z = ent1Pos.z
+		//ent2NearPos.z = ent1Pos.z
+	end
+	local ent2NearPos = ent2:NearestPoint(ent1NearPos)
+	//VJ.DEBUG_TempEnt(ent1NearPos, Angle(0, 0, 0), VJ.COLOR_GREEN)
+	//VJ.DEBUG_TempEnt(ent2NearPos)
+	return ent1NearPos, ent2NearPos
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Finds the nearest position from the ent1 to ent2 AND from ent2 to the nearest ent1 position found previously, then returns the distance between them
+		NOTE: Identical to "VJ.GetNearestPositions", this is just a convenience function
+		- ent1 = Entity 1 to find the nearest position of in respect to ent2
+		- ent2 = Entity 2 to find the nearest position of in respect to ent1
+		- centerEnt1 = Should the X & Y axis for the ent1 stay at its origin with ONLY the Z-axis changing? | DEFAULT: false
+			- Example: Melee attacks only changing the Z-axis of the NPC to keep the attack at the same height as the target
+	Returns
+		number, The distance from the NPC nearest position to the given NPC's nearest position
+-----------------------------------------------------------]]
+function VJ.GetNearestDistance(ent1, ent2, centerEnt1)
+	local ent1NearPos = ent1:NearestPoint(ent2:GetPos() + ent2:OBBCenter())
+	if centerEnt1 then
+		local ent1Pos = ent1:GetPos()
+		ent1NearPos.x = ent1Pos.x
+		ent1NearPos.y = ent1Pos.y
+	end
+	local ent2NearPos = ent2:NearestPoint(ent1NearPos)
+	//VJ.DEBUG_TempEnt(ent1NearPos, Angle(0, 0, 0), VJ.COLOR_GREEN)
+	//VJ.DEBUG_TempEnt(ent2NearPos)
+	return ent2NearPos:Distance(ent1NearPos)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -262,57 +301,6 @@ function VJ.TraceDirections(ent, trType, maxDist, requireFullDist, returnAsDict,
 		end
 		return result
 	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
-	Finds the nearest position from the ent1 to ent2 AND from ent2 to the nearest ent1 position found previously, then returns both positions
-		- ent1 = Entity 1 to find the nearest position of in respect to ent2
-		- ent2 = Entity 2 to find the nearest position of in respect to ent1
-		- centerEnt1 = Should the X & Y axis for the ent1 stay at its origin with ONLY the Z-axis changing? | DEFAULT: false
-			- Example: Melee attacks only changing the Z-axis of the NPC to keep the attack at the same height as the target
-	Returns
-		1:
-			- Vector, ent1's nearest position to ent2
-		2:
-			- Vector, ent2's nearest position to the ent1's nearest position
------------------------------------------------------------]]
-function VJ.GetNearestPositions(ent1, ent2, centerEnt1)
-	local ent1NearPos = ent1:NearestPoint(ent2:GetPos() + ent2:OBBCenter())
-	if centerEnt1 then
-		local ent1Pos = ent1:GetPos()
-		ent1NearPos.x = ent1Pos.x
-		ent1NearPos.y = ent1Pos.y
-	//elseif groundedZ then -- No need to have it built-in, can just be grounded after the function call
-		//ent1NearPos.z = ent1Pos.z
-		//ent2NearPos.z = ent1Pos.z
-	end
-	local ent2NearPos = ent2:NearestPoint(ent1NearPos)
-	//VJ.DEBUG_TempEnt(ent1NearPos, Angle(0, 0, 0), VJ.COLOR_GREEN)
-	//VJ.DEBUG_TempEnt(ent2NearPos)
-	return ent1NearPos, ent2NearPos
-end
----------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
-	Finds the nearest position from the ent1 to ent2 AND from ent2 to the nearest ent1 position found previously, then returns the distance between them
-		NOTE: Identical to "VJ.GetNearestPositions", this is just a convenience function
-		- ent1 = Entity 1 to find the nearest position of in respect to ent2
-		- ent2 = Entity 2 to find the nearest position of in respect to ent1
-		- centerEnt1 = Should the X & Y axis for the ent1 stay at its origin with ONLY the Z-axis changing? | DEFAULT: false
-			- Example: Melee attacks only changing the Z-axis of the NPC to keep the attack at the same height as the target
-	Returns
-		number, The distance from the NPC nearest position to the given NPC's nearest position
------------------------------------------------------------]]
-function VJ.GetNearestDistance(ent1, ent2, centerEnt1)
-	local ent1NearPos = ent1:NearestPoint(ent2:GetPos() + ent2:OBBCenter())
-	if centerEnt1 then
-		local ent1Pos = ent1:GetPos()
-		ent1NearPos.x = ent1Pos.x
-		ent1NearPos.y = ent1Pos.y
-	end
-	local ent2NearPos = ent2:NearestPoint(ent1NearPos)
-	//VJ.DEBUG_TempEnt(ent1NearPos, Angle(0, 0, 0), VJ.COLOR_GREEN)
-	//VJ.DEBUG_TempEnt(ent2NearPos)
-	return ent2NearPos:Distance(ent1NearPos)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -456,18 +444,6 @@ function VJ.IsCurrentAnim(ent, anim)
 		return ent:LookupSequence(anim) == ent:GetSequence()
 	end
 	return false
-end
---------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
-	Checks if the given entity is a prop
-		- ent = The entity to check if it's a prop
-	Returns
-		- Boolean, true = entity is considered a prop
------------------------------------------------------------]]
-local props = {prop_physics = true, prop_physics_multiplayer = true, prop_physics_respawnable = true, prop_physics_override = true, prop_sphere = true}
---
-function VJ.IsProp(ent)
-	return props[ent:GetClass()] == true -- Without == check, it would return nil on false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -793,6 +769,88 @@ function VJ.DamageSpecialEnts(attacker, ent, dmgInfo)
 			phys:ApplyForceCenter(attacker:GetForward() * 1000)
 		end
 	end
+end
+--------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Helper function that attempts to find the name of the given entity
+		- ent [entity] = The entity to find the name for
+		- useClassFallback [boolean] = Should it return the class name if no name was found? | DEFAULT = true
+	Returns
+		- string, the name of the entity or its class name if no name was found and useClassFallback is true
+		- false, only if name couldn't be found and useClassFallback is false
+	Calculation
+		1. Check for "targetname" keyvalue used by engine's I/O system using "ent:GetName()"
+		2. Check for the variable "ent.PrintName"
+		3. Check for the name assigned to the class in the NPC spawn menu list
+		4. Check for the name assigned to the class in the Weapon spawn menu list
+		5. Check for the name assigned to the class in the Entities spawn menu list
+		6. Check if the client has a language translation for the entity's class
+		7. If all above fails and useClassFallback is true, return the entity's class
+-----------------------------------------------------------]]
+function VJ.GetName(ent, useClassFallback)
+	local getNameFunc = ent.GetName
+	if getNameFunc then
+		local targetName = ent:GetName()
+		if targetName != "" then
+			return CLIENT and language.GetPhrase(targetName) or targetName
+		end
+	end
+	
+	local printName = ent.PrintName
+	if printName && printName != "" then
+		return CLIENT and language.GetPhrase(printName) or printName
+	end
+	
+	local entClass = ent:GetClass()
+	local menuName_NPC = list.GetEntry("NPC", entClass)
+	if menuName_NPC then
+		return CLIENT and language.GetPhrase(menuName_NPC.Name) or menuName_NPC.Name
+	end
+	
+	local menuName_Wep = list.GetEntry("Weapon", entClass)
+	if menuName_Wep then
+		return CLIENT and language.GetPhrase(menuName_Wep.PrintName) or menuName_Wep.PrintName
+	end
+	
+	local menuName_Ent = list.GetEntry("SpawnableEntities", entClass)
+	if menuName_Ent then
+		return CLIENT and language.GetPhrase(menuName_Ent.PrintName) or menuName_Ent.PrintName
+	end
+	
+	if CLIENT then
+		local className = language.GetPhrase(entClass)
+		if className != entClass then
+			return className
+		end
+	end
+	if useClassFallback == false then
+		return false
+	end
+	return entClass
+end
+--------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Checks if the given entity is a prop
+		- ent = The entity to check if it's a prop
+	Returns
+		- Boolean, true = entity is considered a prop
+-----------------------------------------------------------]]
+local props = {prop_physics = true, prop_physics_multiplayer = true, prop_physics_respawnable = true, prop_physics_override = true, prop_sphere = true}
+--
+function VJ.IsProp(ent)
+	return props[ent:GetClass()] == true -- Without == check, it would return nil on false
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function VJ.RoundToMultiple(num, multiple)
+	if math_round(num / multiple) == num / multiple then
+		return num
+	else
+		return math_round(num / multiple) * multiple
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function VJ.Color2Byte(color)
+	return bShiftL(math_floor(color.r * 7 / 255), 5) + bShiftL(math_floor(color.g * 7 / 255), 2) + math_floor(color.b * 3 / 255)
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Meta Edits ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

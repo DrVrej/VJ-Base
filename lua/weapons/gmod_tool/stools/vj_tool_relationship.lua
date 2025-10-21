@@ -31,6 +31,7 @@ if CLIENT then
 			end
 		panel:AddPanel(reset)
 
+		-- Tutorial button
 		local tutorial = vgui.Create("DButton")
 			tutorial:SetFont("DermaDefaultBold")
 			tutorial:SetText("#vjbase.menu.general.tutorial.vid")
@@ -41,8 +42,8 @@ if CLIENT then
 			end
 		panel:AddPanel(tutorial)
 
-		panel:Help("#tool.vj_tool_relationship.header")
-		panel:ControlHelp("#tool.vj_tool_relationship.header.help")
+		panel:Help("#tool.vj_tool_relationship.menu.header")
+		panel:ControlHelp("#tool.vj_tool_relationship.menu.header.help")
 		
 		VJ_TOOL_RELATIONSHIP_LIST = VJ_TOOL_RELATIONSHIP_LIST or {}
 		
@@ -50,7 +51,8 @@ if CLIENT then
 			//classList:Center() -- No need since Size does it already
 			classList:SetSize( 100, 300 )
 			classList:SetMultiSelect(false)
-			classList:AddColumn("#tool.vj_tool_relationship.tableheader")
+			classList:AddColumn("#tool.vj_tool_relationship.menu.list.header")
+			classList:SetHideHeaders(true)
 			function classList:OnRowSelected(rowIndex, row)
 				chat.AddText(VJ.COLOR_GREEN, "Double click to ", VJ.COLOR_ORANGE_VIVID, "remove ", VJ.COLOR_GREEN, "a class")
 			end
@@ -70,9 +72,9 @@ if CLIENT then
 		local function InsertToTable(val)
 			if string.len(val) > 0 then
 				val = string.upper(val)
-				if VJ.HasValue(VJ_TOOL_RELATIONSHIP_LIST, val) then
+				if VJ.HasValue(VJ_TOOL_RELATIONSHIP_LIST, val) then -- Fail
 					chat.AddText(Color(220, 20, 60), "ERROR! ", VJ.COLOR_ORANGE_VIVID, val .. " ", Color(220, 20, 60), "already exists in the table!")
-				else
+				else -- Success
 					chat.AddText(VJ.COLOR_GREEN, "Added", VJ.COLOR_ORANGE_VIVID, " " .. val .. " ", VJ.COLOR_GREEN, "to the class list!")
 					table.insert(VJ_TOOL_RELATIONSHIP_LIST, val)
 					timer.Simple(0.05, function() -- Otherwise it will not update the values in time
@@ -84,16 +86,16 @@ if CLIENT then
 			end
 		end
 		
-		local textBox = vgui.Create("DTextEntry")
-			textBox:SetPlaceholderText(language.GetPhrase("#tool.vj_tool_relationship.label2") .. "...")
-			function textBox:OnEnter(value)
+		local classTextEntry = vgui.Create("DTextEntry")
+			classTextEntry:SetPlaceholderText(language.GetPhrase("#tool.vj_tool_relationship.menu.text.help") .. "...")
+			function classTextEntry:OnEnter(value)
 				InsertToTable(value)
 			end
-		panel:AddItem(textBox)
+		panel:AddItem(classTextEntry)
 		
 		local button = vgui.Create("DButton")
 			button:SetFont("DermaDefaultBold")
-			button:SetText("#tool.vj_tool_relationship.button.antlion")
+			button:SetText("#tool.vj_tool_relationship.menu.button.antlion")
 			button:SetSize(50, 20)
 			button:SetColor(VJ.COLOR_BLACK)
 			function button:DoClick()
@@ -103,7 +105,7 @@ if CLIENT then
 		
 		button = vgui.Create("DButton")
 			button:SetFont("DermaDefaultBold")
-			button:SetText("#tool.vj_tool_relationship.button.combine")
+			button:SetText("#tool.vj_tool_relationship.menu.button.combine")
 			button:SetSize(50, 20)
 			button:SetColor(VJ.COLOR_BLACK)
 			function button:DoClick()
@@ -113,7 +115,7 @@ if CLIENT then
 		
 		button = vgui.Create("DButton")
 			button:SetFont("DermaDefaultBold")
-			button:SetText("#tool.vj_tool_relationship.button.hecu")
+			button:SetText("#tool.vj_tool_relationship.menu.button.hecu")
 			button:SetSize(50, 20)
 			button:SetColor(VJ.COLOR_BLACK)
 			function button:DoClick()
@@ -123,7 +125,7 @@ if CLIENT then
 		
 		button = vgui.Create("DButton")
 			button:SetFont("DermaDefaultBold")
-			button:SetText("#tool.vj_tool_relationship.button.xen")
+			button:SetText("#tool.vj_tool_relationship.menu.button.xen")
 			button:SetSize(50, 20)
 			button:SetColor(VJ.COLOR_BLACK)
 			function button:DoClick()
@@ -133,7 +135,7 @@ if CLIENT then
 		
 		button = vgui.Create("DButton")
 			button:SetFont("DermaDefaultBold")
-			button:SetText("#tool.vj_tool_relationship.button.zombie")
+			button:SetText("#tool.vj_tool_relationship.menu.button.zombie")
 			button:SetSize(50, 20)
 			button:SetColor(VJ.COLOR_BLACK)
 			function button:DoClick()
@@ -143,7 +145,7 @@ if CLIENT then
 		
 		button = vgui.Create("DButton")
 			button:SetFont("DermaDefaultBold")
-			button:SetText("#tool.vj_tool_relationship.button.player")
+			button:SetText("#tool.vj_tool_relationship.menu.button.player")
 			button:SetSize(50, 20)
 			button:SetColor(VJ.COLOR_BLACK)
 			function button:DoClick()
@@ -151,8 +153,8 @@ if CLIENT then
 			end
 		panel:AddPanel(button)
 		
-		panel:CheckBox("#tool.vj_tool_relationship.togglealliedply", "vj_tool_relationship_allytoplyallies")
-		panel:ControlHelp(language.GetPhrase("#tool.vj_tool_relationship.label3"))
+		panel:CheckBox("#tool.vj_tool_relationship.menu.toggle.plyallied", "vj_tool_relationship_allytoplyallies")
+		panel:ControlHelp(language.GetPhrase("#tool.vj_tool_relationship.menu.toggle.plyallied.help"))
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(panel)
@@ -162,12 +164,13 @@ if CLIENT then
 	net.Receive("vj_tool_relationship_cl_select", function(len)
 		local wep = LocalPlayer():GetActiveWeapon()
 		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" && hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_relationship") then
-			//local ent = net.ReadEntity()
-			local entname = net.ReadString()
-			//local hasclasstbl = net.ReadBool()
-			local classtbl = net.ReadTable()
-			chat.AddText(VJ.COLOR_GREEN, "Obtained", VJ.COLOR_ORANGE_VIVID, " " .. entname .. "'s ", VJ.COLOR_GREEN, "relationship class list!")
-			VJ_TOOL_RELATIONSHIP_LIST = classtbl
+			local entName = language.GetPhrase(net.ReadString())
+			local classCount = net.ReadUInt(9)
+			chat.AddText(VJ.COLOR_GREEN, "Obtained", VJ.COLOR_ORANGE_VIVID, " " .. entName .. "'s ", VJ.COLOR_GREEN, "relationship class list!")
+			VJ_TOOL_RELATIONSHIP_LIST = {}
+			for _ = 1, classCount do
+				table.insert(VJ_TOOL_RELATIONSHIP_LIST, net.ReadString())
+			end
 			timer.Simple(0.05, function() -- Otherwise it will not update the values in time
 				local getPanel = controlpanel.Get("vj_tool_relationship")
 				getPanel:Clear()
@@ -180,17 +183,12 @@ if CLIENT then
 		local wep = LocalPlayer():GetActiveWeapon()
 		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" && hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_relationship") then
 			local ent = net.ReadEntity()
-			local entname = net.ReadString()
-			local clicktype = net.ReadString()
-			local allynum = net.ReadFloat()
-			if clicktype == "ReloadClick" then entname = "Yourself" end
-			chat.AddText(VJ.COLOR_GREEN, "#tool.vj_tool_relationship.print.applied", VJ.COLOR_ORANGE_VIVID, " " .. entname)
+			local entName = language.GetPhrase(net.ReadString())
+			local applyType = net.ReadBit()
+			chat.AddText(VJ.COLOR_GREEN, "#tool.vj_tool_relationship.print.applied", VJ.COLOR_ORANGE_VIVID, " " .. (applyType == 1 and "Yourself" or entName))
 			net.Start("vj_tool_relationship_sv_apply")
 				net.WriteEntity(ent)
-				//net.WriteTable(self)
-				//net.WriteString(clicktype)
 				net.WriteTable(VJ_TOOL_RELATIONSHIP_LIST)
-				net.WriteFloat(allynum)
 			net.SendToServer()
 		end
 	end)
@@ -203,12 +201,10 @@ else
 		local wep = ply:GetActiveWeapon()
 		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" && hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_relationship") then
 			local ent = net.ReadEntity()
-			//local clicktype = net.ReadString()
 			local classtbl = net.ReadTable()
-			local allynum = net.ReadFloat()
 			if #classtbl > 0 then
 				ent.VJ_NPC_Class = classtbl
-				if ent:IsNPC() && table.HasValue(classtbl, "CLASS_PLAYER_ALLY") && allynum == 1 then
+				if ent:IsNPC() && table.HasValue(classtbl, "CLASS_PLAYER_ALLY") && ply:GetInfoNum("vj_tool_relationship_allytoplyallies", 1) == 1 then
 					ent.AlliedWithPlayerAllies = true
 				end
 			else
@@ -222,13 +218,10 @@ function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
 	if IsValid(ent) && ent.VJ_ID_Living then
-		local entname = ent:GetName()
-		if entname == "" then entname = ent:GetClass() end
 		net.Start("vj_tool_relationship_cl_apply")
 			net.WriteEntity(ent)
-			net.WriteString(entname)
-			net.WriteString("LeftClick")
-			net.WriteFloat(self:GetClientNumber("allytoplyallies"))
+			net.WriteString(VJ.GetName(ent))
+			net.WriteBit(0)
 		net.Send(self:GetOwner())
 		return true
 	end
@@ -238,25 +231,23 @@ function TOOL:RightClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
 	if IsValid(ent) && ent.VJ_ID_Living then
-		//local hasclasstbl = false
-		local classtbl = {nil}
-		local entname = ent:GetName()
-		if entname == "" then entname = ent:GetClass() end
-		if (ent.VJ_NPC_Class) then
-			//hasclasstbl = true
-			//classtbl = ent.VJ_NPC_Class
-			for _, v in ipairs(ent.VJ_NPC_Class) do
-				table.insert(classtbl, v)
-			end
-			//if (classtbl.BaseClass) then table.remove(classtbl, BaseClass) end
+		local owner = self:GetOwner()
+		local entName = VJ.GetName(ent)
+		local entClasses = ent.VJ_NPC_Class
+		if !entClasses then
+			owner:ChatPrint("ERROR! Failed to get " .. entName .. "'s class list!")
+			return false
+		elseif #entClasses <= 0 then
+			owner:ChatPrint("ERROR! " .. entName .. " has no classes assigned!")
+			return false
 		end
-		//PrintTable(ent.VJ_NPC_Class)
 		net.Start("vj_tool_relationship_cl_select")
-			//net.WriteEntity(ent)
-			net.WriteString(entname)
-			//net.WriteBool(hasclasstbl)
-			net.WriteTable(classtbl)
-		net.Send(self:GetOwner())
+			net.WriteString(entName)
+			net.WriteUInt(#entClasses, 9)
+			for _, v in ipairs(ent.VJ_NPC_Class) do
+				net.WriteString(v)
+			end
+		net.Send(owner)
 		return true
 	end
 end
@@ -266,7 +257,7 @@ function TOOL:Reload(tr)
 	net.Start("vj_tool_relationship_cl_apply")
 		net.WriteEntity(self:GetOwner())
 		net.WriteString("Me")
-		net.WriteString("ReloadClick")
+		net.WriteBit(1)
 	net.Send(self:GetOwner())
 	return true
 end

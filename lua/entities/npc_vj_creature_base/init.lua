@@ -1898,7 +1898,7 @@ function ENT:Think()
 		if selfData.VJ_DEBUG then
 			if GetConVar("vj_npc_debug_enemy"):GetInt() == 1 then VJ.DEBUG_Print(self, false, "Enemy -> " .. tostring(self:GetEnemy() or "NULL") .. " | Alerted? " .. tostring(selfData.Alerted))  end
 			if GetConVar("vj_npc_debug_takingcover"):GetInt() == 1 then if curTime > selfData.TakingCoverT then VJ.DEBUG_Print(self, false, "NOT taking cover") else VJ.DEBUG_Print(self, false, "Taking cover (" .. selfData.TakingCoverT - curTime .. ")") end end
-			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - selfData.EnemyData.VisibleTime) .. " (" .. self:GetName() .. ")") end
+			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - selfData.EnemyData.VisibleTime) .. " (" .. VJ.GetName(self) .. ")") end
 		end
 		
 		//self:SetPlaybackRate(self.AnimationPlaybackRate)
@@ -3070,7 +3070,7 @@ function ENT:OnTakeDamage(dmginfo)
 							self:SCHEDULE_FACE("TASK_FACE_TARGET")
 						end
 						if selfData.CanChatMessage then
-							dmgAttacker:PrintMessage(HUD_PRINTTALK, self:GetName() .. " no longer likes you.")
+							dmgAttacker:PrintMessage(HUD_PRINTTALK, VJ.GetName(self) .. " no longer likes you.")
 						end
 					end
 				end
@@ -3238,7 +3238,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 							ally:SetRelationshipMemory(dmgAttacker, VJ.MEM_OVERRIDE_DISPOSITION, D_HT)
 							ally:AddEntityRelationship(dmgAttacker, D_HT, 2)
 							if ally.CanChatMessage then
-								dmgAttacker:PrintMessage(HUD_PRINTTALK, ally:GetName() .. " no longer likes you.")
+								dmgAttacker:PrintMessage(HUD_PRINTTALK, VJ.GetName(ally) .. " no longer likes you.")
 							end
 							ally:PlaySoundSystem("BecomeEnemyToPlayer")
 						end

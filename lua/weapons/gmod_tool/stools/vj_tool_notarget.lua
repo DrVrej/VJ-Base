@@ -8,7 +8,7 @@ TOOL.Information = {
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	function TOOL.BuildCPanel(panel)
-		panel:Help("#tool.vj_tool_notarget.label")
+		panel:Help("#tool.vj_tool_notarget.menu.label")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -30,14 +30,12 @@ function TOOL:RightClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
 	if !IsValid(ent) then return false end
-	local owner = self:GetOwner()
-	local name = ent:IsPlayer() and ent:Nick() or ent:GetClass()
 	if ent:IsFlagSet(FL_NOTARGET) != true then
-		owner:ChatPrint("Set no target to " .. name .. ": ON")
+		self:GetOwner():ChatPrint("Set no target to " .. VJ.GetName(ent) .. ": ON")
 		ent:AddFlags(FL_NOTARGET)
 		return true
 	else
-		owner:ChatPrint("Set no target to " .. name .. ": OFF")
+		self:GetOwner():ChatPrint("Set no target to " .. VJ.GetName(ent) .. ": OFF")
 		ent:RemoveFlags(FL_NOTARGET)
 		return true
 	end

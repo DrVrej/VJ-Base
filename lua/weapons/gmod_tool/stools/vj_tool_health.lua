@@ -45,13 +45,13 @@ if CLIENT then
 			end
 		panel:AddPanel(tutorial)
 		
-		panel:Help("#tool.vj_tool_health.adminonly")
-		panel:NumSlider("#tool.vj_tool_health.sliderhealth", "vj_tool_health_health", 0, 10000, 0)
-		panel:Help("#tool.vj_tool_health.label1")
-		panel:CheckBox("#tool.vj_tool_health.togglegodmode", "vj_tool_health_godmode")
-		panel:CheckBox("#tool.vj_tool_health.togglehealthregen", "vj_tool_health_healthregen")
-		panel:NumSlider("#tool.vj_tool_health.sliderhealthregenamt", "vj_tool_health_healthregen_amt", 0, 10000, 0)
-		panel:NumSlider("#tool.vj_tool_health.sliderhealthregendelay", "vj_tool_health_healthregen_delay", 0, 10000, 0)
+		panel:Help("#tool.vj_tool_health.menu.label.admin")
+		panel:NumSlider("#tool.vj_tool_health.menu.health", "vj_tool_health_health", 0, 10000, 0)
+		panel:Help(language.GetPhrase("#tool.vj_tool_health.menu.label.vj") .. ":")
+		panel:CheckBox("#tool.vj_tool_health.menu.toggle.god", "vj_tool_health_godmode")
+		panel:CheckBox("#tool.vj_tool_health.menu.toggle.regen", "vj_tool_health_healthregen")
+		panel:NumSlider("#tool.vj_tool_health.menu.toggle.regen.amt", "vj_tool_health_healthregen_amt", 0, 10000, 0)
+		panel:NumSlider("#tool.vj_tool_health.menu.toggle.regen.delay", "vj_tool_health_healthregen_delay", 0, 10000, 0)
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(panel)
