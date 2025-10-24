@@ -3,6 +3,8 @@ TOOL.Tab = "DrVrej"
 TOOL.Category = "Tools"
 TOOL.Information = {
 	{name = "left"},
+	{name = "right"},
+	{name = "reload"},
 }
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
@@ -32,5 +34,21 @@ function TOOL:LeftClick(tr)
 	end
 	ply:PrintMessage(HUD_PRINTCONSOLE, "COLOR    ==> Color(" .. ent:GetColor().r .. ", " .. ent:GetColor().g .. ", " .. ent:GetColor().b .. ", " .. ent:GetColor().a .. ")")
 	ply:PrintMessage(HUD_PRINTCONSOLE, "-----------------------------------------------------------------------------------------------")
+	return true
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function TOOL:RightClick(tr)
+	if CLIENT then return true end
+	local ent = tr.Entity
+	if !IsValid(ent) then return false end
+	PrintTable(ent:GetSaveTable(true))
+	return true
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function TOOL:Reload(tr)
+	if CLIENT then return true end
+	local ent = tr.Entity
+	if !IsValid(ent) then return false end
+	PrintTable(ent:GetTable())
 	return true
 end

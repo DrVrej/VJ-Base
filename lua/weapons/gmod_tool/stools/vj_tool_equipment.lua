@@ -103,6 +103,7 @@ function TOOL:LeftClick(tr)
 	local equipment = self:GetClientInfo("weaponclass")
 	if equipment != "None" then
 		ApplyWeapon(self:GetOwner(), ent, {equipment})
+		// ent:SetSaveValue("additionalequipment", equipment)
 	end
 	return true
 end

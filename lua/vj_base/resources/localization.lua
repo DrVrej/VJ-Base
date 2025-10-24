@@ -367,9 +367,11 @@ local strings_english = {
 	
 	-- Entity Scanner toool
 	["tool.vj_tool_scanner.name"] = "Entity Scanner",
-	["tool.vj_tool_scanner.desc"] = "Get information about an entity",
+	["tool.vj_tool_scanner.desc"] = "Get information and data about an entity",
 	["tool.vj_tool_scanner.left"] = "Print information about the entity in console",
-	["tool.vj_tool_scanner.menu.label"] = "Prints information about any selected entity in the console.",
+	["tool.vj_tool_scanner.right"] = "Print entity's engine save table in console",
+	["tool.vj_tool_scanner.reload"] = "Print entity's Lua table in console",
+	["tool.vj_tool_scanner.menu.label"] = "Prints information and data about any selected entity in the console. This is useful for debugging, and other development purposes.",
 	
 	-- Health Modifier tool
 	["tool.vj_tool_health.name"] = "Health Modifier",
