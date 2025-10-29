@@ -225,9 +225,6 @@ if CLIENT then
 		ControlPanel(panel)
 	end
 else
-	util.AddNetworkString("vj_tool_spawner_cl_create")
-	util.AddNetworkString("vj_tool_spawner_sv_create")
----------------------------------------------------------------------------------------------------------------------------------------------
 	local spawnSounds = {"garrysmod/save_load1.wav", "garrysmod/save_load2.wav", "garrysmod/save_load3.wav", "garrysmod/save_load4.wav"}
 	--
 	net.Receive("vj_tool_spawner_sv_create", function(len, ply)

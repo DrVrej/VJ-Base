@@ -8,7 +8,6 @@ if !SERVER then return end
 
 local stinkyMatTypes = {alienflesh = true, antlion = true, armorflesh = true, bloodyflesh = true, flesh = true, zombieflesh = true, player = true}
 	-- Material types: https://developer.valvesoftware.com/wiki/Material_surface_properties
--- Localized static values
 local IsValid = IsValid
 local table_remove = table.remove
 local sdEmitHint = sound.EmitHint

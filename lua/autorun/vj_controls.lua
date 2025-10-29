@@ -185,9 +185,10 @@ end
 		- helpText = Help text to display in the console
 		- min = If set, the ConVar cannot be changed to a number lower than this value
 		- max = If set, the ConVar cannot be changed to a number higher than this value
+		- save = Whether the ConVar should be saved or reset between sessions
 -----------------------------------------------------------]]
-VJ.AddClientConVar = function(name, defValue, helpText, min, max)
-	return CreateClientConVar(name, defValue, true, true, helpText or "", min, max)
+VJ.AddClientConVar = function(name, defValue, helpText, min, max, save)
+	return CreateClientConVar(name, defValue, save != false, true, helpText or "", min, max)
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Backwards Compatibility ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

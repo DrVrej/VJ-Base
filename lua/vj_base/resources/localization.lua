@@ -171,6 +171,12 @@ local strings_english = {
 	["vjbase.menu.npc.settings.atk.wep.drop"] = "Drop Weapon On Death",
 	["vjbase.menu.npc.settings.atk.wep.ply.pickup"] = "Players Can Pickup Dropped Weapons",
 	
+	-- NPC Client Settings
+	["vjbase.menu.npc.settings.cl"] = "Client Settings",
+	["vjbase.menu.npc.settings.cl.guard"] = "Spawn NPCs as Guards",
+	["vjbase.menu.npc.settings.cl.snd_track.volume"] = "Sound Track Volume:",
+	["vjbase.menu.npc.settings.cl.snd_track.volume.label"] = "Overrides the volume of sound tracks for all NPCs\n1 = Don't override (100% volume)\n0.5 = 50% volume\n3 = 300% volume",
+	
 	-- NPC General Settings
 	["vjbase.menu.npc.settings.gen"] = "General",
 	["vjbase.menu.npc.settings.gen.difficulty.header"] = "Selected Difficulty:",

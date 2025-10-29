@@ -13,12 +13,13 @@ function ENT:MatFootStepQCEvent(data)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	net.Receive("vj_npc_testint_menu", function()
+	net.Receive("vj_npc_test_interactive_cl", function(len)
+		local ply = LocalPlayer()
 		local welMsgs = {
 			"Hi!",
 			"Welcome to my shop, how can I help you?",
-			"Hello " .. LocalPlayer():GetName() .. ", You need anything?",
-			"What can I do for you " .. LocalPlayer():GetName() .. "?",
+			"Hello " .. ply:GetName() .. ", You need anything?",
+			"What can I do for you " .. ply:GetName() .. "?",
 			"This ain't cheap stuff, but it is good!",
 		}
 	
@@ -42,7 +43,7 @@ if CLIENT then
 		button_kill:SetSize(100, 50)
 		button_kill.DoClick = function()
 			RunConsoleCommand("kill")
-			LocalPlayer():EmitSound("vj_base/player/illuminati.mp3", 0, 200)
+			ply:EmitSound("vj_base/player/illuminati.mp3", 0, 200)
 		end
 		
 		local label_admin = vgui.Create("DLabel", frame)
@@ -55,7 +56,7 @@ if CLIENT then
 		button_god:SetPos(10, 130)
 		button_god:SetSize(100, 50)
 		button_god.DoClick = function()
-			if LocalPlayer():IsAdmin() then RunConsoleCommand("god") end
+			if ply:IsAdmin() then RunConsoleCommand("god") end
 		end
 		
 		local button_buddha = vgui.Create("DButton", frame)
@@ -63,7 +64,7 @@ if CLIENT then
 		button_buddha:SetPos(120, 130)
 		button_buddha:SetSize(100, 50)
 		button_buddha.DoClick = function()
-			if LocalPlayer():IsAdmin() then RunConsoleCommand("buddha") end
+			if ply:IsAdmin() then RunConsoleCommand("buddha") end
 		end
 		
 		local button_fp = vgui.Create("DButton", frame)
@@ -71,7 +72,7 @@ if CLIENT then
 		button_fp:SetPos(230, 130)
 		button_fp:SetSize(100, 50)
 		button_fp.DoClick = function()
-			if LocalPlayer():IsAdmin() then RunConsoleCommand("firstperson") end
+			if ply:IsAdmin() then RunConsoleCommand("firstperson") end
 		end
 		
 		local button_tp = vgui.Create("DButton", frame)
@@ -79,10 +80,10 @@ if CLIENT then
 		button_tp:SetPos(340, 130)
 		button_tp:SetSize(100, 50)
 		button_tp.DoClick = function()
-			if LocalPlayer():IsAdmin() then RunConsoleCommand("thirdperson") end
+			if ply:IsAdmin() then RunConsoleCommand("thirdperson") end
 		end
 		
-		if LocalPlayer():SteamID() == "STEAM_0:0:22688298" then
+		if ply:SteamID() == "STEAM_0:0:22688298" then
 			local button_vj = vgui.Create("DButton", frame)
 			button_vj:SetText("Illuminati")
 			button_vj:SetPos(10, 170)

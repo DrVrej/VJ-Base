@@ -76,12 +76,15 @@ if CLIENT then
 			local ent = net.ReadEntity()
 			local entName = language.GetPhrase(net.ReadString())
 			VJ_TOOL_MOVER_ENTS = VJ_TOOL_MOVER_ENTS or {}
-			local editType = 0 -- Check if we are removing or adding an NPC | 0 = Add, 1 = Remove
+			local editType = 0 -- 0 = Add, 1 = Remove
 			for k, v in ipairs(VJ_TOOL_MOVER_ENTS) do
-				if !IsValid(v) then table.remove(VJ_TOOL_MOVER_ENTS, k) continue end -- Remove any NPCs that no longer exist!
-				if v == ent then -- If the selected NPC already exists then unselect it!
-					chat.AddText(VJ.COLOR_GREEN, "NPC", VJ.COLOR_ORANGE_VIVID, " " .. entName .. " ", VJ.COLOR_GREEN, "unselected!")
+				-- Remove NPCs that no longer exist!
+				if !IsValid(v) then
+					table.remove(VJ_TOOL_MOVER_ENTS, k)
+				-- If the selected NPC already exists then unselect it!
+				elseif v == ent then
 					editType = 1
+					chat.AddText(VJ.COLOR_GREEN, "NPC", VJ.COLOR_ORANGE_VIVID, " " .. entName .. " ", VJ.COLOR_GREEN, "unselected!")
 					table.remove(VJ_TOOL_MOVER_ENTS, k)
 				end
 			end
@@ -132,11 +135,6 @@ if CLIENT then
 		ControlPanel(panel)
 	end
 else
-	util.AddNetworkString("vj_tool_mover_cl_select")
-	util.AddNetworkString("vj_tool_mover_cl_move")
-	util.AddNetworkString("vj_tool_mover_sv_select")
-	util.AddNetworkString("vj_tool_mover_sv_move")
----------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_tool_mover_sv_select", function(len, ply)
 		local wep = ply:GetActiveWeapon()
 		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_mover" && hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_mover") then

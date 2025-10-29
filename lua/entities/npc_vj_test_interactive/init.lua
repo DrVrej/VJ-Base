@@ -16,8 +16,6 @@ ENT.FollowPlayer = false
 
 ENT.HasFootstepSounds = false
 ENT.SoundTbl_Pain = {"vo/npc/male01/pain01.wav", "vo/npc/male01/pain02.wav", "vo/npc/male01/pain03.wav", "vo/npc/male01/pain04.wav", "vo/npc/male01/pain05.wav", "vo/npc/male01/pain06.wav", "vo/npc/male01/pain07.wav", "vo/npc/male01/pain08.wav", "vo/npc/male01/pain09.wav"}
-
-util.AddNetworkString("vj_npc_testint_menu")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PreInit()
 	self.Model = "models/humans/group01/male_0" .. math.random(1, 9) .. ".mdl"
@@ -25,7 +23,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnInput(key, activator, caller, data)
 	if key == "Use" && IsValid(activator) && activator:IsPlayer() && activator:Alive() then
-		net.Start("vj_npc_testint_menu")
+		net.Start("vj_npc_test_interactive_cl")
 		net.Send(activator)
 		activator:EmitSound("vj_base/player/illuminati.mp3", 75)
 		self:PlaySoundSystem("Speech", "vo/npc/male01/hi0" .. math.random(1, 2) .. ".wav")

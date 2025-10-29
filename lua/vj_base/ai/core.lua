@@ -20,7 +20,6 @@
 AccessorFunc(ENT, "m_iClass", "NPCClass", FORCE_NUMBER)
 AccessorFunc(ENT, "m_fMaxYawSpeed", "MaxYawSpeed", FORCE_NUMBER)
 
--- Localized static values
 local metaEntity = FindMetaTable("Entity")
 local funcGetTable = metaEntity.GetTable
 local funcSetSaveValue = metaEntity.SetSaveValue
@@ -3438,7 +3437,7 @@ function ENT:StartSoundTrack()
 	if !self.HasSounds or !self.HasSoundTrack then return end
 	if math.random(1, self.SoundTrackChance) == 1 then
 		self.VJ_SD_PlayingMusic = true
-		net.Start("vj_music_run")
+		net.Start("vj_music_cl")
 			net.WriteEntity(self)
 			net.WriteString(PICK(self.SoundTbl_SoundTrack))
 			net.WriteFloat(self.SoundTrackVolume)

@@ -298,6 +298,13 @@ local function VJ_NPC_SETTINGS_PERFORMANCE(panel)
 	panel:ControlHelp("#vjbase.menu.npc.settings.perf.reducevfx.label")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local function VJ_NPC_SETTINGS_CLIENT(panel)
+	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_spawn_guard 0\n vj_npc_snd_track_volume 1"})
+	panel:CheckBox("#vjbase.menu.npc.settings.cl.guard", "vj_npc_spawn_guard")
+	panel:NumSlider("#vjbase.menu.npc.settings.cl.snd_track.volume", "vj_npc_snd_track_volume", 0, 5, 2)
+	panel:ControlHelp("#vjbase.menu.npc.settings.cl.snd_track.volume.label")
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_WEAPON_SETTINGS_CLIENT(panel)
 	panel:Help("#vjbase.menu.wep.settings.client.notice")
 	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_wep_muzzleflash 1\n vj_wep_shells 1\n vj_wep_muzzleflash_light 1"})
@@ -317,5 +324,6 @@ hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_CONFIGURES", function()
 	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_dev", "#vjbase.menu.npc.settings.dev", "", "", VJ_NPC_SETTINGS_DEV)
 	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_con", "#vjbase.menu.npc.settings.con", "", "", VJ_NPC_SETTINGS_CONTROLLER)
 	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_perf", "#vjbase.menu.npc.settings.perf", "", "", VJ_NPC_SETTINGS_PERFORMANCE)
+	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_cl", "#vjbase.menu.npc.settings.cl", "", "", VJ_NPC_SETTINGS_CLIENT)
 	spawnmenu.AddToolMenuOption("DrVrej", "Weapons", "vj_menu_wep_settings_cl", "#vjbase.menu.wep.settings.client", "", "", VJ_WEAPON_SETTINGS_CLIENT)
 end)

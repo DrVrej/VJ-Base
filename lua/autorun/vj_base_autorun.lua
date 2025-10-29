@@ -24,11 +24,9 @@ VJ_CVAR_IGNOREPLAYERS = GetConVar("ai_ignoreplayers"):GetInt() != 0
 VJ_CVAR_AI_ENABLED = GetConVar("ai_disabled"):GetInt() != 1
 if SERVER then VJ_RecipientFilter = RecipientFilter() VJ_RecipientFilter:AddAllPlayers() end
 if !VJ then VJ = {} end
-
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ File Initialization ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- ====== Autorun ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 AddCSLuaFile("autorun/vj_controls.lua")
 include("autorun/vj_controls.lua")
 
@@ -80,7 +78,7 @@ AddCSLuaFile("includes/modules/vj_ai_schedule.lua")
 AddCSLuaFile("includes/modules/vj_ai_task.lua")
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Default Spawn Menu ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Spawn Menu Initialization ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local spawnCategory = "VJ Base"
 	-- ====== Category Information (Many are for popular categories) ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -141,22 +139,42 @@ VJ.AddNPCWeapon("VJ_Crossbow", "weapon_vj_crossbow")
 VJ.AddNPCWeapon("VJ_SSG-08", "weapon_vj_ssg08")
 VJ.AddNPCWeapon("VJ_Crowbar", "weapon_vj_crowbar")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Main Hooks / Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Misc Initialization ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if SERVER then
-	util.AddNetworkString("vj_welcome")
-	util.AddNetworkString("vj_meme")
+	-- ====== Network Strings ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	util.AddNetworkString("vj_welcome_cl")
+	util.AddNetworkString("vj_music_cl")
+	util.AddNetworkString("vj_meme_sv")
 	
-	-- Initialize AI Schedule and Task systems
+	util.AddNetworkString("vj_npc_test_interactive_cl")
+	
+	util.AddNetworkString("vj_controller_cl_hud")
+	util.AddNetworkString("vj_controller_cl_data")
+	util.AddNetworkString("vj_controller_sv_data")
+	
+	util.AddNetworkString("vj_tool_mover_cl_select")
+	util.AddNetworkString("vj_tool_mover_cl_move")
+	util.AddNetworkString("vj_tool_mover_sv_select")
+	util.AddNetworkString("vj_tool_mover_sv_move")
+	
+	util.AddNetworkString("vj_tool_relationship_cl_select")
+	util.AddNetworkString("vj_tool_relationship_cl_apply")
+	util.AddNetworkString("vj_tool_relationship_sv_apply")
+	
+	util.AddNetworkString("vj_tool_spawner_cl_create")
+	util.AddNetworkString("vj_tool_spawner_sv_create")
+	
+	-- ====== AI Schedule and Task Modules ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	require("vj_ai_schedule")
 	
-	-- Initialize AI Nodegraph system
+	-- ====== AI Nodegraph Module ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	require("vj_ai_nodegraph")
 	timer.Simple(1, function() -- To make sure world is initialized otherwise things like traces will return nil because "worldspawn" doesn't exist
 		VJ_Nodegraph = vj_ai_nodegraph.New()
 		-- If it failed to read the nodegraph, wait and try again in case nodegraph file hasn't generated yet
 		if VJ_Nodegraph:GetNodegraph().Version == -1 then
-			MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base [AI Nodegraph module]: ", VJ.COLOR_RED_LIGHT, "Failed to read nodegraph, will attempt again soon...\n")
+			MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base [AI Nodegraph module]: ", VJ.COLOR_RED_LIGHT, "Failed to read file, will attempt again soon...\n")
 			timer.Simple(4, function()
 				MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base [AI Nodegraph module]: ", VJ.COLOR_SERVER, "Running second read attempt...\n")
 				VJ_Nodegraph.Data = VJ_Nodegraph:ReadNodegraph()
@@ -172,13 +190,13 @@ if SERVER then
 	hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn_Msg", function(ply, transition)
 		timer.Simple(1, function()
 			if VJBASE_DISABLE_INIT_MESSAGE != true then
-				net.Start("vj_welcome")
+				net.Start("vj_welcome_cl")
 				net.Send(ply)
 			end
 		end)
 	end)
 	---------------------------------------------------------------------------------------------------------------------------------------------
-	net.Receive("vj_meme", function(len, ply)
+	net.Receive("vj_meme_sv", function(len, ply)
 		if ply:IsPlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
 			local memeType = net.ReadUInt(1) -- 2 types total
 			PrintMessage(HUD_PRINTTALK, memeType == 1 and "Are you thirsty?" or "Hello from DrVrej! :D")
@@ -200,7 +218,7 @@ elseif CLIENT then
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	local colorDarkCyan = Color(30, 200, 255)
 	--
-	net.Receive("vj_welcome", function(len)
+	net.Receive("vj_welcome_cl", function(len)
 		chat.AddText(VJ.COLOR_CYAN, "VJ Base ", colorDarkCyan, VJBASE_VERSION, VJ.COLOR_WHITE, " : Navigate to the ", VJ.COLOR_YELLOW, "DrVrej", VJ.COLOR_WHITE, " tab in the spawn menu for settings.")
 	end)
 end

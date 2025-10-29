@@ -52,10 +52,6 @@ ENT.VJC_Removed = false
 	- self.VJCE_NPC			The NPC that's being controlled
 */
 
-util.AddNetworkString("vj_controller_data")
-util.AddNetworkString("vj_controller_data_cl")
-util.AddNetworkString("vj_controller_hud")
-
 local vecDef = Vector(0, 0, 0)
 local math_min = math.min
 local math_max = math.max
@@ -303,7 +299,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Sadly no other way, this is the most reliable way to sync the position from client to server in time
 	-- Also avoids garbage positions that output from other methods
-net.Receive("vj_controller_data_cl", function(len, ply)
+net.Receive("vj_controller_sv_data", function(len, ply)
 	-- Set the controller's bullseye position if the player is controlling an NPC AND controller entity exists AND Bullseye exists --> Protect against spam ?
 	if ply.VJ_IsControllingNPC && IsValid(ply.VJ_TheControllerEntity) && ply.VJ_TheControllerEntity.VJC_Bullseye_RefreshPos && IsValid(ply.VJ_TheControllerEntity.VJCE_Bullseye) then -- Added a var for toggling the bullseye positioning, this way if one wants to override it they can
 		ply.VJ_TheControllerEntity.VJCE_Bullseye:SetPos(net.ReadVector())
@@ -315,7 +311,7 @@ function ENT:SendDataToClient(reset)
 	local npc = self.VJCE_NPC
 	local npcData = npc.ControllerParams
 
-	net.Start("vj_controller_data")
+	net.Start("vj_controller_cl_data")
 		net.WriteBool(ply.VJ_IsControllingNPC)
 		net.WriteUInt((reset and nil) or self.VJCE_Camera:EntIndex(), 14)
 		net.WriteUInt((reset and nil) or npc:EntIndex(), 14)
@@ -359,7 +355,7 @@ function ENT:Think()
 	
 	-- HUD
 	if self.VJC_Player_DrawHUD then
-		net.Start("vj_controller_hud")
+		net.Start("vj_controller_cl_hud")
 			net.WriteBool(ply:GetInfoNum("vj_npc_cont_hud", 1) == 1)
 			net.WriteFloat(npc:GetMaxHealth())
 			net.WriteFloat(npc:Health())
@@ -613,7 +609,7 @@ function ENT:OnRemove()
 	if !self.VJC_Removed then
 		self:StopControlling()
 	end
-	net.Start("vj_controller_hud")
+	net.Start("vj_controller_cl_hud")
 		net.WriteBool(false)
 	net.Broadcast()
 end

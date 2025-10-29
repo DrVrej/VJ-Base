@@ -193,10 +193,6 @@ if CLIENT then
 		end
 	end)
 else
-	util.AddNetworkString("vj_tool_relationship_cl_select")
-	util.AddNetworkString("vj_tool_relationship_cl_apply")
-	util.AddNetworkString("vj_tool_relationship_sv_apply")
----------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_tool_relationship_sv_apply", function(len, ply)
 		local wep = ply:GetActiveWeapon()
 		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" && hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_relationship") then

@@ -83,7 +83,7 @@ if CLIENT then
 			end,
 		})
 		//ParticleEffect("vj_impact_dirty", tr.HitPos, Angle(0, 0, 0), npc)
-		net.Start("vj_controller_data_cl")
+		net.Start("vj_controller_sv_data")
 			net.WriteVector(tr.HitPos)
 		net.SendToServer()
 		
@@ -108,7 +108,7 @@ if CLIENT then
 		end
 	end)
 	---------------------------------------------------------------------------------------------------------------------------------------------
-	net.Receive("vj_controller_data", function(len)
+	net.Receive("vj_controller_cl_data", function(len)
 		//print("Data Sent!")
 		//print(len)
 		local ply = LocalPlayer()
@@ -140,7 +140,7 @@ if CLIENT then
 	local mat_icon_gun = Material("vj_base/hud/gun.png")
 	local mat_icon_camera = Material("vj_base/hud/camera.png")
 	local mat_icon_zoom = Material("vj_base/hud/camera_zoom.png")
-	net.Receive("vj_controller_hud", function(len)
+	net.Receive("vj_controller_cl_hud", function(len)
 		//print(len)
 		local enabled = net.ReadBool()
 		if enabled != true then hook.Remove("HUDPaint", "vj_controller_HUD") return end
