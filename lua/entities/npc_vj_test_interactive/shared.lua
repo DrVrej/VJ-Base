@@ -14,19 +14,22 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	net.Receive("vj_npc_test_interactive_cl", function(len)
+		local ent = net.ReadEntity()
+		if !IsValid(ent) or ent:GetClass() != "npc_vj_test_interactive" or !ent:Alive() then return end
 		local ply = LocalPlayer()
+		if !ply:Alive() then return end
 		local welMsgs = {
 			"Hi!",
 			"Welcome to my shop, how can I help you?",
-			"Hello " .. ply:GetName() .. ", You need anything?",
-			"What can I do for you " .. ply:GetName() .. "?",
+			"Hello " .. ply:Nick() .. ", You need anything?",
+			"What can I do for you " .. ply:Nick() .. "?",
 			"This ain't cheap stuff, but it is good!",
 		}
 	
 		local frame = vgui.Create("DFrame")
 		frame:SetSize(450, 210)
 		frame:SetPos(ScrW() * 0.5, ScrH() * 0.5)
-		frame:SetTitle("VJ Test Menu")
+		frame:SetTitle("Interactive NPC")
 		//frame:SetBackgroundBlur(true)
 		frame:SetSizable(true)
 		frame:SetDeleteOnClose(false)

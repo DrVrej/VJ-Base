@@ -36,8 +36,8 @@ function ENT:OnStopControlling(keyPressed) end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.ControllerVars_Player = nil -- A hash table to hold all the values that need to be reset after the player stops controlling
-ENT.ControllerVars_NPC = nil -- A hash table to hold all the values that need to be reset after the NPC is uncontrolled
+ENT.VJC_SavedVars_PLY = nil -- A hash table to hold all the values that need to be reset after the player stops controlling
+ENT.VJC_SavedVars_NPC = nil -- A hash table to hold all the values that need to be reset after the NPC is uncontrolled
 ENT.VJC_Camera_Mode = 1 -- Current camera mode | 1 = Third, 2 = First
 ENT.VJC_Camera_CurZoom = Vector(0, 0, 0)
 ENT.VJC_Key_Last = BUTTON_CODE_NONE -- The last button the user pressed
@@ -46,10 +46,10 @@ ENT.VJC_NPC_LastPos = Vector(0, 0, 0)
 ENT.VJC_Removed = false
 
 /* Important entities:
-	- self.VJCE_Bullseye	The bullseye entity used for the NPC to target
-	- self.VJCE_Camera		The camera object
 	- self.VJCE_Player		The player that's controlling
 	- self.VJCE_NPC			The NPC that's being controlled
+	- self.VJCE_Bullseye	The bullseye entity used for the NPC to target
+	- self.VJCE_Camera		The camera entity used for the player
 */
 
 local vecDef = Vector(0, 0, 0)
@@ -66,101 +66,6 @@ function ENT:Initialize()
 	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local color0000 = Color(0, 0, 0, 0)
---
-function ENT:StartControlling()
-	-- Set up the camera entity
-	local npc = self.VJCE_NPC
-	local camera = ents.Create("prop_dynamic")
-	camera:SetPos(npc:GetPos() + Vector(0, 0, npc:OBBMaxs().z)) //npc:EyePos()
-	camera:SetModel("models/props_junk/watermelon01_chunk02c.mdl")
-	camera:SetParent(npc)
-	camera:SetRenderMode(RENDERMODE_NONE)
-	camera:Spawn()
-	camera:SetColor(color0000)
-	camera:SetNoDraw(false)
-	camera:DrawShadow(false)
-	self:DeleteOnRemove(camera)
-	self.VJCE_Camera = camera
-	
-	-- Set up the player
-	local ply = self.VJCE_Player
-	ply.VJ_IsControllingNPC = true
-	ply.VJ_TheControllerEntity = self
-	ply:Spectate(OBS_MODE_CHASE)
-	ply:SpectateEntity(camera)
-	ply:DrawShadow(false)
-	ply:SetNoDraw(true)
-	ply:SetMoveType(MOVETYPE_OBSERVER)
-	ply:DrawViewModel(false)
-	ply:DrawWorldModel(false)
-	local weps = {}
-	for _, v in ipairs(ply:GetWeapons()) do
-		weps[#weps + 1] = v:GetClass()
-	end
-	self.ControllerVars_Player = {
-		health = ply:Health(),
-		armor = ply:Armor(),
-		weapons = weps,
-		activeWep = (IsValid(ply:GetActiveWeapon()) and ply:GetActiveWeapon():GetClass()) or "",
-		godMode = ply:HasGodMode(), -- Maintain the player's God mode status after exiting the controller
-		noTarget = ply:IsFlagSet(FL_NOTARGET)
-	}
-	ply:SetNoTarget(true)
-	ply:StripWeapons()
-	if ply:GetInfoNum("vj_npc_cont_diewithnpc", 0) == 1 then self.VJC_Player_CanRespawn = false end
-
-	hook.Add("PlayerButtonDown", self, function(ent, ply2, button)
-		if IsValid(ent) && ply2.VJ_IsControllingNPC && ent.VJCE_Player == ply2 then
-			ent.VJC_Key_Last = button
-			ent.VJC_Key_LastTime = CurTime()
-			ent:OnKeyPressed(button)
-			
-			-- Stop Controlling
-			if ent.VJC_Player_CanExit and button == KEY_END then
-				ent:StopControlling(true)
-			end
-			
-			-- Tracking
-			if button == KEY_T then
-				ent:ToggleBullseyeTracking()
-			end
-			
-			-- Camera mode
-			if button == KEY_H then
-				ent.VJC_Camera_Mode = (ent.VJC_Camera_Mode == 1 and 2) or 1
-			end
-			
-			-- Allow movement jumping
-			if button == KEY_J then
-				ent:ToggleMovementJumping()
-			end
-			
-			-- Zoom
-			local zoom = ply2:GetInfoNum("vj_npc_cont_cam_zoom_dist", 5)
-			if button == KEY_LEFT then
-				ent.VJC_Camera_CurZoom = ent.VJC_Camera_CurZoom - Vector(0, zoom, 0)
-			elseif button == KEY_RIGHT then
-				ent.VJC_Camera_CurZoom = ent.VJC_Camera_CurZoom + Vector(0, zoom, 0)
-			elseif button == KEY_UP then
-				ent.VJC_Camera_CurZoom = ent.VJC_Camera_CurZoom + (ply2:KeyDown(IN_SPEED) and Vector(0, 0, zoom) or Vector(zoom, 0, 0))
-			elseif button == KEY_DOWN then
-				ent.VJC_Camera_CurZoom = ent.VJC_Camera_CurZoom - (ply2:KeyDown(IN_SPEED) and Vector(0, 0, zoom) or Vector(zoom, 0, 0))
-			end
-			if button == KEY_BACKSPACE then
-				ent.VJC_Camera_CurZoom = vecDef
-			end
-		end
-	end)
-
-	hook.Add("KeyPress", self, function(ent, ply2, key)
-		//print(key)
-		if IsValid(ent) && ply2.VJ_IsControllingNPC && ent.VJCE_Player == ply2 then
-			ent:OnKeyBindPressed(key)
-		end
-	end)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetControlledNPC(npc)
 	-- Set the bullseye entity values
 	local bullseye = ents.Create("obj_vj_bullseye")
@@ -170,7 +75,6 @@ function ENT:SetControlledNPC(npc)
 	bullseye:SetRenderMode(RENDERMODE_NONE)
 	bullseye:Spawn()
 	bullseye:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
-	bullseye:SetColor(color0000)
 	bullseye:SetNoDraw(false)
 	bullseye:DrawShadow(false)
 	bullseye.ForceEntAsEnemy = npc
@@ -183,6 +87,7 @@ function ENT:SetControlledNPC(npc)
 	bullseye.VJ_IsBeingControlled = true
 	self:DeleteOnRemove(bullseye)
 	self.VJCE_Bullseye = bullseye
+	self:SetBullseye(bullseye)
 
 	-- Set the NPC
 	if !npc.ControllerParams then
@@ -212,7 +117,7 @@ function ENT:SetControlledNPC(npc)
 			npc:ResetEnemy()
 			npc:SetEnemy(bullseye)
 		end
-		self.ControllerVars_NPC = {
+		self.VJC_SavedVars_NPC = {
 			[1] = npc.DisableWandering,
 			[2] = npc.DisableChasingEnemy,
 			[3] = npc.DamageResponse,
@@ -280,7 +185,7 @@ function ENT:SetControlledNPC(npc)
 			end
 		end)
 	end
-	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self.CustomOnKeyPressed then self.OnKeyPressed = function(_, key) self:CustomOnKeyPressed(key) end end
 	if self.CustomOnKeyBindPressed then self.OnKeyBindPressed = function(_, key) self:CustomOnKeyBindPressed(key) end end
 	if self.CustomOnStopControlling then self.OnStopControlling = function(_, keyPressed) self:CustomOnStopControlling(keyPressed) end end
@@ -288,6 +193,7 @@ function ENT:SetControlledNPC(npc)
 	npc:ClearSchedule()
 	npc:StopMoving()
 	self.VJCE_NPC = npc
+	self:SetNPC(npc)
 	timer.Simple(0, function() -- This only needs to be 0 seconds because we just need a tick to pass
 		if IsValid(self) && IsValid(self.VJCE_NPC) then
 			self.VJCE_NPC.PauseAttacks = false
@@ -295,38 +201,144 @@ function ENT:SetControlledNPC(npc)
 			self.VJCE_NPC:SetEnemy(self.VJCE_Bullseye)
 		end
 	end)
+	self:SendDataToClient()
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:StartControlling()
+	local npc = self.VJCE_NPC
+	
+	-- Set up the camera entity
+	local camera = ents.Create("prop_dynamic")
+	camera:SetPos(npc:GetPos() + Vector(0, 0, npc:OBBMaxs().z)) //npc:EyePos()
+	camera:SetModel("models/props_junk/watermelon01_chunk02c.mdl")
+	camera:SetParent(npc)
+	camera:SetRenderMode(RENDERMODE_NONE)
+	camera:Spawn()
+	camera:SetNoDraw(false)
+	camera:DrawShadow(false)
+	self:DeleteOnRemove(camera)
+	self.VJCE_Camera = camera
+	self:SetCamera(camera)
+	
+	-- Set up the player
+	local ply = self.VJCE_Player
+	self:SetPlayer(ply)
+	ply.VJ_IsControllingNPC = true
+	ply.VJ_TheControllerEntity = self
+	ply:Spectate(OBS_MODE_CHASE)
+	ply:SpectateEntity(camera)
+	ply:DrawShadow(false)
+	ply:SetNoDraw(true)
+	ply:SetMoveType(MOVETYPE_OBSERVER)
+	ply:DrawViewModel(false)
+	ply:DrawWorldModel(false)
+	local weps = {}
+	for _, v in ipairs(ply:GetWeapons()) do
+		weps[#weps + 1] = v:GetClass()
+	end
+	self.VJC_SavedVars_PLY = {
+		health = ply:Health(),
+		armor = ply:Armor(),
+		weapons = weps,
+		activeWep = (IsValid(ply:GetActiveWeapon()) and ply:GetActiveWeapon():GetClass()) or "",
+		godMode = ply:HasGodMode(), -- Maintain the player's God mode status after exiting the controller
+		noTarget = ply:IsFlagSet(FL_NOTARGET)
+	}
+	ply:SetNoTarget(true)
+	ply:StripWeapons()
+	if ply:GetInfoNum("vj_npc_cont_diewithnpc", 0) == 1 then self.VJC_Player_CanRespawn = false end
+
+	hook.Add("PlayerButtonDown", self, function(ent, ply2, button)
+		if IsValid(ent) && ply2.VJ_IsControllingNPC && ent.VJCE_Player == ply2 then
+			ent.VJC_Key_Last = button
+			ent.VJC_Key_LastTime = CurTime()
+			ent:OnKeyPressed(button)
+			
+			-- Stop Controlling
+			if ent.VJC_Player_CanExit and button == KEY_END then
+				ent:StopControlling(true)
+			end
+			
+			-- Tracking
+			if button == KEY_T then
+				ent:ToggleBullseyeTracking()
+			end
+			
+			-- Camera mode
+			if button == KEY_H then
+				ent.VJC_Camera_Mode = (ent.VJC_Camera_Mode == 1 and 2) or 1
+			end
+			
+			-- Allow movement jumping
+			if button == KEY_J then
+				ent:ToggleMovementJumping()
+			end
+			
+			-- Zoom
+			local zoom = ply2:GetInfoNum("vj_npc_cont_cam_zoom_dist", 5)
+			if button == KEY_LEFT then
+				ent.VJC_Camera_CurZoom = ent.VJC_Camera_CurZoom - Vector(0, zoom, 0)
+			elseif button == KEY_RIGHT then
+				ent.VJC_Camera_CurZoom = ent.VJC_Camera_CurZoom + Vector(0, zoom, 0)
+			elseif button == KEY_UP then
+				ent.VJC_Camera_CurZoom = ent.VJC_Camera_CurZoom + (ply2:KeyDown(IN_SPEED) and Vector(0, 0, zoom) or Vector(zoom, 0, 0))
+			elseif button == KEY_DOWN then
+				ent.VJC_Camera_CurZoom = ent.VJC_Camera_CurZoom - (ply2:KeyDown(IN_SPEED) and Vector(0, 0, zoom) or Vector(zoom, 0, 0))
+			end
+			if button == KEY_BACKSPACE then
+				ent.VJC_Camera_CurZoom = vecDef
+			end
+		end
+	end)
+
+	hook.Add("KeyPress", self, function(ent, ply2, key)
+		//print(key)
+		if IsValid(ent) && ply2.VJ_IsControllingNPC && ent.VJCE_Player == ply2 then
+			ent:OnKeyBindPressed(key)
+		end
+	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Sadly no other way, this is the most reliable way to sync the position from client to server in time
 	-- Also avoids garbage positions that output from other methods
-net.Receive("vj_controller_sv_data", function(len, ply)
+net.Receive("vj_controller_sv", function(len, ply)
 	-- Set the controller's bullseye position if the player is controlling an NPC AND controller entity exists AND Bullseye exists --> Protect against spam ?
-	if ply.VJ_IsControllingNPC && IsValid(ply.VJ_TheControllerEntity) && ply.VJ_TheControllerEntity.VJC_Bullseye_RefreshPos && IsValid(ply.VJ_TheControllerEntity.VJCE_Bullseye) then -- Added a var for toggling the bullseye positioning, this way if one wants to override it they can
+	if ply.VJ_IsControllingNPC && IsValid(ply.VJ_TheControllerEntity) && ply.VJ_TheControllerEntity.VJC_Bullseye_RefreshPos && IsValid(ply.VJ_TheControllerEntity.VJCE_Bullseye) then
 		ply.VJ_TheControllerEntity.VJCE_Bullseye:SetPos(net.ReadVector())
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SendDataToClient(reset)
-	local ply = self.VJCE_Player
 	local npc = self.VJCE_NPC
 	local npcData = npc.ControllerParams
-
-	net.Start("vj_controller_cl_data")
-		net.WriteBool(ply.VJ_IsControllingNPC)
-		net.WriteUInt((reset and nil) or self.VJCE_Camera:EntIndex(), 14)
-		net.WriteUInt((reset and nil) or npc:EntIndex(), 14)
-		net.WriteUInt((reset and 1) or self.VJC_Camera_Mode, 2)
-		net.WriteVector((reset and vecDef) or (npcData.ThirdP_Offset + self.VJC_Camera_CurZoom))
-		net.WriteVector((reset and vecDef) or npcData.FirstP_Offset)
-		local bone = -1
-		if reset != true then
-			bone = npc:LookupBone(npcData.FirstP_Bone) or -1
+	self:SetHUDEnabled(self.VJC_Player_DrawHUD)
+	self:SetCameraMode((reset and 1) or self.VJC_Camera_Mode)
+	self:SetCameraTP_Offset((reset and vecDef) or (npcData.ThirdP_Offset + self.VJC_Camera_CurZoom))
+	self:SetCameraFP_Offset((reset and vecDef) or npcData.FirstP_Offset)
+	if IsValid(npc) then
+		self:SetCameraFP_Bone(npc:LookupBone(npcData.FirstP_Bone) or -1)
+	end
+	self:SetCameraFP_ShrinkBone((reset != true and npcData.FirstP_ShrinkBone) or false)
+	self:SetCameraFP_BoneAng((reset != true and npcData.FirstP_CameraBoneAng) or 0)
+	self:SetCameraFP_BoneAngOffset((reset != true and npcData.FirstP_CameraBoneAng_Offset) or 0)
+	
+	if !reset && IsValid(npc) then
+		self:SetNPCName(npc:GetName())
+		self:SetNPCHealth(npc:Health())
+		self:SetNPCMaxHealth(npc:GetMaxHealth())
+		self:SetNPCAttackMelee(npc.HasMeleeAttack && (((npc.IsAbleToMeleeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_MELEE) and 2) or 1) or 0)
+		self:SetNPCRangeAttack(npc.HasRangeAttack && (((npc.IsAbleToRangeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_RANGE) and 2) or 1) or 0)
+		self:SetNPCLeapAttack(npc.HasLeapAttack && (((npc.IsAbleToLeapAttack != true or npc.AttackType == VJ.ATTACK_TYPE_LEAP) and 2) or 1) or 0)
+		self:SetNPCGrenadeAttack(npc.HasGrenadeAttack && ((CurTime() <= npc.NextThrowGrenadeT and 2) or 1) or 0)
+		local npcWeapon = npc:GetActiveWeapon()
+		if IsValid(npcWeapon) then
+			self:SetNPCWeapon(npcWeapon)
+			self:SetNPCWeaponAmmo(IsValid(npcWeapon) && npcWeapon:Clip1() or 0)
+		else
+			self:SetNPCWeapon(NULL)
+			self:SetNPCWeaponAmmo(0)
 		end
-		net.WriteInt(bone, 10)
-		net.WriteBool((reset != true and npcData.FirstP_ShrinkBone) or false)
-		net.WriteUInt((reset != true and npcData.FirstP_CameraBoneAng) or 0, 2)
-		net.WriteInt((reset != true and npcData.FirstP_CameraBoneAng_Offset) or 0, 10)
-	net.Send(ply)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local vecZ20 = Vector(0, 0, 20)
@@ -335,43 +347,29 @@ function ENT:Think()
 	local ply = self.VJCE_Player
 	local npc = self.VJCE_NPC
 	local camera = self.VJCE_Camera
-	if !IsValid(camera) or !IsValid(ply) or !ply.VJ_IsControllingNPC or ply:Health() <= 0 or !IsValid(npc) or !npc:Alive() then self:StopControlling() return end
+	local bullseye = self.VJCE_Bullseye
+	if !IsValid(ply) or !IsValid(npc) or !IsValid(camera) or !IsValid(bullseye) or !ply.VJ_IsControllingNPC or !ply:Alive() or !npc:Alive() then self:StopControlling() return end
 	local curTime = CurTime()
 	local npcWeapon = npc:GetActiveWeapon()
 	local npcEnemy = npc:GetEnemy()
+	local bullseyePos = bullseye:GetPos()
 	
-	self.VJC_NPC_LastPos = npc:GetPos()
-	ply:SetPos(self.VJC_NPC_LastPos + vecZ20) -- Set the player's location
-	self:SendDataToClient()
-	
-	if npcEnemy != self.VJCE_Bullseye then
+	-- Keep bullseye as the enemy
+	if npcEnemy != bullseye then
 		if npc.IsVJBaseSNPC then
 			npc:ResetEnemy()
-			npc:ForceSetEnemy(self.VJCE_Bullseye, false)
+			npc:ForceSetEnemy(bullseye, false)
 		end
-		npc:AddEntityRelationship(self.VJCE_Bullseye, D_HT, 99)
-		npc:SetEnemy(self.VJCE_Bullseye)
+		npc:AddEntityRelationship(bullseye, D_HT, 99)
+		npc:SetEnemy(bullseye)
 	end
 	
-	-- HUD
-	if self.VJC_Player_DrawHUD then
-		net.Start("vj_controller_cl_hud")
-			net.WriteBool(ply:GetInfoNum("vj_npc_cont_hud", 1) == 1)
-			net.WriteFloat(npc:GetMaxHealth())
-			net.WriteFloat(npc:Health())
-			net.WriteString(npc:GetName())
-			net.WriteInt(npc.HasMeleeAttack && (((npc.IsAbleToMeleeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_MELEE) and 2) or 1) or 0, 3)
-			net.WriteInt(npc.HasRangeAttack && (((npc.IsAbleToRangeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_RANGE) and 2) or 1) or 0, 3)
-			net.WriteInt(npc.HasLeapAttack && (((npc.IsAbleToLeapAttack != true or npc.AttackType == VJ.ATTACK_TYPE_LEAP) and 2) or 1) or 0, 3)
-			net.WriteBool(IsValid(npcWeapon))
-			net.WriteInt(IsValid(npcWeapon) && npcWeapon:Clip1() or 0, 32)
-			net.WriteInt(npc.HasGrenadeAttack && ((curTime <= npc.NextThrowGrenadeT and 2) or 1) or 0, 3)
-		net.Send(ply)
-	end
-	
+	self.VJC_NPC_LastPos = npc:GetPos()
+	ply:SetPos(self.VJC_NPC_LastPos + vecZ20) -- Set player's location
 	if #ply:GetWeapons() > 0 then ply:StripWeapons() end
-
-	local bullseyePos = self.VJCE_Bullseye:GetPos()
+	self:SendDataToClient()
+	
+	-- Debug
 	if ply:GetInfoNum("vj_npc_cont_debug", 0) == 1 then
 		debugoverlay.Box(ply:GetPos(), Vector(-2, -2, -2), Vector(2, 2, 2), 1, VJ.COLOR_BLUE)
 		debugoverlay.Text(ply:GetPos(), "Player", 1, false)
@@ -386,7 +384,7 @@ function ENT:Think()
 	local canTurn = true
 	if npc.Flinching or (((npc.CurrentSchedule && !npc.CurrentSchedule.IsPlayActivity) or !npc.CurrentSchedule) && npc:GetNavType() == NAV_JUMP) then return end
 
-	-- Weapon attack
+	-- NPC Weapon attack
 	if npc.IsVJBaseSNPC_Human then
 		if IsValid(npcWeapon) && !npc:IsMoving() && npcWeapon.IsVJBaseWeapon && ply:KeyDown(IN_ATTACK2) && !npc.AttackType && !npc.PauseAttacks && npc:GetWeaponState() == VJ.WEP_STATE_READY then
 			//npc:SetAngles(Angle(0, math.ApproachAngle(npc:GetAngles().y, ply:GetAimVector():Angle().y, 100), 0))
@@ -418,13 +416,13 @@ function ENT:Think()
 	end
 	
 	if npc.IsVJBaseSNPC && npc.AttackAnimTime < curTime && curTime > npc.NextChaseTime && !npc.IsVJBaseSNPC_Tank then
-		-- Turning
+		-- NPC Turning
 		if !npc:IsMoving() && canTurn && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ.WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
 			npc:SCHEDULE_IDLE_STAND()
 			if self.VJC_NPC_CanTurn then
 				local turnData = npc.TurnData
-				if turnData.Target != self.VJCE_Bullseye then
-					npc:SetTurnTarget(self.VJCE_Bullseye, 1)
+				if turnData.Target != bullseye then
+					npc:SetTurnTarget(bullseye, 1)
 				elseif npc:GetActivity() == ACT_IDLE && npc:GetIdealActivity() == ACT_IDLE && npc:DeltaIdealYaw() <= -45 or npc:DeltaIdealYaw() >= 45 then -- Check both current act AND ideal act because certain activities only change the current act (Ex: UpdateTurnActivity function)
 					npc:UpdateTurnActivity()
 					if npc:GetIdealActivity() != ACT_IDLE then -- If ideal act is no longer idle, then we have selected a turn activity!
@@ -436,13 +434,8 @@ function ENT:Think()
 			//npc:SetAngles(Angle(0, Lerp(100*FrameTime(), self.TestLerp, ply:GetAimVector():Angle().y), 0))
 		end
 		
-		-- Movement
+		-- NPC Movement
 		npc:Controller_Movement(self, ply, bullseyePos)
-		
-		//if (ply:KeyDown(IN_USE)) then
-			//npc:StopMoving()
-			//self:StopControlling()
-		//end
 	end
 	self:NextThink(curTime)
 end
@@ -531,7 +524,7 @@ function ENT:StopControlling(keyPressed)
 	local npc = self.VJCE_NPC
 	local ply = self.VJCE_Player
 	if IsValid(ply) then
-		local plyData = self.ControllerVars_Player
+		local plyData = self.VJC_SavedVars_PLY
 		ply:UnSpectate()
 		ply:KillSilent() -- If we don't, we will get bugs like not being able to pick up weapons when walking over them
 		if self.VJC_Player_CanRespawn or keyPressed then
@@ -568,7 +561,7 @@ function ENT:StopControlling(keyPressed)
 	self.VJCE_Player = NULL
 
 	if IsValid(npc) then
-		local npcData = self.ControllerVars_NPC
+		local npcData = self.VJC_SavedVars_NPC
 		//npc:StopMoving()
 		npc.VJ_IsBeingControlled = false
 		npc.VJ_TheController = NULL
@@ -609,7 +602,4 @@ function ENT:OnRemove()
 	if !self.VJC_Removed then
 		self:StopControlling()
 	end
-	net.Start("vj_controller_cl_hud")
-		net.WriteBool(false)
-	net.Broadcast()
 end

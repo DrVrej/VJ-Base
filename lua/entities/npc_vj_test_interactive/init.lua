@@ -24,11 +24,12 @@ end
 function ENT:OnInput(key, activator, caller, data)
 	if key == "Use" && IsValid(activator) && activator:IsPlayer() && activator:Alive() then
 		net.Start("vj_npc_test_interactive_cl")
+			net.WriteEntity(self)
 		net.Send(activator)
 		activator:EmitSound("vj_base/player/illuminati.mp3", 75)
 		self:PlaySoundSystem("Speech", "vo/npc/male01/hi0" .. math.random(1, 2) .. ".wav")
 		self:StopMoving()
 		self:SetTarget(activator)
-		self:SetTurnTarget(activator, -1)
+		self:SetTurnTarget(activator, -1, true)
 	end
 end

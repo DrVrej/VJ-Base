@@ -1151,7 +1151,7 @@ local function InitConvars(self)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function ApplyBackwardsCompatibility(self)
-	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	-- Most of these are pre-revamp variables & functions
 	if self.CustomOnInitialize then self:CustomOnInitialize() end
 	if self.CustomInitialize then self:CustomInitialize() end
@@ -1522,12 +1522,26 @@ local function ApplyBackwardsCompatibility(self)
 			return self:GetMeleeAttackDamageOrigin()
 		end
 	end
-	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defShootVec = Vector(0, 0, 55)
 local capBitsDefault = bit.bor(CAP_SKIP_NAV_GROUND_CHECK, CAP_TURN_HEAD)
 local capBitsDoors = bit.bor(CAP_OPEN_DOORS, CAP_AUTO_DOORS, CAP_USE)
+local idleFunc = ENT.MaintainIdleAnimation
+--
+local function funcAnimThink(self)
+	if VJ_CVAR_AI_ENABLED then
+		idleFunc(self)
+	end
+end
+--
+local function idleThink_Extra(self)
+	if VJ_CVAR_AI_ENABLED then
+		idleFunc(self)
+	end
+	self:UpdateBoneFollowers()
+end
 --
 function ENT:Initialize()
 	self:PreInit()
@@ -1636,20 +1650,10 @@ function ENT:Initialize()
 			-- This is needed as setting "NextThink" to CurTime will cause performance drops, so we set the idle maintain in a separate hook that runs every tick
 			local thinkHook = hook.GetTable()["Think"]
 			if (thinkHook && !thinkHook[self]) or (!thinkHook) then
-				local idleFunc = self.MaintainIdleAnimation
 				if #self:GetBoneFollowers() > 0 then
-					hook.Add("Think", self, function()
-						if VJ_CVAR_AI_ENABLED then
-							idleFunc(self)
-						end
-						self:UpdateBoneFollowers()
-					end)
+					hook.Add("Think", self, idleThink_Extra)
 				else
-					hook.Add("Think", self, function()
-						if VJ_CVAR_AI_ENABLED then
-							idleFunc(self)
-						end
-					end)
+					hook.Add("Think", self, funcAnimThink)
 				end
 			else
 				VJ.DEBUG_Print(self, false, "warn", "has an existing embedded \"Think\" hook already, which is disallowing the default base hook from assigning. Make sure to handle \"MaintainIdleAnimation\" in the overridden hook!")

@@ -26,27 +26,27 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	function ENT:Init() end
+	---------------------------------------------------------------------------------------------------------------------------------------------
 	--[[---------------------------------------------------------
-		UNCOMMENT TO USE | Overrides the camera calculations for the NPC Controller
+		UNCOMMENT TO USE | Called whenever CalcView is ran on the NPC controller | Useful to override the camera calculations
+			- controller = Controller entity (Includes all the necessary data)
 			- ply = Player that is controlling the NPC
 			- origin = Current view position
 			- angles = Current view angles
 			- fov = Current field of view
-			- camera = Camera entity
-			- cameraMode = Camera mode | 1 = Third, 2 = First
 		Returns
 			- false or nothing = Run base code
 			- Table: Override base code, possible values --> {origin, ang, fov, speed}, "speed" = Camera lerp speed
 		Example Code:
-			Use a new cool view origin!
+			Use a new cool view origin while in third person mode!
 			--
-			if cameraMode == 1 then -- Only if we are in third person
+			if controller:GetCameraMode() == 1 then
 				return {origin = origin - (angles:Forward() * 300)}
 			end
 			return false
 			--
 	-----------------------------------------------------------]]
-	-- function ENT:Controller_CalcView(ply, origin, angles, fov, camera, cameraMode) end
+	-- function ENT:Controller_OnCalcView(controller, ply, origin, angles, fov) end
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	//ENT.RenderGroup = RENDERGROUP_BOTH
 	local metaEntity = FindMetaTable("Entity")

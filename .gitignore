@@ -1,0 +1,20 @@
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# IDE configs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Misc
+*.gma
+*.zip
+*.7z
+*.rar
+*.bak
+*.tmp
+*.log
