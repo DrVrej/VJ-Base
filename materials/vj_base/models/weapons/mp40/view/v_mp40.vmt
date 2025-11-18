@@ -4,7 +4,6 @@
 	"$bumpmap" "vj_base/models/weapons/mp40/view/v_mp40_normal"
 	"$phong" "1"
 
-	
 	"$phongboost" "1"
 	"$phongfresnelranges"	"[0.1 0.8 0.8]"
 //	"$halflambert" "1"

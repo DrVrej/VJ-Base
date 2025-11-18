@@ -432,7 +432,7 @@ end
 local vecZ50 = Vector(0, 0, -50)
 --
 function ENT:OnEat(status, statusData)
-	-- The following code is a ideal example based on Half-Life 1 Zombie
+	-- NOTE: The following code is a ideal example based on Half-Life 1 Zombie
 	//VJ.DEBUG_Print(self, "OnEat", status, statusData)
 	if status == "CheckFood" then
 		return true //statusData.owner.BloodData && statusData.owner.BloodData.Color == VJ.BLOOD_COLOR_RED

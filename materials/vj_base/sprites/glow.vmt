@@ -1,6 +1,6 @@
 "Sprite"
 {
+	"$basetexture" "vj_base/sprites/glow"
 	"$spriteorientation" "vp_parallel"
 	"$spriteorigin" "[ 0.50 0.50 ]"
-	"$basetexture" "vj_base/sprites/glow"
 }

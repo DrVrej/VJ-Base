@@ -14,7 +14,6 @@
 	"$phongfresnelranges"	"[.5 1 1]"
 	"$phongalbedotint" "1"
 	"$BasemapAlphaPhongMask" "0.5"
-	
 
 	// Rim lighting parameters
 	"$rimlight" "1"

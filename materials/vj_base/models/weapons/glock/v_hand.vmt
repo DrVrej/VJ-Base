@@ -1,7 +1,5 @@
 "VertexLitGeneric"
-{	
-//THIS IS KEVINS HEV HAND TEXTURE
-//PLASTIC GLOVE TEXTURE
+{
 	"$baseTexture" "vj_base/models/weapons/glock/v_hand"
 	"$bumpmap" "vj_base/models/weapons/glock/v_hand_normal"
 
