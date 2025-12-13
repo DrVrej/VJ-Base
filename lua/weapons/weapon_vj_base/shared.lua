@@ -285,7 +285,10 @@ SWEP.InitTime = 0 -- Holds the CurTime that it was spawned at, used to make sure
 local metaEntity = FindMetaTable("Entity")
 local funcDrawModel = metaEntity.DrawModel
 local funcGetTable = metaEntity.GetTable
-
+--
+local metaNPC = FindMetaTable("NPC")
+local funcGetActiveWeapon = metaNPC.GetActiveWeapon
+--
 local metaAngle = FindMetaTable("Angle")
 
 local vj_wep_muzzleflash = GetConVar("vj_wep_muzzleflash")
@@ -533,7 +536,7 @@ end
 function SWEP:NPC_Think()
 	if !IsValid(self) then return end
 	local owner = metaEntity.GetOwner(self)
-	if !IsValid(owner) or !owner:IsNPC() or owner:GetActiveWeapon() != self then return end
+	if !IsValid(owner) or !owner:IsNPC() or funcGetActiveWeapon(owner) != self then return end
 
 	local selfData = funcGetTable(self)
 	selfData.MaintainWorldModel(self, selfData, owner)
@@ -872,8 +875,8 @@ function SWEP:PrimaryAttackEffects(owner)
 			//muzzleLight:SetParent(self)
 			muzzleLight:Spawn()
 			muzzleLight:Activate()
-			muzzleLight:Fire("TurnOn", "", 0)
-			muzzleLight:Fire("Kill", "", 0.07)
+			muzzleLight:Fire("TurnOn")
+			muzzleLight:Fire("Kill", nil, 0.07)
 			self:DeleteOnRemove(muzzleLight)
 		end
 	end

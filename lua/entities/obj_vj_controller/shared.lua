@@ -44,6 +44,7 @@ local vec0 = Vector(0, 0, 0)
 local vec1 = Vector(1, 1, 1)
 local viewLerpVec = Vector(0, 0, 0)
 local viewLerpAng = Angle(0, 0, 0)
+local math_clamp = math.Clamp
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Draw()
 	return false
@@ -167,22 +168,27 @@ function ENT:PlayerBindPress(ply, bind, pressed)
 	-- Scroll wheel zooming
 	if IsValid(self) && self:GetPlayer() == ply && (bind == "invprev" or bind == "invnext") && IsValid(self:GetCamera()) && self:GetCameraMode() != 2 then
 		if bind == "invprev" then
-			self.VJC_Camera_Zoom = math.Clamp(self.VJC_Camera_Zoom - ply:GetInfoNum("vj_npc_cont_cam_zoom_speed", 10), 0, 500)
+			self.VJC_Camera_Zoom = math_clamp(self.VJC_Camera_Zoom - ply:GetInfoNum("vj_npc_cont_cam_zoom_speed", 10), 0, 500)
 		else
-			self.VJC_Camera_Zoom = math.Clamp(self.VJC_Camera_Zoom + ply:GetInfoNum("vj_npc_cont_cam_zoom_speed", 10), 0, 500)
+			self.VJC_Camera_Zoom = math_clamp(self.VJC_Camera_Zoom + ply:GetInfoNum("vj_npc_cont_cam_zoom_speed", 10), 0, 500)
 		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local lerp_hp = 0
+-- Settings
 local box_roundness = 6
 local box_border_thickness = 2
+
+-- Colors
 local color_red = VJ.COLOR_RED
 local color_orange = VJ.COLOR_ORANGE_VIVID
 local color_green = VJ.COLOR_GREEN
 local color_cyan_muted = Color(0, 255, 255, 125)
-local color_under = Color(0, 0, 0, 180)
+local color_box = Color(0, 0, 0, 150)
+local color_box_under = Color(0, 0, 0, 180)
 local color_white = VJ.COLOR_WHITE
+
+-- Materials
 local mat_icon_melee = Material("vj_base/hud/melee.png")
 local mat_icon_range = Material("vj_base/hud/range.png")
 local mat_icon_leap = Material("vj_base/hud/leap.png")
@@ -190,11 +196,21 @@ local mat_icon_grenade = Material("vj_base/hud/grenade.png")
 local mat_icon_gun = Material("vj_base/hud/gun.png")
 local mat_icon_camera = Material("vj_base/hud/camera.png")
 local mat_icon_zoom = Material("vj_base/hud/camera_zoom.png")
+
+local lerp_hp = 0
+local attack_icon_color = {[0] = color_red, [1] = color_green, [2] = color_orange}
+local draw_RoundedBox = draw.RoundedBox
+local draw_SimpleText = draw.SimpleText
+local surface_SetMaterial = surface.SetMaterial
+local surface_SetDrawColor = surface.SetDrawColor
+local surface_DrawTexturedRect = surface.DrawTexturedRect
+local ScrW, ScrH = ScrW, ScrH
 --
 function ENT:HUD()
 	local ply = LocalPlayer()
 	if !IsValid(self) or self:GetPlayer() != ply then return end
 	if !self:GetHUDEnabled() or ply:GetInfoNum("vj_npc_cont_hud", 1) == 0 then return end
+	local srcW, srcH = ScrW(), ScrH()
 	local health = self:GetNPCHealth()
 	local healthMax = self:GetNPCMaxHealth()
 	local atkMelee = self:GetNPCAttackMelee()
@@ -203,52 +219,50 @@ function ENT:HUD()
 	local atkGrenade = self:GetNPCGrenadeAttack()
 	local atkWeapon = IsValid(self:GetNPCWeapon())
 	local atkWeaponAmmo = self:GetNPCWeaponAmmo()
-	local srcW = ScrW()
-	local srcH = ScrH()
 	
-	draw.RoundedBox(box_roundness, srcW / 2.24, srcH - 130, 215, 100, Color(0, 0, 0, 150))
-	draw.SimpleText(self:GetNPCName(), "VJBaseSmallMedium", srcW / 2.21, srcH - 125, color_white, 0, 0)
+	draw_RoundedBox(box_roundness, srcW / 2.24, srcH - 130, 215, 100, color_box)
+	draw_SimpleText(self:GetNPCName(), "VJBaseSmallMedium", srcW / 2.21, srcH - 125, color_white, 0, 0)
 	
 	-- Health
 	lerp_hp = Lerp(8 * FrameTime(), lerp_hp, health)
-	draw.RoundedBox(box_roundness, srcW / 2.21, srcH - 105, 190, 20, color_cyan_muted)
-	draw.RoundedBox(box_roundness, srcW / 2.21 + box_border_thickness, srcH - 105 + box_border_thickness, 190 - box_border_thickness * 2, 20 - box_border_thickness * 2, color_under)
-	draw.RoundedBox(box_roundness, srcW / 2.21 + box_border_thickness, srcH - 105 + box_border_thickness, ((190 * math.Clamp(lerp_hp, 0, healthMax)) / healthMax) - box_border_thickness * 2, 20 - box_border_thickness * 2, color_cyan_muted)
-	draw.SimpleText(string.format("%.0f",  lerp_hp) .. "/" .. healthMax,  "VJBaseSmallMedium", (srcW / 1.99) - ((surface.GetTextSize(health .. "/" .. healthMax)) / 2), srcH - 103, color_white)
+	draw_RoundedBox(box_roundness, srcW / 2.21, srcH - 105, 190, 20, color_cyan_muted)
+	draw_RoundedBox(box_roundness, srcW / 2.21 + box_border_thickness, srcH - 105 + box_border_thickness, 190 - box_border_thickness * 2, 20 - box_border_thickness * 2, color_box_under)
+	draw_RoundedBox(box_roundness, srcW / 2.21 + box_border_thickness, srcH - 105 + box_border_thickness, ((190 * math_clamp(lerp_hp, 0, healthMax)) / healthMax) - box_border_thickness * 2, 20 - box_border_thickness * 2, color_cyan_muted)
+	draw_SimpleText(string.format("%.0f",  lerp_hp) .. "/" .. healthMax,  "VJBaseSmallMedium", (srcW / 1.99) - ((surface.GetTextSize(health .. "/" .. healthMax)) / 2), srcH - 103, color_white)
 	
 	-- Attack Icons
-	surface.SetMaterial(mat_icon_melee)
-	surface.SetDrawColor((atkMelee == 0 and color_red) or ((atkMelee == 2 and color_orange) or color_green))
-	surface.DrawTexturedRect(srcW / 2.21, srcH - 83, 28, 28)
+	surface_SetMaterial(mat_icon_melee)
+	surface_SetDrawColor(attack_icon_color[atkMelee] or color_green)
+	surface_DrawTexturedRect(srcW / 2.21, srcH - 83, 28, 28)
 	
-	surface.SetMaterial(mat_icon_range)
-	surface.SetDrawColor((atkRange == 0 and color_red) or ((atkRange == 2 and color_orange) or color_green))
-	surface.DrawTexturedRect(srcW / 2.14, srcH - 83, 28, 28)
+	surface_SetMaterial(mat_icon_range)
+	surface_SetDrawColor(attack_icon_color[atkRange] or color_green)
+	surface_DrawTexturedRect(srcW / 2.14, srcH - 83, 28, 28)
 	
-	surface.SetMaterial(mat_icon_leap)
-	surface.SetDrawColor((atkLeap == 0 and color_red) or ((atkLeap == 2 and color_orange) or color_green))
-	surface.DrawTexturedRect(srcW / 2.065, srcH - 83, 28, 28)
+	surface_SetMaterial(mat_icon_leap)
+	surface_SetDrawColor(attack_icon_color[atkLeap] or color_green)
+	surface_DrawTexturedRect(srcW / 2.065, srcH - 83, 28, 28)
 	
-	surface.SetMaterial(mat_icon_grenade)
-	surface.SetDrawColor((atkGrenade == 0 and color_red) or ((atkGrenade == 2 and color_orange) or color_green))
-	surface.DrawTexturedRect(srcW / 2.005, srcH - 83, 28, 28)
+	surface_SetMaterial(mat_icon_grenade)
+	surface_SetDrawColor(attack_icon_color[atkGrenade] or color_green)
+	surface_DrawTexturedRect(srcW / 2.005, srcH - 83, 28, 28)
 	
-	surface.SetMaterial(mat_icon_gun)
-	surface.SetDrawColor((!atkWeapon and color_red) or ((atkWeaponAmmo <= 0 and color_orange) or color_green))
-	surface.DrawTexturedRect(srcW / 1.94, srcH - 83, 28, 28)
+	surface_SetMaterial(mat_icon_gun)
+	surface_SetDrawColor((!atkWeapon and color_red) or ((atkWeaponAmmo <= 0 and color_orange) or color_green))
+	surface_DrawTexturedRect(srcW / 1.94, srcH - 83, 28, 28)
 	if atkWeapon then
-		draw.SimpleText(atkWeaponAmmo, "VJBaseMedium", srcW / 1.885, srcH - 80, (atkWeaponAmmo <= 0 and color_orange) or color_green, 0, 0)
+		draw_SimpleText(atkWeaponAmmo, "VJBaseMedium", srcW / 1.885, srcH - 80, (atkWeaponAmmo <= 0 and color_orange) or color_green, 0, 0)
 	end
 	
 	-- Camera Mode
-	surface.SetMaterial(mat_icon_camera)
-	surface.SetDrawColor(color_white)
-	surface.DrawTexturedRect(srcW / 2.21, srcH - 55, 22, 22)
-	draw.SimpleText((self:GetCameraMode() == 1 and "Third") or "First", "VJBaseMedium", srcW / 2.14, srcH - 55, color_white, 0, 0)
+	surface_SetMaterial(mat_icon_camera)
+	surface_SetDrawColor(color_white)
+	surface_DrawTexturedRect(srcW / 2.21, srcH - 55, 22, 22)
+	draw_SimpleText((self:GetCameraMode() == 1 and "Third") or "First", "VJBaseMedium", srcW / 2.14, srcH - 55, color_white, 0, 0)
 	
 	-- Camera Zoom
-	surface.SetMaterial(mat_icon_zoom)
-	surface.SetDrawColor(color_white)
-	surface.DrawTexturedRect(srcW / 1.94, srcH - 55, 22, 22)
-	draw.SimpleText(self.VJC_Camera_Zoom, "VJBaseMedium", srcW / 1.885, srcH - 55, color_white, 0, 0)
+	surface_SetMaterial(mat_icon_zoom)
+	surface_SetDrawColor(color_white)
+	surface_DrawTexturedRect(srcW / 1.94, srcH - 55, 22, 22)
+	draw_SimpleText(self.VJC_Camera_Zoom, "VJBaseMedium", srcW / 1.885, srcH - 55, color_white, 0, 0)
 end

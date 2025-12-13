@@ -62,7 +62,7 @@ function ENT:Initialize()
 	self.StartLight1:SetParent(self)
 	self.StartLight1:Spawn()
 	self.StartLight1:Activate()
-	self.StartLight1:Fire("TurnOn", "", 0)
+	self.StartLight1:Fire("TurnOn")
 	self:DeleteOnRemove(self.StartLight1)*/
 
 	local envFlare = ents.Create("env_flare")

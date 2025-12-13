@@ -16,10 +16,16 @@ ENT.Spawnable		= true
 
 scripted_ents.Alias("sent_vj_fireplace", "sent_vj_campfire") -- !! Backwards Compatibility !!
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:SetupDataTables()
+	self:NetworkVar("Bool", "Activated")
+	if SERVER then
+		self:SetActivated(false)
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	ENT.NextActivationCheckT = 0
-	ENT.NextFireLightT = 0
-	ENT.DoneFireParticles = false
+	ENT.CreatedParticles = false
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	function ENT:Draw()
 		self:DrawModel()
@@ -28,30 +34,29 @@ if CLIENT then
 	function ENT:Think()
 		local curTime = CurTime()
 		if curTime > self.NextActivationCheckT then
-			if self:GetNW2Bool("VJ_FirePlace_Activated", false) then
-				if !self.DoneFireParticles then
-					self.DoneFireParticles = true
+			if self:GetActivated() then
+				-- Needs to be done here instead of server side due to a GMod bug where particles don't show for the server host and certain clients while in multiplayer
+				if !self.CreatedParticles then
 					ParticleEffectAttach("env_fire_tiny_smoke", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 					ParticleEffectAttach("env_embers_large", PATTACH_ABSORIGIN_FOLLOW, self, 0)
+					self.CreatedParticles = true
 				end
-				if curTime > self.NextFireLightT then
-					local dynLight = DynamicLight(self:EntIndex())
-					if (dynLight) then
-						dynLight.Pos = self:GetPos() + self:GetUp() * 15
-						dynLight.R = 255
-						dynLight.G = 100
-						dynLight.B = 0
-						dynLight.Brightness = 2
-						dynLight.Size = 400
-						dynLight.Decay = 400
-						dynLight.DieTime = curTime + 1
-					end
-					self.NextFireLightT = curTime + 0.2
+				local dynLight = DynamicLight(self:EntIndex())
+				if dynLight then
+					dynLight.pos = self:GetPos() + self:GetUp() * 15
+					dynLight.r = 255
+					dynLight.g = 100
+					dynLight.b = 0
+					dynLight.brightness = 2
+					dynLight.size = 400
+					dynLight.decay = 400
+					dynLight.dietime = curTime + 1
 				end
-			else
-				self.DoneFireParticles = false
+			elseif self.CreatedParticles then
+				self:StopParticles() -- Sometimes server side call doesn't work while in multiplayer
+				self.CreatedParticles = false
 			end
-			self.NextActivationCheckT = curTime + 0.1
+			self.NextActivationCheckT = curTime + 0.2
 		end
 	end
 end
@@ -61,48 +66,57 @@ if !SERVER then return end
 ENT.IsOn = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
-	self:SetNW2Bool("VJ_FirePlace_Activated", false)
 	self:SetModel("models/vj_base/fireplace.mdl")
 	//self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_NONE)
 	self:SetSolid(SOLID_VPHYSICS)
 	self:SetUseType(SIMPLE_USE)
-	
 	self:SetCollisionBounds(Vector(25, 25, 25), Vector(-25, -25, 1))
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Think()
-	if !self.IsOn then
-		VJ.STOPSOUND(self.fireLoopSD)
-		self:StopParticles()
+	
+	-- Supports spawning it activated (such as saves or duplicator)
+	if self:GetActivated() then
+		self:CampfireToggle(true)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Use(activator, caller)
-	if self.IsOn == false then
-		self:SetNW2Bool("VJ_FirePlace_Activated", true)
+function ENT:CampfireToggle(activate)
+	if activate then
+		self:SetActivated(true)
 		self.IsOn = true
-		self:EmitSound("ambient/fire/mtov_flame2.wav", 60, 100)
-		self.fireLoopSD = CreateSound(self, "ambient/fire/fire_small_loop1.wav")
-		self.fireLoopSD:SetSoundLevel(60)
-		self.fireLoopSD:PlayEx(1, 100)
-		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.campfire.print.activated") 
+		self:EmitSound("ambient/fire/ignite.wav", 60, 100)
+		self.CurrentFireSound = CreateSound(self, "ambient/fire/fire_small_loop1.wav")
+		self.CurrentFireSound:SetSoundLevel(60)
+		self.CurrentFireSound:PlayEx(1, 100)
 	else
-		self:SetNW2Bool("VJ_FirePlace_Activated", false)
+		self:SetActivated(false)
 		self.IsOn = false
+		self:EmitSound("ambient/fire/mtov_flame2.wav", 60, 100)
 		self:StopParticles()
-		VJ.STOPSOUND(self.fireLoopSD)
-		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.campfire.print.deactivated")
+		VJ.STOPSOUND(self.CurrentFireSound)
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Use(activator, caller, useType, value)
+	if !self.IsOn then
+		self:CampfireToggle(true)
+		if IsValid(activator) then
+			activator:PrintMessage(HUD_PRINTTALK, "#vjbase.campfire.print.activated")
+		end
+	else
+		self:CampfireToggle(false)
+		if IsValid(activator) then
+			activator:PrintMessage(HUD_PRINTTALK, "#vjbase.campfire.print.deactivated")
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
-	if IsValid(entity) && entity:GetPos():Distance(self:GetPos()) <= 38 && self.IsOn && (entity:IsNPC() or entity:IsPlayer() or entity:IsNextBot()) then
+	if IsValid(entity) && self.IsOn && entity.VJ_ID_Living && entity:GetPos():Distance(self:GetPos()) <= 38 then
 		entity:Ignite(math.Rand(3, 5))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
 	self:StopParticles()
-	VJ.STOPSOUND(self.fireLoopSD)
+	VJ.STOPSOUND(self.CurrentFireSound)
 end

@@ -18,7 +18,7 @@ ENT.StartHealth = 50
 ENT.HealthRegenParams = {
 	Enabled = false, -- Can it regenerate its health?
 	Amount = 4, -- How much should the health increase after every delay?
-	Delay = VJ.SET(2, 4), -- How much time until the health increases
+	Delay = VJ.SET(2, 4), -- Delay between each regeneration
 	ResetOnDmg = true, -- Should the delay reset when it receives damage?
 }
 	-- ====== Collision ====== --
@@ -45,8 +45,7 @@ ENT.CanTurnWhileMoving = true -- Can it turn while moving? | EX: GoldSrc NPCs, F
 ENT.MovementType = VJ_MOVETYPE_GROUND -- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.UsePoseParameterMovement = false -- Sets the model's "move_x" and "move_y" pose parameters while moving | Required for player models to move properly!
 	-- ====== JUMPING ====== --
-	-- Requires "CAP_MOVE_JUMP" capability
-	-- Applied automatically by the base if "ACT_JUMP" is valid on the NPC's model
+	-- Requires "CAP_MOVE_JUMP" capability, which is automatically set by the base if "ACT_JUMP" activity exists in the NPC's model
 	-- Example scenario:
 	--      [A]       <- Apex
 	--     /   \
@@ -56,7 +55,7 @@ ENT.JumpParams = {
 	Enabled = true, -- Can it do movement jumps?
 	MaxRise = 80, -- How high it can jump up ((S -> A) AND (S -> E))
 	MaxDrop = 230, -- How low it can jump down (E -> S)
-	MaxDistance = 275, -- Maximum distance between Start and End
+	MaxDistance = 275, -- Maximum distance between Start (S) and End (E)
 }
 	-- ====== STATIONARY ====== --
 ENT.CanTurnWhileStationary = true -- Can it turn while using stationary move type?
@@ -65,7 +64,7 @@ ENT.CanTurnWhileStationary = true -- Can it turn while using stationary move typ
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- What type of AI behavior is it?
 ENT.IsGuard = false -- Should it guard its position? | Will attempt to stay around its guarding position
-ENT.NextProcessTime = 1 -- Time until it runs the essential performance-heavy AI components
+ENT.NextProcessTime = 1 -- Cooldown between executions of essential performance-heavy AI components
 ENT.EnemyDetection = true -- Can it search and detect for enemies?
 ENT.EnemyTouchDetection = true -- Can it turn and detect enemies that collide with it?
 ENT.EnemyXRayDetection = false -- Can it detect enemies through walls & objects?
@@ -346,10 +345,10 @@ ENT.IdleDialogueCanTurn = true -- Should it turn to to face its dialogue target?
 	-- ====== On Killed Enemy ====== --
 ENT.HasKilledEnemySounds = true -- Can it play sounds when it kills an enemy?
 ENT.KilledEnemySoundLast = true -- Should it only play "self.SoundTbl_KilledEnemy" if there is no enemies left?
-	-- ====== Sound Track ====== --
-ENT.HasSoundTrack = false -- Can it play sound tracks?
-ENT.SoundTrackVolume = 1 -- Volume of the sound track | 1 = Normal | 2 = 200% | 0.5 = 50%
-ENT.SoundTrackPlaybackRate = 1 -- Playback speed of sound tracks | 1 = Normal | 2 = Twice the speed | 0.5 = Half the speed
+	-- ====== Soundtrack ====== --
+ENT.HasSoundTrack = false -- Can it play soundtracks?
+ENT.SoundTrackVolume = 1 -- Volume of the soundtrack | 1 = Normal | 2 = 200% | 0.5 = 50%
+ENT.SoundTrackPlaybackRate = 1 -- Playback speed of soundtracks | 1 = Normal | 2 = Twice the speed | 0.5 = Half the speed
 	-- ====== Other Sound Controls ====== --
 ENT.HasBreathSound = true -- Can it play breathing sounds?
 ENT.HasReceiveOrderSounds = true -- Can it play sounds when it receives an order?
@@ -653,10 +652,14 @@ function ENT:OnPlayerSight(ent) end
 -- function ENT:OnFootstepSound(moveType, sdFile) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	UNCOMMENT TO USE | Called when the NPC detects a danger
-		- dangerType = Type of danger detected | Enum: VJ.NPC_DANGER_TYPE_*
-		- data = Danger / grenade entity for types "DANGER_TYPE_ENTITY" and "DANGER_TYPE_GRENADE"
-			-- Currently empty for danger type "DANGER_TYPE_HINT"
+UNCOMMENT TO USE | Called when the NPC detects a danger
+=-=-=| PARAMETERS |=-=-=
+		1. dangerType [enum : VJ.DANGER_TYPE_*] : Type of danger detected
+		2. data [nil | entity] : Entity for types "DANGER_TYPE_ENTITY" and "DANGER_TYPE_GRENADE", nil for "DANGER_TYPE_HINT"
+
+=-=-=| RETURNS |=-=-=
+	-> [nil | boolean] : Return true to completely skip the default danger reaction
+		USAGE EXAMPLES -> Prevent a danger type or entity from triggering a reaction | Code an entirely custom danger reaction system
 -----------------------------------------------------------]]
 -- function ENT:OnDangerDetected(dangerType, data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1635,6 +1638,7 @@ local funcSetPoseParameter = metaEntity.SetPoseParameter
 --
 local metaNPC = FindMetaTable("NPC")
 local funcHasCondition = metaNPC.HasCondition
+local funcGetActiveWeapon = metaNPC.GetActiveWeapon
 
 ENT.UpdatedPoseParam = false
 ENT.Weapon_UnarmedBehavior_Active = false
@@ -2226,7 +2230,7 @@ function ENT:Initialize()
 			if self.Weapon_Disabled then
 				self:UpdateAnimationTranslations()
 			else
-				local wep = self:GetActiveWeapon()
+				local wep = funcGetActiveWeapon(self)
 				if IsValid(wep) then
 					self.WeaponEntity = self:DoChangeWeapon() -- Setup the weapon
 					self.WeaponInventory.Primary = wep
@@ -2380,7 +2384,7 @@ function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to alw
 	if !alwaysChase && (selfData.DisableChasingEnemy or selfData.IsGuard) then self:SCHEDULE_IDLE_STAND() return end
 	
 	-- If the enemy is not reachable
-	if (funcHasCondition(self, COND_ENEMY_UNREACHABLE) or self:IsUnreachable(ene)) && (IsValid(self:GetActiveWeapon()) && (!self:GetActiveWeapon().IsMeleeWeapon)) then
+	if (funcHasCondition(self, COND_ENEMY_UNREACHABLE) or self:IsUnreachable(ene)) && (IsValid(funcGetActiveWeapon(self)) && (!funcGetActiveWeapon(self).IsMeleeWeapon)) then
 		self:SCHEDULE_ALERT_CHASE(true)
 		self:RememberUnreachable(ene, 2)
 	else -- Is reachable, so chase the enemy!
@@ -2411,7 +2415,7 @@ function ENT:TranslateActivity(act)
 		if selfData.Weapon_UnarmedBehavior_Active then
 			//return PICK(selfData.AnimTbl_ScaredBehaviorStand)
 			return ACT_COWER
-		elseif selfData.Alerted && self:GetWeaponState() != VJ.WEP_STATE_HOLSTERED && IsValid(self:GetActiveWeapon()) then
+		elseif selfData.Alerted && self:GetWeaponState() != VJ.WEP_STATE_HOLSTERED && IsValid(funcGetActiveWeapon(self)) then
 			//return PICK(selfData.AnimTbl_WeaponAim)
 			return ACT_IDLE_ANGRY
 		end
@@ -2459,7 +2463,7 @@ local sdWepSwitch = {"physics/metal/weapon_impact_soft1.wav", "physics/metal/wea
 function ENT:DoChangeWeapon(wep, invSwitch)
 	wep = wep or nil -- The weapon to give or setup | Setting it nil will only setup the current active weapon
 	invSwitch = invSwitch or false -- If true, it will not delete the previous weapon!
-	local curWep = self:GetActiveWeapon()
+	local curWep = funcGetActiveWeapon(self)
 	
 	-- If not supposed to have a weapon, then return!
 	if self.Weapon_Disabled && IsValid(curWep) then
@@ -2573,15 +2577,12 @@ end
 //function ENT:OnActiveWeaponChanged(old, new) print(old, new) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	//if self.NextActualThink <= CurTime() then
-		//self.NextActualThink = CurTime() + 0.065
-	
 	-- Schedule debug
 	//if self.CurrentSchedule then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask then PrintTable(self.CurrentTask) end
 	
 	//self:SetCondition(1) -- Probably not needed as "sv_pvsskipanimation" handles it | Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case "sv_pvsskipanimation" isn't disabled!
-	//if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& curSchedule.IsMovingTask*/ then self:DropToFloor() end -- No need, already handled by the engine
+	//if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& curSchedule.IsMovingTask*/ then self:DropToFloor() end -- No need, now handled by the engine
 	
 	local curTime = CurTime()
 	local selfData = self:GetTable()
@@ -2595,7 +2596,7 @@ function ENT:Think()
 	
 	if !selfData.Dead then
 		-- Detect any weapon change, unless the NPC is dead because the variable is used by self:DeathWeaponDrop()
-		if selfData.WeaponEntity != self:GetActiveWeapon() then
+		if selfData.WeaponEntity != funcGetActiveWeapon(self) then
 			selfData.WeaponEntity = self:DoChangeWeapon()
 		end
 		
@@ -2660,7 +2661,7 @@ function ENT:Think()
 								schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 								schedule:EngTask("TASK_FACE_TARGET", 1)
 								schedule.CanShootWhenMoving = true
-								if IsValid(self:GetActiveWeapon()) then
+								if IsValid(funcGetActiveWeapon(self)) then
 									schedule.TurnData = {Type = VJ.FACE_ENEMY_VISIBLE}
 								end
 								self:StartSchedule(schedule)
@@ -2669,7 +2670,7 @@ function ENT:Think()
 								//end
 								/*self:SCHEDULE_GOTO_TARGET((distToPly < (followData.MinDist * 1.5) and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(schedule)
 									schedule.CanShootWhenMoving = true
-									if IsValid(self:GetActiveWeapon()) then
+									if IsValid(funcGetActiveWeapon(self)) then
 										schedule.TurnData = {Type = VJ.FACE_ENEMY_VISIBLE}
 									end
 								end)*/
@@ -3348,17 +3349,17 @@ function ENT:CheckForDangers()
 			local owner = ent:GetOwner()
 			if !(IsValid(owner) && owner.IsVJBaseSNPC && ((self:GetClass() == owner:GetClass()) or (self:Disposition(owner) == D_LI))) then
 				if ent.VJ_ID_Danger then regDangerDetected = ent continue end -- If it's a regular danger then just skip it for now
-				local funcCustom = self.OnDangerDetected; if funcCustom then funcCustom(self, VJ.DANGER_TYPE_GRENADE, ent) end
+				local funcCustom = self.OnDangerDetected; if funcCustom && funcCustom(self, VJ.DANGER_TYPE_GRENADE, ent) then continue end
 				local curTime = CurTime()
 				if !self:PlaySoundSystem("GrenadeSight") then self:PlaySoundSystem("DangerSight") end -- No grenade sight sounds? See if we have danger sight sounds
 				selfData.NextDangerDetectionT = curTime + 4
 				selfData.TakingCoverT = curTime + 4
-				-- If has the ability to throw it back, then throw the grenade!
+				-- First attempt to throw the grenade away or at the enemy!
 				if selfData.CanRedirectGrenades && selfData.HasGrenadeAttack && ent.VJ_ID_Grabbable && !ent.VJ_ST_Grabbed && ent:GetVelocity():Length() < 400 && VJ.GetNearestDistance(self, ent) < 100 && self:GrenadeAttack(ent, true) then
 					selfData.NextGrenadeAttackSoundT = curTime + 3
 					return
 				end
-				-- Was not able to throw back the grenade, so take cover instead!
+				-- Was not able to throw away the grenade, so take cover instead!
 				self:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH", function(x)
 					x.CanShootWhenMoving = true
 					x.TurnData = {Type = VJ.FACE_ENEMY}
@@ -3371,9 +3372,9 @@ function ENT:CheckForDangers()
 		local funcCustom = self.OnDangerDetected
 		if funcCustom then
 			if regDangerDetected then
-				funcCustom(self, VJ.DANGER_TYPE_ENTITY, regDangerDetected)
+				if funcCustom(self, VJ.DANGER_TYPE_ENTITY, regDangerDetected) then return end
 			else
-				funcCustom(self, VJ.DANGER_TYPE_HINT, nil)
+				if funcCustom(self, VJ.DANGER_TYPE_HINT, nil) then return end
 			end
 		end
 		self:PlaySoundSystem("DangerSight")
@@ -3564,7 +3565,7 @@ function ENT:SelectSchedule()
 		
 	-- Combat Behavior --
 	else
-		local wep = self:GetActiveWeapon()
+		local wep = funcGetActiveWeapon(self)
 		local eneData = selfData.EnemyData
 		
 		-- Check for weapon validity
@@ -4042,7 +4043,7 @@ function ENT:OnTakeDamage(dmginfo)
 			-- Move away or hide behind object when damaged while enemy is valid | RESULT: May play a hiding animation OR move to take cover from enemy
 			local eneData = selfData.EnemyData
 			if !isPassive && selfData.CombatDamageResponse && IsValid(eneData.Target) && curTime > selfData.NextCombatDamageResponseT && !selfData.IsFollowing && !selfData.AttackType && !self:IsBusy() && curTime > selfData.TakingCoverT && eneData.Visible && self:GetWeaponState() != VJ.WEP_STATE_RELOADING && eneData.Distance < selfData.Weapon_MaxDistance then
-				local wep = self:GetActiveWeapon()
+				local wep = funcGetActiveWeapon(self)
 				local canMove = true
 				if self:DoCoverTrace(self:GetPos() + self:OBBCenter(), eneData.Target:EyePos()) then
 					local hideTime = math.Rand(selfData.CombatDamageResponse_CoverTime.a, selfData.CombatDamageResponse_CoverTime.b)
@@ -4064,7 +4065,7 @@ function ENT:OnTakeDamage(dmginfo)
 			if !isPassive && !IsValid(self:GetEnemy()) then
 				local canMove = true
 				
-				-- How allies respond when it's damaged
+				-- How allies respond when it's damaged | RESULT: May become alerted and may play an animation
 				if selfData.DamageAllyResponse && curTime > selfData.NextDamageAllyResponseT && !selfData.IsFollowing then
 					local responseDist = math_max(800, self:OBBMaxs():Distance(self:OBBMins()) * 12)
 					local allies = self:Allies_Check(responseDist)
@@ -4089,7 +4090,7 @@ function ENT:OnTakeDamage(dmginfo)
 				
 				local dmgResponse = selfData.DamageResponse
 				if dmgResponse && curTime > selfData.TakingCoverT && !self:IsBusy("Activities") then
-					-- Attempt to find who damaged me | RESULT: May become alerted if attacker is visible OR it may hide if it didn't find the attacker
+					-- Attempt to find who damaged me | RESULT: May become alerted and set its enemy if attacker is visible
 					if dmgAttacker && (dmgResponse == true or dmgResponse == "OnlySearch") then
 						local sightDist = self:GetMaxLookDistance()
 						sightDist = math_min(math_max(sightDist / 2, sightDist <= 1000 and sightDist or 1000), sightDist)
@@ -4107,13 +4108,13 @@ function ENT:OnTakeDamage(dmginfo)
 						end
 					end
 					
-					-- If all else failed then take cover!
+					-- If all else failed then take cover! | RESULT: May move away from its current position
 					if canMove && (dmgResponse == true or dmgResponse == "OnlyMove") && !selfData.IsFollowing && selfData.MovementType != VJ_MOVETYPE_STATIONARY && dmginfo:GetDamageCustom() != VJ.DMG_BLEED then
 						self:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.TurnData = {Type = VJ.FACE_ENEMY} end)
 						selfData.TakingCoverT = curTime + 5
 					end
 				end
-			-- Passive NPCs
+			-- Make passive NPCs run away | RESULT: May move away from its current position
 			elseif isPassive && curTime > selfData.TakingCoverT then
 				if selfData.DamageResponse && !self:IsBusy() then
 					self:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH")
@@ -4121,7 +4122,7 @@ function ENT:OnTakeDamage(dmginfo)
 			end
 		end
 		
-		-- Make passive NPCs move away | RESULT: May move away AND may cause other passive NPCs to move as well
+		-- Signal other passive NPCs of possible danager | RESULT: May cause other passive NPCs to move away from their current positions
 		if isPassive && curTime > selfData.TakingCoverT then
 			if selfData.Passive_AlliesRunOnDamage then -- Make passive allies run too!
 				local allies = self:Allies_Check(math_max(800, self:OBBMaxs():Distance(self:OBBMins()) * 20))
@@ -4254,7 +4255,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 	-- I/O events, from: https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/mp/src/game/server/basecombatcharacter.cpp#L1582
 	if IsValid(dmgAttacker) then -- Someone else killed me
 		self:TriggerOutput("OnDeath", dmgAttacker)
-		dmgAttacker:Fire("KilledNPC", "", 0, self, self) -- Allows player companions (npc_citizen) to respond to kill
+		dmgAttacker:Fire("KilledNPC", nil, 0, self, self) -- Allows player companions (npc_citizen) to respond to kill
 	else
 		self:TriggerOutput("OnDeath", self)
 	end
@@ -4432,8 +4433,8 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		VJ.Corpse_AddStinky(corpse, true)
 		
 		if IsValid(self.WeaponEntity) then corpse.ChildEnts[#corpse.ChildEnts + 1] = self.WeaponEntity end
-		if self.DeathCorpseFade then corpse:Fire(corpse.FadeCorpseType, "", self.DeathCorpseFade) end
-		if vj_npc_corpse_fade:GetInt() == 1 then corpse:Fire(corpse.FadeCorpseType, "", vj_npc_corpse_fadetime:GetInt()) end
+		if self.DeathCorpseFade then corpse:Fire(corpse.FadeCorpseType, nil, self.DeathCorpseFade) end
+		if vj_npc_corpse_fade:GetInt() == 1 then corpse:Fire(corpse.FadeCorpseType, nil, vj_npc_corpse_fadetime:GetInt()) end
 		self:OnCreateDeathCorpse(dmginfo, hitgroup, corpse)
 		if corpse:IsFlagSet(FL_DISSOLVING) then
 			if IsValid(self.WeaponEntity) then
@@ -4449,9 +4450,9 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			for _, child in ipairs(childPieces) do
 				if IsValid(child) then
 					if child:GetClass() == "prop_ragdoll" then -- Make ragdolls fade
-						child:Fire("FadeAndRemove", "", 0)
+						child:Fire("FadeAndRemove")
 					else
-						child:Fire("kill", "", 0)
+						child:Fire("kill")
 					end
 				end
 			end
@@ -4470,7 +4471,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DeathWeaponDrop(dmginfo, hitgroup)
-	local activeWep = self:GetActiveWeapon()
+	local activeWep = funcGetActiveWeapon(self)
 	if !self.DropWeaponOnDeath or !IsValid(activeWep) then return end
 	
 	-- Save its original pos & ang in case the weapon uses custom world model pos & ang

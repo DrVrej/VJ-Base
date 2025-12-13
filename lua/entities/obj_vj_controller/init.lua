@@ -9,8 +9,8 @@ ENT.VJC_Player_CanExit = true -- Can the player exit the controller?
 ENT.VJC_Player_CanRespawn = true -- If false, the player will die when the NPC dies!
 ENT.VJC_Player_CanChatMessage = true -- Can the controller be allowed to send chat messages to the player?
 ENT.VJC_Player_DrawHUD = true -- Should the controller HUD be displayed?
-ENT.VJC_Bullseye_RefreshPos = true -- Should bullseye's position update every tick?
 ENT.VJC_NPC_CanTurn = true -- Should the NPC be allowed to turn while idle?
+ENT.VJC_Bullseye_RefreshPos = true -- Should bullseye's position update every tick?
 ENT.VJC_BullseyeTracking = false -- Activates bullseye tracking (Will not turn to the move location!)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -64,6 +64,10 @@ function ENT:Initialize()
 	self:Init()
 	if self.CustomOnInitialize then self:CustomOnInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:UpdateTransmitState()
+	return TRANSMIT_ALWAYS -- This entity should always transmit as its client side code is essential!
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetControlledNPC(npc)

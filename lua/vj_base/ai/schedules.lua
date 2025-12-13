@@ -4,6 +4,9 @@ require("vj_ai_schedule")
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
+local VJ_MOVETYPE_AERIAL = VJ_MOVETYPE_AERIAL
+local VJ_MOVETYPE_AQUATIC = VJ_MOVETYPE_AQUATIC
+local VJ_MOVETYPE_STATIONARY = VJ_MOVETYPE_STATIONARY
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SCHEDULE_FACE(faceTask, customFunc)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
@@ -99,9 +102,10 @@ function ENT:SCHEDULE_IDLE_WANDER()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SCHEDULE_IDLE_STAND()
-	if self:IsMoving() or self.NextIdleTime > CurTime() then return end
+	local selfData = self:GetTable()
+	if self:IsMoving() or selfData.NextIdleTime > CurTime() then return end
 	local navType = self:GetNavType(); if navType == NAV_JUMP or navType == NAV_CLIMB then return end
-	local moveType = self.MovementType; if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) && (self.AA_CurrentMoveTime > CurTime() or self:IsBusy("Activities")) then return end // self:GetVelocity():Length() > 0
+	local moveType = selfData.MovementType; if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) && (selfData.AA_CurrentMoveTime > CurTime() or self:IsBusy("Activities")) then return end // self:GetVelocity():Length() > 0
 	self:MaintainIdleAnimation(self:GetIdealActivity() != ACT_IDLE)
 	return true
 end
@@ -262,7 +266,6 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Called whenever a task fails
-		- failCode = 
 -----------------------------------------------------------]]
 function ENT:OnTaskFailed(failCode, failString)
 	//VJ.DEBUG_Print(self, "OnTaskFailed", "warn", failCode, failString)
@@ -286,8 +289,8 @@ function ENT:OnTaskFailed(failCode, failString)
 						self:NextTask(curSchedule) -- Attempt to move on to the next task!
 					end
 					-- Handle "RunCode_OnFail"
-					if !curSchedule.AlreadyRanCode_OnFail && curSchedule.RunCode_OnFail != nil then
-						curSchedule.AlreadyRanCode_OnFail = true
+					if !curSchedule.OnFailExecuted && curSchedule.RunCode_OnFail != nil then
+						curSchedule.OnFailExecuted = true
 						curSchedule.RunCode_OnFail(failCode, failString)
 					end
 				end
@@ -438,13 +441,14 @@ function ENT:DoSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopCurrentSchedule()
-	local schedule = self.CurrentSchedule
+	local selfData = self:GetTable()
+	local schedule = selfData.CurrentSchedule
 	//VJ.DEBUG_Print(self, "StopCurrentSchedule", schedule)
 	if schedule then
 		timer.Remove("attack_pause_reset" .. self:EntIndex())
-		self.NextIdleTime = 0
-		self.NextChaseTime = 0
-		self.AnimLockTime = 0
+		selfData.NextIdleTime = 0
+		selfData.NextChaseTime = 0
+		selfData.AnimLockTime = 0
 		self:ClearSchedule()
 		self:ClearGoal()
 		self:ScheduleFinished(schedule)
@@ -457,8 +461,8 @@ function ENT:ScheduleFinished(schedule)
 	local selfData = self:GetTable()
 	if schedule then
 		-- Handle "RunCode_OnFinish"
-		if !schedule.AlreadyRanCode_OnFinish && schedule.RunCode_OnFinish != nil then
-			schedule.AlreadyRanCode_OnFinish = true
+		if !schedule.OnFinishExecuted && schedule.RunCode_OnFinish != nil then
+			schedule.OnFinishExecuted = true
 			schedule.RunCode_OnFinish()
 		end
 		-- Handle COND_TASK_FAILED, unless we have handled the failure case, we should keep the failure condition forever until it's handled or new schedule is ran

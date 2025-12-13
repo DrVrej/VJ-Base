@@ -95,7 +95,7 @@ function ENT:OnDestroy()
 	expLight:SetParent(self)
 	expLight:Spawn()
 	expLight:Activate()
-	expLight:Fire("TurnOn", "", 0)
+	expLight:Fire("TurnOn")
 	self:DeleteOnRemove(expLight)
 
 	self:SetLocalPos(myPos + vecZ4) -- Because the entity is too close to the ground

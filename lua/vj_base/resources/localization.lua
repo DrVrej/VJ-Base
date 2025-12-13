@@ -67,18 +67,17 @@ local strings_english = {
 	["vjbase.menu.cleanup.remove.ply.weapons"] = "Remove all of your Weapons",
 	["vjbase.menu.cleanup.remove.ply.ammo"] = "Remove all of your Ammo",
 	
-	-- Contact
-	["vjbase.menu.contact"] = "Contact",
-	["vjbase.menu.contact.incompatible"] = "Incompatible Addons",
-	["vjbase.menu.contact.github"] = "GitHub",
-	["vjbase.menu.contact.documentation"] = "Documentation",
-	["vjbase.menu.contact.changelogs"] = "Change Logs",
-	["vjbase.menu.contact.discord"] = "Discord",
-	["vjbase.menu.contact.steam"] = "Steam",
-	["vjbase.menu.contact.youtube"] = "YouTube",
-	["vjbase.menu.contact.twitter"] = "Twitter",
-	["vjbase.menu.contact.patreon"] = "Patreon",
-	["vjbase.menu.contact.patreon.label"] = "Donations help and encourage me to continue creating mods! Thank you!",
+	-- About & Contact
+	["vjbase.menu.about"] = "About & Contact",
+	["vjbase.menu.about.github"] = "GitHub",
+	["vjbase.menu.about.documentation"] = "Documentation",
+	["vjbase.menu.about.changelogs"] = "Change Logs",
+	["vjbase.menu.about.discord"] = "Discord",
+	["vjbase.menu.about.steam"] = "Steam",
+	["vjbase.menu.about.youtube"] = "YouTube",
+	["vjbase.menu.about.patreon"] = "Patreon",
+	["vjbase.menu.about.patreon.label"] = "Donations help maintain VJ Base, thank you!",
+	["vjbase.menu.about.incompatible"] = "Incompatible Addons",
 	
 	-- Server Settings
 	["vjbase.menu.settings.server"] = "Server Settings",
@@ -103,9 +102,6 @@ local strings_english = {
 	["vjbase.menu.settings.client.lang.auto"] = "Automatically Set Language",
 	["vjbase.menu.settings.client.lang.auto.label"] = "Ignored if VJ Base is set to a language unsupported by GMod",
 	
-	-- Information
-	["vjbase.menu.info"] = "Information",
-	
 	-- Plugins
 	["vjbase.menu.plugins"] = "Plugins",
 	["vjbase.menu.plugins.label"] = "List of installed VJ Base plugins.",
@@ -126,7 +122,7 @@ local strings_english = {
 	["vjbase.menu.npc.settings.ai.sightdistance"] = "Sight Distance Override:",
 	["vjbase.menu.npc.settings.ai.sightdistance.label"] = "NPCs have their own distances, this will make them all the same! (0 = Original)",
 	["vjbase.menu.npc.settings.ai.sightxray"] = "X-Ray Vision",
-	["vjbase.menu.npc.settings.ai.sightxray.label"] = "They will see through walls & have a 360 FOV",
+	["vjbase.menu.npc.settings.ai.sightxray.label"] = "NPCs will see through walls & have a 360 FOV",
 	["vjbase.menu.npc.settings.ai.wander"] = "Wander",
 	["vjbase.menu.npc.settings.ai.chase"] = "Chase Enemies",
 	["vjbase.menu.npc.settings.ai.detectdanger"] = "Detect Dangers & Grenades (Humans)",
@@ -139,7 +135,7 @@ local strings_english = {
 	["vjbase.menu.npc.settings.ai.callhelp"] = "Call for Help",
 	["vjbase.menu.npc.settings.ai.plybetray"] = "Player Allies Can Become Enemy",
 	["vjbase.menu.npc.settings.ai.plyfollow"] = "Follow Players",
-	["vjbase.menu.npc.settings.ai.plyfollow.label"] = "Press 'E' on a friendly to follow you",
+	["vjbase.menu.npc.settings.ai.plyfollow.label"] = "Press USE on an allied NPC to follow you",
 	["vjbase.menu.npc.settings.ai.creatureopendoor"] = "Creatures Can Open Doors",
 	["vjbase.menu.npc.settings.ai.humanjump"] = "Humans Can Jump",
 	["vjbase.menu.npc.settings.ai.relation.label"] = "Relationship Overrides:",
@@ -174,8 +170,8 @@ local strings_english = {
 	-- NPC Client Settings
 	["vjbase.menu.npc.settings.cl"] = "Client Settings",
 	["vjbase.menu.npc.settings.cl.guard"] = "Spawn NPCs as Guards",
-	["vjbase.menu.npc.settings.cl.snd_track.volume"] = "Sound Track Volume:",
-	["vjbase.menu.npc.settings.cl.snd_track.volume.label"] = "Overrides the volume of sound tracks for all NPCs\n1 = Don't override (100% volume)\n0.5 = 50% volume\n3 = 300% volume",
+	["vjbase.menu.npc.settings.cl.snd_track.volume"] = "Soundtrack Volume:",
+	["vjbase.menu.npc.settings.cl.snd_track.volume.label"] = "Overrides soundtrack volume for all NPCs\n1 = Don't override (100% volume)\n0.5 = 50% volume\n3 = 300% volume",
 	
 	-- NPC General Settings
 	["vjbase.menu.npc.settings.gen"] = "General",
@@ -201,7 +197,7 @@ local strings_english = {
 	["vjbase.menu.npc.settings.gen.health.label"] = "Health Settings:",
 	["vjbase.menu.npc.settings.gen.health.god"] = "God Mode (Won't take any damage)",
 	["vjbase.menu.npc.settings.gen.health.override"] = "Health Override:",
-	["vjbase.menu.npc.settings.gen.health.override.label"] = "Default: 0 | Total: 9 digits",
+	["vjbase.menu.npc.settings.gen.health.override.label"] = "Default: 0 | Max: 9 digits",
 	["vjbase.menu.npc.settings.gen.health.blood.vfx"] = "Blood VFX",
 	["vjbase.menu.npc.settings.gen.health.blood.vfx.label"] = "Blood particles, decals, pools etc.",
 	["vjbase.menu.npc.settings.gen.health.blood.pool"] = "Blood Pools",
@@ -214,7 +210,7 @@ local strings_english = {
 	["vjbase.menu.npc.settings.gen.corpse.undo"] = "Undoable Corpses (Undo Key)",
 	["vjbase.menu.npc.settings.gen.corpse.fade"] = "Fade Corpses",
 	["vjbase.menu.npc.settings.gen.corpse.fadetime"] = "Corpse Fade Time",
-	["vjbase.menu.npc.settings.gen.corpse.fadetime.label"] = "Total: 600 seconds (10 Minutes)",
+	["vjbase.menu.npc.settings.gen.corpse.fadetime.label"] = "Max: 600 seconds (10 Minutes)",
 	["vjbase.menu.npc.settings.gen.collision.header"] = "Corpse Collision:",
 	["vjbase.menu.npc.settings.gen.collision.default"] = "Default | Excludes: Players, NPCs, Weapons, Ragdolls",
 	["vjbase.menu.npc.settings.gen.collision.everything"] = "No exclusions | Everything!",
@@ -229,7 +225,7 @@ local strings_english = {
 	["vjbase.menu.npc.settings.gen.gib.collision"] = "Collidable Gibs",
 	["vjbase.menu.npc.settings.gen.gib.fade"] = "Fade Gibs",
 	["vjbase.menu.npc.settings.gen.gib.fadetime"] = "Gib Fade Time",
-	["vjbase.menu.npc.settings.gen.gib.fadetime.label"] = "Default: 30 | Total: 600 seconds (10 Minutes)",
+	["vjbase.menu.npc.settings.gen.gib.fadetime.label"] = "Default: 30 | Max: 600 seconds (10 Minutes)",
 	["vjbase.menu.npc.settings.gen.ply.label"] = "Player Settings:",
 	["vjbase.menu.npc.settings.gen.ply.addfrags"] = "Add Kills to Player's Frag Count",
 	["vjbase.menu.npc.settings.gen.ply.chat"] = "Post in Player Chat",
@@ -238,7 +234,7 @@ local strings_english = {
 	-- NPC Sound Settings
 	["vjbase.menu.npc.settings.snd"] = "Sounds",
 	["vjbase.menu.npc.settings.snd.toggle"] = "Allow Sounds",
-	["vjbase.menu.npc.settings.snd.track"] = "Sound Tracks / Music",
+	["vjbase.menu.npc.settings.snd.track"] = "Soundtracks / Music",
 	["vjbase.menu.npc.settings.snd.idle"] = "Idle Sounds",
 	["vjbase.menu.npc.settings.snd.breathing"] = "Breathing Sounds",
 	["vjbase.menu.npc.settings.snd.footsteps"] = "Footstep Sounds",
@@ -458,6 +454,7 @@ local strings_english = {
 	["tool.vj_tool_spawner.menu.pos.up"] = "Position | Up",
 	["tool.vj_tool_spawner.menu.selected.wep"] = "Selected Weapon",
 	["tool.vj_tool_spawner.menu.relclass"] = "Relation Class Override",
+	["tool.vj_tool_spawner.menu.relclass.help"] = "String such as CLASS_COMBINE",
 	["tool.vj_tool_spawner.menu.toggle.plyallied"] = "Friendly To Player Allies",
 	["tool.vj_tool_spawner.menu.toggle.plyallied.help"] = "Must have relation class \"CLASS_PLAYER_ALLY\"!",
 	["tool.vj_tool_spawner.menu.button.add"] = "Add To List",
@@ -543,18 +540,14 @@ local strings_russian = {
 	["vjbase.menu.cleanup.remove.ply.weapons"] = "Убрать всё своё оружие",
 	["vjbase.menu.cleanup.remove.ply.ammo"] = "Убрать все свои боеприпасы",
 
-	["vjbase.menu.contact"] = "Контакты и поддержка",
-	["vjbase.menu.contact.incompatible"] = "Несовместимые дополнения",
-	["vjbase.menu.contact.reportbug"] = "Сообщить о проблеме",
-	["vjbase.menu.contact.suggestion"] = "Предложить что-нибудь",
-	["vjbase.menu.contact.discord"] = "Discord создателя!",
-	["vjbase.menu.contact.steam"] = "Steam создателя!",
-	["vjbase.menu.contact.youtube"] = "Подписка на YouTube!",
-	["vjbase.menu.contact.twitter"] = "Подписка на Твиттер!",
-	["vjbase.menu.contact.patreon"] = "Поддержите меня на Patron!",
-	["vjbase.menu.contact.label1"] = "Перейдите по одной из этих ссылок, чтобы получить информацию об обновлениях моих дополнений!",
-	["vjbase.menu.contact.patreon.label"] = "Пожертвования помогают и поощряют меня продолжать делать/обновлять дополнения! Спасибо!",
-	["vjbase.menu.contact.thanks"] = "Спасибо за вашу поддержку!",
+	["vjbase.menu.about"] = "Информация",
+	["vjbase.menu.about.incompatible"] = "Несовместимые дополнения",
+	["vjbase.menu.about.discord"] = "Discord создателя!",
+	["vjbase.menu.about.steam"] = "Steam создателя!",
+	["vjbase.menu.about.youtube"] = "Подписка на YouTube!",
+	["vjbase.menu.about.patreon"] = "Поддержите меня на Patron!",
+	["vjbase.menu.about.patreon.label"] = "Пожертвования помогают и поощряют меня продолжать делать/обновлять дополнения! Спасибо!",
+	["vjbase.menu.about.thanks"] = "Спасибо за вашу поддержку!",
 
 	["vjbase.menu.settings.server"] = "Административные настройки",
 	["vjbase.menu.settings.server.label"] = "ВНИМАНИЕ: НЕКОТОРЫЕ НАСТРОЙКИ ЯВЛЯЮТСЯ ЧИТЕРСКИМИ!",
@@ -576,8 +569,6 @@ local strings_russian = {
 	["vjbase.menu.settings.client.lang.notify"] = "Язык VJ Base установлен на:",
 	["vjbase.menu.settings.client.lang.auto"] = "Автонастройка языка",
 	["vjbase.menu.settings.client.lang.auto.label"] = "Игнорируется, если в VJ Base установлен на язык, не поддерживаемый игрой",
-
-	["vjbase.menu.info"] = "Информация",
 
 	["vjbase.menu.plugins"] = "Установленные плагины",
 	["vjbase.menu.plugins.label"] = "Список установленных плагинов VJ Base.",
@@ -966,17 +957,13 @@ local strings_lithuanian = {
 	["vjbase.menu.cleanup.remove.ply.weapons"] = "Šalinti visus savo ginklus",
 	["vjbase.menu.cleanup.remove.ply.ammo"] = "Šalinti visus savo šovinius",
 
-	["vjbase.menu.contact"] = "Susisiekti ir palaikyti",
-	["vjbase.menu.contact.reportbug"] = "Pranešti apie klaidą",
-	["vjbase.menu.contact.suggestion"] = "Kažką pasiūlyti",
-	["vjbase.menu.contact.discord"] = "Prisijunkite prie mano Discord grupės!",
-	["vjbase.menu.contact.steam"] = "Prisijunkite prie mano Steam grupės!",
-	["vjbase.menu.contact.youtube"] = "Prenumeruokite mano YouTube kanalą!",
-	["vjbase.menu.contact.twitter"] = "Sekite mane Twitter!",
-	["vjbase.menu.contact.patreon"] = "Paremkite mane Patreon!",
-	["vjbase.menu.contact.label1"] = "Spustelėkite vieną iš šių nuorodų, kad gautumėte informaciją apie mano priedų naujinimus!",
-	["vjbase.menu.contact.patreon.label"] = "Jūsų parama skatina mane toliau kurti/naujinti priedus! Ačiū!",
-	["vjbase.menu.contact.thanks"] = "Ačiū už jūsų palaikymą!",
+	["vjbase.menu.about"] = "Informacija",
+	["vjbase.menu.about.discord"] = "Prisijunkite prie mano Discord grupės!",
+	["vjbase.menu.about.steam"] = "Prisijunkite prie mano Steam grupės!",
+	["vjbase.menu.about.youtube"] = "Prenumeruokite mano YouTube kanalą!",
+	["vjbase.menu.about.patreon"] = "Paremkite mane Patreon!",
+	["vjbase.menu.about.patreon.label"] = "Jūsų parama skatina mane toliau kurti/naujinti priedus! Ačiū!",
+	["vjbase.menu.about.thanks"] = "Ačiū už jūsų palaikymą!",
 
 	["vjbase.menu.settings.server"] = "Serverio nustatymai",
 	["vjbase.menu.settings.server.label"] = "ĮSPĖJIMAS: KAI KURIE NUSTATYMAI REIKALAUJA SV_CHEATS!",
@@ -996,8 +983,6 @@ local strings_lithuanian = {
 	["vjbase.menu.settings.client.label"] = "Naudokite šį meniu kiento nustatymų tinkinimui. Serveriai negali keisti šių nustatymų!",
 	["vjbase.menu.settings.client.lang.label"] = "Kalbos nuostata...",
 	["vjbase.menu.settings.client.lang.notify"] = "VJ Base kalba nustatyta į:",
-
-	["vjbase.menu.info"] = "Informacija",
 
 	["vjbase.menu.plugins"] = "Įdiegti įskiepiai",
 	["vjbase.menu.plugins.label"] = "Įdiegtų VJ Base įskiepių sąrašas.",
@@ -1348,17 +1333,13 @@ local strings_spanish_latin = {
 	["vjbase.menu.cleanup.remove.ply.weapons"] = "Remover todas tus Armas",
 	["vjbase.menu.cleanup.remove.ply.ammo"] = "Remover toda tu Munición",
 
-	["vjbase.menu.contact"] = "Contacto y Apoyo",
-	["vjbase.menu.contact.reportbug"] = "Reportar un Bug",
-	["vjbase.menu.contact.suggestion"] = "Sugerir Algo",
-	["vjbase.menu.contact.discord"] = "¡Unete a mi servidor de Discord!",
-	["vjbase.menu.contact.steam"] = "¡Unete a mi grupo de Steam!",
-	["vjbase.menu.contact.youtube"] = "¡Suscribete a mi canal de YouTube!",
-	["vjbase.menu.contact.twitter"] = "¡Sigueme en Twitter!",
-	["vjbase.menu.contact.patreon"] = "¡Doname en Patreon!",
-	["vjbase.menu.contact.label1"] = "¡Sigueme en uno de estos links para estar al pendiente de mis addons!",
-	["vjbase.menu.contact.patreon.label"] = "¡Las donaciones me ayudan y me motivan a crear/actualizar addons! Gracias!",
-	["vjbase.menu.contact.thanks"] = "¡Gracias por el apoyo!",
+	["vjbase.menu.about"] = "Información",
+	["vjbase.menu.about.discord"] = "¡Unete a mi servidor de Discord!",
+	["vjbase.menu.about.steam"] = "¡Unete a mi grupo de Steam!",
+	["vjbase.menu.about.youtube"] = "¡Suscribete a mi canal de YouTube!",
+	["vjbase.menu.about.patreon"] = "¡Doname en Patreon!",
+	["vjbase.menu.about.patreon.label"] = "¡Las donaciones me ayudan y me motivan a crear/actualizar addons! Gracias!",
+	["vjbase.menu.about.thanks"] = "¡Gracias por el apoyo!",
 			
 	["vjbase.menu.settings.server"] = "Ajustes del Servidor Admin",
 	["vjbase.menu.settings.server.label"] = "ADVERTENCIA: ¡ALGUNOS AJUSTES NECESITAN TENER LOS CHEATS ACTIVADOS!",
@@ -1378,8 +1359,6 @@ local strings_spanish_latin = {
 	["vjbase.menu.settings.client.label"] = "Utiliza este menú para personalizar tus ajustes del Cliente, ¡los servidores no pueden cambiar estos ajustes!",
 	["vjbase.menu.settings.client.lang.label"] = "Selección de Idioma",
 	["vjbase.menu.settings.client.lang.notify"] = "Idioma De VJ Base Establecido Al:",
-			
-	["vjbase.menu.info"] = "Información",
 			
 	["vjbase.menu.label"] = "Plugins Instalados",
 	["vjbase.menu.plugins.label"] = "Lista de plugins de VJ Base instalados.",
@@ -1432,18 +1411,17 @@ local strings_chinese_simplified = {
 	["vjbase.menu.cleanup.remove.ply.weapons"] = "移除您的所有武器",
 	["vjbase.menu.cleanup.remove.ply.ammo"] = "移除您的所有弹药",
 	
-	-- Contact
-	["vjbase.menu.contact"] = "联系和支持",
-	["vjbase.menu.contact.incompatible"] = "不兼容的插件",
-	["vjbase.menu.contact.github"] = "GitHub",
-	["vjbase.menu.contact.documentation"] = "文档",
-	["vjbase.menu.contact.changelogs"] = "更新日志",
-	["vjbase.menu.contact.discord"] = "Discord",
-	["vjbase.menu.contact.steam"] = "Steam",
-	["vjbase.menu.contact.youtube"] = "YouTube",
-	["vjbase.menu.contact.twitter"] = "Twitter",
-	["vjbase.menu.contact.patreon"] = "Patreon",
-	["vjbase.menu.contact.patreon.label"] = "赞助会帮助和鼓励我继续制作插件！非常感谢您的支持。",
+	-- About & Contact
+	["vjbase.menu.about"] = "信息",
+	["vjbase.menu.about.incompatible"] = "不兼容的插件",
+	["vjbase.menu.about.github"] = "GitHub",
+	["vjbase.menu.about.documentation"] = "文档",
+	["vjbase.menu.about.changelogs"] = "更新日志",
+	["vjbase.menu.about.discord"] = "Discord",
+	["vjbase.menu.about.steam"] = "Steam",
+	["vjbase.menu.about.youtube"] = "YouTube",
+	["vjbase.menu.about.patreon"] = "Patreon",
+	["vjbase.menu.about.patreon.label"] = "赞助会帮助和鼓励我继续制作插件！非常感谢您的支持。",
 	
 	-- Server Settings
 	["vjbase.menu.settings.server"] = "服务器设置",
@@ -1467,9 +1445,6 @@ local strings_chinese_simplified = {
 	["vjbase.menu.settings.client.lang.notify"] = "VJ Base 的语言设置为：",
 	["vjbase.menu.settings.client.lang.auto"] = "自动设置语言",
 	["vjbase.menu.settings.client.lang.auto.label"] = "如果 VJ Base 设置为 GMod 不支持的语言，则忽略",
-
-	-- Information
-	["vjbase.menu.info"] = "信息",
 	
 	-- Plugins
 	["vjbase.menu.plugins"] = "插件",
@@ -1896,18 +1871,14 @@ local strings_turkish = {
 	["vjbase.menu.cleanup.remove.ply.weapons"] = "Bütün Silahlarını Kaldır",
 	["vjbase.menu.cleanup.remove.ply.ammo"] = "Bütün Mermini Kaldır",
 
-	["vjbase.menu.contact"] = "İletişim ve Destek",
-	["vjbase.menu.contact.incompatible"] = "Uyumsuz Eklentiler",
-	["vjbase.menu.contact.reportbug"] = "Hata Bildir",
-	["vjbase.menu.contact.suggestion"] = "Bir şeyler Öner",
-	["vjbase.menu.contact.discord"] = "Discord'a katıl!",
-	["vjbase.menu.contact.steam"] = "Steam grubuna katıl!",
-	["vjbase.menu.contact.youtube"] = "Youtube'da abone ol!",
-	["vjbase.menu.contact.twitter"] = "Twitter'da takip et!",
-	["vjbase.menu.contact.patreon"] = "Patreon'dan bağış yap!",
-	["vjbase.menu.contact.label1"] = "Eklentilerim ile ilgili gelişmeleri takip etmek için adreslerden birini takip et!",
-	["vjbase.menu.contact.patreon.label"] = "Bağışlar eklenti yapmaya/güncellemeye devam etmem için bana yardımcı oluyor ve beni cesaretlendiriyor! Teşekkür ederim!",
-	["vjbase.menu.contact.thanks"] = "Thanks for your support!",
+	["vjbase.menu.about"] = "Bilgi",
+	["vjbase.menu.about.incompatible"] = "Uyumsuz Eklentiler",
+	["vjbase.menu.about.discord"] = "Discord'a katıl!",
+	["vjbase.menu.about.steam"] = "Steam grubuna katıl!",
+	["vjbase.menu.about.youtube"] = "Youtube'da abone ol!",
+	["vjbase.menu.about.patreon"] = "Patreon'dan bağış yap!",
+	["vjbase.menu.about.patreon.label"] = "Bağışlar eklenti yapmaya/güncellemeye devam etmem için bana yardımcı oluyor ve beni cesaretlendiriyor! Teşekkür ederim!",
+	["vjbase.menu.about.thanks"] = "Thanks for your support!",
 	
 	["vjbase.menu.settings.server"] = "Yönetici Sunucu Ayarları",
 	["vjbase.menu.settings.server.label"] = "UYARI: Bazı ayarlar için hilelerin açık olması gereklidir!",
@@ -1929,8 +1900,6 @@ local strings_turkish = {
 	["vjbase.menu.settings.client.lang.notify"] = "VJ Base dili ayarlandı:",
 	["vjbase.menu.settings.client.lang.auto"] = "Dil otomatik olarak ayarlandı.",
 	["vjbase.menu.settings.client.lang.auto.label"] = "VJ Base GMod tarafından desteklenmeyen bir dile ayarlanmışsa göz ardı edilir.",
-	
-	["vjbase.menu.info"] = "Bilgi",
 
 	["vjbase.menu.plugins"] = "Eklentiler",
 	["vjbase.menu.plugins.label"] = "Yüklenmiş VJBase Eklentilerinin Listesi.",

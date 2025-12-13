@@ -28,7 +28,7 @@ if CLIENT then
 		myAng:RotateAroundAxis(myAng:Right(), vec.x)
 		myAng:RotateAroundAxis(myAng:Up(), vec.y)
 		myAng:RotateAroundAxis(myAng:Forward(), vec.z)
-		cam.Start3D2D(self:GetPos() + self:GetForward()*7 + self:GetUp()*6 + self:GetRight()*2, myAng, 0.07)
+		cam.Start3D2D(self:GetPos() + self:GetForward() * 7 + self:GetUp() * 6 + self:GetRight() * 2, myAng, 0.07)
 		draw.SimpleText("Admin Health Kit", "DermaLarge", 31, -22, textColor, 1, 1)
 		cam.End3D2D()
 	end
@@ -41,11 +41,10 @@ function ENT:Initialize()
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetSolid(SOLID_VPHYSICS)
-	//self:SetCollisionGroup(COLLISION_GROUP_NONE)
 	self:SetUseType(SIMPLE_USE)
 	
 	local phys = self:GetPhysicsObject()
-	if phys and IsValid(phys) then
+	if IsValid(phys) then
 		phys:Wake()
 	end
 end

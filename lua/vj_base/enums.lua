@@ -341,7 +341,7 @@ VJ_ID_Aircraft					bool		Helicopters, jets, planes, etc.
 -- Sounds
 VJ_SD_InvestTime				number		Last time this NPC/Player has made a investigatable sound that should be heard by enemy NPCs
 VJ_SD_InvestLevel				number		Sound level of the last investigatable sound made by this NPC/Player | Used alongside "VJ_SD_InvestTime"
-VJ_SD_PlayingMusic				bool		It's playing a sound track
+VJ_SD_PlayingMusic				bool		It's playing a soundtrack / music
 
 -- Controllers
 VJ_IsControllingNPC				bool		It's controlling an NPC, usually using the NPC Controller | Mainly used for players

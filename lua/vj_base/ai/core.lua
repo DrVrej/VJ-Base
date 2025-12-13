@@ -15,6 +15,11 @@
 	debugoverlay.Line(self:EyePos() + self:GetHeadDirection(), self:EyePos() + self:GetHeadDirection() * 100, 0.2)
 	debugoverlay.Box(self:EyePos() + self:GetEyeDirection(), Vector(-2, -2, -2), Vector(2, 2, 2), 0.2, VJ.COLOR_RED)
 	debugoverlay.Line(self:EyePos() + self:GetEyeDirection(), self:EyePos() + self:GetEyeDirection() * 100, 0.2, VJ.COLOR_RED)
+	
+	-- Eye offset example:
+	local newEyeOffset = self:WorldToLocal(self:GetAttachment(self:LookupAttachment("mouth")).Pos)
+	self:SetViewOffset(newEyeOffset)
+	self:SetSaveValue("m_vDefaultEyeOffset", newEyeOffset)
 */
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 AccessorFunc(ENT, "m_iClass", "NPCClass", FORCE_NUMBER)
@@ -222,8 +227,9 @@ local colorGrey = Color(90, 90, 90)
 --
 function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 	-- Should only be ran after self.Corpse has been created!
-	if !IsValid(self.Corpse) then return end
-	local dmginfo = self.Corpse.DamageInfo
+	local corpse = self.Corpse
+	if !IsValid(corpse) then return end
+	local dmginfo = corpse.DamageInfo
 	if dmginfo == nil then return end
 	extraOptions = extraOptions or {}
 	local ent = ents.Create(class or "prop_ragdoll")
@@ -232,10 +238,10 @@ function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 	ent:SetAngles(extraOptions.Ang or self:GetAngles())
 	ent:Spawn()
 	ent:Activate()
-	ent:SetColor(self.Corpse:GetColor())
-	ent:SetMaterial(self.Corpse:GetMaterial())
+	ent:SetColor(corpse:GetColor())
+	ent:SetMaterial(corpse:GetMaterial())
 	ent:SetCollisionGroup(self.DeathCorpseCollisionType)
-	if self.Corpse:IsOnFire() then
+	if corpse:IsOnFire() then
 		ent:Ignite(math.Rand(8, 10), 0)
 		ent:SetColor(colorGrey)
 	end
@@ -249,13 +255,13 @@ function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 	if extraOptions.ShouldFade == true then
 		local fadeTime = extraOptions.ShouldFadeTime or 0
 		if funcGetClass(ent) == "prop_ragdoll" then
-			ent:Fire("FadeAndRemove", "", fadeTime)
+			ent:Fire("FadeAndRemove", nil, fadeTime)
 		else
-			ent:Fire("kill", "", fadeTime)
+			ent:Fire("kill", nil, fadeTime)
 		end
 	end
-	if extraOptions.RemoveOnCorpseDelete != false then //self.Corpse:DeleteOnRemove(ent)
-		self.Corpse.ChildEnts[#self.Corpse.ChildEnts + 1] = ent
+	if extraOptions.RemoveOnCorpseDelete != false then //corpse:DeleteOnRemove(ent)
+		corpse.ChildEnts[#corpse.ChildEnts + 1] = ent
 	end
 	if (customFunc) then customFunc(ent) end
 	return ent
@@ -348,8 +354,8 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 	if extraOptions.NoFade != true && vj_npc_gib_fade:GetInt() == 1 then
 		local gibClass = funcGetClass(gib)
 		if gibClass == "obj_vj_gib" then timer.Simple(vj_npc_gib_fadetime:GetInt(), function() SafeRemoveEntity(gib) end)
-		elseif gibClass == "prop_ragdoll" then gib:Fire("FadeAndRemove", "", vj_npc_gib_fadetime:GetInt())
-		elseif gibClass == "prop_physics" then gib:Fire("kill", "", vj_npc_gib_fadetime:GetInt()) end
+		elseif gibClass == "prop_ragdoll" then gib:Fire("FadeAndRemove", nil, vj_npc_gib_fadetime:GetInt())
+		elseif gibClass == "prop_physics" then gib:Fire("kill", nil, vj_npc_gib_fadetime:GetInt()) end
 	end
 	if removeOnCorpseDelete then //self.Corpse:DeleteOnRemove(extraent)
 		if !self.DeathCorpse_ChildEnts then self.DeathCorpse_ChildEnts = {} end -- If it doesn't exist, then create it!
@@ -1252,15 +1258,15 @@ function ENT:DoGroupFormation(formType, baseEnt, it, spacing)
 	spacing = spacing or 50
 	if formType == "Diamond" then
 		if it == 0 then
-			self:SetLastPosition(baseEnt:GetPos() + baseEnt:GetForward()*spacing + baseEnt:GetRight()*spacing)
+			self:SetLastPosition(baseEnt:GetPos() + baseEnt:GetForward() * spacing + baseEnt:GetRight() * spacing)
 		elseif it == 1 then
-			self:SetLastPosition(baseEnt:GetPos() + baseEnt:GetForward()*-spacing + baseEnt:GetRight()*spacing)
+			self:SetLastPosition(baseEnt:GetPos() + baseEnt:GetForward() * -spacing + baseEnt:GetRight() * spacing)
 		elseif it == 2 then
-			self:SetLastPosition(baseEnt:GetPos() + baseEnt:GetForward()*spacing + baseEnt:GetRight()*-spacing)
+			self:SetLastPosition(baseEnt:GetPos() + baseEnt:GetForward() * spacing + baseEnt:GetRight() * -spacing)
 		elseif it == 3 then
-			self:SetLastPosition(baseEnt:GetPos() + baseEnt:GetForward()*-spacing + baseEnt:GetRight()*-spacing)
+			self:SetLastPosition(baseEnt:GetPos() + baseEnt:GetForward() * -spacing + baseEnt:GetRight() * -spacing)
 		else
-			self:SetLastPosition(baseEnt:GetPos() + baseEnt:GetForward()*(spacing + (3 * it)) + baseEnt:GetRight()*(spacing + (3 * it)))
+			self:SetLastPosition(baseEnt:GetPos() + baseEnt:GetForward() * (spacing + (3 * it)) + baseEnt:GetRight() * (spacing + (3 * it)))
 		end
 	end
 end
@@ -1606,7 +1612,6 @@ function ENT:OnEntityCopyTableFinish(data)
 	data.Tank_TurningLerp = nil
 	data.Gunner = nil
 
-
 	-- Following should be saved because:
 		-- Duplicator: Useful for duplicating NPCs without needing to set the behavior values individually (Ex: following another entity)
 		-- Saves: Usually intended targets will be NULL, and so the respective systems will reset without errors
@@ -1733,37 +1738,40 @@ function ENT:ResetFollowBehavior()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Attempts to start following an entity, if it's already following another entity, it will return false!
+	Attempts to follow the given entity
 		- ent = Entity to follow
-		- stopIfFollowing = If true, it will stop following if it's already following the same entity
+		- doToggle = Should it stop following if it's already following the same entity? | DEFAULT = false
 	Returns
 		1 = Boolean
 			- true, successfully started following the entity
 			- false, failed or stopped following the entity
-		2 = Failure reason (If it failed)
-			0 = Unknown reason
+		2 = Failure reason (if it failed)
+			0 = Unknown / misc reasons
 			1 = NPC is stationary and unable to follow
 			2 = NPC is already following another entity
-			3 = NPC is hostile or neutral the entity
+			3 = NPC is hostile or neutral towards ent
 -----------------------------------------------------------]]
-function ENT:Follow(ent, stopIfFollowing)
+function ENT:Follow(ent, doToggle)
 	if !IsValid(ent) or self.Dead or !VJ_CVAR_AI_ENABLED or self == ent then return false, 0 end
 	
 	local isPly = ent:IsPlayer()
 	local isLiving = ent.VJ_ID_Living
 	if (!isLiving) or (ent:Alive() && ((isPly && !VJ_CVAR_IGNOREPLAYERS) or (!isPly))) then
-		local followData = self.FollowData
 		-- Refusals
-		if isLiving && funcGetClass(self) != funcGetClass(ent) && (self:Disposition(ent) == D_HT or self:Disposition(ent) == D_NU) then -- Check for enemy/neutral
+		local followData = self.FollowData
+		-- Check for enemy/neutral
+		if isLiving && funcGetClass(self) != funcGetClass(ent) && (self:Disposition(ent) == D_HT or self:Disposition(ent) == D_NU) then
 			if isPly && self.CanChatMessage then
 				ent:PrintMessage(HUD_PRINTTALK, VJ.GetName(self) .. " isn't friendly so it won't follow you.")
 			end
 			return false, 3
-		elseif self.IsFollowing && ent != followData.Target then -- Already following another entity
+		-- Check if it's already following another entity
+		elseif self.IsFollowing && ent != followData.Target then
 			if isPly && self.CanChatMessage then
 				ent:PrintMessage(HUD_PRINTTALK, VJ.GetName(self) .. " is following another entity so it won't follow you.")
 			end
 			return false, 2
+		-- Check for invalid move types
 		elseif self.MovementType == VJ_MOVETYPE_STATIONARY or self.MovementType == VJ_MOVETYPE_PHYSICS then
 			if isPly && self.CanChatMessage then
 				ent:PrintMessage(HUD_PRINTTALK, VJ.GetName(self) .. " is currently stationary so it can't follow you.")
@@ -1797,7 +1805,7 @@ function ENT:Follow(ent, stopIfFollowing)
 			end
 			self:OnFollow("Start", ent)
 			return true, 0
-		elseif stopIfFollowing then -- Unfollow the entity
+		elseif doToggle then -- Unfollow the entity
 			if isPly then
 				self:PlaySoundSystem("UnFollowPlayer")
 			end
@@ -2090,13 +2098,13 @@ function ENT:SetRelationshipMemory(ent, memoryName, memoryValue)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Checks the relationship towards the given entity and converts custom dispositions such as "D_VJ_INTEREST" to a default source engine disposition
+	Checks the relationship towards the given entity and converts custom dispositions such as "D_VJ_INTEREST" to the closest default source engine disposition
 		- ent = The entity to check its relation with
 	Returns
 		- Disposition value, list: https://wiki.facepunch.com/gmod/Enums/D
 -----------------------------------------------------------]]
 function ENT:CheckRelationship(ent)
-	if ent:IsFlagSet(FL_NOTARGET) or !ent:Alive() or (ent:IsPlayer() && VJ_CVAR_IGNOREPLAYERS) then return D_NU end
+	if ent:IsFlagSet(FL_NOTARGET) or !ent:Alive() or (ent:IsPlayer() && VJ_CVAR_IGNOREPLAYERS) then return D_ER end
 	if funcGetClass(self) == funcGetClass(ent) then return D_LI end
 	local myDisp = self:Disposition(ent)
 	if myDisp == D_VJ_INTEREST then return D_HT end
@@ -2109,7 +2117,7 @@ local ENT_TYPE_NPC = 1
 local ENT_TYPE_PLAYER = 2
 local ENT_TYPE_NEXTBOT = 3
 --
--- Return: Whether or not it found an enemy
+-- Returns: Whether or not it found an enemy
 function ENT:MaintainRelationships()
 	local selfData = self:GetTable()
 	local myBehavior = selfData.Behavior
@@ -2581,7 +2589,7 @@ function ENT:Flinch(dmginfo, hitgroup)
 	local curTime = CurTime()
 	local selfData = self:GetTable()
 	local flinchType = selfData.CanFlinch
-	if !flinchType or flinchType == 0 or selfData.Flinching or selfData.AnimLockTime > curTime or selfData.NextFlinchT > curTime or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
+	if !flinchType or flinchType == 0 or selfData.Flinching or selfData.AnimLockTime > curTime or selfData.NextFlinchT > curTime or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB or selfData.AttackType == VJ.ATTACK_TYPE_GRENADE then return end
 	
 	-- DMG_FORCE_FLINCH: Skip secondary checks, flinch chance, and damage types!
 	local customDmgType = dmginfo:GetDamageCustom()
@@ -2714,14 +2722,15 @@ function ENT:SetupBloodColor(blColor)
 	npcSize = ((npcSize < 25 and 0) or npcSize < 50 and 1) or 2 -- 0 = tiny | 1 = small | 2 = normal
 	local blood = bloodNames[blColor]
 	if blood then
-		if !PICK(self.BloodParticle) then
-			self.BloodParticle = blood.particle
+		local selfData = self:GetTable()
+		if !PICK(selfData.BloodParticle) then
+			selfData.BloodParticle = blood.particle
 		end
-		if !PICK(self.BloodDecal) then
-			self.BloodDecal = self.BloodDecalUseGMod and blood.decal_gmod or blood.decal
+		if !PICK(selfData.BloodDecal) then
+			selfData.BloodDecal = selfData.BloodDecalUseGMod and blood.decal_gmod or blood.decal
 		end
-		if !PICK(self.BloodPool) then
-			self.BloodPool = blood.pool[npcSize]
+		if !PICK(selfData.BloodPool) then
+			selfData.BloodPool = blood.pool[npcSize]
 		end
 	end
 end
@@ -2736,7 +2745,7 @@ function ENT:SpawnBloodParticles(dmginfo, hitgroup)
 		particle:Spawn()
 		particle:Activate()
 		particle:Fire("Start")
-		particle:Fire("Kill", "", 0.1)
+		particle:Fire("Kill", nil, 0.1)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

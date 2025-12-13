@@ -153,7 +153,9 @@ if CLIENT then
 		panel:AddItem(selectedWep)
 		
 		-- Relationship options
-		panel:TextEntry("#tool.vj_tool_spawner.menu.relclass", "vj_tool_spawner_spawnnpclass")
+		local classTextEntry = panel:TextEntry("#tool.vj_tool_spawner.menu.relclass", "vj_tool_spawner_spawnnpclass")
+			classTextEntry:SetPlaceholderText(language.GetPhrase("#tool.vj_tool_spawner.menu.relclass.help") .. "...")
+		
 		panel:CheckBox("#tool.vj_tool_spawner.menu.toggle.plyallied", "vj_tool_spawner_fritoplyallies")
 		panel:ControlHelp("#tool.vj_tool_spawner.menu.toggle.plyallied.help")
 		

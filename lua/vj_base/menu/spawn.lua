@@ -581,6 +581,8 @@ VJ.CreateDupe_Entity = function( ply, data )
 
 	ent:Activate()
 
+	ent.EntityName = data.EntityName
+
 	-- For hacked combine mines, they reset their skin
 	if ( data.Skin ) then ent:SetSkin( data.Skin ) end
 
@@ -608,6 +610,8 @@ VJ.CreateDupe_Weapon = function( ply, data )
 	--duplicator.DoGenericPhysics( ent, ply, data )
 
 	ent:Activate()
+
+	ent.EntityName = data.EntityName
 
 	if ( IsValid( ply ) ) then
 		ent:SetCreator( ply )

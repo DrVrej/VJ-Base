@@ -292,7 +292,7 @@ function ENT:Tank_FireShell()
 			muzzleFlash:SetPos(muzzleFlashPos)
 			muzzleFlash:SetAngles(myAngForward)
 			muzzleFlash:SetKeyValue("scale", "10")
-			muzzleFlash:Fire("Fire", 0, 0)
+			muzzleFlash:Fire("Fire")
 			local lightFire = ents.Create("light_dynamic")
 			lightFire:SetKeyValue("brightness", "4")
 			lightFire:SetKeyValue("distance", "400")
@@ -303,7 +303,7 @@ function ENT:Tank_FireShell()
 			lightFire:Spawn()
 			lightFire:Activate()
 			lightFire:Fire("TurnOn")
-			lightFire:Fire("Kill", "", 0.1)
+			lightFire:Fire("Kill", nil, 0.1)
 			self:DeleteOnRemove(lightFire)
 			
 			-- Smoke effect
@@ -316,7 +316,7 @@ function ENT:Tank_FireShell()
 			smokeWhite:Spawn()
 			smokeWhite:Activate()
 			smokeWhite:Fire("Start")
-			smokeWhite:Fire("Kill", "", 6)
+			smokeWhite:Fire("Kill", nil, 6)
 			
 			-- Dust effect
 			local dust = EffectData()
@@ -342,7 +342,7 @@ function ENT:Tank_FireShell()
 			//smoke:SetParent(self)
 			//smoke:Spawn()
 			//smoke:Activate()
-			//smoke:Fire("Kill", 0, 4)
+			//smoke:Fire("Kill", nil, 4)
 		end
 		selfData.Tank_Shell_Status = TANK_SHELL_STATUS_EMPTY
 		selfData.Tank_Shell_NextFireT = CurTime() + selfData.Tank_Shell_NextFireTime

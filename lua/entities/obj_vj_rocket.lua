@@ -64,7 +64,7 @@ function ENT:Init()
 	//dynLight:SetParent(self)
 	//dynLight:Spawn()
 	//dynLight:Activate()
-	//dynLight:Fire("TurnOn", "", 0)
+	//dynLight:Fire("TurnOn")
 	//self:DeleteOnRemove(dynLight)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -92,6 +92,6 @@ function ENT:OnDestroy(data, phys)
 	expLight:SetParent(self)
 	expLight:Spawn()
 	expLight:Activate()
-	expLight:Fire("TurnOn", "", 0)
+	expLight:Fire("TurnOn")
 	self:DeleteOnRemove(expLight)
 end

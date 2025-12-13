@@ -77,7 +77,7 @@ function VJ.Corpse_Add(ent)
 		local oldestCorpse = table_remove(VJ.Corpse_Ents, 1)
 		if IsValid(oldestCorpse) then
 			local fadeType = oldestCorpse.FadeCorpseType
-			if fadeType then oldestCorpse:Fire(fadeType, "", 0) end -- Fade out
+			if fadeType then oldestCorpse:Fire(fadeType) end -- Fade out
 			timer.Simple(1, function() if IsValid(oldestCorpse) then oldestCorpse:Remove() end end) -- Make sure it's removed
 		end
 	end

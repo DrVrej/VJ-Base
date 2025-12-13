@@ -48,7 +48,6 @@ if CLIENT then
 		VJ_TOOL_RELATIONSHIP_LIST = VJ_TOOL_RELATIONSHIP_LIST or {}
 		
 		local classList = vgui.Create("DListView")
-			//classList:Center() -- No need since Size does it already
 			classList:SetSize( 100, 300 )
 			classList:SetMultiSelect(false)
 			classList:AddColumn("#tool.vj_tool_relationship.menu.list.header")

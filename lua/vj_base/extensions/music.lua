@@ -25,7 +25,7 @@ net.Receive("vj_music_cl", function(len)
 			sdChan:SetPlaybackRate(sdPlayback)
 			table.insert(VJ.Music_Queue, {npc = ent, channel = sdChan, npcVolume = sdVol})
 		else
-			print("[VJ Base Music] Error adding sound track!", errorID, errorName)
+			print("[VJ Base Music] Error adding soundtrack!", errorID, errorName)
 		end
 	end)
 	timer.Create("vj_music_think", 1, 0, function()
