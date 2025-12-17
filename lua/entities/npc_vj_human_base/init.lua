@@ -1633,10 +1633,12 @@ local VJ_MOVETYPE_PHYSICS = VJ_MOVETYPE_PHYSICS
 local ANIM_TYPE_GESTURE = VJ.ANIM_TYPE_GESTURE
 
 local metaEntity = FindMetaTable("Entity")
+local funcGetTable = metaEntity.GetTable
 local funcGetPoseParameter = metaEntity.GetPoseParameter
 local funcSetPoseParameter = metaEntity.SetPoseParameter
 --
 local metaNPC = FindMetaTable("NPC")
+local funcGetEnemy = metaNPC.GetEnemy
 local funcHasCondition = metaNPC.HasCondition
 local funcGetActiveWeapon = metaNPC.GetActiveWeapon
 
@@ -2333,11 +2335,11 @@ local schedule_alert_chase = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE")
 function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 	self:ClearCondition(COND_ENEMY_UNREACHABLE)
 	local moveType = self.MovementType; if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then self:AA_ChaseEnemy() return end
-	if self.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" then return end // && (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12)
+	if self.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" then return end // && (self:GetEnemyLastKnownPos():Distance(funcGetEnemy(self):GetPos()) <= 12)
 	local navType = self:GetNavType(); if navType == NAV_JUMP or navType == NAV_CLIMB then return end
 	if doLOSChase then
 		schedule_alert_chaseLOS.RunCode_OnFinish = function()
-			local ene = self:GetEnemy()
+			local ene = funcGetEnemy(self)
 			if IsValid(ene) then
 				self:RememberUnreachable(ene, 0)
 				self:SCHEDULE_ALERT_CHASE(false)
@@ -2351,7 +2353,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to always make the NPC chase
 	local curTime = CurTime()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if selfData.NextChaseTime > curTime or selfData.Dead or selfData.VJ_IsBeingControlled or selfData.Flinching or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
 	local eneData = selfData.EnemyData
 	local ene = eneData.Target
@@ -2409,7 +2411,7 @@ end
 -----------------------------------------------------------]]
 function ENT:TranslateActivity(act)
 	//VJ.DEBUG_Print(self, "TranslateActivity", act)
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	-- Handle idle scared and angry animations
 	if act == ACT_IDLE then
 		if selfData.Weapon_UnarmedBehavior_Active then
@@ -2585,7 +2587,7 @@ function ENT:Think()
 	//if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& curSchedule.IsMovingTask*/ then self:DropToFloor() end -- No need, now handled by the engine
 	
 	local curTime = CurTime()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	
 	-- This is here to make sure the initialized process time stays in place...
 	-- otherwise if AI is disabled then reenabled, all the NPCs will now start processing at the same exact CurTime!
@@ -2617,7 +2619,7 @@ function ENT:Think()
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	if VJ_CVAR_AI_ENABLED && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
 		if selfData.VJ_DEBUG then
-			if GetConVar("vj_npc_debug_enemy"):GetInt() == 1 then VJ.DEBUG_Print(self, false, "Enemy -> " .. tostring(self:GetEnemy() or "NULL") .. " | Alerted? " .. tostring(selfData.Alerted))  end
+			if GetConVar("vj_npc_debug_enemy"):GetInt() == 1 then VJ.DEBUG_Print(self, false, "Enemy -> " .. tostring(funcGetEnemy(self) or "NULL") .. " | Alerted? " .. tostring(selfData.Alerted))  end
 			if GetConVar("vj_npc_debug_takingcover"):GetInt() == 1 then if curTime > selfData.TakingCoverT then VJ.DEBUG_Print(self, false, "NOT taking cover") else VJ.DEBUG_Print(self, false, "Taking cover (" .. selfData.TakingCoverT - curTime .. ")") end end
 			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - selfData.EnemyData.VisibleTime) .. " (" .. VJ.GetName(self) .. ")") end
 			if IsValid(selfData.WeaponEntity) && GetConVar("vj_npc_debug_weapon"):GetInt() == 1 then VJ.DEBUG_Print(self, false, " : Weapon -> " .. tostring(selfData.WeaponEntity) .. " | Ammo: " .. selfData.WeaponEntity:Clip1() .. " / " .. selfData.WeaponEntity:GetMaxClip1() .. " | Accuracy: " .. selfData.Weapon_Accuracy) end
@@ -2713,20 +2715,20 @@ function ENT:Think()
 			
 			local plyControlled = selfData.VJ_IsBeingControlled
 			local myPos = self:GetPos()
-			local ene = self:GetEnemy()
+			local ene = funcGetEnemy(self)
 			local eneValid = IsValid(ene)
 			local eneData = selfData.EnemyData
 			if !eneData.Reset then
 				-- Reset enemy if it doesn't exist or it's dead
 				if !eneValid then
 					self:ResetEnemy(true, true)
-					ene = self:GetEnemy()
+					ene = funcGetEnemy(self)
 					eneValid = IsValid(ene)
 				-- Reset enemy if it has been unseen for a while
 				elseif (curTime - eneData.VisibleTime) > ((eneData.Distance < 4000 and selfData.EnemyTimeout) or (selfData.EnemyTimeout / 2)) && !selfData.IsVJBaseSNPC_Tank then
 					self:PlaySoundSystem("LostEnemy")
 					self:ResetEnemy(true, true)
-					ene = self:GetEnemy()
+					ene = funcGetEnemy(self)
 					eneValid = IsValid(ene)
 				end
 			end
@@ -2804,7 +2806,7 @@ function ENT:Think()
 									schedule.RunCode_OnFinish = function()
 										if self:GetWeaponState() == VJ.WEP_STATE_RELOADING then
 											-- If the current situation isn't favorable, then abandon the current reload, and try again!
-											if self.AttackType or (IsValid(self:GetEnemy()) && eneData.Distance <= self.Weapon_RetreatDistance) then
+											if self.AttackType or (IsValid(funcGetEnemy(self)) && eneData.Distance <= self.Weapon_RetreatDistance) then
 												self:SetWeaponState()
 												//timer.Remove("wep_reload_reset" .. self:EntIndex()) -- Remove the timer to make sure it doesn't set reloading to false at a random time (later on)
 											else -- Our hiding spot is good, so reload!
@@ -2983,7 +2985,7 @@ function ENT:Think()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ExecuteMeleeAttack()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if selfData.Dead or selfData.PauseAttacks or selfData.Flinching or selfData.AttackType == VJ.ATTACK_TYPE_GRENADE or (selfData.MeleeAttackStopOnHit && selfData.AttackState == VJ.ATTACK_STATE_EXECUTED_HIT) then return end
 	local skip = self:OnMeleeAttackExecute("Init")
 	local hitRegistered = false
@@ -3341,7 +3343,7 @@ local sdBitMortar = bit.bor(SOUND_DANGER, SOUND_CONTEXT_MORTAR) ---> Combine mor
 	- BEST USE: Sounds that should scare the owner's allies
 -----------------------------------------------------------]]
 function ENT:CheckForDangers()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if !selfData.CanDetectDangers or selfData.AttackType == VJ.ATTACK_TYPE_GRENADE or selfData.NextDangerDetectionT > CurTime() then return end
 	local regDangerDetected = false -- A regular non-grenade danger has been found (This is done to make sure grenades take priority over other dangers!)
 	for _, ent in ipairs(ents.FindInSphere(self:GetPos(), selfData.DangerDetectionDistance)) do
@@ -3391,7 +3393,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAttacks(checkTimers)
 	if !self:Alive() then return end
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if selfData.VJ_DEBUG && GetConVar("vj_npc_debug_attack"):GetInt() == 1 then VJ.DEBUG_Print(self, "StopAttacks", "Attack type = " .. selfData.AttackType) end
 	
 	if checkTimers && selfData.AttackType == VJ.ATTACK_TYPE_MELEE && selfData.AttackState < VJ.ATTACK_STATE_EXECUTED then
@@ -3411,10 +3413,10 @@ local function math_angDif(diff)
 end
 --
 function ENT:UpdatePoseParamTracking(resetPoses)
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if !selfData.HasPoseParameterLooking or (!selfData.VJ_IsBeingControlled && (!selfData.WeaponAttackState or (!selfData.EnemyData.Visible && selfData.WeaponAttackState < VJ.WEP_ATTACK_STATE_FIRE))) then return end
 	//VJ.GetPoseParameters(self)
-	local ene = self:GetEnemy()
+	local ene = funcGetEnemy(self)
 	local newPitch = 0
 	local newYaw = 0
 	local newRoll = 0
@@ -3464,7 +3466,7 @@ function ENT:CanFireWeapon(checkDistance, checkDistanceOnly)
 	if self:OnWeaponCanFire() == false then return false end
 	local hasDist = false
 	local hasChecks = false
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	local curWep = selfData.WeaponEntity
 	
 	if selfData.PauseAttacks or !IsValid(curWep) or self:GetWeaponState() != VJ.WEP_STATE_READY then return false end
@@ -3505,11 +3507,11 @@ local schedule_yield_player = vj_ai_schedule.New("SCHEDULE_YIELD_PLAYER")
 local bitsDanger = bit.bor(SOUND_BULLET_IMPACT, SOUND_COMBAT, SOUND_WORLD, SOUND_DANGER) // SOUND_PLAYER, SOUND_PLAYER_VEHICLE
 --
 function ENT:SelectSchedule()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if selfData.VJ_IsBeingControlled or selfData.Dead then return end
 	
 	local curTime = CurTime()
-	local ene = self:GetEnemy()
+	local ene = funcGetEnemy(self)
 	local eneValid = IsValid(ene)
 	self:PlayIdleSound(nil, nil, eneValid)
 	
@@ -3825,9 +3827,9 @@ function ENT:SelectSchedule()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(checkAllies, checkVis)
-	local selfData = self:GetTable()
-	if selfData.Dead or (selfData.VJ_IsBeingControlled && selfData.VJ_TheControllerBullseye == self:GetEnemy()) then selfData.EnemyData.Reset = false return false end
-	local ene = self:GetEnemy()
+	local selfData = funcGetTable(self)
+	if selfData.Dead or (selfData.VJ_IsBeingControlled && selfData.VJ_TheControllerBullseye == funcGetEnemy(self)) then selfData.EnemyData.Reset = false return false end
+	local ene = funcGetEnemy(self)
 	local eneValid = IsValid(ene)
 	local eneData = selfData.EnemyData
 	local curTime = CurTime()
@@ -3835,7 +3837,7 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 		local getAllies = self:Allies_Check(1000)
 		if getAllies then
 			for _, ally in ipairs(getAllies) do
-				local allyEne = ally:GetEnemy()
+				local allyEne = funcGetEnemy(ally)
 				if IsValid(allyEne) && (curTime - ally.EnemyData.VisibleTime) < selfData.EnemyTimeout && allyEne:Alive() && self:GetPos():Distance(allyEne:GetPos()) <= self:GetMaxLookDistance() && self:CheckRelationship(allyEne) == D_HT then
 					selfData.AllowWeaponOcclusionDelay = false
 					self:ForceSetEnemy(allyEne, false)
@@ -3863,7 +3865,7 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 	if selfData.VJ_DEBUG && GetConVar("vj_npc_debug_resetenemy"):GetInt() == 1 then VJ.DEBUG_Print(self, "ResetEnemy", tostring(ene)) end
 	eneData.Reset = true
 	self:SetNPCState(NPC_STATE_ALERT)
-	timer.Create("alert_reset" .. self:EntIndex(), math.Rand(selfData.AlertTimeout.a, selfData.AlertTimeout.b), 1, function() if !IsValid(self:GetEnemy()) then selfData.Alerted = false self:SetNPCState(NPC_STATE_IDLE) end end)
+	timer.Create("alert_reset" .. self:EntIndex(), math.Rand(selfData.AlertTimeout.a, selfData.AlertTimeout.b), 1, function() if !IsValid(funcGetEnemy(self)) then selfData.Alerted = false self:SetNPCState(NPC_STATE_IDLE) end end)
 	self:OnResetEnemy()
 	local moveToEnemy = false
 	if eneValid then
@@ -3915,7 +3917,7 @@ function ENT:OnTakeDamage(dmginfo)
 	-- Attempt to avoid taking damage when walking on ragdolls
 	if dmgInflictor && dmgInflictor:GetClass() == "prop_ragdoll" && dmgInflictor:GetVelocity():Length() <= 100 then return 0 end
 	
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	local hitgroup = self:GetLastDamageHitGroup()
 	self:OnDamaged(dmginfo, hitgroup, "Init")
 	if selfData.GodMode or dmginfo:GetDamage() <= 0 then return 0 end
@@ -4017,7 +4019,7 @@ function ENT:OnTakeDamage(dmginfo)
 						self:AddEntityRelationship(dmgAttacker, D_HT, 2)
 						selfData.TakingCoverT = curTime + 2
 						self:PlaySoundSystem("BecomeEnemyToPlayer")
-						if !IsValid(self:GetEnemy()) then
+						if !IsValid(funcGetEnemy(self)) then
 							self:StopMoving()
 							self:SetTarget(dmgAttacker)
 							self:SCHEDULE_FACE("TASK_FACE_TARGET")
@@ -4062,7 +4064,7 @@ function ENT:OnTakeDamage(dmginfo)
 				end
 			end
 			
-			if !isPassive && !IsValid(self:GetEnemy()) then
+			if !isPassive && !IsValid(funcGetEnemy(self)) then
 				local canMove = true
 				
 				-- How allies respond when it's damaged | RESULT: May become alerted and may play an animation
@@ -4193,7 +4195,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 						end
 					end
 					-- Alert ally
-					if (responseType == true or responseType == "OnlyAlert") && !IsValid(ally:GetEnemy()) then
+					if (responseType == true or responseType == "OnlyAlert") && !IsValid(funcGetEnemy(ally)) then
 						ally:DoReadyAlert()
 						if !moved then
 							local faceTime = math.Rand(5, 8)

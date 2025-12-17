@@ -152,6 +152,9 @@ local defAng = Angle(0, 0, 0)
 
 local vj_npc_melee = GetConVar("vj_npc_melee")
 local vj_npc_reduce_vfx = GetConVar("vj_npc_reduce_vfx")
+
+local metaEntity = FindMetaTable("Entity")
+local funcGetTable = metaEntity.GetTable
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
 	self:SetPhysicsDamageScale(0) -- Take no physics damage
@@ -210,7 +213,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThink()
 	if self:Tank_OnThink() != true && vj_npc_reduce_vfx:GetInt() == 0 then
-		local selfData = self:GetTable()
+		local selfData = funcGetTable(self)
 		if selfData.Tank_NextIdleParticles < CurTime() then
 			self:Tank_UpdateIdleParticles()
 			selfData.Tank_NextIdleParticles = CurTime() + 0.1
@@ -249,7 +252,7 @@ local vec80z = Vector(0, 0, 80)
 local FACE_NONE = VJ.FACE_NONE
 --
 function ENT:OnThinkActive()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if selfData.Dead then return end
 	selfData.TurnData.Type = FACE_NONE -- This effectively makes it never face anything through Lua
 	self:Tank_OnThinkActive()
@@ -334,7 +337,7 @@ function ENT:OnThinkActive()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if selfData.Dead then return end
 
 	local eneValid = IsValid(self:GetEnemy())
@@ -453,7 +456,7 @@ function ENT:CustomOnRemove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_PlaySoundSystem(sdSet)
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if !selfData.HasSounds or !sdSet then return end
 	if sdSet == "Movement" then
 		if selfData.HasMoveSound then

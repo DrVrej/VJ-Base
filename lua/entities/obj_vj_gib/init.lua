@@ -35,6 +35,9 @@ local defDecals = {
 local vj_npc_gib_collision = GetConVar("vj_npc_gib_collision")
 local vj_npc_snd_gib = GetConVar("vj_npc_snd_gib")
 local vj_npc_gib_vfx = GetConVar("vj_npc_gib_vfx")
+
+local metaEntity = FindMetaTable("Entity")
+local funcGetTable = metaEntity.GetTable
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:PhysicsInit(MOVETYPE_VPHYSICS)
@@ -74,7 +77,7 @@ function ENT:Initialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	local curTime = CurTime()
 	
 	-- Stinky gib! yuck!
@@ -86,7 +89,7 @@ function ENT:Think()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, phys)
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	
 	-- Collision Sound
 	local velSpeed = phys:GetVelocity():Length()

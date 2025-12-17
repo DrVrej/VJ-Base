@@ -78,6 +78,9 @@ ENT.NextIdleSoundT = 0
 local string_explode = string.Explode
 local defPos = Vector(0, 0, 0)
 local defAng = Angle(0, 0, 0)
+
+local metaEntity = FindMetaTable("Entity")
+local funcGetTable = metaEntity.GetTable
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Spawns an entity from the given information, recommended to not manually call this function!
@@ -208,7 +211,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	local curTime = CurTime()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	self:OnThink()
 	
 	-- Idle sound

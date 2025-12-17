@@ -20,13 +20,16 @@ ENT.AA_DoingLastChasePos = false
 
 local defPos = Vector(0, 0, 0)
 local defAng = Angle(0, 0, 0)
+
+local metaEntity = FindMetaTable("Entity")
+local funcGetTable = metaEntity.GetTable
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Stops the current NPC, similar to ground NPCs calling self:StopMoving()
 -----------------------------------------------------------]]
 function ENT:AA_StopMoving()
 	if self:GetVelocity():Length() > 0 then
-		local selfData = self:GetTable()
+		local selfData = funcGetTable(self)
 		selfData.AA_CurrentMoveMaxSpeed = 0
 		selfData.AA_CurrentMoveTime = 0
 		selfData.AA_CurrentMoveType = 0
@@ -53,7 +56,7 @@ local vecEnd = Vector(0, 0, 40)
 --
 function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	local destVec = isvector(dest) and dest
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if selfData.Dead or (!destVec && !IsValid(dest)) then return end
 	moveType = moveType or "Calm" -- "Calm" | "Alert"
 	extraOptions = extraOptions or {}
@@ -262,7 +265,7 @@ end
 			- IgnoreGround = If true, it will not do any ground checks | DEFAULT: false
 -----------------------------------------------------------]]
 function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	moveType = moveType or "Calm" -- "Calm" | "Alert"
 	local moveSpeed = (moveType == "Calm" and selfData.Aerial_FlyingSpeed_Calm) or selfData.Aerial_FlyingSpeed_Alerted
 	local moveDown = false -- Used by aquatic NPCs only, forces them to move down
@@ -370,7 +373,7 @@ local badACTs = {[ACT_WALK] = true, [ACT_WALK_AIM] = true, [ACT_RUN] = true, [AC
 function ENT:AA_MoveAnimation()
 	-- NOTE: Unique condition used for directional flying animations in TranslateActivity:
 		--  if "AA_CurrentMoveAnim" is current sequence AND current activity is not a sequence AND translated activity does not equal current sequence's activity
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	local curSeq = self:GetSequence()
 	local curACT = self:GetActivity()
 	if ((CurTime() > selfData.AA_NextMoveAnimTime) or (curSeq != selfData.AA_CurrentMoveAnim or (curACT != ACT_DO_NOT_DISTURB && self:GetSequenceActivity(curSeq) != self:TranslateActivity(curACT)))) && !self:IsBusy("Activities") then

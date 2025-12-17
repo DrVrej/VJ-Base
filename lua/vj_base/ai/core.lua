@@ -34,6 +34,7 @@ local funcVisible = metaEntity.Visible
 local funcGetClass = metaEntity.GetClass
 
 local metaNPC = FindMetaTable("NPC")
+local funcGetEnemy = metaNPC.GetEnemy
 local funcGetIdealActivity = metaNPC.GetIdealActivity
 local funcGetActivity = metaNPC.GetActivity
 local funcGetIdealSequence = metaNPC.GetIdealSequence
@@ -116,7 +117,7 @@ ENT.FollowData = {
 	NextUpdateT = 0
 }
 ENT.EnemyData = {
-	Target = NULL, -- Enemy entity | Cached value of "self:GetEnemy()", use it when you're already retrieving the "EnemyData"
+	Target = NULL, -- Enemy entity | Cached value of "GetEnemy()", use it when you're already retrieving the "EnemyData"
 	Distance = 0, -- Distance to the enemy
 	DistanceNearest = 0, -- Nearest position distance to the enemy
 	TimeSet = 0, -- Last time an enemy was set | Updated whenever "ForceSetEnemy" is ran successfully
@@ -555,7 +556,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainIdleBehavior(idleType) -- idleType: nil = Random | 1 = Wander | 2 = Idle Stand
 	local curTime = CurTime()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if selfData.Dead or selfData.VJ_IsBeingControlled or (selfData.AttackAnimTime > curTime) or (selfData.NextIdleTime > curTime) or (selfData.AA_CurrentMoveTime > curTime) or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
@@ -875,7 +876,7 @@ end
 -----------------------------------------------------------]]
 function ENT:IsBusy(checkType)
 	local checkAll = !checkType
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	
 	-- Check behaviors
 	if checkAll then
@@ -992,7 +993,7 @@ end
 	Stops most sounds played by the NPC | Excludes: Death, impact, attack misses, attack impacts
 -----------------------------------------------------------]]
 function ENT:StopAllSounds()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	StopSD(selfData.CurrentSpeechSound)
 	StopSD(selfData.CurrentExtraSpeechSound)
 	StopSD(selfData.CurrentBreathSound)
@@ -1044,7 +1045,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 	if target == "Enemy" then
 		//VJ.DEBUG_Print(self, "SetTurnTarget", "ENEMY")
 		self:ResetTurnTarget()
-		local ene = self:GetEnemy()
+		local ene = funcGetEnemy(self)
 		-- If enemy is valid do normal facing otherwise return my angles because we didn't actually face an enemy
 		if IsValid(ene) then
 			if self.TurningUseAllAxis then
@@ -1122,7 +1123,7 @@ local function UTIL_VecToYaw(vec) -- Based on: https://github.com/ValveSoftware/
 end
 --
 function ENT:OverrideMoveFacing(flInterval, move)
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if !selfData.DisableFootStepSoundTimer then self:PlayFootstepSound() end
 	//VJ.DEBUG_Print(self, "OverrideMoveFacing", flInterval)
 	//PrintTable(move)
@@ -1287,7 +1288,7 @@ end
 			- Table, trace result
 -----------------------------------------------------------]]
 function ENT:DoCoverTrace(startPos, endPos, acceptWorld, extraOptions)
-	local ene = self:GetEnemy()
+	local ene = funcGetEnemy(self)
 	if !IsValid(ene) then return false, {} end
 	startPos = startPos or (self:GetPos() + self:OBBCenter())
 	endPos = endPos or ene:EyePos()
@@ -1665,7 +1666,7 @@ function ENT:HandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if selfData.VJ_DEBUG && GetConVar("vj_npc_debug_touch"):GetInt() == 1 then VJ.DEBUG_Print(self, "Touch", funcGetClass(entity)) end
 	local funcCustom = self.OnTouch; if funcCustom then funcCustom(self, entity) end
 	if !VJ_CVAR_AI_ENABLED or selfData.VJ_IsBeingControlled then return end
@@ -1678,7 +1679,7 @@ function ENT:Touch(entity)
 			selfData.TakingCoverT = CurTime() + math.Rand(3, 4)
 			return
 		end
-	elseif selfData.EnemyTouchDetection && !selfData.IsFollowing && entity.VJ_ID_Living && !IsValid(self:GetEnemy()) && self:CheckRelationship(entity) != D_LI && !self:IsBusy() then
+	elseif selfData.EnemyTouchDetection && !selfData.IsFollowing && entity.VJ_ID_Living && !IsValid(funcGetEnemy(self)) && self:CheckRelationship(entity) != D_LI && !self:IsBusy() then
 		self:StopMoving()
 		self:SetTarget(entity)
 		self:SCHEDULE_FACE("TASK_FACE_TARGET")
@@ -1832,7 +1833,7 @@ function ENT:ResetMedicBehavior()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainMedicBehavior()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if selfData.Weapon_UnarmedBehavior_Active then return end -- Do NOT heal if playing scared animations!
 	local medicData = selfData.MedicData
 	
@@ -1840,7 +1841,7 @@ function ENT:MaintainMedicBehavior()
 	if !medicData.Status then
 		if CurTime() < medicData.Cooldown then return end
 		for _, ent in ipairs(ents.FindInSphere(self:GetPos(), selfData.Medic_CheckDistance)) do
-			if ent != self && (ent.IsVJBaseSNPC or ent:IsPlayer()) && ent.VJ_ID_Healable && !ent.VJ_ST_Healing && !ent.VJ_ID_Vehicle && ent:Health() <= (ent:GetMaxHealth() * 0.75) && ((ent:IsNPC() && !IsValid(self:GetEnemy()) && (!IsValid(ent:GetEnemy()) or ent.VJ_IsBeingControlled)) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(ent) == D_LI then
+			if ent != self && (ent.IsVJBaseSNPC or ent:IsPlayer()) && ent.VJ_ID_Healable && !ent.VJ_ST_Healing && !ent.VJ_ID_Vehicle && ent:Health() <= (ent:GetMaxHealth() * 0.75) && ((ent:IsNPC() && !IsValid(funcGetEnemy(self)) && (!IsValid(funcGetEnemy(ent)) or ent.VJ_IsBeingControlled)) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(ent) == D_LI then
 				medicData.Target = ent
 				medicData.Status = "Active"
 				ent.VJ_ST_Healing = true
@@ -1938,7 +1939,7 @@ function ENT:MaintainMedicBehavior()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainConstantlyFaceEnemy()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	local eneData = selfData.EnemyData
 	if eneData.Distance < selfData.ConstantlyFaceEnemy_MinDistance then
 		-- Handle "IfVisible" and "IfAttacking" cases
@@ -2038,7 +2039,7 @@ end
 function ENT:ForceSetEnemy(ent, stopMoving, maxPerf, hasEnemy)
 	if !maxPerf then
 		if (!IsValid(ent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or !ent:Alive() or (ent:IsPlayer() && VJ_CVAR_IGNOREPLAYERS)) then return end
-		hasEnemy = IsValid(self:GetEnemy())
+		hasEnemy = IsValid(funcGetEnemy(self))
 		funcAddEntityRelationship(self, ent, D_HT, 0)
 	end
 	self:SetEnemy(ent)
@@ -2065,8 +2066,8 @@ function ENT:DoReadyAlert()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoEnemyAlert(ent)
-	//VJ.DEBUG_Print(self, "DoEnemyAlert", ent, self:GetEnemy(), self.Alerted)
-	local selfData = self:GetTable()
+	//VJ.DEBUG_Print(self, "DoEnemyAlert", ent, funcGetEnemy(self), self.Alerted)
+	local selfData = funcGetTable(self)
 	local eneData = selfData.EnemyData
 	eneData.Distance = self:GetPos():Distance(ent:GetPos())
 	if selfData.Alerted == ALERT_STATE_ENEMY then return end
@@ -2119,7 +2120,7 @@ local ENT_TYPE_NEXTBOT = 3
 --
 -- Returns: Whether or not it found an enemy
 function ENT:MaintainRelationships()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	local myBehavior = selfData.Behavior
 	if myBehavior == VJ_BEHAVIOR_PASSIVE_NATURE then return false end
 	local entities = selfData.RelationshipEnts
@@ -2160,7 +2161,7 @@ function ENT:MaintainRelationships()
 			-- Handle no target and dead entities
 			if ent:IsFlagSet(FL_NOTARGET) or !ent:Alive() then
 				-- If ent is our current enemy then reset it!
-				if self:GetEnemy() == ent then
+				if funcGetEnemy(self) == ent then
 					self:ResetEnemy(true, false)
 				end
 				funcAddEntityRelationship(self, ent, D_NU, 0)
@@ -2171,7 +2172,7 @@ function ENT:MaintainRelationships()
 			local distanceToEnt = myPos:Distance(entPos)
 			if distanceToEnt > mySightDist then
 				-- If ent is our current enemy then reset it!
-				if self:GetEnemy() == ent then
+				if funcGetEnemy(self) == ent then
 					self:PlaySoundSystem("LostEnemy")
 					self:ResetEnemy(true, false)
 				end
@@ -2269,7 +2270,7 @@ function ENT:MaintainRelationships()
 			if calculatedDisp == D_LI then
 				//print("MaintainRelationships 2 - friendly!")
 				-- Reset the enemy if it's currently this friendly ent
-				if self:GetEnemy() == ent then
+				if funcGetEnemy(self) == ent then
 					self:ResetEnemy(true, false)
 				end
 				
@@ -2327,7 +2328,7 @@ function ENT:MaintainRelationships()
 					end
 				end
 				
-				local ene = self:GetEnemy()
+				local ene = funcGetEnemy(self)
 				local eneValid = IsValid(ene)
 				if !calculatedDisp or calculatedDisp == D_VJ_INTEREST or calculatedDisp == D_HT then
 					-- Check if this NPC should be engaged, if not then set it as an interest but don't engage it
@@ -2431,14 +2432,14 @@ end
 -----------------------------------------------------------]]
 function ENT:Allies_CallHelp(dist)
 	local selfData = funcGetTable(self)
-	local ene = metaNPC.GetEnemy(self)
+	local ene = funcGetEnemy(self)
 	local myClass = funcGetClass(self)
 	local myPos = metaEntity.GetPos(self)
 	local curTime = CurTime()
 	local isFirst = true -- Is this the first ent that received a call?
 	for _, ent in ipairs(ents.FindInSphere(myPos, dist or 800)) do
 		local entData = funcGetTable(ent)
-		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && metaEntity.Alive(ent) && (funcGetClass(ent) == myClass or metaNPC.Disposition(ent, self) == D_LI) && entData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && funcGetClass(ene) != funcGetClass(ent) && !IsValid(metaNPC.GetEnemy(ent)) then
+		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && metaEntity.Alive(ent) && (funcGetClass(ent) == myClass or metaNPC.Disposition(ent, self) == D_LI) && entData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && funcGetClass(ene) != funcGetClass(ent) && !IsValid(funcGetEnemy(ent)) then
 			-- If it's guarding and enemy is not visible, then don't call!
 			if entData.IsGuard && !funcVisible(ent, ene) then continue end
 
@@ -2504,7 +2505,7 @@ function ENT:Allies_Check(dist)
 	local isPassive = self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE
 	local myClass = funcGetClass(self)
 	for _, ent in ipairs(ents.FindInSphere(self:GetPos(), dist or 800)) do
-		local entData = ent:GetTable()
+		local entData = funcGetTable(ent)
 		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && ent:Alive() && (funcGetClass(ent) == myClass or (ent:Disposition(self) == D_LI or entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) then
 			if isPassive then
 				if entData.Behavior == VJ_BEHAVIOR_PASSIVE or entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
@@ -2542,10 +2543,10 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 	local it = 0
 	local curTime = CurTime()
 	for _, ent in ipairs(entsTbl or ents.FindInSphere(myPos, dist)) do
-		local entData = ent:GetTable()
+		local entData = funcGetTable(ent)
 		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && ent:Alive() && (funcGetClass(ent) == myClass or ent:Disposition(self) == D_LI) && entData.Behavior != VJ_BEHAVIOR_PASSIVE && entData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !entData.IsFollowing && !entData.IsGuard && curTime > entData.TakingCoverT then
 			if onlyVis && !funcVisible(ent, self) then continue end
-			if !IsValid(ent:GetEnemy()) && myPos:Distance(ent:GetPos()) < dist then
+			if !IsValid(funcGetEnemy(ent)) && myPos:Distance(ent:GetPos()) < dist then
 				self.NextWanderTime = curTime + 8
 				entData.NextWanderTime = curTime + 8
 				it = it + 1
@@ -2587,7 +2588,7 @@ end
 --
 function ENT:Flinch(dmginfo, hitgroup)
 	local curTime = CurTime()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	local flinchType = selfData.CanFlinch
 	if !flinchType or flinchType == 0 or selfData.Flinching or selfData.AnimLockTime > curTime or selfData.NextFlinchT > curTime or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB or selfData.AttackType == VJ.ATTACK_TYPE_GRENADE then return end
 	
@@ -2722,7 +2723,7 @@ function ENT:SetupBloodColor(blColor)
 	npcSize = ((npcSize < 25 and 0) or npcSize < 50 and 1) or 2 -- 0 = tiny | 1 = small | 2 = normal
 	local blood = bloodNames[blColor]
 	if blood then
-		local selfData = self:GetTable()
+		local selfData = funcGetTable(self)
 		if !PICK(selfData.BloodParticle) then
 			selfData.BloodParticle = blood.particle
 		end
@@ -2799,7 +2800,7 @@ function ENT:SpawnBloodPool(dmginfo, hitgroup, corpse)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlayFootstepSound(customSD)
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if selfData.HasSounds && selfData.HasFootstepSounds && selfData.MovementType != VJ_MOVETYPE_STATIONARY && self:IsOnGround() then
 		if selfData.DisableFootStepSoundTimer then
 			-- Use custom table if available, if none found then use the footstep sound table
@@ -2828,7 +2829,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- combatIdle = Play combat idle if possible
 function ENT:PlayIdleSound(customSD, sdType, combatIdle)
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if !selfData.HasSounds or !selfData.HasIdleSounds then return false end
 	
 	local curTime = CurTime()
@@ -2936,7 +2937,7 @@ function ENT:PlayIdleSound(customSD, sdType, combatIdle)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlaySoundSystem(sdSet, customSD, sdType)
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if !selfData.HasSounds or !sdSet then return false end
 	if customSD then
 		customSD = PICK(customSD)
@@ -3421,7 +3422,7 @@ function ENT:IsGibDamage(dmgType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GibOnDeath(dmginfo, hitgroup)
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if !selfData.CanGib or !selfData.CanGibOnDeath or selfData.GibbedOnDeath then return false end
 	if !selfData.GibOnDeathFilter or (selfData.GibOnDeathFilter && self:IsGibDamage(dmginfo:GetDamageType())) then
 		local gibbed, overrides = self:HandleGibOnDeath(dmginfo, hitgroup)

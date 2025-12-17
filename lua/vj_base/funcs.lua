@@ -6,9 +6,6 @@
 local CurTime = CurTime
 local IsValid = IsValid
 local CreateSound = CreateSound
-local istable = istable
-local isstring = isstring
-local isnumber = isnumber
 local tonumber = tonumber
 local string_find = string.find
 local string_gsub = string.gsub
@@ -30,7 +27,7 @@ local bShiftL = bit.lshift
 -----------------------------------------------------------]]
 function VJ.PICK(values)
 	if !values then return false end
-	if istable(values) then
+	if type(values) == "table" then
 		return values[math.random(1, #values)] or false -- "or false" = To make sure it doesn't return nil when the table is empty!
 	end
 	return values -- Not a table, so just return it
@@ -55,7 +52,7 @@ end
 		- boolean, whether or not it found the value
 -----------------------------------------------------------]]
 function VJ.HasValue(tbl, val)
-	if istable(tbl) then
+	if type(tbl) == "table" then
 		for x = 1, #tbl do
 			if tbl[x] == val then
 				return true
@@ -76,7 +73,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ.CreateSound(ent, sdFile, sdLevel, sdPitch, customFunc)
 	if !sdFile then return end
-	if istable(sdFile) then
+	if type(sdFile) == "table" then
 		sdFile = sdFile[math.random(1, #sdFile)]
 		if !sdFile then return end -- If the table is empty then end it
 	end
@@ -91,7 +88,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ.EmitSound(ent, sdFile, sdLevel, sdPitch, sdVolume, sdChannel)
 	if !sdFile then return end
-	if istable(sdFile) then
+	if type(sdFile) == "table" then
 		sdFile = sdFile[math.random(1, #sdFile)]
 		if !sdFile then return end -- If the table is empty then end it
 	end
@@ -312,9 +309,10 @@ end
 -----------------------------------------------------------]]
 function VJ.AnimExists(ent, anim)
 	local animType = false
-	if isnumber(anim) then
+	local getType = type(anim)
+	if getType == "number" then
 		animType = 1
-	elseif isstring(anim) then
+	elseif getType == "string" then
 		animType = 2
 	else
 		return false
@@ -353,9 +351,10 @@ end
 function VJ.AnimDuration(ent, anim)
 	if !VJ.AnimExists(ent, anim) then return 0 end -- Invalid animation
 	
-	if isnumber(anim) then -- Activity
+	local getType = type(anim)
+	if getType == "number" then -- Activity
 		return ent:SequenceDuration(ent:SelectWeightedSequence(anim))
-	elseif isstring(anim) then -- Sequence / Gesture
+	elseif getType == "string" then -- Sequence / Gesture
 		-- Get rid of the gesture prefix
 		if string_find(anim, "vjges_") then
 			anim = string_gsub(anim, "vjges_", "")
@@ -384,7 +383,7 @@ function VJ.AnimDurationEx(ent, anim, override, decrease)
 	if isbool(anim) then return 0 end
 	if !override then -- Base decides
 		return (VJ.AnimDuration(ent, anim) - (decrease or 0)) / ent.AnimPlaybackRate
-	elseif isnumber(override) then -- User decides
+	elseif type(override) == "number" then -- User decides
 		return override / ent.AnimPlaybackRate
 	else
 		return 0
@@ -400,9 +399,10 @@ end
 		- number, converted activity (ACT_)
 -----------------------------------------------------------]]
 function VJ.SequenceToActivity(ent, anim)
-	if isnumber(anim) then -- Already an activity, just return!
+	local getType = type(anim)
+	if getType == "number" then -- Already an activity, just return!
 		return anim
-	elseif isstring(anim) then -- Sequence
+	elseif getType == "string" then -- Sequence
 		local result = ent:GetSequenceActivity(ent:LookupSequence(anim))
 		if !result or result == -1 then
 			return false
@@ -422,11 +422,11 @@ end
 		- true, Given animation is the current animation
 -----------------------------------------------------------]]
 function VJ.IsCurrentAnim(ent, anim)
-	if istable(anim) then
+	if type(anim) == "table" then
 		local curSeq = ent:GetSequence()
 		local curAct = ent:GetActivity()
 		for _, v in ipairs(anim) do
-			if isnumber(v) then
+			if type(v) == "number" then
 				if v != -1 && v == curAct then
 					return true
 				end
@@ -436,7 +436,7 @@ function VJ.IsCurrentAnim(ent, anim)
 		end
 	else
 		if anim == -1 then return false end
-		if isnumber(anim) then -- For numbers do an activity check because an activity can have more than 1 sequence!
+		if type(anim) == "number" then -- For numbers do an activity check because an activity can have more than 1 sequence!
 			local curAct = ent:GetActivity()
 			return (anim == curAct) or (ent:TranslateActivity(anim) == curAct)
 		end
@@ -498,7 +498,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 	extraOptions = extraOptions or {}
 	local predict = false
 	local predictProjSpeed = 1
-	if isnumber(targetPos) then
+	if type(targetPos) == "number" then
 		if IsValid(target) then
 			if self.IsVJBaseSNPC then -- Only VJ NPCs can adjust based on target's visibility and only they can predict!
 				if targetPos > 0 then -- Set to predict, so save the prediction rate!
@@ -701,7 +701,7 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 		local baseForce = extraOptions.Force or false
 	local dmgFinal = dmgMax
 	local hitEnts = {}
-	for _, ent in ipairs((isnumber(extraOptions.UseConeDegree) and ents.FindInCone(startPos, extraOptions.UseConeDirection or attacker:GetForward(), dmgRadius, math_cos(math_rad(extraOptions.UseConeDegree or 90)))) or ents.FindInSphere(startPos, dmgRadius)) do
+	for _, ent in ipairs((type(extraOptions.UseConeDegree) == "number" and ents.FindInCone(startPos, extraOptions.UseConeDirection or attacker:GetForward(), dmgRadius, math_cos(math_rad(extraOptions.UseConeDegree or 90)))) or ents.FindInSphere(startPos, dmgRadius)) do
 		if (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) or ent.VJ_IsControllingNPC then continue end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
 		local nearestPos = ent:NearestPoint(startPos) -- From the enemy position to the given position
 		if realisticRadius != false then -- Decrease damage from the nearest point all the way to the enemy point then clamp it!

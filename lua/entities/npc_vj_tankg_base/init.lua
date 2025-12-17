@@ -130,6 +130,9 @@ ENT.Tank_Shell_Status = TANK_SHELL_STATUS_EMPTY
 
 local vj_npc_range = GetConVar("vj_npc_range")
 local vj_npc_reduce_vfx = GetConVar("vj_npc_reduce_vfx")
+
+local metaEntity = FindMetaTable("Entity")
+local funcGetTable = metaEntity.GetTable
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
 	self:SetSolid(SOLID_NONE)
@@ -148,7 +151,7 @@ function ENT:OnThink()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThinkActive()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if selfData.Dead then return end
 	local parent = self:GetParent()
 	if !IsValid(parent) then return end
@@ -200,7 +203,7 @@ function ENT:OnThinkActive()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if selfData.Dead then return end
 	
 	local eneValid = IsValid(self:GetEnemy())
@@ -247,7 +250,7 @@ function ENT:Tank_PrepareShell()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_FireShell()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	local ene = self:GetEnemy()
 	if !VJ_CVAR_AI_ENABLED or selfData.Dead or !selfData.Tank_ProperHeightShoot or !selfData.Tank_FacingTarget or !IsValid(ene) then return end // selfData.Tank_FacingTarget != true
 	if self:Visible(ene) then
@@ -365,7 +368,7 @@ function ENT:CustomOnRemove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_PlaySoundSystem(sdSet)
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if !selfData.HasSounds or !sdSet then return end
 	if sdSet == "Movement" then
 		if selfData.HasMoveSound then

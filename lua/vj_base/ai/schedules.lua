@@ -7,6 +7,9 @@ require("vj_ai_schedule")
 local VJ_MOVETYPE_AERIAL = VJ_MOVETYPE_AERIAL
 local VJ_MOVETYPE_AQUATIC = VJ_MOVETYPE_AQUATIC
 local VJ_MOVETYPE_STATIONARY = VJ_MOVETYPE_STATIONARY
+
+local metaEntity = FindMetaTable("Entity")
+local funcGetTable = metaEntity.GetTable
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SCHEDULE_FACE(faceTask, customFunc)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
@@ -102,7 +105,7 @@ function ENT:SCHEDULE_IDLE_WANDER()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SCHEDULE_IDLE_STAND()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if self:IsMoving() or selfData.NextIdleTime > CurTime() then return end
 	local navType = self:GetNavType(); if navType == NAV_JUMP or navType == NAV_CLIMB then return end
 	local moveType = selfData.MovementType; if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) && (selfData.AA_CurrentMoveTime > CurTime() or self:IsBusy("Activities")) then return end // self:GetVelocity():Length() > 0
@@ -158,7 +161,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RunAI() -- Called from the engine every 0.1 seconds
 	if self:GetState() == VJ_STATE_FREEZE or self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then self:MaintainActivity() return end
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if self:IsRunningBehavior() or selfData.bDoingEngineSchedule then return true end -- true = Run "MaintainSchedule" in engine
 	//self:SetArrivalActivity(ACT_COWER)
 	//self:SetArrivalSpeed(1000)
@@ -344,7 +347,7 @@ function ENT:TranslateNavGoal(ent, goal)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSchedule(schedule)
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if selfData.MovementType == VJ_MOVETYPE_STATIONARY && schedule.HasMovement then return end -- It's stationary therefore it should not move!
 	-- Certain states should ONLY do animation schedules!
 	if !schedule.IsPlayActivity then
@@ -441,7 +444,7 @@ function ENT:DoSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopCurrentSchedule()
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	local schedule = selfData.CurrentSchedule
 	//VJ.DEBUG_Print(self, "StopCurrentSchedule", schedule)
 	if schedule then
@@ -458,7 +461,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ScheduleFinished(schedule)
 	//VJ.DEBUG_Print(self, "ScheduleFinished", schedule)
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	if schedule then
 		-- Handle "RunCode_OnFinish"
 		if !schedule.OnFinishExecuted && schedule.RunCode_OnFinish != nil then
@@ -485,7 +488,7 @@ function ENT:ScheduleFinished(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetTask(task)
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	selfData.CurrentTask = task
 	selfData.CurrentTaskComplete = false
 	selfData.TaskStartTime = CurTime()
@@ -527,7 +530,7 @@ end
 		- boolean, true = Schedule is finished
 -----------------------------------------------------------]]
 function ENT:IsScheduleFinished(schedule)
-	local selfData = self:GetTable()
+	local selfData = funcGetTable(self)
 	return selfData.CurrentTaskComplete && (!selfData.CurrentTaskID or selfData.CurrentTaskID >= schedule:NumTasks())
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -1060,7 +1060,7 @@ end
 if CLIENT then
 	function SWEP:DrawWorldModel()
 		local drawMdl = true
-		local selfData = self:GetTable()
+		local selfData = funcGetTable(self)
 		if !self:OnDrawWorldModel() or !self:GetDrawWorldModel() then drawMdl = false end
 		
 		if selfData.WorldModel_UseCustomPosition then
