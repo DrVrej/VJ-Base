@@ -542,7 +542,11 @@ VJ.CreateDupe_NPC = function( ply, mdl, class, equipment, spawnflags, data )
 		if ( data.CurHealth ) then ent:SetHealth( data.CurHealth ) end
 		if ( data.MaxHealth ) then ent:SetMaxHealth( data.MaxHealth ) end
 
-		ent:OnEntityCopyTableFinish(data) -- Here to allow old saves to work properly
+		-- Here to allow old saves to work properly
+		local onCopy = ent.OnEntityCopyTableFinish
+		if onCopy then
+			onCopy(ent, data)
+		end
 		
 		table.Merge( ent:GetTable(), data )
 

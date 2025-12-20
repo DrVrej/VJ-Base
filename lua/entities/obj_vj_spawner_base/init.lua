@@ -186,9 +186,9 @@ function ENT:Initialize()
 	if self.CustomOnInitialize then self:CustomOnInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self:GetModel() == "models/error.mdl" then -- No model was detected
-		local mdls = VJ.PICK(self.Model)
-		if mdls && mdl !="models/props_junk/popcan01a.mdl" then
-			self:SetModel(mdls)
+		local mdl = VJ.PICK(self.Model)
+		if mdl && mdl != "models/props_junk/popcan01a.mdl" then
+			self:SetModel(mdl)
 		else -- No models found in self.Model
 			self:DrawShadow(false)
 			self:SetNoDraw(true)

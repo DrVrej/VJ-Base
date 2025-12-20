@@ -185,6 +185,7 @@ function ENT:Init()
 			gunner:SetAngles(self:GetAngles())
 			gunner:SetOwner(self)
 			gunner:SetParent(self)
+			gunner.DoNotDuplicate = true -- Otherwise you will have double gunners
 			gunner.VJ_NPC_Class = self.VJ_NPC_Class
 			gunner:Spawn()
 			gunner:Activate()

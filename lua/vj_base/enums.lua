@@ -332,11 +332,12 @@ VJ_ID_Danger					bool		Should it be detected as a regular danger by NPCs?
 VJ_ID_Grenade					bool		Should it be detected as a grenade type of danger by NPCs?
 VJ_ID_Boss						bool		Large and/or boss entities (Ex: It won't receive melee knock backs)
 VJ_ID_Police					bool		Police officers, metrocops, etc.
-VJ_ID_Civilian					bool		Civilians, citizens, etc.
+VJ_ID_Civilian					bool		Civilians, citizens, refugees, scientists, non-combatant humanoids, etc.
 VJ_ID_Headcrab					bool		Headcrabs!
+VJ_ID_Undead					bool		Zombies, skeletons, ghouls, vampires, mummies, etc.
 VJ_ID_Turret					bool		Turrets, sentry guns, etc.
 VJ_ID_Vehicle					bool		Cars, tanks, APCs, helicopters, planes, boats, etc.
-VJ_ID_Aircraft					bool		Helicopters, jets, planes, etc.
+VJ_ID_Aircraft					bool		Helicopters, jets, planes, drones, alien ships, etc.
 
 -- Sounds
 VJ_SD_InvestTime				number		Last time this NPC/Player has made a investigatable sound that should be heard by enemy NPCs
