@@ -49,7 +49,7 @@ ENT.StartupSoundChance = 1
 ENT.IdleSoundChance = 1
 ENT.OnCollideSoundChance = 1
 ENT.OnRemoveSoundChance = 1
-	-- ====== Timer ====== --
+	-- ====== Sound Timer ====== --
 ENT.NextSoundTime_Idle = VJ.SET(0.2, 0.5)
 	-- ====== Sound Level ====== --
 	-- The proper number are usually range from 0 to 180, though it can go as high as 511

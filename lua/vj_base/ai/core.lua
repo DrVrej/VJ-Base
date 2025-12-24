@@ -354,9 +354,13 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 	end
 	if extraOptions.NoFade != true && vj_npc_gib_fade:GetInt() == 1 then
 		local gibClass = funcGetClass(gib)
-		if gibClass == "obj_vj_gib" then timer.Simple(vj_npc_gib_fadetime:GetInt(), function() SafeRemoveEntity(gib) end)
-		elseif gibClass == "prop_ragdoll" then gib:Fire("FadeAndRemove", nil, vj_npc_gib_fadetime:GetInt())
-		elseif gibClass == "prop_physics" then gib:Fire("kill", nil, vj_npc_gib_fadetime:GetInt()) end
+		if gibClass == "obj_vj_gib" then
+			timer.Simple(vj_npc_gib_fadetime:GetInt(), function() if IsValid(gib) then gib:Remove() end end)
+		elseif gibClass == "prop_ragdoll" then
+			gib:Fire("FadeAndRemove", nil, vj_npc_gib_fadetime:GetInt())
+		elseif gibClass == "prop_physics" then
+			gib:Fire("kill", nil, vj_npc_gib_fadetime:GetInt())
+		end
 	end
 	if removeOnCorpseDelete then //self.Corpse:DeleteOnRemove(extraent)
 		if !self.DeathCorpse_ChildEnts then self.DeathCorpse_ChildEnts = {} end -- If it doesn't exist, then create it!

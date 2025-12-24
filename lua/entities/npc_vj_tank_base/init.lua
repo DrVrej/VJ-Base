@@ -425,7 +425,7 @@ function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpse)
 		if math.random(1, self.Tank_DeathDriverCorpseChance) == 1 then
 			local soldierMDL = VJ.PICK(self.Tank_DeathDriverCorpse)
 			if soldierMDL then
-				self:CreateExtraDeathCorpse("prop_ragdoll", soldierMDL, {Pos=myPos + self:GetUp()*90 + self:GetRight()*-30, Vel=Vector(math.Rand(-600, 600), math.Rand(-600, 600), 500)}, function(ent)
+				self:CreateExtraDeathCorpse("prop_ragdoll", soldierMDL, {Pos = myPos + self:GetUp() * 90 + self:GetRight() * -30, Vel = Vector(math.Rand(-600, 600), math.Rand(-600, 600), 500)}, function(ent)
 					ent:Ignite(math.Rand(8, 10), 0)
 					ent:SetColor(colorGray)
 					self:Tank_OnDeathCorpse(dmginfo, hitgroup, corpse, "Soldier", ent)

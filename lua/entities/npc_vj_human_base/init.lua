@@ -444,7 +444,7 @@ ENT.ImpactSoundChance = 1
 ENT.DamageByPlayerSoundChance = 1
 ENT.DeathSoundChance = 1
 ENT.SoundTrackChance = 1
-	-- ====== Timer ====== --
+	-- ====== Sound Timer ====== --
 	-- Randomized time between the two variables, x amount of time has to pass for the sound to play again | Counted in seconds
 	-- false = Base will decide the time
 ENT.NextSoundTime_Breath = false
