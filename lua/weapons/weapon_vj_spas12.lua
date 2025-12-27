@@ -51,7 +51,8 @@ function SWEP:OnPrimaryAttack(status, statusData)
 		if IsValid(owner) && owner:IsPlayer() then
 			timer.Simple(0.2, function()
 				if IsValid(self) && IsValid(owner) && owner:IsPlayer() then
-					self:EmitSound("weapons/shotgun/shotgun_cock.wav", 80, 100)
+					-- Play at CHAN_AUTO to not interrupt the firing sound
+					self:EmitSound("weapons/shotgun/shotgun_cock.wav", 80, nil, nil, CHAN_AUTO)
 					local animTime = VJ.AnimDuration(owner:GetViewModel(), ACT_SHOTGUN_PUMP)
 					self:SendWeaponAnim(ACT_SHOTGUN_PUMP)
 					self.PLY_NextIdleAnimT = CurTime() + animTime
