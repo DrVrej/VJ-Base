@@ -24,7 +24,7 @@ SWEP.NPC_CustomSpread = 0.8
 
 SWEP.Primary.Damage = 8
 SWEP.Primary.ClipSize = 18
-SWEP.Primary.Delay = 0.25
+SWEP.Primary.Delay = .133
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "Pistol"
 SWEP.Primary.Sound = "VJ.Weapon_9mmPistol.Single"
@@ -35,4 +35,4 @@ SWEP.PrimaryEffects_ShellType = "ShellEject"
 
 SWEP.HasReloadSound = true
 SWEP.ReloadSound = "weapons/pistol/pistol_reload1.wav"
-SWEP.Reload_TimeUntilAmmoIsSet	= 1
+SWEP.Reload_TimeUntilAmmoIsSet= 1
