@@ -75,8 +75,9 @@ SWEP.ViewModel = "models/weapons/c_pistol.mdl"
 SWEP.UseHands = false -- Should this weapon use Garry's Mod hands? (The model must support it!)
 SWEP.ViewModelFlip = false -- Flip the model? Usually used for CS:S models
 SWEP.ViewModelFOV = 55 -- Player FOV for the view model
-SWEP.BobScale = 1.5 -- Bob effect when moving
-SWEP.SwayScale = 1 -- Scale of the viewmodel sway
+-- Tilt depending on whether we are looking up or down, and how much,
+-- as seen in Half-Life 2. I highly recommend leaving this on.
+SWEP.ViewModelVerticalTilt = true
 SWEP.CSMuzzleFlashes = false -- Recommended to enable for Counter Strike: Source models
 SWEP.DrawAmmo = true -- Draw regular Garry's Mod HUD?
 SWEP.DrawCrosshair = true -- Draw Crosshair?
@@ -339,14 +340,14 @@ function SWEP:Initialize()
 	if self.CustomOnSecondaryAttack then self.OnSecondaryAttack = function() return !self:CustomOnSecondaryAttack() end end
 	--
 	
-	//if SERVER then
-		//self:SetWeaponHoldType(self.HoldType)
-		//self:SetNPCMinBurst(10)
-		//self:SetNPCMaxBurst(20)
-		//self:SetNPCFireRate(10)
-	//end
-	self:SetDefaultValues(self.HoldType)
-	//self:SetKeyValue("spawnflags", bit.bor(SF_WEAPON_NO_PLAYER_PICKUP))
+	//	if SERVER then
+	//		self:SetWeaponHoldType(self.HoldType)
+	//		self:SetNPCMinBurst(10)
+	//		self:SetNPCMaxBurst(20)
+	//		self:SetNPCFireRate(10)
+	//	end
+	//	self:SetDefaultValues(self.HoldType)
+	//	self:SetKeyValue("spawnflags", bit.bor(SF_WEAPON_NO_PLAYER_PICKUP))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:GetCapabilities()
@@ -654,10 +655,6 @@ function SWEP:NPCShoot_Primary()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttack()
-	//if self:GetOwner():KeyDown(IN_RELOAD) then return end
-	//self:GetOwner():SetFOV(45, 0.3)
-	//if !IsFirstTimePredicted() then return end
-
 	local selfData = funcGetTable(self)
 	local owner = metaEntity.GetOwner(self)
 	local ownerData = funcGetTable(owner)
@@ -974,7 +971,8 @@ function SWEP:Reload()
 		if SERVER && self.HasReloadSound then
 			local reloadSD = VJ.PICK(self.ReloadSound)
 			if reloadSD then
-				owner:EmitSound(reloadSD, 50, math.random(90, 100))
+				-- Play at CHAN_AUTO to not interrupt the firing sound
+				owner:EmitSound(reloadSD, 50, math.random(90, 100), nil, CHAN_AUTO)
 			end
 		end
 		-- Handle clip
@@ -1004,7 +1002,10 @@ function SWEP:NPC_Reload()
 	local owner = self:GetOwner()
 	owner.NextThrowGrenadeT = owner.NextThrowGrenadeT + 2
 	self:OnReload("Start")
-	if self.NPC_HasReloadSound then VJ.EmitSound(owner, self.NPC_ReloadSound, self.NPC_ReloadSoundLevel) end
+	if self.NPC_HasReloadSound then
+		-- Play at CHAN_AUTO to not interrupt the firing sound
+		VJ.EmitSound(owner, self.NPC_ReloadSound, self.NPC_ReloadSoundLevel, nil, nil, CHAN_AUTO)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Holster(newWep)
@@ -1080,6 +1081,109 @@ if CLIENT then
 			end
 		end
 		if drawMdl then funcDrawModel(self) end
+	end
+	-- Mockup of inline void VectorMA( const QAngle &start, float scale, const QAngle &direction, QAngle &dest )
+	-- https://github.com/ValveSoftware/source-sdk-2013/blob/7191ecc418e28974de8be3a863eebb16b974a7ef/src/public/mathlib/vector.h#L1892
+	local function VectorMA( vStart, flScale, vDirection, vDestination )
+		vDestination[ 1 ] = vStart[ 1 ] + flScale * vDirection[ 1 ]
+		vDestination[ 2 ] = vStart[ 2 ] + flScale * vDirection[ 2 ]
+		vDestination[ 3 ] = vStart[ 3 ] + flScale * vDirection[ 3 ]
+	end
+	-- All of this is stupid and needs to be improved, but I'm (somewhat) sticking to VALVe's original code
+	local HL2_BOB_CYCLE_MIN = 1
+	local HL2_BOB_CYCLE_MAX = .45
+	local HL2_BOB = .002
+	local HL2_BOB_UP = .5
+	local g_lateralBob = 0
+	local g_verticalBob = 0
+	local bobtime, lastbobtime = 0, 0
+	-- Function localizations
+	local LocalPlayer = LocalPlayer
+	local CurTime = CurTime
+	local math_floor = math.floor
+	local math_pi = math.pi
+	local math_Clamp = math.Clamp
+	local HL2_BOB_CYCLE_MAX2 = HL2_BOB_CYCLE_MAX * 2
+	-- function SWEP:CalcViewModelBob()
+	local function CalcViewModelBob( player )
+		local cycle = 0
+		-- CBaseEntity::GetLocalVelocity... maybe replace with GetVelocity?
+		local speed = math_Clamp( player:GetAbsVelocity():Length2D(), -320, 320 )
+		local bob_offset = math.Remap( speed, 0, 320, 0, 1 )
+		local gpGlobals_curtime = CurTime()
+		bobtime = bobtime + ( gpGlobals_curtime - lastbobtime ) * bob_offset
+		lastbobtime = gpGlobals_curtime
+		cycle = bobtime - math_floor( bobtime / HL2_BOB_CYCLE_MAX ) * HL2_BOB_CYCLE_MAX
+		cycle = cycle / HL2_BOB_CYCLE_MAX
+		if cycle < HL2_BOB_UP then
+			cycle = math_pi * cycle / HL2_BOB_UP
+		else
+			cycle = math_pi + math_pi * ( cycle - HL2_BOB_UP ) / ( 1 - HL2_BOB_UP )
+		end
+		g_verticalBob = speed * .005
+		g_verticalBob = g_verticalBob * .3 + g_verticalBob * .7 * math.sin( cycle )
+		g_verticalBob = math_Clamp( g_verticalBob, -7, 4 )
+		cycle = bobtime - math_floor( bobtime / HL2_BOB_CYCLE_MAX2 ) * HL2_BOB_CYCLE_MAX2
+		cycle = cycle / HL2_BOB_CYCLE_MAX2
+		if cycle < HL2_BOB_UP then
+			cycle = math_pi * cycle / HL2_BOB_UP
+		else
+			cycle = math_pi + math_pi * ( cycle - HL2_BOB_UP ) / ( 1 - HL2_BOB_UP )
+		end
+		g_lateralBob = speed * .005
+		g_lateralBob = g_lateralBob * .3 + g_lateralBob * .7 * math.sin( cycle )
+		g_lateralBob = math_Clamp( g_lateralBob, -7, 4 )
+	end
+	-- function SWEP:AddViewmodelBob( /*viewmodel,*/ origin, angles )
+	local function AddViewmodelBob( player, origin, angles )
+		local forward, right = angles:Forward(), angles:Right()
+		CalcViewModelBob( player )
+		-- Apply bob, but scaled down to 40%
+		VectorMA( origin, g_verticalBob * .1, forward, origin )
+		-- Z bob a bit more
+		origin[ 2 ] = origin[ 2 ] + g_verticalBob * .1
+		-- bob the angles
+		angles[ 3 ] = angles[ 3 ] + g_verticalBob * .5
+		angles[ 1 ] = angles[ 1 ] - g_verticalBob * .4
+		angles[ 2 ] = angles[ 2 ] - g_lateralBob * .3
+		VectorMA( origin, g_lateralBob * .8, right, origin )
+	end
+	local m_vecLastFacing = Vector( 0, 0, 0 )
+	-- Must be > 0, recommended 1.5. Original VALVe code checked for
+	-- zero, but for the sake of optimization, mine doesn't...
+	-- who am I writing this to? No one will probably touch this anyway
+	local g_flMaxViewModelLag = 1.5
+	local math_min = math.min
+	function SWEP:CalcViewModelView( pViewModel, origin, angles )
+		local MyTable = funcGetTable( self )
+		-- We don't need VALVe's built in sway, so remove it in case someone legacy adjusts it
+		MyTable.SwayScale = 0
+		MyTable.BobScale = 0
+		local player = LocalPlayer()
+		local forward, right, up = angles:Forward(), angles:Right(), angles:Up()
+		local vDifference = forward - m_vecLastFacing
+		local flSpeed = 5
+		-- If we start to lag too far behind, we'll increase the "catch up" speed. Solves the problem with fast cl_yawspeed, m_yaw or joysticks
+		-- rotating quickly. The old code would slam lastfacing with origin causing the viewmodel to pop to a new position
+		local flDifference = vDifference:Length()
+		if flDifference > g_flMaxViewModelLag then flSpeed = flSpeed * flDifference / g_flMaxViewModelLag end
+		VectorMA( m_vecLastFacing, flSpeed * FrameTime(), vDifference, m_vecLastFacing )
+		-- Make sure it doesn't grow out of control!!!
+		m_vecLastFacing:Normalize()
+		VectorMA( origin, 5, vDifference * -1, origin )
+		if MyTable.ViewModelVerticalTilt then
+			local pitch = angles[ 1 ]
+			if pitch > 180 then
+				pitch = pitch - 360
+			elseif pitch < -180 then
+				pitch = pitch + 360
+			end
+			VectorMA( origin, -pitch * .035, forward, origin )
+			VectorMA( origin, -pitch * .03, right, origin )
+			VectorMA( origin, -pitch * .02, up, origin )
+		end
+		AddViewmodelBob( player, origin, angles )
+		return origin, angles
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

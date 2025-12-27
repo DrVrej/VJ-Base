@@ -25,28 +25,14 @@ SWEP.Primary.Force = 5
 SWEP.Primary.ClipSize = 17
 SWEP.Primary.Recoil = 0.3
 SWEP.Primary.Cone = 5
-SWEP.Primary.Delay = 0.25
-SWEP.Primary.Automatic = true
+SWEP.Primary.Delay = .133 -- What is funny is that the realistic rate would be .075
+SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = "Pistol"
 SWEP.Primary.Sound = "VJ.Weapon_Glock17.Single"
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellType = "ShellEject"
 
-SWEP.Secondary.Automatic = true
-SWEP.Secondary.Ammo = "Pistol"
-
 SWEP.AnimTbl_Deploy = ACT_VM_IDLE_TO_LOWERED
 SWEP.HasReloadSound = true
 SWEP.ReloadSound = "vj_base/weapons/glock17/reload.wav"
 SWEP.Reload_TimeUntilAmmoIsSet = 1.5
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:OnSecondaryAttack()
-	self.Primary.Delay = 0.175
-	self.Primary.Cone = 20
-	self:PrimaryAttack()
-	self.Primary.Delay = 0.25
-	self.Primary.Cone = 5
-	
-	self:SetNextSecondaryFire(CurTime() + 0.175)
-	return true
-end
