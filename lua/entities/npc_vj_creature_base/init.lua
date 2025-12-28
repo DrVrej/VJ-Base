@@ -3112,7 +3112,7 @@ function ENT:OnTakeDamage(dmginfo)
 				local dmgResponse = selfData.DamageResponse
 				if dmgResponse && curTime > selfData.TakingCoverT && !self:IsBusy("Activities") then
 					-- Attempt to find who damaged me | RESULT: May become alerted and set its enemy if attacker is visible
-					if dmgAttacker && (dmgResponse == true or dmgResponse == "OnlySearch") then
+					if dmgAttacker && dmgAttacker.VJ_ID_Living && (dmgResponse == true or dmgResponse == "OnlySearch") then
 						local sightDist = self:GetMaxLookDistance()
 						sightDist = math_min(math_max(sightDist / 2, sightDist <= 1000 and sightDist or 1000), sightDist)
 						-- IF normal sight dist is less than 1000 then change nothing, OR ELSE use half the distance with 1000 as minimum

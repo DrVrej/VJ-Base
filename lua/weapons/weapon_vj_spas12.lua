@@ -49,9 +49,9 @@ function SWEP:OnPrimaryAttack(status, statusData)
 	if status == "PostFire" then
 		local owner = self:GetOwner()
 		if IsValid(owner) && owner:IsPlayer() then
-			timer.Simple(0.2, function()
+			timer.Simple(0.25, function()
 				if IsValid(self) && IsValid(owner) && owner:IsPlayer() then
-					self:EmitSound("weapons/shotgun/shotgun_cock.wav", 80, 100)
+					self:EmitSound("Weapon_Shotgun.Special1")
 					local animTime = VJ.AnimDuration(owner:GetViewModel(), ACT_SHOTGUN_PUMP)
 					self:SendWeaponAnim(ACT_SHOTGUN_PUMP)
 					self.PLY_NextIdleAnimT = CurTime() + animTime
