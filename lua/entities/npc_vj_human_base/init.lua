@@ -4245,10 +4245,8 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 	if IsValid(dmgAttacker) then
 		if dmgAttacker:GetClass() == "npc_barnacle" then self.HasDeathCorpse = false end -- Don't make a corpse if it's killed by a barnacle!
 		if vj_npc_ply_frag:GetInt() == 1 && dmgAttacker:IsPlayer() then dmgAttacker:AddFrags(1) end
-		if IsValid(dmgInflictor) then
-			gamemode.Call("OnNPCKilled", self, dmgAttacker, dmgInflictor, dmginfo)
-		end
 	end
+	gamemode.Call("OnNPCKilled", self, dmgAttacker, dmgInflictor)
 	self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 	self:GibOnDeath(dmginfo, hitgroup)
 	self:PlaySoundSystem("Death")

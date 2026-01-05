@@ -50,18 +50,15 @@ end
 			- Everything else : Color of the kill icon | DEFAULT = Color(255, 80, 0, 255)
 -----------------------------------------------------------]]
 local killIconDefColor = Color(255, 80, 0, 255)
-local KILLICON_DEFAULT = VJ.KILLICON_DEFAULT
-local KILLICON_TYPE_ALIAS = VJ.KILLICON_TYPE_ALIAS
-local KILLICON_TYPE_FONT = VJ.KILLICON_TYPE_FONT
 --
 local function addKillIcon(class, name, texture, data)
 	language.Add(class, name)
-	if texture == KILLICON_TYPE_ALIAS then
+	if texture == VJ.KILLICON_TYPE_ALIAS then
 		killicon.AddAlias(class, data or "prop_physics")
-	elseif data && texture == KILLICON_TYPE_FONT then
+	elseif data && texture == VJ.KILLICON_TYPE_FONT then
 		killicon.Add(class, data.font, data.symbol, data.color or killIconDefColor, data.heightScale or 1)
-	else	
-		killicon.Add(class, texture or KILLICON_DEFAULT, data or killIconDefColor)
+	else
+		killicon.Add(class, texture or VJ.KILLICON_DEFAULT, data or killIconDefColor)
 	end
 end
 --
@@ -81,7 +78,7 @@ VJ.AddNPC = function(name, class, category, adminOnly, customFunc)
 	list.Set("NPC", class, property)
 	list.Set("VJBASE_SPAWNABLE_NPC", class, property)
 	if CLIENT && !killicon.Exists(class) then
-		addKillIcon(class, name, KILLICON_DEFAULT)
+		addKillIcon(class, name, VJ.KILLICON_DEFAULT)
 	end
 	duplicator.RegisterEntityClass(class, VJ.CreateDupe_NPC, "Model", "Class", "Equipment", "SpawnFlags", "Data")
 end
@@ -101,7 +98,7 @@ VJ.AddNPC_HUMAN = function(name, class, weapons, category, adminOnly, customFunc
 	list.Set("NPC", class, property)
 	list.Set("VJBASE_SPAWNABLE_NPC", class, property)
 	if CLIENT && !killicon.Exists(class) then
-		addKillIcon(class, name, KILLICON_DEFAULT)
+		addKillIcon(class, name, VJ.KILLICON_DEFAULT)
 	end
 	duplicator.RegisterEntityClass(class, VJ.CreateDupe_NPC, "Model", "Class", "Equipment", "SpawnFlags", "Data")
 end
