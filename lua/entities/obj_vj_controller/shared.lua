@@ -54,9 +54,18 @@ function ENT:Initialize()
 	hook.Add("CalcView", self, self.CalcView)
 	hook.Add("PlayerBindPress", self, self.PlayerBindPress)
 	hook.Add("HUDPaint", self, self.HUD)
+	
+	local ply = self:GetPlayer()
+	if IsValid(ply) then
+		ply.VJ_IsControllingNPC = true
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
+	local ply = self:GetPlayer()
+	if IsValid(ply) then
+		ply.VJ_IsControllingNPC = false
+	end
 	-- Reset the NPC's bone manipulation!
 	local npc = self:GetNPC()
 	if IsValid(npc) then

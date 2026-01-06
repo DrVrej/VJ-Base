@@ -345,6 +345,7 @@ local strings_english = {
 	["vjbase.menu.context.guard"] = "Toggle Guarding Behavior",
 	["vjbase.menu.context.wander"] = "Toggle Wandering Behavior",
 	["vjbase.menu.context.medic"] = "Toggle Medic Behavior",
+	["vjbase.menu.context.sounds"] = "Toggle Sounds",
 	["vjbase.menu.context.ally"] = "Ally To Me",
 	["vjbase.menu.context.hostile"] = "Hostile To Me",
 	["vjbase.menu.context.slay"] = "Slay",
