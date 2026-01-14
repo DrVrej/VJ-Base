@@ -103,7 +103,7 @@ if CLIENT then
 	end
 	--[-------------------------------------------------------]--
 	/*
-	hook.Add("PopulateVJBaseHome", "AddVJBaseSpawnMenu_Home", function(pnlContent, tree, node)
+	hook.Add("VJ_PopulateSpawn_Home", "VJ_PopulateSpawn_Home", function(pnlContent, tree, node)
 		local hometree = tree:AddNode("Home", "icon16/monkey.png")
 		hometree.PropPanel = vgui.Create("ContentContainer", pnlContent)
 		hometree.PropPanel:SetVisible(false)
@@ -132,7 +132,7 @@ if CLIENT then
 	end)
 	*/
 	--[-------------------------------------------------------]--
-	hook.Add("PopulateVJBaseMain", "PopulateVJBaseMain", function(pnlContent, tree, node)
+	hook.Add("VJ_PopulateSpawn_Main", "VJ_PopulateSpawn_Main", function(pnlContent, tree, node)
 		VJ_PopulateTrees(pnlContent, tree, node, "NPCs", "icon16/monkey.png", "VJBASE_SPAWNABLE_NPC")
 		VJ_PopulateTrees(pnlContent, tree, node, "Weapons", "icon16/gun.png", "VJBASE_SPAWNABLE_WEAPON")
 		VJ_PopulateTrees(pnlContent, tree, node, "Entities", "icon16/bricks.png", "VJBASE_SPAWNABLE_ENTITIES")
@@ -223,24 +223,24 @@ if CLIENT then
 		end
 		table.SortByMember(results, "text", true)
 		return results
-	end, "vjbase_npcs")
+	end, "vjbase")
 
 	--[-------------------------------------------------------]--
 	-- Create the main spawn menu tab, set it to be placed after the default "Vehicles" tab
 	if VJBASE_DISABLE_MENU_SPAWN != true then
 		spawnmenu.AddCreationTab("VJ Base", function()
 			local ctrl = vgui.Create("SpawnmenuContentPanel")
-			ctrl:EnableSearch("vjbase_npcs", "PopulateVJBaseMain")
-			ctrl:CallPopulateHook("PopulateVJBaseMain")
-			//ctrl:CallPopulateHook("PopulateVJBaseHome")
-			//ctrl:CallPopulateHook("PopulateVJBaseNPC")
-			//ctrl:CallPopulateHook("PopulateVJBaseWeapons")
-			//ctrl:CallPopulateHook("PopulateVJBaseEntities")
-			//ctrl:CallPopulateHook("PopulateVJBaseTools")
+			ctrl:EnableSearch("vjbase", "VJ_PopulateSpawn_Main")
+			ctrl:CallPopulateHook("VJ_PopulateSpawn_Main")
+			//ctrl:CallPopulateHook("VJ_PopulateSpawn_Home")
+			//ctrl:CallPopulateHook("VJ_PopulateSpawn_NPC")
+			//ctrl:CallPopulateHook("VJ_PopulateSpawn_Weapons")
+			//ctrl:CallPopulateHook("VJ_PopulateSpawn_Entities")
+			//ctrl:CallPopulateHook("VJ_PopulateSpawn_Tools")
 			
 			local sidebar = ctrl.ContentNavBar
-			sidebar.Options = vgui.Create( "VJ_SpawnmenuNPCSidebarToolbox", sidebar )
-			sidebar.Options:Dock( BOTTOM )
+			sidebar.Options = vgui.Create("VJ_SpawnmenuNPCSidebarToolbox", sidebar)
+			sidebar.Options:Dock(BOTTOM)
 		
 			return ctrl
 		end, "vj_base/icons/vrejgaming.png", 60, "All VJ Base entities are located here!") // icon16/plugin.png

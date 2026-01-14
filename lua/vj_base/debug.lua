@@ -117,7 +117,7 @@ function metaVJ:GetIdealMoveSpeed(example)
 	end
 end
 
-hook.Add("OnEntityCreated", "vjmetatabletest", function(ent)
+hook.Add("OnEntityCreated", "VJ_OnEntityCreated_Test", function(ent)
 	if scripted_ents.IsBasedOn(ent:GetClass(), "npc_vj_creature_base") or scripted_ents.IsBasedOn(ent:GetClass(), "npc_vj_human_base") then
 		local mt = table.Merge({}, debug.getmetatable(ent)) -- Create a new table to avoid overflow!
 		mt.__index = __index
@@ -150,14 +150,14 @@ local triggerLua = ents.Create("lua_run")
 triggerLua:SetName("triggerhook")
 triggerLua:Spawn()
 
-hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
+hook.Add("OnEntityCreated", "VJ_OnEntityCreated_Outputs", function(ent)
 	if ent:IsNPC() && ent.IsVJBaseSNPC then
 		-- Format: <output name> <targetname>:<inputname>:<parameter>:<delay>:<max times to fire, -1 means infinite>
 		self:Fire("AddOutput", "OnIgnite triggerhook:RunPassedCode:hook.Run( 'OnOutput' ):0:-1")
 	end
 end)
 
-hook.Add("OnOutput", "OnOutput", function()
+hook.Add("OnOutput", "VJ_OnOutput", function()
 	local activator, caller = ACTIVATOR, CALLER
 	print(activator, caller)
 end )

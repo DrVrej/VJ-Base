@@ -1538,7 +1538,7 @@ local function funcAnimThink(self)
 	end
 end
 --
-local function idleThink_Extra(self)
+local function funcAnimThinkExtra(self)
 	if VJ_CVAR_AI_ENABLED then
 		idleFunc(self)
 	end
@@ -1653,7 +1653,7 @@ function ENT:Initialize()
 			local thinkHook = hook.GetTable()["Think"]
 			if (thinkHook && !thinkHook[self]) or (!thinkHook) then
 				if #self:GetBoneFollowers() > 0 then
-					hook.Add("Think", self, idleThink_Extra)
+					hook.Add("Think", self, funcAnimThinkExtra)
 				else
 					hook.Add("Think", self, funcAnimThink)
 				end

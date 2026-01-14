@@ -50,7 +50,7 @@ local function VJ_NPC_SETTINGS_ATTACKS(panel)
 	end
 	panel:Help("#vjbase.menu.general.admin.only")
 	panel:Help("#vjbase.menu.general.npc.note.future")
-	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_wep_ply_pickup 1\n vj_npc_wep_drop 1\n vj_npc_wep_reload 1\n vj_npc_wep 1\n vj_npc_grenade 1\n vj_npc_melee_ply_dsp 1\n vj_npc_melee_propint 1\n vj_npc_melee_bleed 1\n vj_npc_melee_ply_speed 1\n vj_npc_melee 1\n vj_npc_range 1\n vj_npc_leap 1"})
+	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_wep_ply_pickup 1\n vj_npc_wep_drop 1\n vj_npc_wep_reload 1\n vj_npc_wep 1\n vj_npc_wep_secondary 1\n vj_npc_grenade 1\n vj_npc_melee_ply_dsp 1\n vj_npc_melee_propint 1\n vj_npc_melee_bleed 1\n vj_npc_melee_ply_speed 1\n vj_npc_melee 1\n vj_npc_range 1\n vj_npc_leap 1"})
 	
 	panel:CheckBox("#vjbase.menu.npc.settings.atk.range", "vj_npc_range")
 	panel:CheckBox("#vjbase.menu.npc.settings.atk.grenade", "vj_npc_grenade")
@@ -68,6 +68,7 @@ local function VJ_NPC_SETTINGS_ATTACKS(panel)
 	panel:AddControl("ComboBox", propCombo)
 	panel:Help("#vjbase.menu.npc.settings.atk.wep.label")
 	panel:CheckBox("#vjbase.menu.npc.settings.atk.wep", "vj_npc_wep")
+	panel:CheckBox("#vjbase.menu.npc.settings.atk.wep.secondary", "vj_npc_wep_secondary")
 	panel:CheckBox("#vjbase.menu.npc.settings.atk.wep.reload", "vj_npc_wep_reload")
 	panel:CheckBox("#vjbase.menu.npc.settings.atk.wep.drop", "vj_npc_wep_drop")
 	panel:CheckBox("#vjbase.menu.npc.settings.atk.wep.ply.pickup", "vj_npc_wep_ply_pickup")
@@ -312,7 +313,7 @@ local function VJ_WEAPON_SETTINGS_CLIENT(panel)
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_CONFIGURES", function()
+hook.Add("PopulateToolMenu", "VJ_PopulateToolMenu_Configures", function()
 	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_ai", "#vjbase.menu.npc.settings.ai", "", "", VJ_NPC_SETTINGS_AI)
 	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_atk", "#vjbase.menu.npc.settings.atk", "", "", VJ_NPC_SETTINGS_ATTACKS)
 	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_gen", "#vjbase.menu.npc.settings.gen", "", "", VJ_NPC_SETTINGS_GENERAL)

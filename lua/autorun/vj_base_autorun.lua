@@ -203,7 +203,7 @@ if SERVER then
 		end
 	end)
 elseif CLIENT then
-	hook.Add("AddToolMenuTabs", "VJ_CREATETOOLTAB", function()
+	hook.Add("AddToolMenuTabs", "VJ_AddToolMenuTabs", function()
 		spawnmenu.AddToolTab("DrVrej", "DrVrej", "vj_base/icons/vrejgaming.png")
 		spawnmenu.AddToolCategory("DrVrej", "Main", "#vjbase.menu.tabs.main")
 		spawnmenu.AddToolCategory("DrVrej", "NPCs", "#vjbase.menu.tabs.npc")

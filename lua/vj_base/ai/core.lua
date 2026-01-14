@@ -1722,7 +1722,7 @@ function ENT:Touch(entity)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Resets and stops following the current entity (If it's following any)
+	Resets and stops following the current entity (if any)
 -----------------------------------------------------------]]
 function ENT:ResetFollowBehavior()
 	local followData = self.FollowData
@@ -3391,18 +3391,23 @@ end
 -----------------------------------------------------------]]
 function ENT:ValidateNoCollide(ent)
 	local noCollTbl = self.EntitiesToNoCollide
-	if noCollTbl then
+	if noCollTbl && self != ent then
 		local entClass = funcGetClass(ent)
 		for i = 1, #noCollTbl do
 			if noCollTbl[i] == entClass then
+				-- TODO: The returned logic_collision_pair created here could be removed as it continues working without issues, but I have no idea
+				-- what kind of side effects it could cause, best to leave as is until further testing or someone with more info can confirm it's safe
+				-- Alternatively, Facepunch should just directly bind "PhysEnableEntityCollisions" and "PhysDisableEntityCollisions" to Lua, which is
+				-- what Valve uses for the default NPCs: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/shared/physics_shared.h#L142
 				constraint.NoCollide(self, ent, 0, 0)
-				-- Check if the other entity has bone followers, if it does then make them no collide
+				-- Check for bone followers
 				local boneFollowers = ent:GetBoneFollowers()
 				if #boneFollowers > 0 then
 					for _, v in ipairs(boneFollowers) do
 						constraint.NoCollide(self, v.follower, 0, 0)
 					end
 				end
+				break
 			end
 		end
 	end

@@ -275,7 +275,7 @@ local function VJ_MAIN_PLUGINS(panel)
 	panel:AddPanel(tutorialButton)
 end
 ----=================================----
-hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_MAIN", function()
+hook.Add("PopulateToolMenu", "VJ_PopulateToolMenu_Main", function()
 	spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_plugins", "#vjbase.menu.plugins", "", "", VJ_MAIN_PLUGINS)
 	spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_about", "#vjbase.menu.about", "", "", VJ_MAIN_ABOUT)
 	spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_cleanup", "#vjbase.menu.cleanup", "", "", VJ_MAIN_CLEANUP)

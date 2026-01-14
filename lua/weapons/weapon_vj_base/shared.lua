@@ -36,7 +36,7 @@ SWEP.WorldModel_CustomPositionBone = "ValveBiped.Bip01_R_Hand" -- The bone it wi
 SWEP.NPC_NextPrimaryFire = 0.11 -- RPM of the weapon in seconds | Calculation: 60 / RPM | Melee weapons automatically change this number!
 SWEP.NPC_TimeUntilFire = 0 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_TimeUntilFireExtraTimers = {} -- Extra timers, which will make the gun fire again! | The seconds are counted after the self.NPC_TimeUntilFire!
-SWEP.NPC_CustomSpread = 1 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
+SWEP.NPC_CustomSpread = 1 -- Bullet spread multiplier, this is on top of other multipliers like the NPC's accuracy! | Closer to 0 = Increased accuracy, Farther than 1 = Decreased accuracy
 SWEP.NPC_BulletSpawnAttachment = "" -- The attachment that the bullet spawns on, leave empty for base to decide!
 SWEP.NPC_CanBePickedUp = true -- Can this weapon be picked up by NPCs? (Ex: Rebels)
 SWEP.NPC_StandingOnly = false -- If true, the weapon can only be fired if the NPC is standing still
@@ -47,26 +47,25 @@ SWEP.NPC_FiringCone = 0.9 -- NPC can only fire when their target is within the c
 	-- ====== Reload ====== --
 SWEP.NPC_HasReloadSound = true -- Should it play a sound when the base detects the SNPC playing a reload animation?
 SWEP.NPC_ReloadSound = {} -- Sounds it plays when the base detects the SNPC playing a reload animation
-SWEP.NPC_ReloadSoundLevel = 60 -- How far does the sound go?
+SWEP.NPC_ReloadSoundLevel = 60
 	-- ====== Before Fire Sound ====== --
 	-- NOTE: This only works with VJ Human NPCs!
 SWEP.NPC_BeforeFireSound = {} -- Plays a sound before the firing code is ran, usually in the beginning of the animation
-SWEP.NPC_BeforeFireSoundLevel = 70 -- How far does the sound go?
-SWEP.NPC_BeforeFireSoundPitch = VJ.SET(90, 100) -- How much time until the secondary fire can be used again?
+SWEP.NPC_BeforeFireSoundLevel = 70
+SWEP.NPC_BeforeFireSoundPitch = VJ.SET(90, 100)
 	-- ====== Extra Firing Sound ====== --
 SWEP.NPC_ExtraFireSound = {} -- Plays an extra sound after it fires (Example: Bolt action sound)
 SWEP.NPC_ExtraFireSoundTime = 0.4 -- How much time until it plays the sound (After Firing)?
-SWEP.NPC_ExtraFireSoundLevel = 70 -- How far does the sound go?
-SWEP.NPC_ExtraFireSoundPitch = VJ.SET(90, 100) -- How much time until the secondary fire can be used again?
+SWEP.NPC_ExtraFireSoundLevel = 70
+SWEP.NPC_ExtraFireSoundPitch = VJ.SET(90, 100)
 	-- ====== Secondary Fire ====== --
-SWEP.NPC_HasSecondaryFire = false -- Can the weapon have a secondary fire?
-SWEP.NPC_SecondaryFireEnt = "obj_vj_grenade_rifle" -- The entity to fire, this only applies if self:NPC_SecondaryFire() has NOT been overridden!
+SWEP.NPC_HasSecondaryFire = false -- Can NPCs use the secondary fire?
+SWEP.NPC_SecondaryFireEnt = "obj_vj_grenade_rifle" -- Entity to spawn when secondary is fired | Only applies if "NPC_SecondaryFire()" has NOT been overridden!
 SWEP.NPC_SecondaryFireChance = 3 -- Chance that the secondary fire is used | 1 = always
 SWEP.NPC_SecondaryFireNext = VJ.SET(12, 15) -- How much time until the secondary fire can be used again?
-SWEP.NPC_SecondaryFireDistance = 1000 -- How close does the owner's enemy have to be for it to fire?
-SWEP.NPC_HasSecondaryFireSound = true -- Can the secondary fire sound be played?
-SWEP.NPC_SecondaryFireSound = {} -- The sound it plays when the secondary fire is used
-SWEP.NPC_SecondaryFireSoundLevel = 90 -- The sound level to use for the secondary firing sound
+SWEP.NPC_SecondaryFireDistance = 1000 -- Max distance an enemy must be to initiate a secondary fire
+SWEP.NPC_SecondaryFireSound = {} -- Sounds to play when the secondary fire is used
+SWEP.NPC_SecondaryFireSoundLevel = 90
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Player Only ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -97,9 +96,9 @@ SWEP.HasIdleAnimation = true -- Does it have a idle animation?
 SWEP.AnimTbl_Idle = ACT_VM_IDLE
 	-- ====== Reload ====== --
 SWEP.AnimTbl_Reload = ACT_VM_RELOAD
-SWEP.HasReloadSound = false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
+SWEP.HasReloadSound = false -- Does it have a reload sound?
 SWEP.ReloadSound = {}
-SWEP.Reload_TimeUntilAmmoIsSet = 1 -- Time until ammo is set to the weapon
+SWEP.Reload_TimeUntilAmmoIsSet = 1
 	-- ====== Secondary Fire ====== --
 SWEP.Secondary.Automatic = false -- Should the weapon continue firing as long as the attack button is held down?
 SWEP.Secondary.Ammo = "none" -- Ammo type
@@ -111,11 +110,10 @@ SWEP.AnimTbl_SecondaryFire = ACT_VM_SECONDARYATTACK
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Dry Fire (Players & NPCs) ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- Examples: Under water, out of ammo
-SWEP.HasDryFireSound = true -- Should it play a sound when it's out of ammo?
-SWEP.DryFireSound = {} -- The sound that it plays when the weapon is out of ammo
-SWEP.DryFireSoundLevel = 50 -- Dry fire sound level
-SWEP.DryFireSoundPitch = VJ.SET(90, 100) -- Dry fire sound pitch
+SWEP.HasDryFireSound = true -- Should it play a sound when it's out of ammo? | Examples: Under water, out of ammo
+SWEP.DryFireSound = {} -- Sounds to play when the weapon is out of ammo
+SWEP.DryFireSoundLevel = 50
+SWEP.DryFireSoundPitch = VJ.SET(90, 100)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Primary Fire (Players & NPCs) ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -614,11 +612,9 @@ function SWEP:NPCShoot_Primary()
 			timer.Simple(fireTime, function()
 				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && (anim == ACT_INVALID or animType == VJ.ANIM_TYPE_GESTURE or (anim && VJ.IsCurrentAnim(owner, anim))) then -- ONLY check for cur anim IF it even had one!
 					self:NPC_SecondaryFire()
-					if self.NPC_HasSecondaryFireSound then
-						local fireSd = VJ.PICK(self.NPC_SecondaryFireSound)
-						if fireSd then
-							self:EmitSound(fireSd, self.NPC_SecondaryFireSoundLevel, math.random(90, 110), 1, CHAN_WEAPON, 0, 0, VJ_RecipientFilter)
-						end
+					local fireSd = VJ.PICK(self.NPC_SecondaryFireSound)
+					if fireSd then
+						self:EmitSound(fireSd, self.NPC_SecondaryFireSoundLevel, math.random(90, 110), 1, CHAN_WEAPON, 0, 0, VJ_RecipientFilter)
 					end
 					self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
 				end

@@ -20,6 +20,7 @@ CreateConVar("vj_npc_melee_ply_dsp", 1, defFlags, "Can NPC melee attacks cause D
 CreateConVar("vj_npc_melee_ply_speed", 1, defFlags, "Can NPC melee attack modify player speed?")
 CreateConVar("vj_npc_grenade", 1, defFlags, "Can NPCs do grenade attacks?")
 CreateConVar("vj_npc_wep", 1, defFlags, "Can NPCs use weapons?")
+CreateConVar("vj_npc_wep_secondary", 1, defFlags, "Can NPCs use a weapon's secondary fire?")
 CreateConVar("vj_npc_wep_reload", 1, defFlags, "Can NPCs reload their weapon?")
 CreateConVar("vj_npc_wep_drop", 1, defFlags, "Should NPCs drop their weapon on death?")
 CreateConVar("vj_npc_wep_ply_pickup", 1, defFlags, "Can players pick up NPC dropped weapons?")

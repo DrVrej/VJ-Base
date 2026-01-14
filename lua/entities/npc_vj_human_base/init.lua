@@ -1693,6 +1693,7 @@ local vj_npc_ply_follow = GetConVar("vj_npc_ply_follow")
 local vj_npc_ply_chat = GetConVar("vj_npc_ply_chat")
 local vj_npc_medic = GetConVar("vj_npc_medic")
 local vj_npc_wep = GetConVar("vj_npc_wep")
+local vj_npc_wep_secondary = GetConVar("vj_npc_wep_secondary")
 local vj_npc_grenade = GetConVar("vj_npc_grenade")
 local vj_npc_dangerdetection = GetConVar("vj_npc_dangerdetection")
 local vj_npc_wep_drop = GetConVar("vj_npc_wep_drop")
@@ -1763,6 +1764,7 @@ local function InitConvars(self)
 	if vj_npc_ply_chat:GetInt() == 0 then self.CanChatMessage = false end
 	if vj_npc_medic:GetInt() == 0 then self.IsMedic = false end
 	if vj_npc_wep:GetInt() == 0 then self.Weapon_Disabled = true end
+	if vj_npc_wep_secondary:GetInt() == 0 then self.Weapon_CanSecondaryFire = false end
 	if vj_npc_grenade:GetInt() == 0 then self.HasGrenadeAttack = false end
 	if vj_npc_dangerdetection:GetInt() == 0 then self.CanDetectDangers = false end
 	if vj_npc_wep_drop:GetInt() == 0 then self.DropWeaponOnDeath = false end
