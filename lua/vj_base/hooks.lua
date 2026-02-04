@@ -98,7 +98,7 @@ local entInfos = {
 	
 	-- Antlion NPCs
 	npc_antlion = {classNPC = "CLASS_ANTLION"},
-	npc_antlionguard = {classNPC = "CLASS_ANTLION"},
+	npc_antlionguard = {classNPC = "CLASS_ANTLION", func = function(ent) ent.VJ_ID_Boss = true end},
 	npc_antlion_worker = {classNPC = "CLASS_ANTLION"},
 	npc_antlion_grub = {classNPC = "CLASS_ANTLION"},
 

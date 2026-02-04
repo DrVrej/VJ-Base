@@ -23,13 +23,24 @@ ENT.Immune_Bullet = true
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE
 ENT.HasPainSounds = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SCHEDULE_FACE(faceType, customFunc) return end -- Tanks can NOT turn!
+function ENT:SCHEDULE_FACE(faceType, customFunc) return end -- Tanks do NOT turn like normal NPCs!
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MaintainAlertBehavior(alwaysChase) return end -- Tanks can NOT chase!
+function ENT:MaintainAlertBehavior(alwaysChase) return end -- Tanks do NOT chase like normal NPCs!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnDamaged(dmginfo, hitgroup, status)
-	if status == "Init" && dmginfo:IsDamageType(DMG_PHYSGUN) then
-		dmginfo:SetDamage(0)
+	-- Skip gravity gun damage and crossbow bolts
+	if status == "Init" then
+		local dmgInflictor = dmginfo:GetInflictor()
+		if dmginfo:IsDamageType(DMG_PHYSGUN) or (IsValid(dmgInflictor) && dmgInflictor:GetClass() == "crossbow_bolt") then
+			dmginfo:SetDamage(0)
+		end
+	-- Skip melee damages unless it's caused by a boss and is strong enough
+	elseif status == "PreDamage" && (dmginfo:IsDamageType(DMG_SLASH) or dmginfo:IsDamageType(DMG_CLUB) or dmginfo:IsDamageType(DMG_GENERIC)) then
+		if dmginfo:GetDamage() >= 30 && dmginfo:GetAttacker().VJ_ID_Boss then
+			dmginfo:SetDamage(dmginfo:GetDamage() / 2)
+		else
+			dmginfo:SetDamage(0)
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -14,15 +14,15 @@ ENT.SightDistance = 10000
 ENT.MovementType = VJ_MOVETYPE_PHYSICS
 ENT.ForceDamageFromBosses = true
 ENT.DeathDelayTime = 2
-	-- ====== Sound Paths ====== --
-ENT.SoundTbl_Breath = "vj_base/vehicles/armored/engine_idle.wav"
-ENT.SoundTbl_Death = "VJ.Explosion"
 
 ENT.BreathSoundLevel = 80
 ENT.IdleSoundLevel = 70
 ENT.CombatIdleSoundLevel = 70
 ENT.AlertSoundLevel = 70
 ENT.DeathSoundLevel = 100
+
+ENT.SoundTbl_Breath = "vj_base/vehicles/armored/engine_idle.wav"
+ENT.SoundTbl_Death = "VJ.Explosion"
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Tank Base ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -73,9 +73,9 @@ function ENT:Tank_OnRunOver(ent) end
 function ENT:GetNearDeathSparkPositions()
 	local randPos = math.random(1, 2)
 	if randPos == 1 then
-		self.Spark1:SetLocalPos(self:GetPos() + self:GetForward()*100 + self:GetUp()*60)
+		self.Spark1:SetLocalPos(self:GetPos() + self:GetForward() * 100 + self:GetUp() * 60)
 	elseif randPos == 2 then
-		self.Spark1:SetLocalPos(self:GetPos() + self:GetForward()*-100 + self:GetUp()*60)
+		self.Spark1:SetLocalPos(self:GetPos() + self:GetForward() * -100 + self:GetUp() * 60)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -168,7 +168,6 @@ function ENT:Init()
 	self:PhysicsInit(SOLID_VPHYSICS) // SOLID_BBOX
 	//self:SetSolid(SOLID_VPHYSICS)
 	self:SetAngles(self:GetAngles() + Angle(0, -self.Tank_AngleOffset, 0))
-	//self:SetPos(self:GetPos() + Vector(0, 0, 90))
 	self:SetCollisionBounds(Vector(self.Tank_CollisionBoundSize, self.Tank_CollisionBoundSize, self.Tank_CollisionBoundUp), Vector(-self.Tank_CollisionBoundSize, -self.Tank_CollisionBoundSize, self.Tank_CollisionBoundDown))
 
 	local phys = self:GetPhysicsObject()
@@ -203,12 +202,12 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_RunOver(ent)
 	if !self.Tank_IsMoving or !IsValid(ent) or (vj_npc_melee:GetInt() == 0 /*or self.HasMeleeAttack == false*/) or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then return end
-	if self:Disposition(ent) == D_HT && ent:Health() > 0 && ((ent:IsNPC() && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot()) && !ent.VJ_ID_Boss && !ent.VJ_ID_Vehicle && !ent.VJ_ID_Aircraft then
+	if self:Disposition(ent) == D_HT && ent:Health() > 0 && !ent.VJ_ID_Boss && !ent.VJ_ID_Vehicle && !ent.VJ_ID_Aircraft && ((ent:IsNPC() && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot()) then
 		self:Tank_OnRunOver(ent)
 		self:Tank_PlaySoundSystem("RunOver")
 		ent:TakeDamage(self:ScaleByDifficulty(8), self, self)
 		VJ.DamageSpecialEnts(self, ent, nil)
-		ent:SetVelocity(ent:GetForward()*-200)
+		ent:SetVelocity(ent:GetForward() * -200)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -362,16 +361,6 @@ function ENT:SelectSchedule()
 		end
 	else
 		selfData.Tank_Status = 1
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnDamaged(dmginfo, hitgroup, status)
-	if status == "PreDamage" && dmginfo:IsDamageType(DMG_SLASH) or dmginfo:IsDamageType(DMG_GENERIC) or dmginfo:IsDamageType(DMG_CLUB) then
-		if dmginfo:GetDamage() >= 30 && !dmginfo:GetAttacker().VJ_ID_Boss then
-			dmginfo:SetDamage(dmginfo:GetDamage() / 2)
-		else
-			dmginfo:SetDamage(0)
-		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

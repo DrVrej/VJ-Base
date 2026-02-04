@@ -2335,6 +2335,7 @@ function ENT:Think()
 					self:UpdatePoseParamTracking(true)
 					//self:ClearPoseParameters()
 				end
+				eneData.Target = NULL
 				eneData.TimeAcquired = 0
 			end
 			

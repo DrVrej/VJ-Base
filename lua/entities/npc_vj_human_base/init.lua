@@ -2922,6 +2922,7 @@ function ENT:Think()
 					self:ClearPoseParameters()
 					selfData.UpdatedPoseParam = false
 				end
+				eneData.Target = NULL
 				eneData.TimeAcquired = 0
 			end
 			
