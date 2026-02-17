@@ -1,28 +1,28 @@
-/*--------------------------------------------------
+/*-----------------------------------------------
 	*** Copyright (c) 2012-2026 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
---------------------------------------------------*/
+-----------------------------------------------*/
 /*
 	HOW IT WORKS:
-		* Looks for the current set language and translates all the strings that are given.
-		* If a string isn't translated, it will automatically default to English.
-		* When updated while in a map, it will refresh all the menus, but some menus require a map restart!
+		* Detects the current language and translates all available strings.
+		* If a string is missing, it automatically falls back to English.
+		* When updated during a map session, most menus will refresh automatically while some may require a map restart.
 	
 	HOW TO CONTRIBUTE:
-		* Make any edits in any language you would like.
-		* If a line doesn't exist in your language, then copy & paste it from the default (English) list.
-		* Once you are done translating or editing, you can push the edited file on GitHub and create pull request.
-		* I will then review it and merge it with the base and include it with the next update on Workshop.
-		* NOTE: Over time more lines will be added in the default (English) list. You are welcome to check back whenever and copy & paste any new lines that added and translate it.
+		* Edit or add translations for any language you would like.
+		* If a line is missing in your language, copy it from the default (English) list.
+		* Once you are done translating or editing, push the updated file to GitHub and open a pull request.
+		* I will review and merge the changes into the base, which will be included in the next update on Workshop.
+		* NOTE: Over time new lines may be added in the default (English) list. Feel free to check back periodically and translate any new entries.
 	
-	Q: I would like to translate and my language isn't listed below =(
-	A: No worries! Just simply contact me (DrVrej) and I will setup a profile for your language!
+	Q: My language isn't listed, can I still translate?!
+	A: No worries! Simply contact me (DrVrej) and I will setup a profile for your language!
 	
-	Q: Someone has already translated my language, how can I contribute now?
-	A: Go over the existing translations and fix any errors. Also compare it with the English version and make sure all lines are updated!
+	Q: My language is already translated, how can I contribute?
+	A: Review the existing translations, fix any errors, and compare them with the English version to ensure all lines are up to date!
 	
-	Thank you everyone that contributed!
+	Thank you to everyone who has contributed!
 */
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !CLIENT then return end
@@ -2255,7 +2255,7 @@ local strings_turkish = {
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- ///// WARNING: Don't touch anything below this line! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// IMPLEMENTATION BELOW — Don't change anything below! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

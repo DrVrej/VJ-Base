@@ -1,8 +1,8 @@
-/*--------------------------------------------------
+/*-----------------------------------------------
 	*** Copyright (c) 2012-2026 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
---------------------------------------------------*/
+-----------------------------------------------*/
 if !CLIENT then return end
 local colorBlue = Color(30, 200, 255)
 local colorYellow = Color(255, 215, 0)

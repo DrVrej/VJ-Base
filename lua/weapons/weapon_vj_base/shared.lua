@@ -1,14 +1,14 @@
-/*--------------------------------------------------
+/*-----------------------------------------------
 	*** Copyright (c) 2012-2026 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
---------------------------------------------------*/
+-----------------------------------------------*/
 SWEP.IsVJBaseWeapon = true
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Core & Information ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //SWEP.Base = "weapon_base"
-SWEP.PrintName = "VJ Weapon Base"
+SWEP.PrintName = "VJ Base Weapon"
 SWEP.Author = "DrVrej"
 SWEP.Contact = "http://steamcommunity.com/groups/vrejgaming"
 SWEP.Purpose = "Made for Players and NPCs."
@@ -119,21 +119,21 @@ SWEP.DryFireSoundPitch = VJ.SET(90, 100)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.DisableBulletCode = false -- The bullet won't spawn, this can be used when creating a projectile-based weapon
 SWEP.Primary.Damage = 5
-SWEP.Primary.PlayerDamage = "Same" -- For players only | "Same" = Same as self.Primary.Damage | "Double" = Double the self.Primary.Damage | number = Overrides self.Primary.Damage
+SWEP.Primary.PlayerDamage = "Same" -- "Same" = Same as self.Primary.Damage | "Double" = Double the self.Primary.Damage | number = Overrides self.Primary.Damage | PLAYERS ONLY
 SWEP.Primary.Automatic = true -- Should the weapon continue firing as long as the attack button is held down?
-SWEP.Primary.AllowInWater = false -- Can it be fired in water?
+SWEP.Primary.AllowInWater = false -- Can it be fired in water? | PLAYERS ONLY
 SWEP.Primary.NumberOfShots = 1 -- How many shots per attack?
 SWEP.Primary.Force = 5 -- Force applied on the object the bullet hits
-SWEP.Primary.Recoil = 0.3 -- How much recoil does the player get?
-SWEP.Primary.Cone = 7 -- How accurate is the bullet? (Players)
-SWEP.Primary.Delay = 0.1 -- Time until it can shoot again
-SWEP.Primary.Tracer = 1 -- Show tracer for every x bullets
+SWEP.Primary.Recoil = 0.3 -- How much recoil does each shot cause? | PLAYERS ONLY
+SWEP.Primary.Cone = 7 -- The firing spread | PLAYERS ONLY
+SWEP.Primary.Delay = 0.1 -- Time until it can shoot again | PLAYERS ONLY
+SWEP.Primary.Tracer = 1 -- Show tracer for every x bullets | 1 = Show tracer for every bullet
 SWEP.Primary.TracerType = "Tracer" -- Tracer type (Examples: AR2)
 SWEP.Primary.TakeAmmo = 1 -- How much ammo should it take from the clip after each shot? | 0 = Unlimited clip
 SWEP.Primary.Ammo = "SMG1" -- Ammo type
 SWEP.Primary.ClipSize = 30 -- Max amount of rounds per clip
-SWEP.Primary.PickUpAmmoAmount = "Default" -- How much ammo should the player get when the gun is picked up? | "Default" = 3 Clips
-SWEP.AnimTbl_PrimaryFire = ACT_VM_PRIMARYATTACK
+SWEP.Primary.PickUpAmmoAmount = "Default" -- How much ammo should the gun supply when picked up? | "Default" = 3 Clips | PLAYERS ONLY
+SWEP.AnimTbl_PrimaryFire = ACT_VM_PRIMARYATTACK -- Firing animation | PLAYERS ONLY
 	-- ====== Sounds ====== --
 SWEP.Primary.Sound = {}
 SWEP.Primary.SoundLevel = 80
@@ -147,7 +147,7 @@ SWEP.Primary.DistantSoundVolume = 1
 	-- ====== Effects ====== --
 SWEP.PrimaryEffects_MuzzleFlash = true
 SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full"}
-SWEP.PrimaryEffects_MuzzleParticlesAsOne = false -- Should all the particles spawn together instead of picking only one?
+SWEP.PrimaryEffects_MuzzleParticlesAsOne = false -- Should all the particles spawn together instead of randomly picking one?
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = true
 SWEP.PrimaryEffects_ShellAttachment = "shell"
@@ -157,14 +157,17 @@ SWEP.PrimaryEffects_DynamicLightBrightness = 4
 SWEP.PrimaryEffects_DynamicLightDistance = 120
 SWEP.PrimaryEffects_DynamicLightColor = Color(255, 150, 60)
 	-- ====== Melee ====== --
-SWEP.IsMeleeWeapon = false -- Should this weapon be a melee weapon?
-SWEP.MeleeWeaponDistance = 60 -- If it's this close, it will attack
-SWEP.MeleeWeaponSound_Hit = "physics/flesh/flesh_impact_bullet1.wav" -- Sound it plays when it hits something
-SWEP.MeleeWeaponSound_Miss = "weapons/iceaxe/iceaxe_swing1.wav" -- Sound it plays when it misses (Doesn't hit anything)
+SWEP.IsMeleeWeapon = false
+SWEP.MeleeWeaponDistance = 60 -- How far the melee attack reaches | For NPCs this is also used as the distance to trigger the attack
+SWEP.MeleeWeaponSound_Hit = "physics/flesh/flesh_impact_bullet1.wav"
+SWEP.MeleeWeaponSound_Miss = "weapons/iceaxe/iceaxe_swing1.wav"
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- Use the functions below to customize certain parts of the base or to add new custom systems
+--
+-- Use the functions below to customize or add new systems and behaviors
+-- Use "self.BaseClass.FuncName(self)" or "baseclass.Get(baseName).FuncName(self)" to run the base code as well when overriding functions not listed below
+--
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Init() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -260,7 +263,7 @@ function SWEP:CustomOnRemove() end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- ///// WARNING: Don't touch anything below this line! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// BASE IMPLEMENTATION BELOW — Override with caution and only when necessary! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -306,7 +309,6 @@ function SWEP:Initialize()
 	-- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self.CustomOnInitialize then self:CustomOnInitialize() end
 	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end
-	if self.CustomOnInitialize then self:CustomOnInitialize() end
 	if self.CustomOnEquip then self.OnEquip = function(_, newOwner) self:CustomOnEquip(newOwner) end end
 	if self.CustomOnDeploy then self.OnDeploy = function() self:CustomOnDeploy() end end
 	if self.CustomBulletSpawnPosition then self.OnGetBulletPos = function() return self:CustomBulletSpawnPosition() end end

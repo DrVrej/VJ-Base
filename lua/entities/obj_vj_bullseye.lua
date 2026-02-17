@@ -1,8 +1,8 @@
-/*--------------------------------------------------
+/*-----------------------------------------------
 	*** Copyright (c) 2012-2026 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
---------------------------------------------------*/
+-----------------------------------------------*/
 AddCSLuaFile()
 
 ENT.Base 			= "base_entity"
@@ -10,7 +10,7 @@ ENT.Type 			= "ai"
 ENT.PrintName 		= "VJ Base Bullseye"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Information 	= "Target for VJ NPCs."
+ENT.Information 	= "Target for VJ Base NPCs."
 ENT.Category		= "VJ Base"
 
 ENT.IsVJBaseBullseye = true
@@ -23,14 +23,14 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.SolidMovementType = "Dynamic" -- Physics type to use (Set in initialize)
-ENT.CanToggle = false -- Mostly used for the Bullseye tool, allows you to activate/deactivate the bullseye
+ENT.SolidMovementType = "Dynamic" -- Physics type to use | Applied in initialize
+ENT.CanToggle = false -- Can it be toggled (activate/deactivate) by players by interacting with it? | Used by the Bullseye tool
 ENT.ToggleDisplayColors = true -- Should it color the bullseye based on the toggle state?
-ENT.ForceEntAsEnemy = false -- Set this to an NPC that should always override all other enemies and target this bullseye instead
+ENT.ForceEntAsEnemy = false -- Set this to an NPC that should always override all other enemies and target this bullseye instead | Used by the NPC Controller
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- ///// WARNING: Don't touch anything below this line! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// BASE IMPLEMENTATION BELOW — Override with caution and only when necessary! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -41,8 +41,6 @@ local sdDeactivated = "hl1/fvox/deactivated.wav"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	//self:SetModel("models/hunter/plates/plate.mdl")
-	//self:SetMoveType(MOVETYPE_NONE)
-	//self:SetSolid(SOLID_NONE)
 	if self.SolidMovementType == "Dynamic" then
 		self:PhysicsInit(SOLID_VPHYSICS)
 		self:SetMoveType(MOVETYPE_NONE)

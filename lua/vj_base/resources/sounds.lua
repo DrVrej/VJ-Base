@@ -1,8 +1,8 @@
-/*--------------------------------------------------
+/*-----------------------------------------------
 	*** Copyright (c) 2012-2026 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
---------------------------------------------------*/
+-----------------------------------------------*/
 //local SNDLVL_IDLE		= 60
 local SNDLVL_NORM 		= 75
 //local SNDLVL_TALKING	= 80
