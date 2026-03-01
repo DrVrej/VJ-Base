@@ -198,7 +198,7 @@ sound.Add({
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
 	pitch = PITCH_RANDOM,
-	sound = "^vj_base/weapons/mp40/single.wav"
+	sound = {"^vj_base/weapons/mp40/single1.wav", "^vj_base/weapons/mp40/single2.wav", "^vj_base/weapons/mp40/single3.wav", "^vj_base/weapons/mp40/single4.wav", "^vj_base/weapons/mp40/single5.wav"}
 })
 sound.Add({
 	name = "VJ.Weapon_MP40.BoltBack",
