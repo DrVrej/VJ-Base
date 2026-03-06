@@ -127,7 +127,7 @@ VJ.AddClientConVar("vj_npc_cont_hud", 1, "Display HUD when controlling NPCs")
 VJ.AddClientConVar("vj_npc_cont_cam_zoom_dist", 5, "Distance that the zoom moves between each interval")
 VJ.AddClientConVar("vj_npc_cont_cam_zoom_speed", 10, "How fast the camera zooms in & out")
 VJ.AddClientConVar("vj_npc_cont_cam_speed", 6, "How fast the camera moves (lerping)")
-VJ.AddClientConVar("vj_npc_cont_debug", 0, "Display developer entities")
+VJ.AddClientConVar("vj_npc_cont_debug", 0, "Display developer entities", 0, 1, false)
 VJ.AddClientConVar("vj_npc_cont_diewithnpc", 0, "Player should die with the NPC (Requires respawn!)")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC Client Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
