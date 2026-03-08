@@ -2083,6 +2083,7 @@ function ENT:DoEnemyAlert(ent)
 	end
 	eneData.TimeAcquired = curTime
 	eneData.VisibleTime = curTime
+	eneData.DistanceNearest = VJ.GetNearestDistance(self, ent, true)
 	self:OnAlert(ent)
 	if curTime > selfData.NextAlertSoundT then
 		self:PlaySoundSystem("Alert")
