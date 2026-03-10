@@ -210,7 +210,7 @@ function ENT:DealDamage(data, phys)
 				dmgPos = parent:GetPos()
 			end
 		end
-		hitEnts = VJ.ApplyRadiusDamage(attackEnt, attackEnt, dmgPos, selfData.RadiusDamageRadius, selfData.RadiusDamage, selfData.RadiusDamageType, ownerValid && !owner:IsPlayer(), selfData.RadiusDamageUseRealisticRadius, {DisableVisibilityCheck=selfData.RadiusDamageDisableVisibilityCheck, Force=selfData.RadiusDamageForce, UpForce=selfData.RadiusDamageForce_Up, DamageAttacker=owner:IsPlayer()})
+		hitEnts = VJ.ApplyRadiusDamage(attackEnt, self, dmgPos, selfData.RadiusDamageRadius, selfData.RadiusDamage, selfData.RadiusDamageType, ownerValid && !owner:IsPlayer(), selfData.RadiusDamageUseRealisticRadius, {DisableVisibilityCheck=selfData.RadiusDamageDisableVisibilityCheck, Force=selfData.RadiusDamageForce, UpForce=selfData.RadiusDamageForce_Up, DamageAttacker=owner:IsPlayer()})
 	end
 	
 	if selfData.DoesDirectDamage then
