@@ -284,7 +284,7 @@ function ENT:OnThinkActive()
 				-- If the enemy is very high up, then move away from it to help the gunner fire!
 				-- OR
 				-- If the enemy's height isn't very high AND the enemy is ( within run over distance OR far away), then move towards the enemy!
-				if (heightRatio > 0.15) or (heightRatio < 0.15 && ((eneData.Distance < selfData.Tank_RanOverDistance) or (eneData.Distance > selfData.Tank_DriveTowardsDistance))) then
+				if selfData.VJ_IsBeingControlled or (heightRatio > 0.15) or (heightRatio < 0.15 && ((eneData.Distance < selfData.Tank_RanOverDistance) or (eneData.Distance > selfData.Tank_DriveTowardsDistance))) then
 					-- Turning
 					if angDiffuse > 15 then
 						self:SetLocalAngles(self:GetLocalAngles() + Angle(0, selfData.Tank_TurningSpeed, 0))
@@ -295,7 +295,7 @@ function ENT:OnThinkActive()
 					end
 					
 					-- Movement : Have a little grace zone so it doesn't constantly switch between forward and backwards driving
-					if heightRatio > 0.15 or heightRatio < 0.1490 then
+					if selfData.VJ_IsBeingControlled or heightRatio > 0.15 or heightRatio < 0.1490 then
 						local driveSpeed = selfData.Tank_DrivingSpeed
 						local moveVel = self:GetForward()
 						moveVel:Rotate(Angle(0, selfData.Tank_AngleOffset, 0))
@@ -306,8 +306,8 @@ function ENT:OnThinkActive()
 							driveSpeed = driveSpeed * (1.1 + (1 - slopeFactor))
 						end
 						
-						-- Move away instead of towards the enemy!
-						if heightRatio > 0.15 then
+						-- Move backwards instead of forwards!
+						if selfData.Tank_IsReversing or (heightRatio > 0.15 and not selfData.VJ_IsBeingControlled) then
 							driveSpeed = -driveSpeed
 						end
 						
@@ -351,8 +351,13 @@ function ENT:SelectSchedule()
 		if selfData.VJ_IsBeingControlled then
 			if selfData.VJ_TheController:KeyDown(IN_FORWARD) then
 				selfData.Tank_Status = 0
+				selfData.Tank_IsReversing = false
+			elseif selfData.VJ_TheController:KeyDown(IN_BACK) then
+				selfData.Tank_Status = 0
+				selfData.Tank_IsReversing = true
 			else
 				selfData.Tank_Status = 1
+				selfData.Tank_IsReversing = false
 			end
 		else
 			local eneData = selfData.EnemyData
@@ -360,10 +365,12 @@ function ENT:SelectSchedule()
 				selfData.Tank_Status = 1
 			else
 				selfData.Tank_Status = 0
+				selfData.Tank_IsReversing = false
 			end
 		end
 	else
 		selfData.Tank_Status = 1
+		selfData.Tank_IsReversing = false
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
