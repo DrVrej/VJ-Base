@@ -1302,7 +1302,8 @@ function ENT:DoCoverTrace(startPos, endPos, acceptWorld, extraOptions)
 		start = startPos,
 		endpos = endPos,
 		filter = self,
-		mask = MASK_SHOT
+		mask = MASK_SHOT, // bit.bor(CONTENTS_SOLID, CONTENTS_WINDOW, CONTENTS_BLOCKLOS, CONTENTS_MOVEABLE, CONTENTS_MONSTER)
+		collisiongroup = COLLISION_GROUP_NPC -- Otherwise it will collide with debris, ground weapons, etc
 	})
 	local hitPos = tr.HitPos
 	local hitEnt = tr.Entity
@@ -1328,7 +1329,7 @@ function ENT:DoCoverTrace(startPos, endPos, acceptWorld, extraOptions)
 	if tr.HitWorld && startPos:Distance(hitPos) < 200 then
 		if setLastHiddenTime then self.LastHiddenZoneT = CurTime() + 20 end
 		return true, tr
-	-- Not a hiding zone: (Sphere found an enemy/NPC/Player) OR (World is NOT accepted as a hiding zone) OR (Trace ent is an enemy/NPC/Player) OR (End pos is far from the hit position)
+	-- Not a hiding zone: (Sphere found current enemy or a living entity) OR (World is NOT accepted as a hiding zone) OR (Trace ent is current enemy or a living entity or is moving fast) OR (Trace hit very close to the end position)
 	elseif sphereInvalidate or (!acceptWorld && tr.HitWorld) or (IsValid(hitEnt) && (hitEnt == ene or hitEnt.VJ_ID_Living or hitEnt:GetVelocity():LengthSqr() > 1000)) or endPos:Distance(hitPos) <= 10 then
 		if setLastHiddenTime then self.LastHiddenZoneT = 0 end
 		return false, tr
@@ -3226,7 +3227,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			local pickedSD = PICK(selfData.SoundTbl_Death)
 			if (pickedSD && math.random(1, selfData.DeathSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
-				selfData.CurrentDeathSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.DeathSoundLevel, self:GetSoundPitch(selfData.DeathSoundPitch))
+				(sdType or VJ.EmitSound)(self, pickedSD, selfData.DeathSoundLevel, self:GetSoundPitch(selfData.DeathSoundPitch))
 			end
 		end
 	elseif sdSet == "Gib" then

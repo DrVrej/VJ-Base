@@ -1000,6 +1000,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_Reload()
 	local owner = self:GetOwner()
+	if !IsValid(owner) then return end
 	owner.NextThrowGrenadeT = owner.NextThrowGrenadeT + 2
 	self:OnReload("Start")
 	if self.NPC_HasReloadSound then VJ.EmitSound(owner, self.NPC_ReloadSound, self.NPC_ReloadSoundLevel) end

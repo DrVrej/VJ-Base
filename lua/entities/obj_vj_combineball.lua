@@ -112,7 +112,7 @@ function ENT:OnCollision(data, phys)
 	local dataEnt = data.HitEntity
 	if IsValid(owner) then
 		if IsValid(dataEnt) && ((!dataEnt:IsNPC() && !dataEnt:IsPlayer()) or (dataEnt:IsNPC() && dataEnt:GetClass() != owner:GetClass() && (owner:IsPlayer() or (owner:IsNPC() && owner:Disposition(dataEnt) != D_LI))) or (dataEnt:IsPlayer() && dataEnt:Alive() && (owner:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !dataEnt:IsFlagSet(FL_NOTARGET))))) then
-			VJ.CreateSound(dataEnt, sdHit, 80)
+			VJ.EmitSound(dataEnt, sdHit, 80)
 			local dmgInfo = DamageInfo()
 			dmgInfo:SetDamage(self.DirectDamage)
 			dmgInfo:SetDamageType(self.DirectDamageType)
@@ -123,7 +123,7 @@ function ENT:OnCollision(data, phys)
 			dataEnt:TakeDamageInfo(dmgInfo, self)
 		end
 	else
-		VJ.CreateSound(dataEnt, sdHit, 80)
+		VJ.EmitSound(dataEnt, sdHit, 80)
 		local dmgInfo = DamageInfo()
 		dmgInfo:SetDamage(self.DirectDamage)
 		dmgInfo:SetDamageType(self.DirectDamageType)
