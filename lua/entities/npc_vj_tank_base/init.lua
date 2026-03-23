@@ -147,7 +147,6 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Tank_IsMoving = false
 ENT.Tank_Status = 1
-ENT.Tank_IsReversing = false
 ENT.Tank_NextLowHealthSparkT = 0
 ENT.Tank_NextRunOverSoundT = 0
 ENT.Tank_NextIdleParticles = 0
@@ -278,25 +277,37 @@ function ENT:OnThinkActive()
 			local eneData = selfData.EnemyData
 			local ene = eneData.Target
 			if IsValid(ene) then
+				local plyControlled = selfData.VJ_IsBeingControlled
 				local enePos = ene:GetPos()
 				local angEne = (enePos - myPos + vec80z):Angle()
 				local angDiffuse = self:Tank_AngleDiffuse(angEne.y, self:GetAngles().y + selfData.Tank_AngleOffset)
-				local heightRatio = (enePos.z - myPos.z) / myPos:Distance(Vector(enePos.x, enePos.y, myPos.z))
+				local heightRatio = plyControlled and 1 or ((enePos.z - myPos.z) / myPos:Distance(Vector(enePos.x, enePos.y, myPos.z)))
 				-- If the enemy is very high up, then move away from it to help the gunner fire!
 				-- OR
-				-- If the enemy's height isn't very high AND the enemy is ( within run over distance OR far away), then move towards the enemy!
-				if selfData.VJ_IsBeingControlled or (heightRatio > 0.15) or (heightRatio < 0.15 && ((eneData.Distance < selfData.Tank_RanOverDistance) or (eneData.Distance > selfData.Tank_DriveTowardsDistance))) then
+				-- If the enemy's height isn't very high AND the enemy is (within run over distance OR far away), then move towards the enemy!
+				if (heightRatio > 0.15) or (heightRatio < 0.15 && ((eneData.Distance < selfData.Tank_RanOverDistance) or (eneData.Distance > selfData.Tank_DriveTowardsDistance))) then
 					-- Turning
-					if angDiffuse > 15 then
-						self:SetLocalAngles(self:GetLocalAngles() + Angle(0, selfData.Tank_TurningSpeed, 0))
-						phys:SetAngles(self:GetAngles())
-					elseif angDiffuse < -15 then
-						self:SetLocalAngles(self:GetLocalAngles() + Angle(0, -selfData.Tank_TurningSpeed, 0))
-						phys:SetAngles(self:GetAngles())
+					if plyControlled then
+						local reverse = selfData.VJ_TheController:KeyDown(IN_BACK) and -1 or 1 -- If we are reversing, then turn the opposite way to make it easier for the player to control
+						if selfData.VJ_TheController:KeyDown(IN_MOVERIGHT) then
+							self:SetLocalAngles(self:GetLocalAngles() + Angle(0, -selfData.Tank_TurningSpeed * reverse, 0))
+							phys:SetAngles(self:GetAngles())
+						elseif selfData.VJ_TheController:KeyDown(IN_MOVELEFT) then
+							self:SetLocalAngles(self:GetLocalAngles() + Angle(0, selfData.Tank_TurningSpeed * reverse, 0))
+							phys:SetAngles(self:GetAngles())
+						end
+					else
+						if angDiffuse > 15 then
+							self:SetLocalAngles(self:GetLocalAngles() + Angle(0, selfData.Tank_TurningSpeed, 0))
+							phys:SetAngles(self:GetAngles())
+						elseif angDiffuse < -15 then
+							self:SetLocalAngles(self:GetLocalAngles() + Angle(0, -selfData.Tank_TurningSpeed, 0))
+							phys:SetAngles(self:GetAngles())
+						end
 					end
 					
 					-- Movement : Have a little grace zone so it doesn't constantly switch between forward and backwards driving
-					if selfData.VJ_IsBeingControlled or heightRatio > 0.15 or heightRatio < 0.1490 then
+					if heightRatio > 0.15 or heightRatio < 0.1490 then
 						local driveSpeed = selfData.Tank_DrivingSpeed
 						local moveVel = self:GetForward()
 						moveVel:Rotate(Angle(0, selfData.Tank_AngleOffset, 0))
@@ -307,9 +318,16 @@ function ENT:OnThinkActive()
 							driveSpeed = driveSpeed * (1.1 + (1 - slopeFactor))
 						end
 						
-						-- Move backwards instead of forwards!
-						if selfData.Tank_IsReversing or (heightRatio > 0.15 and !selfData.VJ_IsBeingControlled) then
-							driveSpeed = -driveSpeed
+						-- Determine whether to reverse or stay forward
+						if plyControlled then
+							if selfData.VJ_TheController:KeyDown(IN_BACK) then
+								driveSpeed = -driveSpeed
+							end
+						else
+							-- Move away instead of towards the enemy!
+							if heightRatio > 0.15 then
+								driveSpeed = -driveSpeed
+							end
 						end
 						
 						if selfData.VJ_DEBUG then VJ.DEBUG_Print(self, false, "Driving Speed = ", driveSpeed) end
@@ -350,15 +368,10 @@ function ENT:SelectSchedule()
 	
 	if eneValid then
 		if selfData.VJ_IsBeingControlled then
-			if selfData.VJ_TheController:KeyDown(IN_FORWARD) then
+			if selfData.VJ_TheController:KeyDown(IN_FORWARD) or selfData.VJ_TheController:KeyDown(IN_BACK) then
 				selfData.Tank_Status = 0
-				selfData.Tank_IsReversing = false
-			elseif selfData.VJ_TheController:KeyDown(IN_BACK) then
-				selfData.Tank_Status = 0
-				selfData.Tank_IsReversing = true
 			else
 				selfData.Tank_Status = 1
-				selfData.Tank_IsReversing = false
 			end
 		else
 			local eneData = selfData.EnemyData
@@ -366,12 +379,10 @@ function ENT:SelectSchedule()
 				selfData.Tank_Status = 1
 			else
 				selfData.Tank_Status = 0
-				selfData.Tank_IsReversing = false
 			end
 		end
 	else
 		selfData.Tank_Status = 1
-		selfData.Tank_IsReversing = false
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

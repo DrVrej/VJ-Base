@@ -1611,8 +1611,7 @@ function ENT:OnEntityCopyTableFinish(data)
 	data.Tank_NextRunOverSoundT = nil
 	data.Tank_NextIdleParticles = nil
 	data.Tank_FacingTarget = nil
-	data.Tank_ProperHeightShoot = nil
-	data.Tank_GunnerIsTurning = nil
+	data.Tank_ReachableHeight = nil
 	data.Tank_Shell_NextFireT = nil
 	data.Tank_Shell_Status = nil
 	data.Tank_TurningLerp = nil

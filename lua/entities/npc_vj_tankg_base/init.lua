@@ -23,6 +23,7 @@ ENT.Tank_AngleDiffuseFiringLimit = 5 -- Firing angle diffuse limit, useful for l
 	-- ====== Movement ====== --
 ENT.Tank_TurningSpeed = 5 -- How fast the gun moves as it's aiming towards an enemy
 	-- ====== Projectile Shell ====== --
+ENT.Tank_HasShellAttack = true
 ENT.Tank_Shell_FireMin = 350 -- If the enemy is closer than this number, than don't shoot!
 ENT.Tank_Shell_FireMax = ENT.SightDistance -- If the enemy is higher than this number, than don't shoot!
 ENT.Tank_Shell_NextFireTime = 0 -- Delay between each fire, triggered the moment when the shell leaves the tank | It can NOT even reload if this delay is active!
@@ -119,8 +120,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Tank_FacingTarget = false -- Is it facing the enemy?
-ENT.Tank_ProperHeightShoot = false -- Is the enemy position proper height for it to shoot?
-ENT.Tank_GunnerIsTurning = false
+ENT.Tank_ReachableHeight = false -- Is the enemy position proper height for it to shoot?
 ENT.Tank_Status = 0 -- 0 = Can fire | 1 = Can NOT fire
 ENT.Tank_Shell_NextFireT = 0
 ENT.Tank_TurningLerp = nil
@@ -142,6 +142,7 @@ function ENT:Init()
 	self.Tank_NextIdleParticles = CurTime() + 1
 	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
 	self:SetPhysicsDamageScale(0) -- Take no physics damage
+	if vj_npc_range:GetInt() == 0 then self.Tank_HasShellAttack = false end
 	self:Tank_Init()
 	if self.CustomInitialize_CustomTank then self:CustomInitialize_CustomTank() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 end
@@ -161,6 +162,7 @@ function ENT:OnThinkActive()
 	if selfData.VJ_NPC_Class != parent.VJ_NPC_Class then
 		selfData.VJ_NPC_Class = parent.VJ_NPC_Class
 	end
+	local turning = false
 	local ene = parent:GetEnemy()
 	self:SetEnemy(ene)
 	self:Tank_OnThinkActive()
@@ -168,17 +170,17 @@ function ENT:OnThinkActive()
 	
 	if selfData.Tank_Status == 0 then
 		if IsValid(ene) then
-			selfData.Tank_GunnerIsTurning = false
+			turning = false
 			local myPos = self:GetPos()
 			local enePos = ene:GetPos()
 			local angEne = (enePos - myPos):Angle()
 			local angDiffuse = self:Tank_AngleDiffuse(angEne.y, self:GetAngles().y + selfData.Tank_AngleOffset) -- Cannon looking direction
 			local heightRatio = (enePos.z - myPos.z) / myPos:Distance(Vector(enePos.x, enePos.y, myPos.z))
-			selfData.Tank_ProperHeightShoot = math.abs(heightRatio) < 0.15 and true or false -- How high it can fire
+			selfData.Tank_ReachableHeight = math.abs(heightRatio) < 0.15 and true or false -- How high it can fire
 			-- If the enemy is within the barrel firing limit AND not already firing a shell AND its height is is reachable AND the enemy is not extremely close, then FIRE!
-			if math.abs(angDiffuse) < selfData.Tank_AngleDiffuseFiringLimit && selfData.Tank_ProperHeightShoot && selfData.EnemyData.Distance > selfData.Tank_Shell_FireMin then
+			if math.abs(angDiffuse) < selfData.Tank_AngleDiffuseFiringLimit && selfData.Tank_ReachableHeight && selfData.EnemyData.Distance > selfData.Tank_Shell_FireMin then
 				selfData.Tank_FacingTarget = true
-				if self:Visible(ene) && vj_npc_range:GetInt() == 1 then
+				if self.Tank_HasShellAttack && self:Visible(ene) then
 					self:Tank_PrepareShell()
 				end
 			-- Turn Left
@@ -186,23 +188,23 @@ function ENT:OnThinkActive()
 				if selfData.Tank_TurningLerp == nil then selfData.Tank_TurningLerp = self:GetLocalAngles() end
 				selfData.Tank_TurningLerp = LerpAngle(1, selfData.Tank_TurningLerp, selfData.Tank_TurningLerp + Angle(0, math.Clamp(angDiffuse, 0, selfData.Tank_TurningSpeed), 0))
 				self:SetLocalAngles(selfData.Tank_TurningLerp)
-				selfData.Tank_GunnerIsTurning = true
+				turning = true
 				selfData.Tank_FacingTarget = false
 			-- Turn Right
 			elseif angDiffuse < -selfData.Tank_AngleDiffuseFiringLimit then
 				if selfData.Tank_TurningLerp == nil then selfData.Tank_TurningLerp = self:GetLocalAngles() end
 				selfData.Tank_TurningLerp = LerpAngle(1, selfData.Tank_TurningLerp, selfData.Tank_TurningLerp + Angle(0, -math.Clamp(math.abs(angDiffuse), 0, selfData.Tank_TurningSpeed), 0))
 				self:SetLocalAngles(selfData.Tank_TurningLerp)
-				selfData.Tank_GunnerIsTurning = true
+				turning = true
 				selfData.Tank_FacingTarget = false
 			end
 		else
 			selfData.Tank_Status = 1
-			selfData.Tank_GunnerIsTurning = false
+			turning = false
 		end
 	end
 	
-	if selfData.Tank_GunnerIsTurning then self:Tank_PlaySoundSystem("Movement") else VJ.STOPSOUND(selfData.CurrentTankMovingSound) end
+	if turning then self:Tank_PlaySoundSystem("Movement") else VJ.STOPSOUND(selfData.CurrentTankMovingSound) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule()
@@ -255,7 +257,7 @@ end
 function ENT:Tank_FireShell()
 	local selfData = funcGetTable(self)
 	local ene = self:GetEnemy()
-	if !VJ_CVAR_AI_ENABLED or selfData.Dead or !selfData.Tank_ProperHeightShoot or !selfData.Tank_FacingTarget or !IsValid(ene) then return end // selfData.Tank_FacingTarget != true
+	if !VJ_CVAR_AI_ENABLED or selfData.Dead or !selfData.Tank_ReachableHeight or !selfData.Tank_FacingTarget or !IsValid(ene) then return end // selfData.Tank_FacingTarget != true
 	if self:Visible(ene) then
 		self:Tank_PlaySoundSystem("ShellFire")
 		
