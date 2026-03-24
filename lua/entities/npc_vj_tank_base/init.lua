@@ -10,7 +10,6 @@ include("vj_base/ai/base_tank.lua")
 ------ Core ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 200
-ENT.SightDistance = 10000
 ENT.MovementType = VJ_MOVETYPE_PHYSICS
 ENT.ForceDamageFromBosses = true
 ENT.DeathDelayTime = 2
@@ -21,7 +20,7 @@ ENT.CombatIdleSoundLevel = 70
 ENT.AlertSoundLevel = 70
 ENT.DeathSoundLevel = 100
 
-ENT.SoundTbl_Breath = "vj_base/vehicles/armored/engine_idle.wav"
+ENT.SoundTbl_Breath = "vj_base/vehicles/armored/engine_idle.wav" -- Recommended to use looping WAV sound!
 ENT.SoundTbl_Death = "VJ.Explosion"
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Tank Base ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -45,11 +44,12 @@ ENT.Tank_DeathDriverCorpse = false -- Driver corpse to spawn on death | false = 
 ENT.Tank_DeathDriverCorpseChance = 3 -- Chance that the driver corpse spawns | 1 = always
 ENT.Tank_DeathDecal = "Scorch" -- Decal to spawn under the tank's location on death
 	-- ====== Sounds ====== --
--- Driving movement sounds
+	-- Driving movement sounds
+	-- Recommended to use looping WAV sound!
 ENT.HasMoveSound = true
 ENT.Tank_SoundTbl_DrivingEngine = false
 ENT.Tank_SoundTbl_Track = false
--- Run over sound
+	-- Run over sound
 ENT.HasRunOverSound = true
 ENT.Tank_SoundTbl_RunOver = false
 
@@ -282,10 +282,11 @@ function ENT:OnThinkActive()
 				local angEne = (enePos - myPos + vec80z):Angle()
 				local angDiffuse = self:Tank_AngleDiffuse(angEne.y, self:GetAngles().y + selfData.Tank_AngleOffset)
 				local heightRatio = plyControlled and 1 or ((enePos.z - myPos.z) / myPos:Distance(Vector(enePos.x, enePos.y, myPos.z)))
+				local enemyIsHighUp = heightRatio > 0.15
 				-- If the enemy is very high up, then move away from it to help the gunner fire!
 				-- OR
 				-- If the enemy's height isn't very high AND the enemy is (within run over distance OR far away), then move towards the enemy!
-				if (heightRatio > 0.15) or (heightRatio < 0.15 && ((eneData.Distance < selfData.Tank_RanOverDistance) or (eneData.Distance > selfData.Tank_DriveTowardsDistance))) then
+				if enemyIsHighUp or (heightRatio < 0.15 && ((eneData.Distance < selfData.Tank_RanOverDistance) or (eneData.Distance > selfData.Tank_DriveTowardsDistance))) then
 					-- Turning
 					if plyControlled then
 						local reverse = selfData.VJ_TheController:KeyDown(IN_BACK) and -1 or 1 -- If we are reversing, then turn the opposite way to make it easier for the player to control
@@ -307,7 +308,7 @@ function ENT:OnThinkActive()
 					end
 					
 					-- Movement : Have a little grace zone so it doesn't constantly switch between forward and backwards driving
-					if heightRatio > 0.15 or heightRatio < 0.1490 then
+					if enemyIsHighUp or heightRatio < 0.1490 then
 						local driveSpeed = selfData.Tank_DrivingSpeed
 						local moveVel = self:GetForward()
 						moveVel:Rotate(Angle(0, selfData.Tank_AngleOffset, 0))
@@ -318,14 +319,18 @@ function ENT:OnThinkActive()
 							driveSpeed = driveSpeed * (1.1 + (1 - slopeFactor))
 						end
 						
-						-- Determine whether to reverse or stay forward
 						if plyControlled then
+							-- Increase speed if the player is holding the sprint key
+							if selfData.VJ_TheController:KeyDown(IN_SPEED) then
+								driveSpeed = driveSpeed * 1.8
+							end
+							-- Reverse if player is holding the back key
 							if selfData.VJ_TheController:KeyDown(IN_BACK) then
 								driveSpeed = -driveSpeed
 							end
 						else
 							-- Move away instead of towards the enemy!
-							if heightRatio > 0.15 then
+							if enemyIsHighUp then
 								driveSpeed = -driveSpeed
 							end
 						end

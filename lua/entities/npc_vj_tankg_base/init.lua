@@ -10,7 +10,6 @@ include("vj_base/ai/base_tank.lua")
 ------ Core ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 0
-ENT.SightDistance = 10000
 ENT.MovementType = VJ_MOVETYPE_STATIONARY
 ENT.CanTurnWhileStationary = false
 ENT.GodMode = true
@@ -20,7 +19,6 @@ ENT.EnemyDetection = false
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Tank_AngleOffset = 0 -- Use to offset the forward angle if the model's y-axis isn't facing the correct direction
 ENT.Tank_AngleDiffuseFiringLimit = 5 -- Firing angle diffuse limit, useful for larger barrel tanks by increasing it | lower number = More specific the barrel has to aim to fire
-	-- ====== Movement ====== --
 ENT.Tank_TurningSpeed = 5 -- How fast the gun moves as it's aiming towards an enemy
 	-- ====== Projectile Shell ====== --
 ENT.Tank_HasShellAttack = true
@@ -34,17 +32,18 @@ ENT.Tank_Shell_VelocitySpeed = 4000 -- How fast should the shell travel?
 ENT.Tank_Shell_MuzzleFlashPos = Vector(0, -235, 18)
 ENT.Tank_Shell_ParticlePos = Vector(-205, 0, 72)
 	-- ====== Sounds ====== --
--- Gun turning movement sound
+	-- Gun turning movement sound
+	-- Recommended to use looping WAV sound!
 ENT.HasMoveSound = true
 ENT.Tank_SoundTbl_Turning = false
 ENT.Tank_TurningSoundLevel = 80
 ENT.Tank_TurningSoundPitch = VJ.SET(100, 100)
--- Shell reload sound
+	-- Shell reload sound
 ENT.HasReloadShellSound = true
 ENT.Tank_SoundTbl_ReloadShell = false
 ENT.Tank_ReloadShellSoundLevel = 75
 ENT.Tank_ReloadShellSoundPitch = VJ.SET(90, 100)
--- Shell fire sound
+	-- Shell fire sound
 ENT.HasFireShellSound = true
 ENT.Tank_SoundTbl_FireShell = false
 ENT.Tank_FireShellSoundLevel = 140

@@ -7,21 +7,26 @@
 -- TANK BASE --
 ENT.VJ_ID_Boss = true
 ENT.SightAngle = 360
+ENT.SightDistance = 10000
 ENT.TurningSpeed = 0 -- Tanks shouldn't use Source Engine turning!
 ENT.HullType = HULL_LARGE
 ENT.HasMeleeAttack = false
-ENT.DisableWandering = true
-ENT.CanReceiveOrders = false
-ENT.DeathAllyResponse = "OnlyAlert"
-ENT.DamageAllyResponse = false
-ENT.CombatDamageResponse = false
-ENT.YieldToAlliedPlayers = false
+
+-- Immunities & Death
 ENT.Bleeds = false
 ENT.Immune_Dissolve = true
 ENT.Immune_Toxic = true
 ENT.Immune_Bullet = true
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE
 ENT.HasPainSounds = false
+
+-- Behaviors
+ENT.DisableWandering = true
+ENT.CanReceiveOrders = false
+ENT.DeathAllyResponse = "OnlyAlert"
+ENT.DamageAllyResponse = false
+ENT.CombatDamageResponse = false
+ENT.YieldToAlliedPlayers = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SCHEDULE_FACE(faceType, customFunc) return end -- Tanks do NOT turn like normal NPCs!
 ---------------------------------------------------------------------------------------------------------------------------------------------
