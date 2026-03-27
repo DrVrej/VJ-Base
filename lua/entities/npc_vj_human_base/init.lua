@@ -2746,7 +2746,7 @@ function ENT:Think()
 				if !plyControlled then
 					if eneValid then
 						-- Switch to melee
-						if !selfData.IsGuard && IsValid(selfData.WeaponInventory.Melee) && ((eneData.Distance < selfData.MeleeAttackDistance) or (eneData.Distance < 300 && curWep:Clip1() <= 0)) && (self:Health() > self:GetMaxHealth() * 0.25) && curWep != selfData.WeaponInventory.Melee then
+						if !selfData.IsGuard && IsValid(selfData.WeaponInventory.Melee) && !curWep.IsMeleeWeapon && ((eneData.Distance < selfData.MeleeAttackDistance) or (eneData.Distance < 300 && curWep:Clip1() <= 0)) && (self:Health() > self:GetMaxHealth() * 0.25) && curWep != selfData.WeaponInventory.Melee then
 							if self:GetWeaponState() == VJ.WEP_STATE_RELOADING then self:SetWeaponState() end -- Since the reloading can be cut off, reset it back to false, or else it can mess up its behavior!
 							//timer.Remove("wep_reload_reset" .. self:EntIndex()) -- No longer needed
 							selfData.WeaponInventoryStatus = VJ.WEP_INVENTORY_MELEE
@@ -3277,7 +3277,12 @@ function ENT:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
 	grenade:SetPos(spawnPos)
 	grenade:SetAngles(spawnAng)
 	
-	if !isLiveEnt then
+	if isLiveEnt then
+		-- Inactive HL2 grenade, activate it!
+		if grenade:GetClass() == "npc_grenade_frag" && grenade:GetInternalVariable("m_flDetonateTime") < 0 then
+			grenade:Input("SetTimer", grenade:GetOwner(), grenade:GetOwner(), fuseTime)
+		end
+	else
 		-- Set the fuse timers for all the different grenade entities
 		local gerClass = grenade:GetClass()
 		if gerClass == "obj_vj_grenade" then

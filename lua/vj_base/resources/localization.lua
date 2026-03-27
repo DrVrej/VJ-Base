@@ -163,8 +163,8 @@ local strings_english = {
 	["vjbase.menu.npc.settings.atk.melee.propint.onlypush"] = "Only Push",
 	["vjbase.menu.npc.settings.atk.wep.label"] = "Weapon Settings:",
 	["vjbase.menu.npc.settings.atk.wep"] = "Use Weapons",
-	["vjbase.menu.npc.settings.atk.wep.secondary"] = "Allow Weapon Secondary Fire",
-	["vjbase.menu.npc.settings.atk.wep.reload"] = "Reload Weapon",
+	["vjbase.menu.npc.settings.atk.wep.secondary"] = "Allow Secondary Fire",
+	["vjbase.menu.npc.settings.atk.wep.reload"] = "Allow Reloading",
 	["vjbase.menu.npc.settings.atk.wep.drop"] = "Drop Weapon On Death",
 	["vjbase.menu.npc.settings.atk.wep.ply.pickup"] = "Players Can Pickup Dropped Weapons",
 	

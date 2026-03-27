@@ -45,17 +45,20 @@ SWEP.NPC_FiringDistanceScale = 1 -- Changes how far the NPC can fire | 1 = No ch
 SWEP.NPC_FiringDistanceMax = 100000 -- Maximum firing distance | Clamped at the maximum sight distance of the NPC
 SWEP.NPC_FiringCone = 0.9 -- NPC can only fire when their target is within the cone (between -1 & 1) | -1 = 360° | 0 = 180° | 1 = Can fire when directly aiming at the target (nearly impossible)
 	-- ====== Reload ====== --
-SWEP.NPC_HasReloadSound = true -- Should it play a sound when the base detects the SNPC playing a reload animation?
-SWEP.NPC_ReloadSound = {} -- Sounds it plays when the base detects the SNPC playing a reload animation
+	-- Sounds to play when the NPC reloads
+SWEP.NPC_HasReloadSound = true
+SWEP.NPC_ReloadSound = false -- Can be string or table | false = Let base decide based on the hold type
 SWEP.NPC_ReloadSoundLevel = 60
 	-- ====== Before Fire Sound ====== --
-	-- NOTE: This only works with VJ Human NPCs!
-SWEP.NPC_BeforeFireSound = {} -- Plays a sound before the firing code is ran, usually in the beginning of the animation
+	-- Sounds to play when the NPC begins firing (Usually at the beginning of the animation)
+	-- NOTE: Only works with VJ Human NPCs!
+SWEP.NPC_BeforeFireSound = false -- Can be string or table | false = No sound
 SWEP.NPC_BeforeFireSoundLevel = 70
 SWEP.NPC_BeforeFireSoundPitch = VJ.SET(90, 100)
 	-- ====== Extra Firing Sound ====== --
-SWEP.NPC_ExtraFireSound = {} -- Plays an extra sound after it fires (Example: Bolt action sound)
-SWEP.NPC_ExtraFireSoundTime = 0.4 -- How much time until it plays the sound (After Firing)?
+	-- Sounds to play when the NPC fires | Example usage: Bolt action, shotgun pump, etc
+SWEP.NPC_ExtraFireSound = false -- Can be string or table | false = No sound
+SWEP.NPC_ExtraFireSoundTime = 0.4 -- Delay time until the sound is played
 SWEP.NPC_ExtraFireSoundLevel = 70
 SWEP.NPC_ExtraFireSoundPitch = VJ.SET(90, 100)
 	-- ====== Secondary Fire ====== --
@@ -64,7 +67,7 @@ SWEP.NPC_SecondaryFireEnt = "obj_vj_grenade_rifle" -- Entity to spawn when secon
 SWEP.NPC_SecondaryFireChance = 3 -- Chance that the secondary fire is used | 1 = always
 SWEP.NPC_SecondaryFireNext = VJ.SET(12, 15) -- How much time until the secondary fire can be used again?
 SWEP.NPC_SecondaryFireDistance = 1000 -- Max distance an enemy must be to initiate a secondary fire
-SWEP.NPC_SecondaryFireSound = {} -- Sounds to play when the secondary fire is used
+SWEP.NPC_SecondaryFireSound = false -- Can be string or table | false = No sound
 SWEP.NPC_SecondaryFireSoundLevel = 90
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Player Only ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -90,14 +93,14 @@ SWEP.BounceWeaponIcon = true -- Should the icon bounce in the weapon selection m
 	-- ====== Deployment ====== --
 SWEP.AnimTbl_Deploy = ACT_VM_DRAW
 SWEP.HasDeploySound = true -- Does the weapon have a deploy sound?
-SWEP.DeploySound = {} -- Sound played when the weapon is deployed
+SWEP.DeploySound = false -- Sounds to play when the weapon is deployed | Can be string or table | false = Let base decide based on the hold type
 	-- ====== Idle ====== --
 SWEP.HasIdleAnimation = true -- Does it have a idle animation?
 SWEP.AnimTbl_Idle = ACT_VM_IDLE
 	-- ====== Reload ====== --
 SWEP.AnimTbl_Reload = ACT_VM_RELOAD
-SWEP.HasReloadSound = false -- Does it have a reload sound?
-SWEP.ReloadSound = {}
+SWEP.HasReloadSound = false -- Can it play reload sounds?
+SWEP.ReloadSound = false -- Can be string or table | false = No sound
 SWEP.Reload_TimeUntilAmmoIsSet = 1
 	-- ====== Secondary Fire ====== --
 SWEP.Secondary.Automatic = false -- Should the weapon continue firing as long as the attack button is held down?
@@ -108,10 +111,11 @@ SWEP.Secondary.DefaultClip = 5 -- Default number of bullets in a clip | It will 
 SWEP.Secondary.Delay = false -- Time until it can shoot again | false = Base auto calculates the duration
 SWEP.AnimTbl_SecondaryFire = ACT_VM_SECONDARYATTACK
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Dry Fire (Players & NPCs) ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Dry Fire Sounds (Players & NPCs) ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.HasDryFireSound = true -- Should it play a sound when it's out of ammo? | Examples: Under water, out of ammo
-SWEP.DryFireSound = {} -- Sounds to play when the weapon is out of ammo
+-- Sounds to play when the weapon is out of ammo or can't shoot
+SWEP.HasDryFireSound = true
+SWEP.DryFireSound = false -- Can be string or table | false = Let base decide based on the hold type
 SWEP.DryFireSoundLevel = 50
 SWEP.DryFireSoundPitch = VJ.SET(90, 100)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -275,12 +279,11 @@ SWEP.Primary.DefaultClip = 0
 SWEP.Reloading = false
 SWEP.PLY_NextReloadT = 0
 SWEP.PLY_NextIdleAnimT = 0
-SWEP.InitHasIdleAnimation = false
 SWEP.NPC_NextDrySoundT = 0
 SWEP.NPC_NextPrimaryFireT = 0
 SWEP.NPC_AnimationSet = VJ.ANIM_SET_CUSTOM
 SWEP.NPC_SecondaryFireNextT = 0
-SWEP.LastOwner = NULL
+SWEP.OwnerIsNPC = false
 SWEP.InitTime = 0 -- Holds the CurTime that it was spawned at, used to make sure spawned weapons can be given to the player without needing to press USE on it
 
 local metaEntity = FindMetaTable("Entity")
@@ -291,7 +294,7 @@ local metaNPC = FindMetaTable("NPC")
 local funcGetActiveWeapon = metaNPC.GetActiveWeapon
 --
 local metaAngle = FindMetaTable("Angle")
-
+--
 local vj_wep_muzzleflash = GetConVar("vj_wep_muzzleflash")
 local vj_wep_muzzleflash_light = GetConVar("vj_wep_muzzleflash_light")
 local vj_wep_shells = GetConVar("vj_wep_shells")
@@ -302,7 +305,8 @@ function SWEP:Initialize()
 	self.InitTime = CurTime()
 	self.PrimaryEffects_ShellType = oldShells[self.PrimaryEffects_ShellType] or self.PrimaryEffects_ShellType -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
 	self:SetHoldType(self.HoldType)
-	if self.HasIdleAnimation then self.InitHasIdleAnimation = true end
+	self:SetClip1(self.Primary.ClipSize)
+	self.Primary.DefaultClip = self.Primary.ClipSize
 	self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
 	self:Init()
 	
@@ -382,10 +386,6 @@ function SWEP:SetDefaultValues(holdType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Equip(newOwner)
-	-- Do NOT set the clip if this is simply a weapon switch (Specifically for VJ NPCs)
-	if self.LastOwner == NULL then
-		self:SetClip1(self.Primary.ClipSize)
-	end
 	if newOwner:IsPlayer() then
 		local replacementWep = self.ReplacementWeapon
 		if replacementWep then
@@ -442,7 +442,6 @@ function SWEP:Equip(newOwner)
 		end
 	end
 	self:OnEquip(newOwner)
-	self.LastOwner = newOwner
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:EquipAmmo(ply)
@@ -452,7 +451,6 @@ function SWEP:EquipAmmo(ply)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Deploy()
-	if self.InitHasIdleAnimation == true then self.HasIdleAnimation = true end
 	local owner = self:GetOwner()
 	self:OnDeploy()
 	if owner:IsNPC() then
@@ -537,7 +535,7 @@ function SWEP:NPC_Think()
 	if !IsValid(self) then return end
 	local owner = metaEntity.GetOwner(self)
 	if !IsValid(owner) or !owner:IsNPC() or funcGetActiveWeapon(owner) != self then return end
-
+	
 	local selfData = funcGetTable(self)
 	selfData.MaintainWorldModel(self, selfData, owner)
 	selfData.OnThink(self)
@@ -584,8 +582,8 @@ function SWEP:NPC_CanFire(selfData, owner)
 			sightDir.z = 0
 			sightDir:Normalize()
 			//print(sightDir:Dot(aimDir))
-			//debugoverlay.Line(spawnPos, spawnPos + aimDir * 10000, 2, VJ.COLOR_RED, true) -- Red: Direction to enemy
-			//debugoverlay.Line(spawnPos, spawnPos + sightDir * 10000, 2, VJ.COLOR_GREEN, true) -- Green: Aim direction
+			//debugoverlay.Line(spawnPos, spawnPos + aimDir * 10000, 2, VJ.COLOR_RED, true) -- Direction to enemy
+			//debugoverlay.Line(spawnPos, spawnPos + sightDir * 10000, 2, VJ.COLOR_GREEN, true) -- Aim direction
 			return sightDir:Dot(aimDir) > selfData.NPC_FiringCone
 		end
 	end
@@ -652,8 +650,6 @@ function SWEP:NPCShoot_Primary()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttack()
-	//if self:GetOwner():KeyDown(IN_RELOAD) then return end
-	//self:GetOwner():SetFOV(45, 0.3)
 	//if !IsFirstTimePredicted() then return end
 
 	local selfData = funcGetTable(self)
@@ -666,8 +662,8 @@ function SWEP:PrimaryAttack()
 	local isNPC = owner:IsNPC()
 	local isPly = owner:IsPlayer()
 	
-	if selfData.Reloading or self:GetNextSecondaryFire() > curTime then return end
-	if isNPC && !ownerData.VJ_IsBeingControlled && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return end
+	if selfData.Reloading or self:GetNextSecondaryFire() > curTime then return end // owner:KeyDown(IN_RELOAD)
+	if isNPC && !ownerData.VJ_IsBeingControlled && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return
 	if !selfData.IsMeleeWeapon && ((isPly && !selfData.Primary.AllowInWater && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then
 		if SERVER then
 			local dryFireSound = VJ.PICK(selfData.DryFireSound)
@@ -679,8 +675,6 @@ function SWEP:PrimaryAttack()
 	end
 	if !selfData.CanPrimaryAttack(self) then return end
 	if selfData.OnPrimaryAttack(self, "Init") == true then return end
-
-	local ownersPos = metaEntity.GetPos(owner)
 	
 	if isNPC && ownerData.IsVJBaseSNPC then
 		timer.Simple(selfData.NPC_ExtraFireSoundTime, function()
@@ -713,6 +707,7 @@ function SWEP:PrimaryAttack()
 	-- MELEE WEAPON
 	if selfData.IsMeleeWeapon then
 		local meleeHit = false
+		local ownersPos = metaEntity.GetPos(owner)
 		for _, ent in ipairs(ents.FindInSphere(ownersPos, selfData.MeleeWeaponDistance + 20)) do
 			local entData = funcGetTable(ent)
 			if (entData.IsVJBaseBullseye && entData.VJ_IsBeingControlled) or (ent:IsPlayer() && entData.VJ_IsControllingNPC) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
@@ -745,54 +740,50 @@ function SWEP:PrimaryAttack()
 				self:EmitSound(meleeSd, 70, math.random(90, 100), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter)
 			end
 		end
-	-- REGULAR WEAPON (NON-MELEE)
-	else
-		if !selfData.Primary.DisableBulletCode then
-			local bullet = {}
-				bullet.Num = selfData.Primary.NumberOfShots
-				bullet.Tracer = selfData.Primary.Tracer
-				bullet.TracerName = selfData.Primary.TracerType
-				bullet.Force = selfData.Primary.Force
-				bullet.AmmoType = selfData.Primary.Ammo
-				bullet.Attacker = owner
-				bullet.Inflictor = self -- Sets both the GetInflictor and GetWeapon for the damage info
+	-- REGULAR BULLET WEAPON
+	elseif !selfData.Primary.DisableBulletCode then
+		local bullet = {}
+			bullet.Num = selfData.Primary.NumberOfShots
+			bullet.Tracer = selfData.Primary.Tracer
+			bullet.TracerName = selfData.Primary.TracerType
+			bullet.Force = selfData.Primary.Force
+			bullet.AmmoType = selfData.Primary.Ammo
+			bullet.Attacker = owner
+			bullet.Inflictor = self -- Sets both the GetInflictor and GetWeapon for the damage info
+			bullet.Callback = function(attacker, tr, dmginfo)
+				return selfData.OnPrimaryAttack_BulletCallback(self, attacker, tr, dmginfo)
+			end
 
-				-- Bullet spawn position & spread & damage
-				if isPly then
-					bullet.Spread = Vector((selfData.Primary.Cone / 60) / 4, (selfData.Primary.Cone / 60) / 4, 0)
-					bullet.Src = owner:GetShootPos()
-					bullet.Dir = owner:GetAimVector()
-					local plyDmg = selfData.Primary.PlayerDamage
-					if plyDmg == "Same" then
-						bullet.Damage = selfData.Primary.Damage
-					elseif plyDmg == "Double" then
-						bullet.Damage = selfData.Primary.Damage * 2
-					elseif isnumber(plyDmg) then
-						bullet.Damage = plyDmg
-					end
-				elseif owner.IsVJBaseSNPC then
-					local ene = owner:GetEnemy()
-					local spawnPos = selfData.GetBulletPos(self)
-					local aimPos = ownerData.GetAimPosition(owner, ene, spawnPos, 0)
-					local spread = ownerData.GetAimSpread(owner, ene, aimPos, selfData.NPC_CustomSpread or 1) // owner:GetPos():Distance(owner.VJ_TheController:GetEyeTrace().HitPos) -- Was used when NPC was being controlled
-					bullet.Spread = Vector(spread, spread, 0)
-					bullet.Dir = (aimPos - spawnPos):GetNormal()
-					bullet.Src = spawnPos
-					bullet.Damage = ownerData.ScaleByDifficulty(owner, selfData.Primary.Damage)
-				else
-					local spawnPos = selfData.GetBulletPos(self)
-					bullet.Spread = Vector(0.05, 0.05, 0)
-					bullet.Dir = (owner:GetEnemy():BodyTarget(spawnPos) - spawnPos):GetNormal()
-					bullet.Src = spawnPos
+			-- Bullet spawn position & spread & damage
+			if isPly then
+				bullet.Spread = Vector((selfData.Primary.Cone / 60) / 4, (selfData.Primary.Cone / 60) / 4, 0)
+				bullet.Src = owner:GetShootPos()
+				bullet.Dir = owner:GetAimVector()
+				local plyDmg = selfData.Primary.PlayerDamage
+				if plyDmg == "Same" then
 					bullet.Damage = selfData.Primary.Damage
+				elseif plyDmg == "Double" then
+					bullet.Damage = selfData.Primary.Damage * 2
+				elseif isnumber(plyDmg) then
+					bullet.Damage = plyDmg
 				end
-				
-				-- Callback
-				bullet.Callback = function(attacker, tr, dmginfo)
-					return selfData.OnPrimaryAttack_BulletCallback(self, attacker, tr, dmginfo)
-				end
-			owner:FireBullets(bullet)
-		end
+			elseif owner.IsVJBaseSNPC then
+				local ene = owner:GetEnemy()
+				local spawnPos = selfData.GetBulletPos(self)
+				local aimPos = ownerData.GetAimPosition(owner, ene, spawnPos, 0)
+				local spread = ownerData.GetAimSpread(owner, ene, aimPos, selfData.NPC_CustomSpread or 1) // owner:GetPos():Distance(owner.VJ_TheController:GetEyeTrace().HitPos) -- Was used when NPC was being controlled
+				bullet.Spread = Vector(spread, spread, 0)
+				bullet.Dir = (aimPos - spawnPos):GetNormal()
+				bullet.Src = spawnPos
+				bullet.Damage = ownerData.ScaleByDifficulty(owner, selfData.Primary.Damage)
+			else
+				local spawnPos = selfData.GetBulletPos(self)
+				bullet.Spread = Vector(0.05, 0.05, 0)
+				bullet.Dir = (owner:GetEnemy():BodyTarget(spawnPos) - spawnPos):GetNormal()
+				bullet.Src = spawnPos
+				bullet.Damage = selfData.Primary.Damage
+			end
+		owner:FireBullets(bullet)
 	end
 	
 	if !selfData.IsMeleeWeapon then -- Melee weapons shouldn't consume ammo!
@@ -804,7 +795,6 @@ function SWEP:PrimaryAttack()
 	end
 	
 	selfData.PrimaryAttackEffects(self, owner)
-	
 	if isPly then
 		//self:ShootEffects("ToolTracer") -- Deprecated
 		owner:ViewPunch(Angle(-selfData.Primary.Recoil, 0, 0))
@@ -965,7 +955,7 @@ end
 function SWEP:Reload()
 	if !IsValid(self) then return end
 	local owner = self:GetOwner()
-	if !IsValid(owner) or !owner:IsPlayer() or !owner:Alive() or owner:GetAmmoCount(self.Primary.Ammo) == 0 or self.Reloading or CurTime() < self.PLY_NextReloadT then return end // or !owner:KeyDown(IN_RELOAD)
+	if !IsValid(owner) or !owner:IsPlayer() or !owner:Alive() or owner:GetAmmoCount(self.Primary.Ammo) == 0 or self.Reloading or CurTime() < self.PLY_NextReloadT then return end
 	if self:Clip1() < self.Primary.ClipSize then
 		self.Reloading = true
 		self:OnReload("Start")
@@ -1007,16 +997,22 @@ function SWEP:NPC_Reload()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Holster(newWep)
-	//if CLIENT then return end
 	if self == newWep or self.Reloading then return end
 	hook.Remove("Think", self) -- Otherwise "NPC_Think" will just keep running!
-	self.HasIdleAnimation = false
+	self.PLY_NextIdleAnimT = CurTime() + 2
 	//self:SendWeaponAnim(ACT_VM_HOLSTER)
 	return self:OnHolster(newWep) != true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnDrop()
 	hook.Remove("Think", self) -- Otherwise "NPC_Think" will just keep running!
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:OwnerChanged()
+	local owner = self:GetOwner()
+	if IsValid(owner) then
+		self.OwnerIsNPC = owner:IsNPC()
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CanBePickedUpByNPCs()

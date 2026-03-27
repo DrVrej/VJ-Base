@@ -355,8 +355,10 @@ hook.Add("PlayerCanPickupWeapon", "VJ_PlayerCanPickupWeapon", function(ply, wep)
 	if wep.IsVJBaseWeapon then
 		if (CurTime() - wep.InitTime) < 0.15 then
 			return true
+		elseif wep.OwnerIsNPC && vj_npc_wep_ply_pickup:GetInt() == 0 then
+			return false
 		end
-		return vj_npc_wep_ply_pickup:GetInt() == 1 && ply:KeyPressed(IN_USE) && ply:GetEyeTrace().Entity == wep
+		return ply:KeyPressed(IN_USE) && ply:GetEyeTrace().Entity == wep
 	end
 end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
