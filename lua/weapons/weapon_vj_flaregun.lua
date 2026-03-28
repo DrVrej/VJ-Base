@@ -7,7 +7,7 @@ SWEP.Contact = "http://steamcommunity.com/groups/vrejgaming"
 SWEP.Category = "VJ Base"
 SWEP.Spawnable = true
 
-SWEP.ViewModel = "models/vj_base/weapons/v_flaregun.mdl"
+SWEP.ViewModel = "models/vj_base/weapons/c_flaregun.mdl"
 SWEP.WorldModel = "models/vj_base/weapons/w_flaregun.mdl"
 SWEP.HoldType = "revolver"
 SWEP.Slot = 1

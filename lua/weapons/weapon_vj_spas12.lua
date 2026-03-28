@@ -68,7 +68,6 @@ function SWEP:OnSecondaryAttack()
 		self.Primary.Cone = 20
 		self.Primary.NumberOfShots = 14
 		self.Primary.TakeAmmo = 2
-		self.NextIdle_PrimaryAttack = 1
 		self.AnimTbl_PrimaryFire = ACT_VM_SECONDARYATTACK
 	end
 	self:PrimaryAttack()
@@ -76,7 +75,6 @@ function SWEP:OnSecondaryAttack()
 	self.Primary.Cone = 12
 	self.Primary.NumberOfShots = 7
 	self.Primary.TakeAmmo = 1
-	self.NextIdle_PrimaryAttack = 0.8
 	self.AnimTbl_PrimaryFire = ACT_VM_PRIMARYATTACK
 	
 	self:SetNextSecondaryFire(CurTime() + 1)

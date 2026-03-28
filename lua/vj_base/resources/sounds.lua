@@ -160,6 +160,14 @@ sound.Add({
 	pitch = PITCH_RANDOM,
 	sound = "^vj_base/weapons/flaregun/single.wav"
 })
+sound.Add({
+	name = "VJ.Weapon_FlareGun.Reload",
+	channel = CHAN_ITEM,
+	volume = 1.0,
+	level = SNDLVL_NORM,
+	pitch = PITCH_NORM,
+	sound = "vj_base/weapons/flaregun/reload.wav"
+})
 
 -- Glock 17
 sound.Add({
