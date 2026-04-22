@@ -357,6 +357,8 @@ hook.Add("PlayerCanPickupWeapon", "VJ_PlayerCanPickupWeapon", function(ply, wep)
 			return true
 		elseif wep.OwnerIsNPC && vj_npc_wep_ply_pickup:GetInt() == 0 then
 			return false
+		elseif ply:GetInfoNum("vj_wep_autopickup", 0) == 1 then
+			return true
 		end
 		return ply:KeyPressed(IN_USE) && ply:GetEyeTrace().Entity == wep
 	end

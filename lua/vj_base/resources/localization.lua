@@ -336,6 +336,8 @@ local strings_english = {
 	-- Weapon Client Settings
 	["vjbase.menu.wep.settings.client"] = "Client Settings",
 	["vjbase.menu.wep.settings.client.notice"] = "Notice: These settings are client, meaning it won't change for other people!",
+	["vjbase.menu.wep.settings.client.toggle.autopickup"] = "Auto Pickup Weapons",
+	["vjbase.menu.wep.settings.client.toggle.autopickup.label"] = "Weapons will be automatically picked up without pressing the USE key",
 	["vjbase.menu.wep.settings.client.toggle.muzzle"] = "Create Muzzle Flashes",
 	["vjbase.menu.wep.settings.client.toggle.muzzlelight"] = "Create Muzzle Flash Dynamic Lights",
 	["vjbase.menu.wep.settings.client.toggle.muzzlelight.label"] = "Disabling muzzle flashes will also disable this",

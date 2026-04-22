@@ -88,7 +88,6 @@ end
 function SWEP:OnReload(status)
 	if status == "Finish" then
 		self:SetBodygroup(1, 0)
-		
 		local owner = self:GetOwner()
 		if IsValid(owner) && owner:IsPlayer() then
 			owner:GetViewModel():SetBodygroup(1, 0)

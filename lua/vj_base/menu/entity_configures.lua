@@ -304,14 +304,15 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_WEAPON_SETTINGS_CLIENT(panel)
 	panel:Help("#vjbase.menu.wep.settings.client.notice")
-	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_wep_muzzleflash 1\n vj_wep_shells 1\n vj_wep_muzzleflash_light 1"})
+	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_wep_autopickup 0\n vj_wep_muzzleflash 1\n vj_wep_shells 1\n vj_wep_muzzleflash_light 1"})
 	
+	panel:CheckBox("#vjbase.menu.wep.settings.client.toggle.autopickup", "vj_wep_autopickup")
+	panel:ControlHelp("#vjbase.menu.wep.settings.client.toggle.autopickup.label")
 	panel:CheckBox("#vjbase.menu.wep.settings.client.toggle.muzzle", "vj_wep_muzzleflash")
 	panel:CheckBox("#vjbase.menu.wep.settings.client.toggle.muzzlelight", "vj_wep_muzzleflash_light")
 	panel:ControlHelp("#vjbase.menu.wep.settings.client.toggle.muzzlelight.label")
 	panel:CheckBox("#vjbase.menu.wep.settings.client.toggle.shells", "vj_wep_shells")
 end
-
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PopulateToolMenu", "VJ_PopulateToolMenu_Configures", function()
 	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_ai", "#vjbase.menu.npc.settings.ai", "", "", VJ_NPC_SETTINGS_AI)
