@@ -202,6 +202,7 @@ function ENT:Initialize()
 	
 	-- Delay to avoid issues such as the position of the spawner being offset
 	timer.Simple(0.1, function()
+		if !IsValid(self) then return end
 		for spawnKey, spawnTbl in ipairs(self.EntitiesToSpawn) do
 			local spawnPos = spawnTbl.SpawnPosition
 			if istable(spawnPos) then -- !!!!!!!!!!!!!! DO NOT USE THESE VARIABLES !!!!!!!!!!!!!! [Backwards Compatibility!]
