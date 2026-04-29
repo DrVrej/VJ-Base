@@ -203,8 +203,10 @@ function ENT:SetControlledNPC(npc)
 	self:SetNPC(npc)
 	timer.Simple(0, function() -- This only needs to be 0 seconds because we just need a tick to pass
 		if IsValid(self) && IsValid(self.VJCE_NPC) then
-			self.VJCE_NPC.PauseAttacks = false
-			self.VJCE_NPC:ForceSetEnemy(self.VJCE_Bullseye, false)
+			if npc.IsVJBaseSNPC then
+				self.VJCE_NPC.PauseAttacks = false
+				self.VJCE_NPC:ForceSetEnemy(self.VJCE_Bullseye, false)
+			end
 			self.VJCE_NPC:SetEnemy(self.VJCE_Bullseye)
 		end
 	end)

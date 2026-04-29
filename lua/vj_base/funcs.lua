@@ -760,7 +760,7 @@ end
 		- dmgInfo = Damage information
 -----------------------------------------------------------]]
 function VJ.DamageSpecialEnts(attacker, ent, dmgInfo)
-	if ent:GetClass() == "npc_turret_floor" then
+	if ent:GetClass() == "npc_turret_floor" && !ent:GetInternalVariable("m_bSelfDestructing") then
 		ent:Fire("selfdestruct")
 		local phys = ent:GetPhysicsObject()
 		if IsValid(phys) then
