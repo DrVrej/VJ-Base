@@ -333,8 +333,6 @@ function ENT:SendDataToClient(reset)
 	
 	if !reset && IsValid(npc) then
 		self:SetNPCName(npc:GetName())
-		self:SetNPCHealth(npc:Health())
-		self:SetNPCMaxHealth(npc:GetMaxHealth())
 		self:SetNPCAttackMelee(npc.HasMeleeAttack && (((npc.IsAbleToMeleeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_MELEE) and 2) or 1) or 0)
 		self:SetNPCRangeAttack(npc.HasRangeAttack && (((npc.IsAbleToRangeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_RANGE) and 2) or 1) or 0)
 		self:SetNPCLeapAttack(npc.HasLeapAttack && (((npc.IsAbleToLeapAttack != true or npc.AttackType == VJ.ATTACK_TYPE_LEAP) and 2) or 1) or 0)

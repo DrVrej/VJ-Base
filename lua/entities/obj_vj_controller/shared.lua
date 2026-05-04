@@ -23,8 +23,6 @@ function ENT:SetupDataTables()
 	
 	-- NPC values
 	self:NetworkVar("String", "NPCName")
-	self:NetworkVar("Float", "NPCHealth")
-	self:NetworkVar("Float", "NPCMaxHealth")
 	self:NetworkVar("Int", "NPCAttackMelee")
 	self:NetworkVar("Int", "NPCRangeAttack")
 	self:NetworkVar("Int", "NPCLeapAttack")
@@ -219,9 +217,11 @@ function ENT:HUD()
 	local ply = LocalPlayer()
 	if !IsValid(self) or self:GetPlayer() != ply then return end
 	if !self:GetHUDEnabled() or ply:GetInfoNum("vj_npc_cont_hud", 1) == 0 then return end
+	local npc = self:GetNPC()
+	if !IsValid(npc) then return end
 	local srcW, srcH = ScrW(), ScrH()
-	local health = self:GetNPCHealth()
-	local healthMax = self:GetNPCMaxHealth()
+	local health = npc:Health()
+	local healthMax = npc:GetMaxHealth()
 	local atkMelee = self:GetNPCAttackMelee()
 	local atkRange = self:GetNPCRangeAttack()
 	local atkLeap = self:GetNPCLeapAttack()
