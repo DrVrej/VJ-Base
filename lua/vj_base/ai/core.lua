@@ -433,8 +433,8 @@ end
 				- "HaltOnly"	= This is ONLY a halt, not complete reset!		| Recommendation: Play normal get up anim
 				- "Unspecified"	= Ex: Food suddenly removed or moved far away	| Recommendation: Play normal get up anim
 				- "Devoured"	= Has completely devoured the food!				| Recommendation: Play normal get up anim and play a sound
-				- "Enemy"		= Has been alerted or detected an enemy			| Recommendation: Play scared get up anim
-				- "Injured"		= Has been injured by something					| Recommendation: Play scared get up anim
+				- "Enemy"		= Has been alerted or detected an enemy			| Recommendation: Play startled get up anim
+				- "Injured"		= Has been injured by something					| Recommendation: Play startled get up anim
 				- "Dead"		= Has died, usually called in "OnRemove"		| Recommendation: Do NOT play any animation!
 	Returns
 		- Boolean, ONLY used for "CheckFood", returning true will tell the base the possible food is valid

@@ -177,6 +177,7 @@ properties.Add("vj_pr_npc_sounds", {
 		if ent.HasSounds then
 			ply:ChatPrint(ent:GetName() .. "'s sounds are now muted.")
 			ent.HasSounds = false
+			ent:StopAllSounds()
 		else
 			ply:ChatPrint(ent:GetName() .. "'s sounds are no longer muted.")
 			ent.HasSounds = true

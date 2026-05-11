@@ -597,7 +597,7 @@ function ENT:OnThinkActive() end
 function ENT:OnFollow(status, ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Called every time a change occurs in the eating system
+	Called every time a change occurs in the idle dialogue system
 		- ent = The entity that it is checking OR speaking with
 		- status = Type of update that is occurring, holds one of the following states:
 			- "CheckEnt"	= Possible friendly entity found, should we speak to it? | return anything other than true to skip and not speak to this entity!
