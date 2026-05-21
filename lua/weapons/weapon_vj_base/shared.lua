@@ -163,6 +163,7 @@ SWEP.PrimaryEffects_DynamicLightColor = Color(255, 150, 60)
 	-- ====== Melee ====== --
 SWEP.IsMeleeWeapon = false
 SWEP.MeleeWeaponDistance = 60 -- How far the melee attack reaches | For NPCs this is also used as the distance to trigger the attack
+SWEP.MeleeWeaponDamageType = DMG_CLUB
 SWEP.MeleeWeaponSound_Hit = "physics/flesh/flesh_impact_bullet1.wav"
 SWEP.MeleeWeaponSound_Miss = "weapons/iceaxe/iceaxe_swing1.wav"
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -718,7 +719,7 @@ function SWEP:PrimaryAttack()
 				if ent.VJ_ID_Living then dmginfo:SetDamageForce(owner:GetForward() * ((dmgAmount + 100) * 70)) end
 				dmginfo:SetInflictor(owner)
 				dmginfo:SetAttacker(owner)
-				dmginfo:SetDamageType(DMG_CLUB)
+				dmginfo:SetDamageType(selfData.MeleeWeaponDamageType)
 				VJ.DamageSpecialEnts(owner, ent, dmginfo)
 				ent:TakeDamageInfo(dmginfo, owner)
 				if ent:IsPlayer() then
