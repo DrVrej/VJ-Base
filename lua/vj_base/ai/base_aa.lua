@@ -10,9 +10,9 @@ ENT.AA_NextMoveAnimTime = 0
 ENT.AA_CurrentMoveAnim = false -- false = No animation set | -1 = Don't play an animation
 ENT.AA_CurrentMoveAnimType = "Calm" -- "Calm" | "Alert"
 ENT.AA_CurrentMoveMaxSpeed = 0
-ENT.AA_CurrentMoveTime = 0
+ENT.AA_CurrentMoveTime = 0 -- This is an approximation of how long it should take for the NPC to reach its destination
 ENT.AA_CurrentMoveType = 0 -- 0 = Undefined | 1 = Wander | 2 = Regular Move-to | 3 = Chase Enemy Move-to
-ENT.AA_CurrentMovePos = nil
+ENT.AA_CurrentMovePos = nil -- Current position it's moving to | This is the best variable to check if the NPC is currently moving or not
 ENT.AA_CurrentMovePosDir = nil
 ENT.AA_CurrentMoveDist = -1 -- Used to make sure we are making progress in case something blocks its path
 ENT.AA_LastChasePos = nil
@@ -218,11 +218,14 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	end*/
 	
 	selfData.AA_CurrentMoveMaxSpeed = moveSpeed
-	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime()*2, self:GetVelocity():Length(), moveSpeed) end
+	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime() * 2, self:GetVelocity():Length(), moveSpeed) end
 	
 	-- Set the velocity
-	local velPos = (finalPos - startPos):GetNormal()*moveSpeed //+ self:GetUp()*velUp + self:GetForward()
-	local velTime = finalPos:Distance(startPos) / velPos:Length()
+	local velPos = (finalPos - startPos):GetNormal() * moveSpeed //+ self:GetUp()*velUp + self:GetForward()
+	local velTime = math.sqrt((finalPos.x - startPos.x)^2 + (finalPos.y - startPos.y)^2) / math.max((self:GetVelocity():Length() + selfData.AA_CurrentMoveMaxSpeed) * 0.5, 1) -- Use 2D distance for timing
+	if selfData.AA_MoveDecelerate > 1 then
+		velTime = velTime + (1 / selfData.AA_MoveDecelerate)
+	end
 	local velTimeCur = CurTime() + velTime
 	if velTimeCur == velTimeCur then -- Check for NaN
 		selfData.AA_CurrentMoveTime = velTimeCur
@@ -320,11 +323,14 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 	end
 	
 	selfData.AA_CurrentMoveMaxSpeed = moveSpeed
-	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime()*2, self:GetVelocity():Length(), moveSpeed) end
+	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime() * 2, self:GetVelocity():Length(), moveSpeed) end
 	
 	-- Set the velocity
-	local velPos = (finalPos - myPos):GetNormal()*moveSpeed
-	local velTime = finalPos:Distance(myPos) / velPos:Length()
+	local velPos = (finalPos - myPos):GetNormal() * moveSpeed
+	local velTime = math.sqrt((finalPos.x - myPos.x)^2 + (finalPos.y - myPos.y)^2) / math.max((self:GetVelocity():Length() + selfData.AA_CurrentMoveMaxSpeed) * 0.5, 1)
+	if selfData.AA_MoveDecelerate > 1 then
+		velTime = velTime + (1 / selfData.AA_MoveDecelerate)
+	end
 	local velTimeCur = CurTime() + velTime
 	if velTimeCur == velTimeCur then -- Check for NaN
 		selfData.AA_CurrentMoveTime = velTimeCur
@@ -361,7 +367,7 @@ function ENT:AA_ChaseEnemy(playAnim, moveType)
 	if self.Dead or (self.NextChaseTime > CurTime()) then return false end
 	local ene = self:GetEnemy()
 	if !IsValid(ene) then return false end
-	self:AA_MoveTo(ene, playAnim != false, moveType or "Alert", {FaceDestTarget=true, ChaseEnemy=true})
+	self:AA_MoveTo(ene, playAnim != false, moveType or "Alert", {FaceDestTarget = true, ChaseEnemy = true})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

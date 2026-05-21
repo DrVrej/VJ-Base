@@ -1919,9 +1919,13 @@ function ENT:Think()
 							moveSpeed = Lerp(FrameTime() * selfData.AA_MoveAccelerate, myVelLen, moveSpeed)
 						end
 						local velPos = selfData.AA_CurrentMovePosDir:GetNormal() * moveSpeed
-						local velTimeCur = curTime + (dist / velPos:Length())
-						if velTimeCur == velTimeCur then -- Check for NaN
-							selfData.AA_CurrentMoveTime = velTimeCur
+						//local velTimeCur = curTime + (dist / velPos:Length())
+						//if velTimeCur == velTimeCur then -- Check for NaN
+						//	selfData.AA_CurrentMoveTime = velTimeCur
+						//end
+						-- Time ran out but we are not there yet, extend it based on current speed
+						if curTime >= selfData.AA_CurrentMoveTime then
+							selfData.AA_CurrentMoveTime = curTime + (dist / math_max(myVelLen, 1))
 						end
 						self:SetLocalVelocity(velPos)
 					-- We are NOT making any progress, stop the movement
@@ -2175,7 +2179,9 @@ function ENT:Think()
 					if maxDist == "UseRangeDistance" then maxDist = selfData.RangeAttackMaxDistance end
 					if (eneDist < maxDist) && (eneDist > minDist) then
 						-- If the selfData.NextChaseTime is about to expire, then give it 0.5 delay so it does NOT chase!
+						local chaseDelayed = false
 						if (selfData.NextChaseTime - curTime) < 0.1 then
+							chaseDelayed = true
 							selfData.NextChaseTime = curTime + 0.5
 						end
 						self:MaintainIdleBehavior(2) -- Otherwise it won't play the idle animation and will loop the last PlayAct animation if range attack doesn't use animations!
@@ -2186,7 +2192,12 @@ function ENT:Think()
 							end
 						elseif moveTypeAA then
 							if selfData.AA_CurrentMoveType == 3 then self:AA_StopMoving() end -- Interrupt enemy chasing because we are in range!
-							if curTime > selfData.AA_CurrentMoveTime then self:AA_IdleWander(true, "Calm", {FaceDest = !selfData.ConstantlyFaceEnemy}) /*self:AA_StopMoving()*/ end -- Only face the position if ConstantlyFaceEnemy is false!
+							if !selfData.AA_CurrentMovePos then
+								self:AA_IdleWander(true, "Calm", {FaceDest = !selfData.ConstantlyFaceEnemy}) -- Only face the position if ConstantlyFaceEnemy is false!
+								if chaseDelayed then
+									selfData.NextChaseTime = math_min(curTime + 6, selfData.AA_CurrentMoveTime) -- Clamp to 6 seconds max
+								end
+							end
 						end
 					else
 						if selfData.CurrentScheduleName != "SCHEDULE_ALERT_CHASE" then self:MaintainAlertBehavior() end

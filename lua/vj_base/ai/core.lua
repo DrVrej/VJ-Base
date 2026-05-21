@@ -561,7 +561,7 @@ end
 function ENT:MaintainIdleBehavior(idleType) -- idleType: nil = Random | 1 = Wander | 2 = Idle Stand
 	local curTime = CurTime()
 	local selfData = funcGetTable(self)
-	if selfData.Dead or selfData.VJ_IsBeingControlled or (selfData.AttackAnimTime > curTime) or (selfData.NextIdleTime > curTime) or (selfData.AA_CurrentMoveTime > curTime) or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
+	if selfData.Dead or selfData.VJ_IsBeingControlled or (selfData.AttackAnimTime > curTime) or (selfData.NextIdleTime > curTime) or selfData.AA_CurrentMovePos or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
 	if self:IsGoalActive() or selfData.DisableWandering or selfData.IsGuard or selfData.MovementType == VJ_MOVETYPE_STATIONARY or !selfData.LastHiddenZone_CanWander or selfData.NextWanderTime > curTime or selfData.IsFollowing or selfData.MedicData.Status then

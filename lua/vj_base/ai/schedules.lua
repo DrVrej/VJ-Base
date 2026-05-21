@@ -108,7 +108,7 @@ function ENT:SCHEDULE_IDLE_STAND()
 	local selfData = funcGetTable(self)
 	if self:IsMoving() or selfData.NextIdleTime > CurTime() then return end
 	local navType = self:GetNavType(); if navType == NAV_JUMP or navType == NAV_CLIMB then return end
-	local moveType = selfData.MovementType; if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) && (selfData.AA_CurrentMoveTime > CurTime() or self:IsBusy("Activities")) then return end // self:GetVelocity():Length() > 0
+	local moveType = selfData.MovementType; if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) && (selfData.AA_CurrentMovePos or self:IsBusy("Activities")) then return end // self:GetVelocity():Length() > 0
 	self:MaintainIdleAnimation(self:GetIdealActivity() != ACT_IDLE)
 	return true
 end
