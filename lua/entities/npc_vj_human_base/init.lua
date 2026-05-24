@@ -4052,8 +4052,6 @@ function ENT:OnTakeDamage(dmginfo)
 				end
 			end
 			
-			self:PlaySoundSystem("Pain")
-			
 			-- Move away or hide behind object when damaged while enemy is valid | RESULT: May play a hiding animation OR move to take cover from enemy
 			local eneData = selfData.EnemyData
 			if !isPassive && selfData.CombatDamageResponse && IsValid(eneData.Target) && curTime > selfData.NextCombatDamageResponseT && !selfData.IsFollowing && !selfData.AttackType && !self:IsBusy() && curTime > selfData.TakingCoverT && eneData.Visible && self:GetWeaponState() != VJ.WEP_STATE_RELOADING && eneData.Distance < selfData.Weapon_MaxDistance then

@@ -1061,7 +1061,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 			resultAng = self:GetTurnAngle(self:GetAngles())
 			updateTurn = false
 		end
-		if faceTime != 0 then -- 0 = Face only this frame, so don't actually set turning data!
+		if faceTime then -- 0 = Face only this frame, so don't actually set turning data!
 			turnData.Type = visibleOnly and VJ.FACE_ENEMY_VISIBLE or VJ.FACE_ENEMY
 		end
 	-- Vector facing
@@ -1069,7 +1069,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 		//VJ.DEBUG_Print(self, "SetTurnTarget", "VECTOR")
 		self:ResetTurnTarget()
 		resultAng = self:GetTurnAngle((target - self:GetPos()):Angle())
-		if faceTime != 0 then -- 0 = Face only this frame, so don't actually set turning data!
+		if faceTime then -- 0 = Face only this frame, so don't actually set turning data!
 			turnData.Type = visibleOnly and VJ.FACE_POSITION_VISIBLE or VJ.FACE_POSITION
 			turnData.Target = target
 		end
@@ -1082,7 +1082,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 		else
 			resultAng = self:GetTurnAngle((target:GetPos() - self:GetPos()):Angle())
 		end
-		if faceTime != 0 then -- 0 = Face only this frame, so don't actually set turning data!
+		if faceTime then -- 0 = Face only this frame, so don't actually set turning data!
 			turnData.Type = visibleOnly and VJ.FACE_ENTITY_VISIBLE or VJ.FACE_ENTITY
 			turnData.Target = target
 		end
@@ -1098,11 +1098,11 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 		else -- Only set it, do NOT update it!
 			self:SetIdealYaw(resultAng.y)
 		end
-		if faceTime != 0 then -- 0 = Face only this frame, so don't actually set turning data!
+		if faceTime then -- 0 = Face only this frame, so don't actually set turning data!
 			turnData.StopOnFace = stopOnFace or false
 			turnData.LastYaw = resultAng.y
 			if faceTime != -1 then -- -1 = Face forever and never reset unless overridden
-				timer.Create("turn_reset" .. self:EntIndex(), faceTime or 0.2, 1, function()
+				timer.Create("turn_reset" .. self:EntIndex(), faceTime, 1, function()
 					self:ResetTurnTarget()
 				end)
 			end
@@ -1317,20 +1317,23 @@ function ENT:DoCoverTrace(startPos, endPos, acceptWorld, extraOptions)
 		debugoverlay.Text(hitPos, "DoCoverTrace - tr.HitPos", 1)
 	end
 	
+	-- Hiding zone: It hit world AND it's close, override "acceptWorld" option!
+	if tr.HitWorld && startPos:Distance(hitPos) < 200 then
+		if setLastHiddenTime then self.LastHiddenZoneT = CurTime() + 20 end
+		return true, tr
+	end
+	
 	-- Sometimes tracing isn't 100%, a tiny find in sphere check fixes this issue...
 	local sphereInvalidate = false
 	for _, v in ipairs(ents.FindInSphere(hitPos, 5)) do
 		if v == ene or v.VJ_ID_Living then
 			sphereInvalidate = true
+			break
 		end
 	end
 	
-	-- Hiding zone: It hit world AND it's close, override "acceptWorld" option!
-	if tr.HitWorld && startPos:Distance(hitPos) < 200 then
-		if setLastHiddenTime then self.LastHiddenZoneT = CurTime() + 20 end
-		return true, tr
 	-- Not a hiding zone: (Sphere found current enemy or a living entity) OR (World is NOT accepted as a hiding zone) OR (Trace ent is current enemy or a living entity or is moving fast) OR (Trace hit very close to the end position)
-	elseif sphereInvalidate or (!acceptWorld && tr.HitWorld) or (IsValid(hitEnt) && (hitEnt == ene or hitEnt.VJ_ID_Living or hitEnt:GetVelocity():LengthSqr() > 1000)) or endPos:Distance(hitPos) <= 10 then
+	if sphereInvalidate or (!acceptWorld && tr.HitWorld) or (IsValid(hitEnt) && (hitEnt == ene or hitEnt.VJ_ID_Living or hitEnt:GetVelocity():LengthSqr() > 1000)) or endPos:Distance(hitPos) <= 10 then
 		if setLastHiddenTime then self.LastHiddenZoneT = 0 end
 		return false, tr
 	else -- Hidden!
@@ -3046,7 +3049,8 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				local dur = CurTime() + ((((SoundDuration(pickedSD) > 0) and SoundDuration(pickedSD)) or 3.5) + 1)
+				local durLen = SoundDuration(pickedSD)
+				local dur = CurTime() + ((((durLen > 0) and durLen) or 3.5) + 1)
 				selfData.IdleSoundBlockTime = dur
 				selfData.NextAlertSoundT = CurTime() + math.random(1, 2)
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.OnPlayerSightSoundLevel, self:GetSoundPitch(selfData.OnPlayerSightSoundPitch))
@@ -3083,7 +3087,8 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				local dur = CurTime() + ((((SoundDuration(pickedSD) > 0) and SoundDuration(pickedSD)) or 2) + 1)
+				local durLen = SoundDuration(pickedSD)
+				local dur = CurTime() + ((((durLen > 0) and durLen) or 2) + 1)
 				selfData.NextIdleSoundT = dur
 				selfData.NextPainSoundT = dur
 				selfData.NextSuppressingSoundT = CurTime() + 4
@@ -3151,7 +3156,8 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				local dur = CurTime() + ((((SoundDuration(pickedSD) > 0) and SoundDuration(pickedSD)) or 2) + 1)
+				local durLen = SoundDuration(pickedSD)
+				local dur = CurTime() + ((((durLen > 0) and durLen) or 2) + 1)
 				selfData.NextPainSoundT = dur
 				selfData.NextAlertSoundT = dur
 				selfData.NextInvestigateSoundT = CurTime() + 2
@@ -3194,7 +3200,8 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				StopSD(selfData.CurrentIdleSound)
 				selfData.IdleSoundBlockTime = CurTime() + 1
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.PainSoundLevel, self:GetSoundPitch(selfData.PainSoundPitch))
-				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
+				local durLen = SoundDuration(pickedSD)
+				sdDur = (durLen > 0 and durLen) or sdDur
 			end
 			selfData.NextPainSoundT = CurTime() + sdDur
 		end
@@ -3214,7 +3221,8 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
+				local durLen = SoundDuration(pickedSD)
+				sdDur = (durLen > 0 and durLen) or sdDur
 				selfData.NextPainSoundT = CurTime() + sdDur
 				selfData.IdleSoundBlockTime = CurTime() + sdDur
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.DamageByPlayerSoundLevel, self:GetSoundPitch(selfData.DamageByPlayerPitch))
@@ -3329,7 +3337,8 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				selfData.IdleSoundBlockTime = CurTime() + ((SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or 3.5)
+				local durLen = SoundDuration(pickedSD)
+				selfData.IdleSoundBlockTime = CurTime() + ((durLen > 0 and durLen) or 3.5)
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.WeaponReloadSoundLevel, self:GetSoundPitch(selfData.WeaponReloadSoundPitch))
 			end
 		end
@@ -3358,7 +3367,8 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
+				local durLen = SoundDuration(pickedSD)
+				sdDur = (durLen > 0 and durLen) or sdDur
 				selfData.IdleSoundBlockTime = CurTime() + sdDur
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.DangerSightSoundLevel, self:GetSoundPitch(selfData.DangerSightSoundPitch))
 			end
@@ -3368,7 +3378,8 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 		if customSD then
 			StopSD(selfData.CurrentSpeechSound)
 			StopSD(selfData.CurrentIdleSound)
-			selfData.IdleSoundBlockTime = CurTime() + ((((SoundDuration(customSD) > 0) and SoundDuration(customSD)) or 2) + 1)
+			local durLen = SoundDuration(customSD)
+			selfData.IdleSoundBlockTime = CurTime() + ((((durLen > 0) and durLen) or 2) + 1)
 			selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, customSD, 80, self:GetSoundPitch(false))
 		end
 	end

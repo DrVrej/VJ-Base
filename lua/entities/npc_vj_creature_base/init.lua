@@ -2524,7 +2524,7 @@ function ENT:ExecuteMeleeAttack(isPropAttack)
 					-- Apply damage
 					if !selfData.DisableDefaultMeleeAttackDamageCode then
 						local dmgInfo = DamageInfo()
-						dmgInfo:SetDamage(self:ScaleByDifficulty(dmgAmount))
+						dmgInfo:SetDamage(dmgAmount)
 						dmgInfo:SetDamageType(selfData.MeleeAttackDamageType)
 						if ent.VJ_ID_Living then dmgInfo:SetDamageForce(self:GetForward() * ((dmgInfo:GetDamage() + 100) * 70)) end
 						dmgInfo:SetInflictor(self)
@@ -3095,8 +3095,6 @@ function ENT:OnTakeDamage(dmginfo)
 					end
 				end
 			end
-			
-			self:PlaySoundSystem("Pain")
 
 			if !isPassive && !IsValid(funcGetEnemy(self)) then
 				local canMove = true

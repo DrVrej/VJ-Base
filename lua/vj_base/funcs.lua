@@ -330,8 +330,11 @@ function VJ.AnimExists(ent, anim)
 	
 	if animType == 1 then -- Activity
 		local seqID = ent:SelectWeightedSequence(anim)
-		if (seqID == -1 or seqID == 0) && (ent:GetSequenceName(seqID) == "Not Found!" or ent:GetSequenceName(seqID) == "No model!") then
-			return false
+		if seqID == -1 or seqID == 0 then
+			local seqName = ent:GetSequenceName(seqID)
+			if seqName == "Not Found!" or seqName == "No model!" then
+				return false
+			end
 		end
 	else -- Sequence
 		if string_find(anim, "vjseq_") then anim = string_gsub(anim, "vjseq_", "") end
@@ -690,7 +693,7 @@ end
 	Returns
 		- table, the entities it damaged (Can be empty!)
 -----------------------------------------------------------]]
-local specialDmgEnts = {npc_strider=true, npc_combinedropship=true, npc_combinegunship=true, npc_helicopter=true} -- Entities that need special code to be damaged
+local specialDmgEnts = {npc_strider = true, npc_combinedropship = true, npc_combinegunship = true, npc_helicopter = true} -- Entities that need special code to be damaged
 --
 function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, dmgType, ignoreInnocents, realisticRadius, extraOptions, customFunc)
 	startPos = startPos or attacker:GetPos()
@@ -699,20 +702,20 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 	extraOptions = extraOptions or {}
 		local disableVisibilityCheck = extraOptions.DisableVisibilityCheck or false
 		local baseForce = extraOptions.Force or false
-	local dmgFinal = dmgMax
 	local hitEnts = {}
 	for _, ent in ipairs((type(extraOptions.UseConeDegree) == "number" and ents.FindInCone(startPos, extraOptions.UseConeDirection or attacker:GetForward(), dmgRadius, math_cos(math_rad(extraOptions.UseConeDegree or 90)))) or ents.FindInSphere(startPos, dmgRadius)) do
 		if (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) or ent.VJ_IsControllingNPC then continue end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
-		local nearestPos = ent:NearestPoint(startPos) -- From the enemy position to the given position
-		if realisticRadius != false then -- Decrease damage from the nearest point all the way to the enemy point then clamp it!
-			dmgFinal = math_min(math_max(dmgFinal * ((dmgRadius - startPos:Distance(nearestPos)) + 150) / dmgRadius, dmgMax / 2), dmgFinal)
-		end
-		
 		if disableVisibilityCheck or (!disableVisibilityCheck && (ent:VisibleVec(startPos) or ent:Visible(attacker))) then
+			local entClass = ent:GetClass()
 			local function DealDamage()
 				if (customFunc) then customFunc(ent) end
+				local dmgFinal = dmgMax
+				local nearestPos = ent:NearestPoint(startPos)
+				if realisticRadius != false then -- Decrease damage from the nearest point all the way to the enemy point then clamp it!
+					dmgFinal = math_min(math_max(dmgFinal * ((dmgRadius - startPos:Distance(nearestPos)) + 150) / dmgRadius, dmgMax / 2), dmgFinal)
+				end
 				hitEnts[#hitEnts + 1] = ent
-				if specialDmgEnts[ent:GetClass()] then
+				if specialDmgEnts[entClass] then
 					ent:TakeDamage(dmgFinal, attacker, inflictor)
 				else
 					local dmgInfo = DamageInfo()
@@ -724,11 +727,11 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 					if baseForce != false then
 						local force = baseForce
 						local forceUp = extraOptions.UpForce or false
-						if VJ.IsProp(ent) or ent:GetClass() == "prop_ragdoll" then
+						if VJ.IsProp(ent) or entClass == "prop_ragdoll" then
 							local phys = ent:GetPhysicsObject()
 							if IsValid(phys) then
 								if forceUp == false then forceUp = force / 9.4 end
-								if ent:GetClass() == "prop_ragdoll" then force = force * 1.5 end
+								if entClass == "prop_ragdoll" then force = force * 1.5 end
 								phys:ApplyForceCenter(((ent:GetPos() + ent:OBBCenter() + ent:GetUp() * forceUp) - startPos) * force)
 							end
 						else
@@ -745,7 +748,7 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 			if ent == attacker then
 				if extraOptions.DamageAttacker then DealDamage() end -- If it can't self hit, then skip
 			-- Other entities
-			elseif (ignoreInnocents == false) or (!ent:IsNPC() && !ent:IsPlayer()) or (ent:IsNPC() && ent:GetClass() != attacker:GetClass() && ent:Alive() && (attacker:IsPlayer() or (attacker:IsNPC() && attacker:Disposition(ent) != D_LI))) or (ent:IsPlayer() && ent:Alive() && (attacker:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !ent:IsFlagSet(FL_NOTARGET)))) then
+			elseif (ignoreInnocents == false) or (!ent:IsNPC() && !ent:IsPlayer()) or (ent:IsNPC() && entClass != attacker:GetClass() && ent:Alive() && (attacker:IsPlayer() or (attacker:IsNPC() && attacker:Disposition(ent) != D_LI))) or (ent:IsPlayer() && ent:Alive() && (attacker:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !ent:IsFlagSet(FL_NOTARGET)))) then
 				DealDamage()
 			end
 		end
@@ -841,11 +844,9 @@ function VJ.IsProp(ent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ.RoundToMultiple(num, multiple)
-	if math_round(num / multiple) == num / multiple then
-		return num
-	else
-		return math_round(num / multiple) * multiple
-	end
+	local div = num / multiple
+	local rounded = math_round(div)
+	return rounded == div and num or rounded * multiple
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ.Color2Byte(color)
