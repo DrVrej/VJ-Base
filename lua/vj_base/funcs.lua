@@ -521,6 +521,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 		result = ((targetPos - startPos):GetNormal()) * strength
 		predictProjSpeed = result:Length() * 0.8
 	elseif algorithmType == "Curve" then
+		local doDebug = self.VJ_DEBUG
 		local gravity = math.abs(physenv.GetGravity().z)
 		local dist = startPos:Distance(targetPos)
 		local midPoint = startPos + (targetPos - startPos) * 0.5 -- The halfway point of the start and end positions, basically the RIGHT side of a triangle
@@ -532,7 +533,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 			-- 4. Apply further adjustments if base detects that it won't hit the target (Usually happens when target is too far for the given arc strength)
 		local verticalAdjustment = math.abs(startPos.z - targetPos.z) + (applyDist and math_min(math_max(strength, -dist), dist) or strength) //+ math.Clamp(strength, -dist, dist / 4) //midPoint:Length() * (strength / (startPos:Distance(targetPos)))
 		if dist > (strength * 9.5) && dist > 2000 then -- Bulletin #4 above
-			if self.VJ_DEBUG then VJ.DEBUG_Print(self, "CalculateTrajectory", "warn", "Target is too far for the given arc strength, applying adjustment to avoid failure!") end
+			if doDebug then VJ.DEBUG_Print(self, "CalculateTrajectory", "warn", "Target is too far for the given arc strength, applying adjustment to avoid failure!") end
 			verticalAdjustment = verticalAdjustment + (dist * 0.1) //((dist * 0.001) * 30) + strength^(dist * 0.0003)
 		end
 		
@@ -544,7 +545,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 		})
 		//midPoint = tr.HitPos
 		if tr.Fraction != 1 then
-			if self.VJ_DEBUG then VJ.DEBUG_Print(self, "CalculateTrajectory", "warn", "Blocked by ceiling, decreasing arc to avoid hitting it!"); debugoverlay.Cross(tr.HitPos, 6, 5, VJ.COLOR_RED); debugoverlay.Text(tr.HitPos, "Ceiling - tr.HitPos", 5, false) end
+			if doDebug then VJ.DEBUG_Print(self, "CalculateTrajectory", "warn", "Blocked by ceiling, decreasing arc to avoid hitting it!"); debugoverlay.Cross(tr.HitPos, 6, 5, VJ.COLOR_RED); debugoverlay.Text(tr.HitPos, "Ceiling - tr.HitPos", 5, false) end
 			midPoint = tr.HitPos - self:GetUp() * 25
 		else
 			midPoint.z = midPoint.z + verticalAdjustment
@@ -552,7 +553,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 		
 		-- Failed to find enough trajectory space | EX: There is an object between the midPoint and targetPos
 		if (midPoint.z < startPos.z || midPoint.z < targetPos.z) then
-			if self.VJ_DEBUG then VJ.DEBUG_Print(self, "CalculateTrajectory", "warn", "Not enough space, applying fail case velocity!") end
+			if doDebug then VJ.DEBUG_Print(self, "CalculateTrajectory", "warn", "Not enough space, applying fail case velocity!") end
 			midPoint = targetPos -- Fail case, will still fail in many situations but is better than nothing!
 		end
 		
@@ -568,7 +569,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 		result.z = gravity * time1 -- How hard upwards to reach the apex at the right time
 		predictProjSpeed = result:Length() * 0.9
 		
-		if self.VJ_DEBUG then
+		if doDebug then
 			if time1 < 0.1 then VJ.DEBUG_Print(self, "CalculateTrajectory", "error", "Probably failed because the trajectory time is below 0.1!") end
 			local apexPos = startPos + (result * time1) -- The peak of the velocity
 			apexPos.z = midPoint.z
@@ -928,9 +929,10 @@ end*/
 -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 function metaEntity:CalculateProjectile(algorithmType, startPos, targetPos, strength)
 	local ene = self:GetEnemy()
+	local isVJ = self.IsVJBaseSNPC
 	if algorithmType == "Line" then
-		return VJ.CalculateTrajectory(self, (self.IsVJBaseSNPC and IsValid(ene)) and ene or NULL, "Line", startPos, self.IsVJBaseSNPC and 1 or targetPos, strength)
+		return VJ.CalculateTrajectory(self, (isVJ and IsValid(ene)) and ene or NULL, "Line", startPos, isVJ and 1 or targetPos, strength)
 	elseif algorithmType == "Curve" then
-		return VJ.CalculateTrajectory(self, (self.IsVJBaseSNPC and IsValid(ene)) and ene or NULL, "CurveOld", startPos, targetPos, strength)
+		return VJ.CalculateTrajectory(self, (isVJ and IsValid(ene)) and ene or NULL, "CurveOld", startPos, targetPos, strength)
 	end
 end

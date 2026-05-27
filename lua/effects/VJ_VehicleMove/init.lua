@@ -5,10 +5,10 @@
 -----------------------------------------------*/
 function EFFECT:Init(data)
 	local ent = data:GetEntity()
+	if !IsValid(ent) then return end
 	local origin = data:GetOrigin()
 	local scale = data:GetScale()
 	local emitter = ParticleEmitter(origin)
-	if !IsValid(ent) then return end
 	
 	-- Dust
 	local dust = emitter:Add("particles/smokey", origin)

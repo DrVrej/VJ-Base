@@ -52,19 +52,6 @@ function ENT:Initialize()
 	//ParticleEffectAttach("vj_rocket_idle2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 	util.SpriteTrail(self, 0, colorTrailRed, false, 1, 100, 5, 5 / ((2 + 10) * 0.5), "trails/smoke.vmt")
 
-	-- No longer needed, light is created by env_flare
-	/*self.StartLight1 = ents.Create("light_dynamic")
-	self.StartLight1:SetKeyValue("brightness", "0.01")
-	self.StartLight1:SetKeyValue("distance", "1500")
-	self.StartLight1:SetLocalPos(self:GetPos())
-	self.StartLight1:SetLocalAngles( self:GetAngles() )
-	self.StartLight1:Fire("Color", "255 0 0")
-	self.StartLight1:SetParent(self)
-	self.StartLight1:Spawn()
-	self.StartLight1:Activate()
-	self.StartLight1:Fire("TurnOn")
-	self:DeleteOnRemove(self.StartLight1)*/
-
 	local envFlare = ents.Create("env_flare")
 	envFlare:SetPos(self:GetPos())
 	envFlare:SetAngles(self:GetAngles())

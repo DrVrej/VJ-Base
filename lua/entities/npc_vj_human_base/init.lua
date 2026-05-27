@@ -2159,7 +2159,7 @@ function ENT:Initialize()
 	
 	-- Initialize variables
 	InitConvars(self)
-	self.NextProcessTime = vj_npc_processtime:GetInt()
+	self.NextProcessTime = vj_npc_processtime:GetFloat()
 	self.SelectedDifficulty = vj_npc_difficulty:GetInt()
 	if !self.RelationshipEnts then self.RelationshipEnts = {} end
 	if !self.RelationshipMemory then self.RelationshipMemory = {} end

@@ -1041,10 +1041,11 @@ end
 		- false, turning failed
 -----------------------------------------------------------]]
 function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
-	if self.MovementType == VJ_MOVETYPE_STATIONARY && !self.CanTurnWhileStationary then return false end
+	local selfData = funcGetTable(self)
+	if selfData.MovementType == VJ_MOVETYPE_STATIONARY && !selfData.CanTurnWhileStationary then return false end
 	local resultAng = false -- The final angle it's going to face
 	local updateTurn = true -- An override to disallow applying the angle now
-	local turnData = self.TurnData
+	local turnData = selfData.TurnData
 	-- Enemy facing
 	if target == "Enemy" then
 		//VJ.DEBUG_Print(self, "SetTurnTarget", "ENEMY")
@@ -1052,7 +1053,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 		local ene = funcGetEnemy(self)
 		-- If enemy is valid do normal facing otherwise return my angles because we didn't actually face an enemy
 		if IsValid(ene) then
-			if self.TurningUseAllAxis then
+			if selfData.TurningUseAllAxis then
 				resultAng = self:GetTurnAngle(((ene:GetPos() + ene:OBBCenter()) - self:GetPos()):Angle())
 			else
 				resultAng = self:GetTurnAngle((ene:GetPos() - self:GetPos()):Angle())
@@ -1077,7 +1078,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 	elseif IsValid(target) then
 		//VJ.DEBUG_Print(self, "SetTurnTarget", "ENTITY")
 		self:ResetTurnTarget()
-		if self.TurningUseAllAxis then
+		if selfData.TurningUseAllAxis then
 			resultAng = self:GetTurnAngle(((target:GetPos() + target:OBBCenter()) - self:GetPos()):Angle())
 		else
 			resultAng = self:GetTurnAngle((target:GetPos() - self:GetPos()):Angle())
@@ -1089,7 +1090,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 	end
 	if resultAng then
 		if updateTurn then
-			if self.TurningUseAllAxis then
+			if selfData.TurningUseAllAxis then
 				local myAng = self:GetAngles()
 				self:SetAngles(LerpAngle(FrameTime() * self:GetMaxYawSpeed(), myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
 			end
@@ -1160,8 +1161,7 @@ function ENT:OverrideMove(flInterval)
 	-- If (Nav type == NAV_JUMP and Goal type == GOALTYPE_NONE) then we are probably running a custom/forced jump! (non-task based jump)
 	if self:GetNavType() == NAV_JUMP && self:GetCurGoalType() == 0 then
 		if self:OnGround() then
-			local result = self:MoveJumpStop()
-			if result == AIMR_CHANGE_TYPE then -- Landed and completed ACT_LAND animation
+			if self:MoveJumpStop() == AIMR_CHANGE_TYPE then -- Landed and completed ACT_LAND animation
 				self:SetNavType(NAV_GROUND)
 			else -- AIMR_OK, still landing or playing ACT_LAND animation
 				self:MoveJumpExec()
@@ -2760,7 +2760,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodDecals(dmginfo, hitgroup)
 	local decals = self.BloodDecal
-	if !PICK(decals) then return end
+	local mainDecal = PICK(decals)
+	if !mainDecal then return end
 	
 	local dmgForce = dmginfo:GetDamageForce()
 	local dmgPos = dmginfo:GetDamagePosition()
@@ -2771,16 +2772,20 @@ function ENT:SpawnBloodDecals(dmginfo, hitgroup)
 	local tr = util.TraceLine({start = dmgPos, endpos = dmgPos + dmgForce:GetNormal() * clampedLength, filter = self})
 	local trNormalP = tr.HitPos + tr.HitNormal
 	local trNormalN = tr.HitPos - tr.HitNormal
-	util.Decal(PICK(decals), trNormalP, trNormalN, self)
+	util.Decal(mainDecal, trNormalP, trNormalN, self)
 	for _ = 1, 2 do
-		if math.random(1, 2) == 1 then util.Decal(PICK(decals), trNormalP + Vector(math.random(-70, 70), math.random(-70, 70), 0), trNormalN, self) end
+		if math.random(1, 2) == 1 then
+			util.Decal(PICK(decals), Vector(trNormalP.x + math.random(-70, 70), trNormalP.y + math.random(-70, 70), trNormalP.z), trNormalN, self)
+		end
 	end
 	
 	-- Kedni ayroun
 	if math.random(1, 2) == 1 then
-		local d2_endpos = dmgPos + Vector(0, 0, - clampedLength)
-		util.Decal(PICK(decals), dmgPos, d2_endpos, self)
-		if math.random(1, 2) == 1 then util.Decal(PICK(decals), dmgPos, d2_endpos + Vector(math.random(-120, 120), math.random(-120, 120), 0), self) end
+		local secEndPos = Vector(dmgPos.x, dmgPos.y, dmgPos.z - clampedLength)
+		util.Decal(PICK(decals), dmgPos, secEndPos, self)
+		if math.random(1, 2) == 1 then
+			util.Decal(PICK(decals), dmgPos, Vector(secEndPos.x + math.random(-120, 120), secEndPos.y + math.random(-120, 120), secEndPos.z), self)
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3465,22 +3470,24 @@ function ENT:GibOnDeath(dmginfo, hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSoundTrack()
-	if !self.HasSounds or !self.HasSoundTrack then return end
-	if math.random(1, self.SoundTrackChance) == 1 then
-		self.VJ_SD_PlayingMusic = true
+	local selfData = funcGetTable(self)
+	if !selfData.HasSounds or !selfData.HasSoundTrack then return end
+	if math.random(1, selfData.SoundTrackChance) == 1 then
+		selfData.VJ_SD_PlayingMusic = true
 		net.Start("vj_music_cl")
 			net.WriteEntity(self)
-			net.WriteString(PICK(self.SoundTbl_SoundTrack))
-			net.WriteFloat(self.SoundTrackVolume)
-			net.WriteFloat(self.SoundTrackPlaybackRate)
-			//net.WriteFloat(self.SoundTrackFadeOutTime)
+			net.WriteString(PICK(selfData.SoundTbl_SoundTrack))
+			net.WriteFloat(selfData.SoundTrackVolume)
+			net.WriteFloat(selfData.SoundTrackPlaybackRate)
+			//net.WriteFloat(selfData.SoundTrackFadeOutTime)
 		net.Broadcast()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CreateDeathLoot(dmginfo, hitgroup)
-	if math.random(1, self.DeathLootChance) == 1 then
-		local pickedEnt = PICK(self.DeathLoot)
+	local selfData = funcGetTable(self)
+	if math.random(1, selfData.DeathLootChance) == 1 then
+		local pickedEnt = PICK(selfData.DeathLoot)
 		if pickedEnt != false then
 			local ent = ents.Create(pickedEnt)
 			ent:SetPos(self:GetPos() + self:OBBCenter())
@@ -3489,8 +3496,8 @@ function ENT:CreateDeathLoot(dmginfo, hitgroup)
 			ent:Activate()
 			local phys = ent:GetPhysicsObject()
 			if IsValid(phys) then
-				local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
-				if self.DeathAnimationCodeRan then
+				local dmgForce = (selfData.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
+				if selfData.DeathAnimationCodeRan then
 					dmgForce = self:GetGroundSpeedVelocity()
 				end
 				phys:SetMass(1)

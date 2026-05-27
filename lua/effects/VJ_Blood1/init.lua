@@ -3,15 +3,14 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
-/*-- Information ---------------------
+/*--------------------------------------
 	-- Common Blood Types --
 	Red 		= Color(130, 19, 10)
 	Yellow 		= Color(255, 221, 35)
 
-	-- Code Implementation --
-	local blcolor = Color(130, 19, 10)
-	effectBlood:SetColor(VJ.Color2Byte(blcolor))
--------------------------------------- */
+	-- Example --
+	effectBlood:SetColor(VJ.Color2Byte(Color(130, 19, 10)))
+--------------------------------------*/
 local bAND = bit.band
 local bShiftR = bit.rshift
 --

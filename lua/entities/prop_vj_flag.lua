@@ -22,7 +22,6 @@ function ENT:Initialize()
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:ResetSequence("Idle")
-	
 	self.WaveSound = VJ.CreateSound(self, "vj_base/ambience/flag_loop.wav", 60)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

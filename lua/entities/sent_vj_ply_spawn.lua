@@ -29,17 +29,10 @@ ENT.Active = true -- Is this spawn point active?
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetModel("models/props_junk/sawblade001a.mdl")
-	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_NONE)
-	self:SetSolid(SOLID_VPHYSICS)
+	self:SetSolid(SOLID_BBOX)
 	self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 	self:SetUseType(SIMPLE_USE)
-
-	local phys = self:GetPhysicsObject()
-	if phys && IsValid(phys) then
-		phys:Wake()
-	end
-
 	self:SetColor(VJ.COLOR_GREEN)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
