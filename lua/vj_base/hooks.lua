@@ -8,6 +8,7 @@ local IsValid = IsValid
 local GetConVar = GetConVar
 local tonumber = tonumber
 local string_StartWith = string.StartWith
+local string_EndsWith = string.EndsWith
 local table_remove = table.remove
 
 local vj_npc_wep_ply_pickup = GetConVar("vj_npc_wep_ply_pickup")
@@ -291,7 +292,7 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 				end
 			end
 			
-			if !VJ_RecipientFilter then -- Just in case it wasn't created
+			if !VJ_RecipientFilter then -- In case it wasn't created
 				VJ_RecipientFilter = RecipientFilter()
 			end
 			VJ_RecipientFilter:AddAllPlayers()
@@ -300,24 +301,23 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
+	//print("---------------------------")
+	//PrintTable(data)
 	local ent = data.Entity
-	if IsValid(ent) then
+	if !IsValid(ent) then return end
+	local isNPC = ent:IsNPC()
+	if SERVER then
 		local isPly = ent:IsPlayer()
-		local isNPC = ent:IsNPC()
-		-- Investigate System
-		if SERVER && (isPly or isNPC) && data.SoundLevel >= 75 then
-			//print("---------------------------")
-			//PrintTable(data)
-			local quiet = (string_StartWith(data.OriginalSoundName, "player/footsteps") and (isPly && (ent:Crouching() or ent:KeyDown(IN_WALK)))) or false
-			if quiet != true && ent.Dead != true then
+		if (isPly or isNPC) && data.SoundLevel >= 75 then
+			local quiet = isPly && string_StartWith(data.OriginalSoundName, "player/footsteps") && (ent:Crouching() or ent:KeyDown(IN_WALK))
+			if !quiet && !ent.Dead then
 				ent.VJ_SD_InvestTime = CurTime()
 				ent.VJ_SD_InvestLevel = (data.SoundLevel * data.Volume) + (((data.Volume <= 0.4) and 15) or 0)
 			end
-		-- Disable the built-in footstep sounds for the player footstep sound for VJ NPCs unless specified otherwise
-			-- Plays only on client-side, making it useless to play material-specific
-		elseif isNPC && ent.IsVJBaseSNPC && (string.EndsWith(data.OriginalSoundName, "stepleft") or string.EndsWith(data.OriginalSoundName, "stepright")) then
-			return ent:MatFootStepQCEvent(data)
 		end
+	-- Disable model footstep sounds for VJ NPCs unless specified otherwise
+	elseif isNPC && ent.IsVJBaseSNPC && (string_EndsWith(data.OriginalSoundName, "stepleft") or string_EndsWith(data.OriginalSoundName, "stepright")) then
+		return ent:MatFootStepQCEvent(data)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------

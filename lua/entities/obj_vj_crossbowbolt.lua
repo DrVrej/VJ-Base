@@ -40,14 +40,14 @@ function ENT:OnCollision(data, phys)
 	local hitEnt = data.HitEntity
 	if IsValid(hitEnt) then
 		self.SoundTbl_OnCollide = sdHitEnt
-		-- Ignite small entities
+		-- Ignite small NPCs
 		if hitEnt:IsNPC() && hitEnt:GetHullType() == HULL_TINY then
 			hitEnt:Ignite(3)
 		end
 	else
 		local bolt = ents.Create("prop_dynamic")
 		bolt:SetModel("models/crossbow_bolt.mdl")
-		bolt:SetPos(data.HitPos + data.HitNormal + self:GetForward()*-15)
+		bolt:SetPos(data.HitPos + data.HitNormal + self:GetForward() * -15)
 		bolt:SetAngles(self:GetAngles())
 		bolt:Activate()
 		bolt:Spawn()

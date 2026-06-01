@@ -1394,59 +1394,26 @@ end
 	Returns
 		- number, the scaled number
 -----------------------------------------------------------]]
-local DIFFICULTY_NEANDERTHAL        = VJ.DIFFICULTY_NEANDERTHAL
-local DIFFICULTY_PUNY               = VJ.DIFFICULTY_PUNY
-local DIFFICULTY_TRIVIAL            = VJ.DIFFICULTY_TRIVIAL
-local DIFFICULTY_EASY               = VJ.DIFFICULTY_EASY
-local DIFFICULTY_BEGINNER           = VJ.DIFFICULTY_BEGINNER
-local DIFFICULTY_NORMAL             = VJ.DIFFICULTY_NORMAL
-local DIFFICULTY_DIFFICULT          = VJ.DIFFICULTY_DIFFICULT
-local DIFFICULTY_HARD               = VJ.DIFFICULTY_HARD
-local DIFFICULTY_EXPERT             = VJ.DIFFICULTY_EXPERT
-local DIFFICULTY_INSANE             = VJ.DIFFICULTY_INSANE
-local DIFFICULTY_IMPOSSIBLE         = VJ.DIFFICULTY_IMPOSSIBLE
-local DIFFICULTY_LUNATIC            = VJ.DIFFICULTY_LUNATIC
-local DIFFICULTY_NIGHTMARE          = VJ.DIFFICULTY_NIGHTMARE
-local DIFFICULTY_HELL_ON_EARTH      = VJ.DIFFICULTY_HELL_ON_EARTH
-local DIFFICULTY_TOTAL_ANNIHILATION = VJ.DIFFICULTY_TOTAL_ANNIHILATION
-local DIFFICULTY_EXTINCTION         = VJ.DIFFICULTY_EXTINCTION
+local difficultyScale = {
+	[VJ.DIFFICULTY_NEANDERTHAL] = 0.01,
+	[VJ.DIFFICULTY_PUNY] = 0.10,
+	[VJ.DIFFICULTY_TRIVIAL] = 0.25,
+	[VJ.DIFFICULTY_EASY] = 0.50,
+	[VJ.DIFFICULTY_BEGINNER] = 0.75,
+	[VJ.DIFFICULTY_DIFFICULT] = 1.25,
+	[VJ.DIFFICULTY_HARD] = 1.5,
+	[VJ.DIFFICULTY_EXPERT] = 1.75,
+	[VJ.DIFFICULTY_INSANE] = 2,
+	[VJ.DIFFICULTY_IMPOSSIBLE] = 2.5,
+	[VJ.DIFFICULTY_LUNATIC] = 3,
+	[VJ.DIFFICULTY_NIGHTMARE] = 3.5,
+	[VJ.DIFFICULTY_HELL_ON_EARTH] = 4.5,
+	[VJ.DIFFICULTY_TOTAL_ANNIHILATION] = 6,
+	[VJ.DIFFICULTY_EXTINCTION] = 10,
+}
 --
 function ENT:ScaleByDifficulty(num)
-	local dif = self.SelectedDifficulty
-	if dif == DIFFICULTY_NORMAL then
-		return num
-	elseif dif == DIFFICULTY_NEANDERTHAL then
-		return math_max(num * 0.01, 1)
-	elseif dif == DIFFICULTY_PUNY then
-		return math_max(num * 0.10, 1)
-	elseif dif == DIFFICULTY_TRIVIAL then
-		return math_max(num * 0.25, 1)
-	elseif dif == DIFFICULTY_EASY then
-		return math_max(num * 0.50, 1)
-	elseif dif == DIFFICULTY_BEGINNER then
-		return math_max(num * 0.75, 1)
-	elseif dif == DIFFICULTY_DIFFICULT then
-		return num * 1.25
-	elseif dif == DIFFICULTY_HARD then
-		return num * 1.5
-	elseif dif == DIFFICULTY_EXPERT then
-		return num * 1.75
-	elseif dif == DIFFICULTY_INSANE then
-		return num * 2
-	elseif dif == DIFFICULTY_IMPOSSIBLE then
-		return num * 2.5
-	elseif dif == DIFFICULTY_LUNATIC then
-		return num * 3
-	elseif dif == DIFFICULTY_NIGHTMARE then
-		return num * 3.5
-	elseif dif == DIFFICULTY_HELL_ON_EARTH then
-		return num * 4.5
-	elseif dif == DIFFICULTY_TOTAL_ANNIHILATION then
-		return num * 6
-	elseif dif == DIFFICULTY_EXTINCTION then
-		return num * 10
-	end
-	return num -- Unknown difficulty
+	return math_max(num * (difficultyScale[self.SelectedDifficulty] or 1), 1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local vecZN100 = Vector(0, 0, -100)

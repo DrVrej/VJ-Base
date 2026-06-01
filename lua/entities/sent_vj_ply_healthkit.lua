@@ -19,17 +19,13 @@ ENT.PhysicsSounds = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	local textColor = Color(0, 255, 0, 255)
-	local vec = Vector(90, 90, 90)
+	local vecOffset = Vector(7, -2, 6)
+	local angOffset = Angle(0, 90, 0)
 	
 	function ENT:Draw()
 		self:DrawModel()
-		
-		local myAng = self:GetAngles()
-		myAng:RotateAroundAxis(myAng:Right(), vec.x)
-		myAng:RotateAroundAxis(myAng:Up(), vec.y)
-		myAng:RotateAroundAxis(myAng:Forward(), vec.z)
-		cam.Start3D2D(self:GetPos() + self:GetForward() * 7 + self:GetUp() * 6 + self:GetRight() * 2, myAng, 0.07)
-		draw.SimpleText("Admin Health Kit", "DermaLarge", 31, -22, textColor, 1, 1)
+		cam.Start3D2D(self:LocalToWorld(vecOffset), self:LocalToWorldAngles(angOffset), 0.07)
+			draw.SimpleText("Admin Health Kit", "DermaLarge", 31, -22, textColor, 1, 1)
 		cam.End3D2D()
 	end
 end

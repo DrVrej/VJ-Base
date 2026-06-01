@@ -2263,12 +2263,12 @@ local strings_turkish = {
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 VJ.AddClientConVar("vj_language", "english", "Current language VJ Base is set to")
 VJ.AddClientConVar("vj_language_auto", 1, "Automatically set the language of VJ Base to the one selected by Garry's Mod")
-
+--
 local function add(name, str)
 	language.Add(name, str)
 end
-
-local tblGModtoVJ = {
+--
+local defToVJ = {
 	["en"] = "english",
 	["ru"] = "russian",
 	["de"] = "german",
@@ -2285,7 +2285,15 @@ local tblGModtoVJ = {
 	["ja"] = "japanese",
 	["vi"] = "vietnamese"
 }
-
+--
+local langLookup = {
+	russian = strings_russian,
+	lithuanian = strings_lithuanian,
+	spanish_lt = strings_spanish_latin,
+	schinese = strings_chinese_simplified,
+	turkish = strings_turkish
+}
+--
 function VJ.RefreshLanguage()
 	local conv = GetConVar("vj_language"):GetString()
 	
@@ -2293,40 +2301,28 @@ function VJ.RefreshLanguage()
 		-- Based on: https://wiki.facepunch.com/gmod/Addon_Localization
 		-- Skip if VJ Base is set to a language unsupported by Garry's Mod
 	if GetConVar("vj_language_auto"):GetInt() == 1 && conv != "armenian" then
-		local gmod_conv = GetConVar("gmod_language"):GetString()
-		local converted = tblGModtoVJ[gmod_conv]
+		local converted = defToVJ[GetConVar("gmod_language"):GetString()]
 		if converted then
 			RunConsoleCommand("vj_language", converted)
 			conv = converted
 		end
 	end
 	
-	-- Obtain the current language's strings
-	local langTable = strings_english
-	if conv == "russian" then
-		langTable = strings_russian
-	elseif conv == "lithuanian" then
-		langTable = strings_lithuanian
-	elseif conv == "spanish_lt" then
-		langTable = strings_spanish_latin
-	elseif conv == "schinese" then
-		langTable = strings_chinese_simplified
-	elseif conv == "turkish" then
-		langTable = strings_turkish
-	end
-	
-	-- First set the English strings in case some aren't overridden by the current language
+	-- Set English strings as default, also used as fallback for missing translations
 	for k, v in pairs(strings_english) do
-		add(k, v)
-	end
-	
-	-- Set the current language's strings to the game
-	for k, v in pairs(langTable) do
 		add(k, v)
 	end
 	
 	-- Deprecated strings
 	add("vjbase.menugeneral.default", "Default")
+	
+	-- Set the current language's strings to the game
+	local langTable = langLookup[conv] or strings_english
+	if langTable != strings_english then
+		for k, v in pairs(langTable) do
+			add(k, v)
+		end
+	end
 	
 	MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base: ", VJ.COLOR_CLIENT, "Language set to ", VJ.COLOR_GREEN, conv .. "\n")
 end
