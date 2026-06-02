@@ -31,7 +31,7 @@ ENT.CollisionDecal = "FadingScorch"
 ENT.DirectDamage = 200
 ENT.DirectDamageType = bit.bor(DMG_DISSOLVE, DMG_BLAST, DMG_SHOCK)
 ENT.SoundTbl_Idle = "weapons/physcannon/energy_sing_loop4.wav"
-ENT.SoundTbl_OnCollide = {"weapons/physcannon/energy_bounce1.wav", "weapons/physcannon/energy_bounce2.wav"}
+ENT.SoundTbl_OnCollide = "NPC_CombineBall.Impact"
 
 ENT.IdleSoundPitch = VJ.SET(100, 100)
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ end
 local colorWhite = Color(255, 255, 255, 255)
 --
 function ENT:Init()
-	timer.Simple(5, function() if IsValid(self) then self:Destroy() end end)
+	timer.Simple(4, function() if IsValid(self) then self:Destroy() end end)
 
 	self:DrawShadow(false)
 	self:ResetSequence("idle")
@@ -80,10 +80,10 @@ end
 function ENT:OnBounce(data, phys)
 	local owner = self:GetOwner()
 	if !IsValid(owner) then return end
-	local ownerIsVJ = owner.IsVJBaseSNPC
 	local myPos = self:GetPos()
-
+	
 	-- Find the closest enemy
+	local ownerIsVJ = owner.IsVJBaseSNPC
 	local closestDist = 1024
 	local target = false
 	for _, v in ipairs(ents.FindInSphere(myPos, closestDist)) do
@@ -104,49 +104,44 @@ function ENT:OnBounce(data, phys)
 		end
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
-local sdHit = {"weapons/physcannon/energy_disintegrate4.wav", "weapons/physcannon/energy_disintegrate5.wav"}
---
+---------------------------------------------------------------------------------------------------------------------------------------------\
 function ENT:OnCollision(data, phys)
+	self.NextPersistCollisionT = 0 -- We don't want any delays for this projectile
 	local owner = self:GetOwner()
-	local dataEnt = data.HitEntity
+	local ent = data.HitEntity
 	if IsValid(owner) then
-		if IsValid(dataEnt) && ((!dataEnt:IsNPC() && !dataEnt:IsPlayer()) or (dataEnt:IsNPC() && dataEnt:GetClass() != owner:GetClass() && (owner:IsPlayer() or (owner:IsNPC() && owner:Disposition(dataEnt) != D_LI))) or (dataEnt:IsPlayer() && dataEnt:Alive() && (owner:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !dataEnt:IsFlagSet(FL_NOTARGET))))) then
-			VJ.EmitSound(dataEnt, sdHit, 80)
+		if IsValid(ent) && ((!ent:IsNPC() && !ent:IsPlayer()) or (ent:IsNPC() && ent:GetClass() != owner:GetClass() && (owner:IsPlayer() or (owner:IsNPC() && owner:Disposition(ent) != D_LI))) or (ent:IsPlayer() && ent:Alive() && (owner:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !ent:IsFlagSet(FL_NOTARGET))))) then
+			VJ.EmitSound(ent, "NPC_CombineBall.KillImpact")
 			local dmgInfo = DamageInfo()
 			dmgInfo:SetDamage(self.DirectDamage)
 			dmgInfo:SetDamageType(self.DirectDamageType)
 			dmgInfo:SetAttacker(owner)
 			dmgInfo:SetInflictor(self)
 			dmgInfo:SetDamagePosition(data.HitPos)
-			VJ.DamageSpecialEnts(owner, dataEnt, dmgInfo)
-			dataEnt:TakeDamageInfo(dmgInfo, self)
+			VJ.DamageSpecialEnts(owner, ent, dmgInfo)
+			ent:TakeDamageInfo(dmgInfo, self)
 		end
 	else
-		VJ.EmitSound(dataEnt, sdHit, 80)
+		VJ.EmitSound(ent, "NPC_CombineBall.KillImpact")
 		local dmgInfo = DamageInfo()
 		dmgInfo:SetDamage(self.DirectDamage)
 		dmgInfo:SetDamageType(self.DirectDamageType)
 		dmgInfo:SetAttacker(self)
 		dmgInfo:SetInflictor(self)
 		dmgInfo:SetDamagePosition(data.HitPos)
-		VJ.DamageSpecialEnts(self, dataEnt, dmgInfo)
-		dataEnt:TakeDamageInfo(dmgInfo, self)
+		VJ.DamageSpecialEnts(self, ent, dmgInfo)
+		ent:TakeDamageInfo(dmgInfo, self)
 	end
 
-	if (dataEnt:IsNPC() or dataEnt:IsPlayer()) then return end
+	if (ent:IsNPC() or ent:IsPlayer()) then return end
 	
 	self:OnBounce(data, phys)
 
-	local dataF = EffectData()
-	dataF:SetOrigin(data.HitPos)
-	util.Effect("cball_bounce", dataF)
-
-	dataF = EffectData()
-	dataF:SetOrigin(data.HitPos)
-	dataF:SetNormal(data.HitNormal)
-	dataF:SetScale(50)
-	util.Effect("AR2Impact", dataF)
+	local effectData = EffectData()
+	effectData:SetOrigin(data.HitPos)
+	effectData:SetNormal(data.HitNormal)
+	effectData:SetRadius(16)
+	util.Effect("cball_bounce", effectData)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GravGunPunt(ply)
@@ -160,14 +155,14 @@ local color2 = Color(255, 255, 225, 64)
 --
 function ENT:OnDestroy(data, phys)
 	local myPos = self:GetPos()
-	effects.BeamRingPoint(myPos, 0.2, 12, 1024, 64, 0, color1, {material="sprites/lgtning.vmt", framerate=2, flags=0, speed=0, delay=0, spread=0})
-	effects.BeamRingPoint(myPos, 0.5, 12, 1024, 64, 0, color2, {material="sprites/lgtning.vmt", framerate=2, flags=0, speed=0, delay=0, spread=0})
+	effects.BeamRingPoint(myPos, 0.2, 12, 1024, 64, 0, color1, {material = "sprites/lgtning.vmt", framerate = 2, flags = 0, speed = 0, delay = 0, spread = 0})
+	effects.BeamRingPoint(myPos, 0.5, 12, 1024, 64, 0, color2, {material = "sprites/lgtning.vmt", framerate = 2, flags = 0, speed = 0, delay = 0, spread = 0})
+	util.ScreenShake(myPos, 20, 150, 1, 1250)
+	VJ.ApplyRadiusDamage(self, self, myPos, 400, 25, bit.bor(DMG_SONIC, DMG_BLAST), true, true, {DisableVisibilityCheck = true, Force = 80})
+	VJ.EmitSound(self, "NPC_CombineBall.Explosion")
+	sound.EmitHint(bit.bor(SOUND_COMBAT, SOUND_CONTEXT_EXPLOSION), myPos, 512, 0.5)
 
 	local effectData = EffectData()
 	effectData:SetOrigin(myPos)
 	util.Effect("cball_explode", effectData)
-
-	VJ.EmitSound(self, "weapons/physcannon/energy_sing_explosion2.wav", 150)
-	util.ScreenShake(myPos, 20, 150, 1, 1250)
-	VJ.ApplyRadiusDamage(self, self, myPos, 400, 25, bit.bor(DMG_SONIC, DMG_BLAST), true, true, {DisableVisibilityCheck=true, Force=80})
 end

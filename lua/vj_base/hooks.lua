@@ -15,7 +15,6 @@ local vj_npc_wep_ply_pickup = GetConVar("vj_npc_wep_ply_pickup")
 local metaEntity = FindMetaTable("Entity")
 local funcGetClass = metaEntity.GetClass
 local funcGetTable = metaEntity.GetTable
-
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local entInfos = {
 	-- Resistance NPCs
