@@ -340,8 +340,8 @@ VJ_ID_Vehicle					bool		Cars, tanks, APCs, helicopters, planes, boats, etc.
 VJ_ID_Aircraft					bool		Helicopters, jets, planes, drones, alien ships, etc.
 
 -- Sounds
-VJ_SD_InvestTime				number		Last time this NPC/Player has made a investigatable sound that should be heard by enemy NPCs
-VJ_SD_InvestLevel				number		Sound level of the last investigatable sound made by this NPC/Player | Used alongside "VJ_SD_InvestTime"
+VJ_SD_InvestTime				number		Last time this entity has made a investigatable sound that should be heard by enemy NPCs
+VJ_SD_InvestLevel				number		Sound level of the last investigatable sound made by this entity | Used alongside "VJ_SD_InvestTime"
 VJ_SD_PlayingMusic				bool		It's playing a soundtrack / music
 
 -- Controllers

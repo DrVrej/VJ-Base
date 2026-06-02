@@ -7,8 +7,7 @@ local CurTime = CurTime
 local IsValid = IsValid
 local GetConVar = GetConVar
 local tonumber = tonumber
-local string_StartWith = string.StartWith
-local string_EndsWith = string.EndsWith
+local string_sub = string.sub
 local table_remove = table.remove
 
 local vj_npc_wep_ply_pickup = GetConVar("vj_npc_wep_ply_pickup")
@@ -305,18 +304,16 @@ hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 	//PrintTable(data)
 	local ent = data.Entity
 	if !IsValid(ent) then return end
-	local isNPC = ent:IsNPC()
 	if SERVER then
-		local isPly = ent:IsPlayer()
-		if (isPly or isNPC) && data.SoundLevel >= 75 then
-			local quiet = isPly && string_StartWith(data.OriginalSoundName, "player/footsteps") && (ent:Crouching() or ent:KeyDown(IN_WALK))
-			if !quiet && !ent.Dead then
-				ent.VJ_SD_InvestTime = CurTime()
-				ent.VJ_SD_InvestLevel = (data.SoundLevel * data.Volume) + (((data.Volume <= 0.4) and 15) or 0)
-			end
+		local entData = funcGetTable(ent)
+		if data.SoundLevel < 75 or !entData.VJ_ID_Living or entData.Dead then return end
+		if ent:IsPlayer() && string_sub(data.OriginalSoundName, 1, 16) == "player/footsteps" && (ent:Crouching() or (ent:KeyDown(IN_WALK) && !ent:IsSprinting())) then -- Quiet player movement
+			return
 		end
+		entData.VJ_SD_InvestTime = CurTime()
+		entData.VJ_SD_InvestLevel = (data.SoundLevel * data.Volume) + (((data.Volume <= 0.4) and 15) or 0)
 	-- Disable model footstep sounds for VJ NPCs unless specified otherwise
-	elseif isNPC && ent.IsVJBaseSNPC && (string_EndsWith(data.OriginalSoundName, "stepleft") or string_EndsWith(data.OriginalSoundName, "stepright")) then
+	elseif ent:IsNPC() && ent.IsVJBaseSNPC && (string_sub(data.OriginalSoundName, -8) == "stepleft" or string_sub(data.OriginalSoundName, -9) == "stepright") then
 		return ent:MatFootStepQCEvent(data)
 	end
 end)
