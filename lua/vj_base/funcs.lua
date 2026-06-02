@@ -212,7 +212,6 @@ function VJ.TraceDirections(ent, trType, maxDist, requireFullDist, returnAsDict,
 	local trData = {start = entPosCentered, endpos = entPosCentered, filter = ent} -- For optimization purposes
 	local resultIndex = 1 -- For optimization purposes
 	if trType == "Quick" then
-		local result = returnAsDict and {Forward=false, Back=false, Left=false, Right=false, ForwardLeft=false, ForwardRight=false, BackLeft=false, BackRight=false} or {}
 		local result = returnAsDict and {Forward = false, Back = false, Left = false, Right = false, ForwardLeft = false, ForwardRight = false, BackLeft = false, BackRight = false} or {}
 		
 		-- Helper function for tracing a direction
@@ -854,7 +853,6 @@ end
 local RGB3, RGB2 = 7 / 255, 3 / 255
 --
 function VJ.Color2Byte(color)
-	return bShiftL(math_floor(color.r * 7 / 255), 5) + bShiftL(math_floor(color.g * 7 / 255), 2) + math_floor(color.b * 3 / 255)
 	return bShiftL(math_floor(color.r * RGB3), 5) + bShiftL(math_floor(color.g * RGB3), 2) + math_floor(color.b * RGB2)
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
