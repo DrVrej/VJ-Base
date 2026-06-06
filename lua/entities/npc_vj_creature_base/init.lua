@@ -79,7 +79,7 @@ ENT.Aquatic_AnimTbl_Alerted = ACT_SWIM -- Swimming animations to play while aler
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ AI & Relationship ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- What type of AI behavior is it?
+ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE
 ENT.IsGuard = false -- Should it guard its position? | Will attempt to stay around its guarding position
 ENT.NextProcessTime = 1 -- Cooldown between executions of essential performance-heavy AI components
 ENT.EnemyDetection = true -- Can it search and detect for enemies?
@@ -1242,9 +1242,9 @@ local function ApplyBackwardsCompatibility(self)
 	if self.Passive_RunOnDamage == false then self.DamageResponse = false end
 	if self.HideOnUnknownDamage == false then self.DamageResponse = "OnlySearch" end
 	if self.DisableTakeDamageFindEnemy == true then if self.HideOnUnknownDamage == false then self.DamageResponse = false else self.DamageResponse = "OnlyMove" end end
-	if self.CanFlinch == 0 then self.CanFlinch = false end
-	if self.CanFlinch == 1 then self.CanFlinch = true end
-	if self.CanFlinch == 2 then self.CanFlinch = "DamageTypes" end
+	if self.CanFlinch == 0 then self.CanFlinch = false
+	elseif self.CanFlinch == 1 then self.CanFlinch = true
+	elseif self.CanFlinch == 2 then self.CanFlinch = "DamageTypes" end
 	if self.BringFriendsOnDeath != nil or self.AlertFriendsOnDeath != nil then
 		if self.AlertFriendsOnDeath == true && (self.BringFriendsOnDeath == false or self.BringFriendsOnDeath == nil) then
 			self.DeathAllyResponse = "OnlyAlert"

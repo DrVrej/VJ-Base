@@ -37,7 +37,7 @@ SWEP.NPC_NextPrimaryFire = 0.11 -- RPM of the weapon in seconds | Calculation: 6
 SWEP.NPC_TimeUntilFire = 0 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_TimeUntilFireExtraTimers = {} -- Extra timers, which will make the gun fire again! | The seconds are counted after the self.NPC_TimeUntilFire!
 SWEP.NPC_CustomSpread = 1 -- Bullet spread multiplier, this is on top of other multipliers like the NPC's accuracy! | Closer to 0 = Increased accuracy, Farther than 1 = Decreased accuracy
-SWEP.NPC_BulletSpawnAttachment = "" -- The attachment that the bullet spawns on, leave empty for base to decide!
+SWEP.NPC_BulletSpawnAttachment = false -- Attachment to use for the bullet spawn | false = Let base decide
 SWEP.NPC_CanBePickedUp = true -- Can this weapon be picked up by NPCs? (Ex: Rebels)
 SWEP.NPC_StandingOnly = false -- If true, the weapon can only be fired if the NPC is standing still
 	-- ====== Firing Control ====== --
@@ -285,11 +285,15 @@ SWEP.NPC_NextPrimaryFireT = 0
 SWEP.NPC_AnimationSet = VJ.ANIM_SET_CUSTOM
 SWEP.NPC_SecondaryFireNextT = 0
 SWEP.OwnerIsNPC = false
+SWEP.ComAttachmentID = false -- Cached common attachment ID, this is used as backup if the specified attachment isn't found/set
 SWEP.InitTime = 0 -- Holds the CurTime that it was spawned at, used to make sure spawned weapons can be given to the player without needing to press USE on it
 
 local metaEntity = FindMetaTable("Entity")
 local funcDrawModel = metaEntity.DrawModel
 local funcGetTable = metaEntity.GetTable
+local funcGetPos = metaEntity.GetPos
+local funcGetOwner = metaEntity.GetOwner
+local funcGetAttachment = metaEntity.GetAttachment
 --
 local metaNPC = FindMetaTable("NPC")
 local funcGetActiveWeapon = metaNPC.GetActiveWeapon
@@ -301,14 +305,23 @@ local vj_wep_muzzleflash_light = GetConVar("vj_wep_muzzleflash_light")
 local vj_wep_shells = GetConVar("vj_wep_shells")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local oldShells = {VJ_Weapon_PistolShell1 = "ShellEject", VJ_Weapon_RifleShell1 = "RifleShellEject", VJ_Weapon_ShotgunShell1 = "ShotgunShellEject"} -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
+local comAttachments = {
+    muzzle = true,
+    muzzleA = true,
+    muzzle_flash = true,
+    muzzle_flash1 = true,
+    muzzle_flash2 = true,
+    ["ValveBiped.muzzle"] = true,
+	["1"] = true
+}
 --
 function SWEP:Initialize()
 	self.InitTime = CurTime()
-	self.PrimaryEffects_ShellType = oldShells[self.PrimaryEffects_ShellType] or self.PrimaryEffects_ShellType -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
 	self:SetHoldType(self.HoldType)
 	self:SetClip1(self.Primary.ClipSize)
 	self.Primary.DefaultClip = self.Primary.ClipSize
 	self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
+	self.PrimaryEffects_ShellType = oldShells[self.PrimaryEffects_ShellType] or self.PrimaryEffects_ShellType -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
 	self:Init()
 	
 	-- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -344,14 +357,17 @@ function SWEP:Initialize()
 	if self.CustomOnSecondaryAttack then self.OnSecondaryAttack = function() return !self:CustomOnSecondaryAttack() end end
 	--
 	
-	//if SERVER then
-		//self:SetWeaponHoldType(self.HoldType)
-		//self:SetNPCMinBurst(10)
-		//self:SetNPCMaxBurst(20)
-		//self:SetNPCFireRate(10)
-	//end
 	self:SetDefaultValues(self.HoldType)
 	//self:SetKeyValue("spawnflags", bit.bor(SF_WEAPON_NO_PLAYER_PICKUP))
+	
+	-- Try to find a common attachment and cache it as backup
+	local attachments = self:GetAttachments()
+	for i = 1, #attachments do
+		local attachData = attachments[i]
+		if comAttachments[attachData.name] then
+			self.ComAttachmentID = attachData.id
+		end
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:GetCapabilities()
@@ -452,7 +468,7 @@ function SWEP:EquipAmmo(ply)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Deploy()
-	local owner = self:GetOwner()
+	local owner = funcGetOwner(self)
 	self:OnDeploy()
 	if owner:IsNPC() then
 		hook.Add("Think", self, self.NPC_Think)
@@ -475,18 +491,9 @@ function SWEP:Deploy()
 	return true -- Or else the player won't be able to get the weapon!
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local commonAttachmentNames = {
-    muzzle = true,
-    muzzleA = true,
-    muzzle_flash = true,
-    muzzle_flash1 = true,
-    muzzle_flash2 = true,
-    ["ValveBiped.muzzle"] = true
-}
---
 function SWEP:GetBulletPos()
-	local owner = self:GetOwner()
-	if !IsValid(owner) then return self:GetPos() end -- Fail safe
+	local owner = funcGetOwner(self)
+	if !IsValid(owner) then return funcGetPos(self) end -- Fail safe
 	if owner:IsPlayer() then return owner:GetShootPos() end -- Players always use "GetShootPos"!
 	
 	-- Custom Position
@@ -497,20 +504,17 @@ function SWEP:GetBulletPos()
 	
 	-- Attachment
 	local bulletAttach = self.NPC_BulletSpawnAttachment
-	if bulletAttach != "" then
-		local attach = self:LookupAttachment(bulletAttach)
-		if attach != 0 && attach != -1 then
-			return self:GetAttachment(attach).Pos
+	if bulletAttach then
+		local attachID = self:LookupAttachment(bulletAttach)
+		if attachID != 0 && attachID != -1 then
+			return funcGetAttachment(self, attachID).Pos
 		end
 	end
 	
-	-- Try to find a common attachment
-	local attachments = self:GetAttachments()
-	for i = 1, #attachments do
-		local attachmentName = attachments[i].name
-		if commonAttachmentNames[attachmentName] then
-			return self:GetAttachment(self:LookupAttachment(attachmentName)).Pos
-		end
+	-- Check if we have a common attachment
+	local comAttach = self.ComAttachmentID
+	if comAttach then
+		return funcGetAttachment(self, comAttach).Pos
 	end
 	
 	-- Try to find a common bone
@@ -534,13 +538,13 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_Think()
 	if !IsValid(self) then return end
-	local owner = metaEntity.GetOwner(self)
+	local owner = funcGetOwner(self)
 	if !IsValid(owner) or !owner:IsNPC() or funcGetActiveWeapon(owner) != self then return end
 	
 	local selfData = funcGetTable(self)
 	selfData.MaintainWorldModel(self, selfData, owner)
 	selfData.OnThink(self)
-
+	
 	if !selfData.IsMeleeWeapon && selfData.NPC_NextPrimaryFire && CurTime() > selfData.NPC_NextPrimaryFireT && selfData.NPC_CanFire(self, selfData, owner) then
 		selfData.NPCShoot_Primary(self)
 	end
@@ -548,7 +552,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_CanFire(selfData, owner)
 	selfData = selfData or funcGetTable(self)
-	owner = owner or metaEntity.GetOwner(self)
+	owner = owner or funcGetOwner(self)
 	local ownerData = funcGetTable(owner)
 	local ene = owner:GetEnemy()
 	local isVJHuman = ownerData.IsVJBaseSNPC_Human
@@ -574,7 +578,7 @@ function SWEP:NPC_CanFire(selfData, owner)
 		end
 		-- Check to make sure the enemy is within the firing cone!
 		if IsValid(ene) && ((!isControlled) or (isControlled && owner.VJ_TheController:KeyDown(IN_ATTACK2))) then
-			local spawnPos = metaEntity.GetPos(self) //self:GetBulletPos() -- Because "GetBulletPos" is VERY costly sadly =(
+			local spawnPos = funcGetPos(self) //self:GetBulletPos() -- Because "GetBulletPos" is VERY costly sadly =(
 			local aimPos = ownerData.IsVJBaseSNPC and ownerData.GetAimPosition(owner, ene, spawnPos, 0) or ene:BodyTarget(spawnPos)
 			local aimDir = aimPos - spawnPos
 			local sightDir = owner:GetHeadDirection() // owner:GetForward() -- Owner's sight direction
@@ -592,7 +596,7 @@ function SWEP:NPC_CanFire(selfData, owner)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPCShoot_Primary()
-	local owner = self:GetOwner()
+	local owner = funcGetOwner(self)
 	if !IsValid(owner) then return end
 	local ene = owner:GetEnemy()
 	if !owner.VJ_IsBeingControlled && (!IsValid(ene) or (!owner:Visible(ene))) then return end
@@ -601,7 +605,7 @@ function SWEP:NPCShoot_Primary()
 	end
 	
 	-- Secondary Fire
-	if self.NPC_HasSecondaryFire && owner.Weapon_CanSecondaryFire && CurTime() > self.NPC_SecondaryFireNextT && ene:GetPos():Distance(owner:GetPos()) <= self.NPC_SecondaryFireDistance then
+	if self.NPC_HasSecondaryFire && owner.Weapon_CanSecondaryFire && CurTime() > self.NPC_SecondaryFireNextT && funcGetPos(ene):Distance(funcGetPos(owner)) <= self.NPC_SecondaryFireDistance then
 		if math.random(1, self.NPC_SecondaryFireChance) == 1 then
 			local anim, animDur, animType = owner:PlayAnim(owner.AnimTbl_WeaponAttackSecondary, true, false, true)
 			if animType != VJ.ANIM_TYPE_GESTURE then
@@ -630,7 +634,7 @@ function SWEP:NPCShoot_Primary()
 	timer.Simple(self.NPC_TimeUntilFire, function()
 		if !IsValid(self) then return end
 		local curTime = CurTime()
-		owner = self:GetOwner()
+		owner = funcGetOwner(self)
 		if IsValid(owner) && owner:IsNPC() && self:NPC_CanFire() && curTime > self.NPC_NextPrimaryFireT then
 			self:PrimaryAttack()
 			owner.WeaponLastShotTime = curTime
@@ -639,7 +643,7 @@ function SWEP:NPCShoot_Primary()
 				for _, tv in ipairs(self.NPC_TimeUntilFireExtraTimers) do
 					timer.Simple(tv, function()
 						if !IsValid(self) then return end
-						owner = self:GetOwner()
+						owner = funcGetOwner(self)
 						if IsValid(owner) && owner:IsNPC() && self:NPC_CanFire() then
 							self:PrimaryAttack()
 						end
@@ -654,7 +658,7 @@ function SWEP:PrimaryAttack()
 	//if !IsFirstTimePredicted() then return end
 
 	local selfData = funcGetTable(self)
-	local owner = metaEntity.GetOwner(self)
+	local owner = funcGetOwner(self)
 	local ownerData = funcGetTable(owner)
 
 	local curTime = CurTime()
@@ -708,11 +712,11 @@ function SWEP:PrimaryAttack()
 	-- MELEE WEAPON
 	if selfData.IsMeleeWeapon then
 		local meleeHit = false
-		local ownersPos = metaEntity.GetPos(owner)
+		local ownersPos = funcGetPos(owner)
 		for _, ent in ipairs(ents.FindInSphere(ownersPos, selfData.MeleeWeaponDistance + 20)) do
 			local entData = funcGetTable(ent)
 			if (entData.IsVJBaseBullseye && entData.VJ_IsBeingControlled) or (ent:IsPlayer() && entData.VJ_IsControllingNPC) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
-			if ent != owner && (isPly or (isNPC && (ent:IsNPC() or (ent:IsPlayer() && ent:Alive() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot() or entData.VJ_ID_Attackable or entData.VJ_ID_Destructible) && owner:Disposition(ent) != D_LI && ent:GetClass() != owner:GetClass() && (owner:GetForward():Dot((ent:GetPos() - ownersPos):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius))))) then
+			if ent != owner && (isPly or (isNPC && (ent:IsNPC() or (ent:IsPlayer() && ent:Alive() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot() or entData.VJ_ID_Attackable or entData.VJ_ID_Destructible) && owner:Disposition(ent) != D_LI && ent:GetClass() != owner:GetClass() && (owner:GetForward():Dot((funcGetPos(ent) - ownersPos):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius))))) then
 				local dmginfo = DamageInfo()
 				local dmgAmount = isNPC and ownerData.ScaleByDifficulty(owner, selfData.Primary.Damage) or selfData.Primary.Damage
 				dmginfo:SetDamage(dmgAmount)
@@ -813,7 +817,7 @@ end
 function SWEP:PrimaryAttackEffects(owner)
 	local selfData = funcGetTable(self)
 	if selfData.IsMeleeWeapon then return end
-	owner = owner or metaEntity.GetOwner(self)
+	owner = owner or funcGetOwner(self)
 	if selfData.CustomOnPrimaryAttackEffects && selfData.CustomOnPrimaryAttackEffects(self, owner) == false then return end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	
 	if vj_wep_muzzleflash:GetInt() == 1 then
@@ -873,7 +877,7 @@ function SWEP:PrimaryAttackEffects(owner)
 	-- SHELL CASING
 	if !owner:IsPlayer() && selfData.PrimaryEffects_SpawnShells && vj_wep_shells:GetInt() == 1 then
 		local shellAttach = selfData.PrimaryEffects_ShellAttachment
-		shellAttach = self:GetAttachment(isnumber(shellAttach) and shellAttach or self:LookupAttachment(shellAttach))
+		shellAttach = funcGetAttachment(self, isnumber(shellAttach) and shellAttach or self:LookupAttachment(shellAttach))
 		if !shellAttach then -- No attachment found, so just use some default pos & ang
 			shellAttach = {Pos = owner:GetShootPos(), Ang = metaEntity.GetAngles(self)}
 		end
@@ -894,7 +898,7 @@ function SWEP:SecondaryAttack()
 	if self:OnSecondaryAttack() == true then return end
 	
 	local curTime = CurTime()
-	local owner = self:GetOwner()
+	local owner = funcGetOwner(self)
 	self:TakeSecondaryAmmo(self.Secondary.TakeAmmo)
 	owner:SetAnimation(PLAYER_ATTACK1)
 	local anim = VJ.PICK(self.AnimTbl_SecondaryFire)
@@ -909,7 +913,7 @@ end
 function SWEP:DoIdleAnimation()
 	local curTime = CurTime()
 	if !self.HasIdleAnimation or curTime < self.PLY_NextIdleAnimT then return end
-	local owner = self:GetOwner()
+	local owner = funcGetOwner(self)
 	if IsValid(owner) then
 		owner:SetAnimation(PLAYER_IDLE)
 		local anim = VJ.PICK(self.AnimTbl_Idle)
@@ -921,7 +925,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:TranslateActivity(act)
 	local selfData = funcGetTable(self)
-	local owner = metaEntity.GetOwner(self)
+	local owner = funcGetOwner(self)
 	local ownerData = funcGetTable(owner)
 	if ownerData.IsVJBaseSNPC then
 		local translation = ownerData.AnimationTranslations[act]
@@ -955,7 +959,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Reload()
 	if !IsValid(self) then return end
-	local owner = self:GetOwner()
+	local owner = funcGetOwner(self)
 	if !IsValid(owner) or !owner:IsPlayer() or !owner:Alive() or owner:GetAmmoCount(self.Primary.Ammo) == 0 or self.Reloading or CurTime() < self.PLY_NextReloadT then return end
 	if self:Clip1() < self.Primary.ClipSize then
 		self.Reloading = true
@@ -990,7 +994,7 @@ function SWEP:Reload()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_Reload()
-	local owner = self:GetOwner()
+	local owner = funcGetOwner(self)
 	if !IsValid(owner) then return end
 	owner.NextThrowGrenadeT = owner.NextThrowGrenadeT + 2
 	self:OnReload("Start")
@@ -1010,7 +1014,7 @@ function SWEP:OnDrop()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OwnerChanged()
-	local owner = self:GetOwner()
+	local owner = funcGetOwner(self)
 	if IsValid(owner) then
 		self.OwnerIsNPC = owner:IsNPC()
 	end
@@ -1036,7 +1040,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:MaintainWorldModel(selfData, owner)
 	selfData = selfData or funcGetTable(self)
-	owner = owner or metaEntity.GetOwner(self)
+	owner = owner or funcGetOwner(self)
 	if IsValid(owner) && selfData.WorldModel_UseCustomPosition then
 		local wepPos, wepAng = selfData.GetWeaponCustomPosition(self, owner, selfData)
 		if wepPos then
@@ -1060,7 +1064,7 @@ if CLIENT then
 		if !self:OnDrawWorldModel() or !self:GetDrawWorldModel() then drawMdl = false end
 		
 		if selfData.WorldModel_UseCustomPosition then
-			local owner = self:GetOwner()
+			local owner = funcGetOwner(self)
 			if IsValid(owner) then
 				if owner:IsPlayer() && owner:InVehicle() then return end
 				local wepPos, wepAng = self:GetWeaponCustomPosition(owner)
@@ -1086,7 +1090,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- !!! USED ONLY FOR DEFAULT HL2 NPCS, NOT VJ NPCS !!!
 function SWEP:SetupWeaponHoldTypeForAI(holdType)
-	local owner = self:GetOwner()
+	local owner = funcGetOwner(self)
 	if owner.IsVJBaseSNPC then return end
 	
 	-- Yete NPC-en Rebel-e, ere vor medz zenki animation-ere kordzadze yerp vor ge kalegor
@@ -1170,7 +1174,6 @@ function SWEP:SetupWeaponHoldTypeForAI(holdType)
 		self.ActivityTranslateAI[ACT_RELOAD] 						= ACT_RELOAD_SHOTGUN
 		self.ActivityTranslateAI[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW //ACT_RELOAD_SHOTGUN_LOW
 		self.ActivityTranslateAI[ACT_GESTURE_RELOAD] 				= ACT_GESTURE_RELOAD_SHOTGUN
-		
 		self.ActivityTranslateAI[ACT_IDLE] 							= ACT_IDLE_SMG1
 		self.ActivityTranslateAI[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SHOTGUN
 		self.ActivityTranslateAI[ACT_IDLE_RELAXED] 					= ACT_IDLE_SHOTGUN_RELAXED
@@ -1179,7 +1182,6 @@ function SWEP:SetupWeaponHoldTypeForAI(holdType)
 		self.ActivityTranslateAI[ACT_IDLE_AIM_RELAXED] 				= ACT_SHOTGUN_IDLE_DEEP
 		self.ActivityTranslateAI[ACT_IDLE_AIM_STIMULATED] 			= ACT_SHOTGUN_IDLE_DEEP
 		self.ActivityTranslateAI[ACT_IDLE_AIM_AGITATED] 			= ACT_SHOTGUN_IDLE_DEEP
-		
 		self.ActivityTranslateAI[ACT_WALK] 							= ACT_WALK_AIM_SHOTGUN
 		self.ActivityTranslateAI[ACT_WALK_AIM] 						= ACT_WALK_AIM_SHOTGUN
 		self.ActivityTranslateAI[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE
@@ -1190,7 +1192,6 @@ function SWEP:SetupWeaponHoldTypeForAI(holdType)
 		self.ActivityTranslateAI[ACT_WALK_AIM_RELAXED] 				= ACT_WALK_AIM_SHOTGUN
 		self.ActivityTranslateAI[ACT_WALK_AIM_STIMULATED] 			= ACT_WALK_AIM_SHOTGUN
 		self.ActivityTranslateAI[ACT_WALK_AIM_AGITATED] 			= ACT_WALK_AIM_SHOTGUN
-		
 		self.ActivityTranslateAI[ACT_RUN] 							= ACT_RUN_RIFLE
 		self.ActivityTranslateAI[ACT_RUN_AIM] 						= bonbakshen_Vazel
 		self.ActivityTranslateAI[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
@@ -1250,10 +1251,8 @@ function SWEP:SetupWeaponHoldTypeForAI(holdType)
 		self.ActivityTranslateAI[ACT_GESTURE_RELOAD] 				= ACT_GESTURE_RELOAD_PISTOL
 		self.ActivityTranslateAI[ACT_IDLE] 							= ACT_IDLE_PISTOL
 		self.ActivityTranslateAI[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_PISTOL
-		
 		self.ActivityTranslateAI[ACT_WALK] 							= ACT_WALK_PISTOL
 		self.ActivityTranslateAI[ACT_WALK_AIM] 						= bezdigZenk_Kalel
-		
 		self.ActivityTranslateAI[ACT_RUN] 							= ACT_RUN_PISTOL
 		self.ActivityTranslateAI[ACT_RUN_AIM] 						= bezdigZenk_Vazel
 	end

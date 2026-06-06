@@ -56,6 +56,7 @@ function ENT:Initialize()
 	local ply = self:GetPlayer()
 	if IsValid(ply) then
 		ply.VJ_IsControllingNPC = true
+		ply.VJ_TheControllerEntity = self
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -63,6 +64,7 @@ function ENT:OnRemove()
 	local ply = self:GetPlayer()
 	if IsValid(ply) then
 		ply.VJ_IsControllingNPC = false
+		ply.VJ_TheControllerEntity = NULL
 	end
 	-- Reset the NPC's bone manipulation!
 	local npc = self:GetNPC()
