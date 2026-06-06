@@ -7,8 +7,7 @@ local CurTime = CurTime
 local IsValid = IsValid
 local CreateSound = CreateSound
 local tonumber = tonumber
-local string_find = string.find
-local string_gsub = string.gsub
+local string_sub = string.sub
 local math_round = math.Round
 local math_floor = math.floor
 local math_min = math.min
@@ -299,46 +298,71 @@ function VJ.TraceDirections(ent, trType, maxDist, requireFullDist, returnAsDict,
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[
+Takes the given animation, strips the tags, and returns the animation along with whether or not any tags were found
+
+=-=-=| PARAMETERS |=-=-=
+	1. anim [string] : The animation to search for
+
+=-=-=| RETURNS |=-=-=
+	1.
+		- [string] : animation with the tags stripped or unchanged if no tags were found
+		- [nil] : duplicate tags or other issues found
+	2.
+		- [boolean] : whether or not the "vjseq_" tag was found
+		- [nil] : duplicate tags or other issues found
+	3.
+		- [boolean] : whether or not the "vjges_" tag was found
+		- [nil] : duplicate tags or other issues found
+--]]
+function VJ.StripAnimTags(anim)
+	local hasSeq = false
+	local hasGes = false
+	for _ = 1, 2 do
+		local tag = string_sub(anim, 1, 6)
+		if tag == "vjseq_" then
+			if hasSeq then return end -- duplicate tag, unsupported
+			hasSeq = true
+		elseif tag == "vjges_" then
+			if hasGes then return end -- duplicate tag, unsupported
+			hasGes = true
+		else
+			break
+		end
+		anim = string_sub(anim, 7)
+	end
+	return anim, hasSeq, hasGes
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Takes the given animation and checks if it exists inside the given entity's model
 		- ent = Entity to use
 		- anim = The animation to search for
 	Returns
-		- false, Given animation couldn't be found
-		- true, Animation was exists and was found inside the entity's model
+		- boolean, Whether or not the animation was found inside the entity's model
 -----------------------------------------------------------]]
 function VJ.AnimExists(ent, anim)
-	local animType = false
-	local getType = type(anim)
-	if getType == "number" then
-		animType = 1
-	elseif getType == "string" then
-		animType = 2
-	else
+	local objType = type(anim)
+	if objType == "string" then
+		-- Handle sequence and gesture tags
+		local animEdited, _, hasGes = VJ.StripAnimTags(anim)
+		if !animEdited then return false end
+		anim = hasGes and tonumber(animEdited) or animEdited -- Convert gesture to activity if possible
+		objType = type(anim)
+	elseif objType != "number" then
 		return false
 	end
 	
-	-- Get rid of the gesture prefix
-	if animType == 2 && string_find(anim, "vjges_") then
-		anim = string_gsub(anim, "vjges_", "")
-		-- Convert to activity if possible
-		if ent:LookupSequence(anim) == -1 then
-			anim = tonumber(anim)
-			animType = 1
-		end
-	end
-	
-	if animType == 1 then -- Activity
+	if objType == "number" then -- Activity
 		local seqID = ent:SelectWeightedSequence(anim)
-		if seqID == -1 or seqID == 0 then
+		if seqID == -1 then
+			return false
+		elseif seqID == 0 then -- Extra check for "0" as it can often be valid
 			local seqName = ent:GetSequenceName(seqID)
-			if seqName == "Not Found!" or seqName == "No model!" then
-				return false
-			end
+			return seqName != "Not Found!" && seqName != "No model!"
 		end
 	else -- Sequence
-		if string_find(anim, "vjseq_") then anim = string_gsub(anim, "vjseq_", "") end
-		if ent:LookupSequence(anim) == -1 then return false end
+		return ent:LookupSequence(anim) != -1
 	end
 	return true
 end
@@ -354,21 +378,18 @@ end
 function VJ.AnimDuration(ent, anim)
 	if !VJ.AnimExists(ent, anim) then return 0 end -- Invalid animation
 	
-	local getType = type(anim)
-	if getType == "number" then -- Activity
+	local objType = type(anim)
+	if objType == "number" then -- Activity
 		return ent:SequenceDuration(ent:SelectWeightedSequence(anim))
-	elseif getType == "string" then -- Sequence / Gesture
-		-- Get rid of the gesture prefix
-		if string_find(anim, "vjges_") then
-			anim = string_gsub(anim, "vjges_", "")
-			if ent:LookupSequence(anim) == -1 then
-				return ent:SequenceDuration(ent:SelectWeightedSequence(tonumber(anim)))
-			end
+	elseif objType == "string" then -- Sequence & Gesture
+		local animEdited, _, hasGes = VJ.StripAnimTags(anim)
+		if !animEdited then return 0 end
+		local seqID = ent:LookupSequence(animEdited)
+		anim = animEdited
+		if hasGes && seqID == -1 then
+			return ent:SequenceDuration(ent:SelectWeightedSequence(tonumber(anim)))
 		end
-		if string_find(anim, "vjseq_") then
-			anim = string_gsub(anim, "vjseq_", "")
-		end
-		return ent:SequenceDuration(ent:LookupSequence(anim))
+		return ent:SequenceDuration(seqID)
 	end
 	return 0
 end
@@ -402,10 +423,10 @@ end
 		- number, converted activity (ACT_)
 -----------------------------------------------------------]]
 function VJ.SequenceToActivity(ent, anim)
-	local getType = type(anim)
-	if getType == "number" then -- Already an activity, just return!
+	local objType = type(anim)
+	if objType == "number" then -- Already an activity, just return!
 		return anim
-	elseif getType == "string" then -- Sequence
+	elseif objType == "string" then -- Sequence
 		local result = ent:GetSequenceActivity(ent:LookupSequence(anim))
 		if !result or result == -1 then
 			return false
@@ -425,7 +446,8 @@ end
 		- true, Given animation is the current animation
 -----------------------------------------------------------]]
 function VJ.IsCurrentAnim(ent, anim)
-	if type(anim) == "table" then
+	local objType = type(anim)
+	if objType == "table" then
 		local curSeq = ent:GetSequence()
 		local curAct = ent:GetActivity()
 		for _, v in ipairs(anim) do
@@ -437,9 +459,8 @@ function VJ.IsCurrentAnim(ent, anim)
 				return true
 			end
 		end
-	else
-		if anim == -1 then return false end
-		if type(anim) == "number" then -- For numbers do an activity check because an activity can have more than 1 sequence!
+	elseif anim != -1 then
+		if objType == "number" then -- For numbers do an activity check because an activity can have more than 1 sequence!
 			local curAct = ent:GetActivity()
 			return (anim == curAct) or (ent:TranslateActivity(anim) == curAct)
 		end

@@ -1659,6 +1659,7 @@ ENT.NextWeaponAttackT = 0
 ENT.NextWeaponAttackT_Base = 0 -- Handled by the base, used to avoid running shoot animation twice
 ENT.NextWeaponStrafeT = 0
 ENT.NextMeleeWeaponAttackT = 0
+ENT.WeaponReloadSeed = 0
 ENT.NextMoveOnGunCoveredT = 0
 ENT.NextThrowGrenadeT = 0
 ENT.NextGrenadeAttackSoundT = 0
@@ -2561,17 +2562,19 @@ local attackTimers = {
 }
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function playReloadAnimation(self, anims)
-	local anim, animDur, animType = self:PlayAnim(anims, true, false, "Visible")
-	if anim != ACT_INVALID then
-		local wep = self.WeaponEntity
-		if wep.IsVJBaseWeapon then wep:NPC_Reload() end
-		timer.Create("wep_reload_reset" .. self:EntIndex(), animDur, 1, function()
-			if IsValid(self) && IsValid(wep) && self:GetWeaponState() == VJ.WEP_STATE_RELOADING then
+	local wep = self.WeaponEntity
+	local seed = self.WeaponReloadSeed
+	local anim, _, animType = self:PlayAnim(anims, true, false, "Visible", 0, {OnFinish = function(interrupted)
+		if self:GetWeaponState() == VJ.WEP_STATE_RELOADING && seed == self.WeaponReloadSeed then
+			if !interrupted && IsValid(wep) then
 				wep:SetClip1(wep:GetMaxClip1())
 				if wep.IsVJBaseWeapon then wep:OnReload("Finish") end
-				self:SetWeaponState()
 			end
-		end)
+			self:SetWeaponState()
+		end
+	end})
+	if anim != ACT_INVALID then
+		if wep.IsVJBaseWeapon then wep:NPC_Reload() end
 		self.AllowWeaponOcclusionDelay = false
 		-- If NOT controlled by a player AND is a gesture make it stop moving so it doesn't run after the enemy right away
 		if !self.VJ_IsBeingControlled && animType == ANIM_TYPE_GESTURE then
@@ -2779,6 +2782,7 @@ function ENT:Think()
 				if selfData.Weapon_CanReload && !selfData.AttackType && !curWep.IsMeleeWeapon && self:GetWeaponState() == VJ.WEP_STATE_READY && ((!plyControlled && ((!eneValid && curWep:GetMaxClip1() > curWep:Clip1() && (curTime - eneData.TimeSet) > math.random(3, 8) && !self:IsMoving()) or (eneValid && curWep:Clip1() <= 0))) or (plyControlled && selfData.VJ_TheController:KeyDown(IN_RELOAD) && curWep:GetMaxClip1() > curWep:Clip1())) then
 					selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 					selfData.NextChaseTime = curTime + 2
+					selfData.WeaponReloadSeed = curTime
 					if !plyControlled then self:SetWeaponState(VJ.WEP_STATE_RELOADING) end
 					if eneValid then self:PlaySoundSystem("WeaponReload") end -- tsayn han e minag yete teshnami ga!
 					self:OnWeaponReload()
@@ -3164,7 +3168,7 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 			customEnt:SetParent(self)
 		end
 	end
-
+	
 	self.AttackType = VJ.ATTACK_TYPE_GRENADE
 	self.AttackState = VJ.ATTACK_STATE_STARTED
 	self:PlaySoundSystem("GrenadeAttack")
@@ -3178,7 +3182,7 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 	-- Call "timer.Adjust("attack_grenade_start" .. self:EntIndex(), 0)" in the event code to make it throw the grenade
 	timer.Create("attack_grenade_start" .. self:EntIndex(), (!releaseTime and timer.TimeLeft("attack_grenade_reset" .. self:EntIndex())) or releaseTime / self.AnimPlaybackRate, 1, function()
 		if self.AttackSeed == seed then
-			if isLiveEnt && !IsValid(customEnt) then return end
+			if isLiveEnt && !IsValid(customEnt) then self:StopAttacks() self:MaintainAlertBehavior() return end -- Reset the attack otherwise the NPC AI will freeze
 			self:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
 		end
 	end)
@@ -3203,9 +3207,10 @@ end
 		- entity, Grenade entity that was thrown
 -----------------------------------------------------------]]
 function ENT:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
-	if self.Dead or self.PauseAttacks or self.Flinching or self.AttackType == VJ.ATTACK_TYPE_MELEE then return false end
+	if self.Dead or self.Flinching or self.AttackType == VJ.ATTACK_TYPE_MELEE then return false end
 	local grenade;
-	local isLiveEnt = IsValid(customEnt) -- Whether or not the given custom entity is live
+	local isLiveEnt = IsValid(customEnt) -- Is the custom entity live?
+	if !isLiveEnt && self.PauseAttacks then return false end -- Let live grenades through even when attacks are paused, otherwise the grenade will explode in the NPC's hand
 	local fuseTime = self.GrenadeAttackFuseTime
 	
 	-- Handle the grenade's spawn position and angle, in order with priority:

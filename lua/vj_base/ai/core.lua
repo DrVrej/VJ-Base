@@ -10,7 +10,7 @@
 	-- Change movement speed:
 	self:SetLocalVelocity(self:GetMoveVelocity() * 1.5)
 	
-	-- To debug eye and head directions:
+	-- Debugging eye and head directions:
 	debugoverlay.Box(self:EyePos() + self:GetHeadDirection(), Vector(-2, -2, -2), Vector(2, 2, 2), 0.2)
 	debugoverlay.Line(self:EyePos() + self:GetHeadDirection(), self:EyePos() + self:GetHeadDirection() * 100, 0.2)
 	debugoverlay.Box(self:EyePos() + self:GetEyeDirection(), Vector(-2, -2, -2), Vector(2, 2, 2), 0.2, VJ.COLOR_RED)
@@ -38,6 +38,7 @@ local funcGetEnemy = metaNPC.GetEnemy
 local funcGetIdealActivity = metaNPC.GetIdealActivity
 local funcGetActivity = metaNPC.GetActivity
 local funcGetIdealSequence = metaNPC.GetIdealSequence
+local funcSetIdealActivity = metaNPC.SetIdealActivity
 local funcAddEntityRelationship = metaNPC.AddEntityRelationship
 local funcIsInViewCone = metaNPC.IsInViewCone
 
@@ -51,9 +52,7 @@ local isvector = isvector
 local isstring = isstring
 local tonumber = tonumber
 local string_sub = string.sub
-local string_find = string.find
 local string_left = string.Left
-local table_concat = table.concat
 local table_remove = table.remove
 local bAND = bit.band
 local math_rad = math.rad
@@ -188,7 +187,6 @@ ENT.NextPainSoundT = 0
 ENT.MainSoundPitchValue = 0
 ENT.TimersToRemove = {
     "state_reset",
-	"wep_reload_reset",
     "wep_state_reset",
     "turn_reset",
     "flinch_reset",
@@ -530,8 +528,11 @@ function ENT:MaintainIdleAnimation(force)
 	//print(self:GetIdealActivity(), self:GetActivity(), self:GetSequenceName(self:GetIdealSequence()), self:GetSequenceName(self:GetSequence()), self:IsSequenceFinished(), self:GetInternalVariable("m_bSequenceLoops"), self:GetCycle())
 	if force then
 		//VJ.DEBUG_Print(self, "MaintainIdleAnimation", "force")
-		self.LastAnimSeed = 0
-		self:SetIdealActivity(ACT_IDLE) // ResetIdealActivity
+		local selfData = funcGetTable(self)
+		if selfData.LastAnimType != ANIM_TYPE_GESTURE then -- Don't interrupt gestures
+			selfData.LastAnimSeed = 0
+		end
+		funcSetIdealActivity(self, ACT_IDLE) // ResetIdealActivity
 		-- Need this check otherwise it may quickly repeat the last animation that was NOT an ACT_IDLE !
 		if funcGetIdealActivity(self) == ACT_IDLE && funcGetActivity(self) == ACT_IDLE then
 			self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L2987
@@ -541,8 +542,11 @@ function ENT:MaintainIdleAnimation(force)
 		-- If animation has finished OR idle animation has changed then play a new idle!
 		if (funcGetCycle(self) >= 0.98) or (self:TranslateActivity(ACT_IDLE) != funcGetSequenceActivity(self, funcGetIdealSequence(self))) then
 			//VJ.DEBUG_Print(self, "MaintainIdleAnimation", "auto")
-			self.LastAnimSeed = 0
-			self:SetIdealActivity(ACT_IDLE) // ResetIdealActivity
+			local selfData = funcGetTable(self)
+			if selfData.LastAnimType != ANIM_TYPE_GESTURE then -- Don't interrupt gestures
+				selfData.LastAnimSeed = 0
+			end
+			funcSetIdealActivity(self, ACT_IDLE) // ResetIdealActivity
 			self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L2987
 			funcSetSaveValue(self, "m_bSequenceLoops", false) -- Otherwise it will stutter and play an idle sequence at 999x playback speed for 0.001 second when changing from one idle to another!
 		else
@@ -603,7 +607,7 @@ end
 			- false = Interruptible by everything!
 			- true = Interruptible by nothing, completely locked!
 			- "LetAttacks" = Interruptible ONLY by attacks!
-		- lockAnimTime = How long should it lock the animation? | DEFAULT: 0
+		- lockAnimTime = How long should it lock the animation? | DEFAULT: false
 			- false = Base calculates the time (recommended)
 		- faceEnemy = Should it constantly face the enemy while playing this animation? | DEFAULT: false
 			- false = Don't face the enemy
@@ -628,53 +632,33 @@ end
 		- Enum, Type of animation it played, such as activity, sequence, and gesture
 			- Enums are VJ.ANIM_TYPE_*
 -----------------------------------------------------------]]
+local emptyTbl = {}
+--
 function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, extraOptions, customFunc)
 	animation = PICK(animation)
 	if !animation then return ACT_INVALID, 0, ANIM_TYPE_NONE end
 	
 	lockAnim = lockAnim or false
-	if lockAnimTime == nil then -- If user didn't put anything, then default it to 0
-		lockAnimTime = 0
-	end
+	lockAnimTime = lockAnimTime or false
 	faceEnemy = faceEnemy or false
 	animDelay = tonumber(animDelay) or 0
-	extraOptions = extraOptions or {}
-	local isGesture = false
-	local isSequence = false
+	extraOptions = extraOptions or emptyTbl
 	local isString = isstring(animation)
+	local isSequence = false
+	local isGesture = false
 	local isRecheck = false
 	
 	::recheck::
-	-- Handle "vjges_" and "vjseq_"
+	-- Handle tags
 	if isString then
-		// animation = string.gsub(animation, "[vjges_|vjseq_]", "") -- Too slow
-		local finalString; -- Only define a table if we need to!
-		local posCur = 1
-		for i = 1, #animation do
-			local posStartGes, posEndGes = string_find(animation, "vjges_", posCur) -- Check for "vjges_"
-			local posStartSeq, posEndSeq = string_find(animation, "vjseq_", posCur) -- Check for "vjseq_"
-			if !posStartGes && !posStartSeq then -- No ges or seq was found, end the loop!
-				if finalString then
-					finalString[#finalString + 1] = string_sub(animation, posCur)
-				end
-				break
-			end
-			if !finalString then finalString = {} end -- Found a match, create table if needed
-			if posStartGes then
-				isGesture = true
-				finalString[i] = string_sub(animation, posCur, posStartGes - 1)
-				posCur = posEndGes + 1
-			end
-			if posStartSeq then
-				isSequence = true
-				finalString[i] = string_sub(animation, posCur, posStartSeq - 1)
-				posCur = posEndSeq + 1
-			end
+		local stripString, stripSequence, stripGesture = VJ.StripAnimTags(animation)
+		if !stripString then
+			return ACT_INVALID, 0, ANIM_TYPE_NONE
 		end
-		if finalString then
-			animation = table_concat(finalString)
-		end
-		-- If animation is -1 then it's probably an activity, so turn it into an activity
+		animation = stripString
+		isSequence = stripSequence
+		isGesture = stripGesture
+		-- If animation is -1 then it's probably an activity, so turn it into a number to be checked later
 		-- EX: "vjges_" .. ACT_MELEE_ATTACK1
 		if isGesture && !isSequence && self:LookupSequence(animation) == -1 then
 			animation = tonumber(animation)
@@ -682,18 +666,18 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 		end
 	end
 	
-	if extraOptions.AlwaysUseGesture then isGesture = true end -- Must play as a gesture
+	if extraOptions.AlwaysUseGesture then isGesture = true end
 	if extraOptions.AlwaysUseSequence then -- Must play as a sequence
 		//isGesture = false -- Leave this alone to allow gesture-sequences to play even when "AlwaysUseSequence" is true!
 		isSequence = true
-		if isnumber(animation) then -- If it's an activity, then convert it to a string
+		if isnumber(animation) then -- If it's an activity, then convert it to a sequence
 			animation = self:GetSequenceName(self:SelectWeightedSequence(animation))
 			isString = true
 		end
 	elseif isString && !isSequence then -- Only for regular & gesture strings
 		-- If it can be played as an activity, then convert it!
 		local result = funcGetSequenceActivity(self, self:LookupSequence(animation))
-		if result == nil or result == -1 then -- Leave it as string
+		if !result or result == -1 then -- Leave it as string
 			isSequence = true
 		else -- Set it as an activity
 			animation = result
@@ -701,7 +685,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 		end
 	end
 	
-	-- Check for activity translations
+	-- Activity translations
 	if !isString && !isRecheck then
 		local translation = self:TranslateActivity(animation)
 		if translation != animation then
@@ -715,8 +699,8 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 		end
 	end
 	
-	-- Check if the animation actually exists
-	if VJ.AnimExists(self, animation) == false then
+	-- Double check if the animation actually exists
+	if !VJ.AnimExists(self, animation) then
 		return ACT_INVALID, 0, ANIM_TYPE_NONE
 	end
 	
@@ -745,10 +729,10 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 				animTime = lockAnimTime
 			end
 			
-			local curTime = CurTime()
-			self.NextChaseTime = curTime + lockAnimTime
-			self.NextIdleTime = curTime + lockAnimTime
-			self.AnimLockTime = curTime + lockAnimTime
+			local time = CurTime() + lockAnimTime
+			self.NextChaseTime = time
+			self.NextIdleTime = time
+			self.AnimLockTime = time
 			
 			if lockAnim != "LetAttacks" then
 				self:StopAttacks(true)
@@ -808,7 +792,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 				})
 				//self:PlaySequence(animation, playbackRate, extraOptions.SequenceDuration != false, dur)
 				animTime = animTime + transitionAnimTime -- Adjust the animation time in case we have a transition animation!
-			else -- Only if activity
+			else -- Activity
 				//self:SetActivity(ACT_RESET)
 				schedule:AddTask("TASK_VJ_PLAY_ACTIVITY", {
 					animation = animation,
@@ -831,12 +815,11 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 					schedule:EngTask("TASK_PLAY_SEQUENCE", animation)
 				end*/
 			end
-			schedule.IsPlayActivity = true
+			schedule.IsPlayAnim = true
 			schedule.CanBeInterrupted = !lockAnim
-			if (customFunc) then customFunc(schedule, animation) end
+			if customFunc then customFunc(schedule, animation) end
 			self:StartSchedule(schedule)
-			if doRealAnimTime then
-				-- Get the calculated duration (Only done in Activity type)
+			if doRealAnimTime then -- Get the calculated duration (Only done in Activity type)
 				animTime = self.CurrentTask.TaskData.duration
 			end
 			if faceEnemy then
@@ -845,7 +828,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 		end
 		
 		-- If it has a OnFinish function, then set the timer to run it when it finishes!
-		if (extraOptions.OnFinish) then
+		if extraOptions.OnFinish then
 			timer.Simple(animTime, function()
 				if IsValid(self) && !self.Dead then
 					extraOptions.OnFinish(self.LastAnimSeed != seed, animation)
@@ -863,9 +846,8 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 			end
 		end)
 		return animation, animDelay + VJ.AnimDurationEx(self, animation, false), animType -- Approximation, this may be inaccurate!
-	else
-		return animation, PlayAct(), animType
 	end
+	return animation, PlayAct(), animType
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1553,6 +1535,7 @@ function ENT:OnEntityCopyTableFinish(data)
 	data.NextWeaponAttackT_Base = nil
 	data.NextWeaponStrafeT = nil
 	data.NextMeleeWeaponAttackT = nil
+	data.WeaponReloadSeed = nil
 	data.NextMoveOnGunCoveredT = nil
 	data.NextThrowGrenadeT = nil
 	data.NextGrenadeAttackSoundT = nil
@@ -1933,34 +1916,30 @@ local angYN90 = Angle(0, -90, 0)
 --
 function ENT:Controller_Movement(cont, ply, bullseyePos)
 	if self.MovementType == VJ_MOVETYPE_STATIONARY then return false end
-	local left = ply:KeyDown(IN_MOVELEFT)
-	local right = ply:KeyDown(IN_MOVERIGHT)
-	local sprint = ply:KeyDown(IN_SPEED)
 	local aimVector = ply:GetAimVector()
-	
 	if ply:KeyDown(IN_FORWARD) then
 		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-			self:AA_MoveTo(cont.VJCE_Bullseye, true, sprint and "Alert" or "Calm", {IgnoreGround = true})
+			self:AA_MoveTo(cont.VJCE_Bullseye, true, ply:KeyDown(IN_SPEED) and "Alert" or "Calm", {IgnoreGround = true})
 		else
-			if left then
+			if ply:KeyDown(IN_MOVELEFT) then
 				cont:StartMovement(aimVector, angY45)
-			elseif right then
+			elseif ply:KeyDown(IN_MOVERIGHT) then
 				cont:StartMovement(aimVector, angYN45)
 			else
 				cont:StartMovement(aimVector, defAng)
 			end
 		end
 	elseif ply:KeyDown(IN_BACK) then
-		if left then
-			cont:StartMovement(aimVector*-1, angYN45)
-		elseif right then
-			cont:StartMovement(aimVector*-1, angY45)
+		if ply:KeyDown(IN_MOVELEFT) then
+			cont:StartMovement(aimVector * -1, angYN45)
+		elseif ply:KeyDown(IN_MOVERIGHT) then
+			cont:StartMovement(aimVector * -1, angY45)
 		else
-			cont:StartMovement(aimVector*-1, defAng)
+			cont:StartMovement(aimVector * -1, defAng)
 		end
-	elseif left then
+	elseif ply:KeyDown(IN_MOVELEFT) then
 		cont:StartMovement(aimVector, angY90)
-	elseif right then
+	elseif ply:KeyDown(IN_MOVERIGHT) then
 		cont:StartMovement(aimVector, angYN90)
 	else
 		self:StopMoving()
@@ -1975,7 +1954,7 @@ function ENT:PlaySequence(animation)
 	if !animation then return false end
 	//self.VJ_PlayingSequence = true -- No longer needed as it is handled by ACT_DO_NOT_DISTURB
 	self:SetActivity(ACT_DO_NOT_DISTURB) -- So `self:GetActivity()` will return the current result (alongside other immediate calls after `PlaySequence`)
-	self:SetIdealActivity(ACT_DO_NOT_DISTURB) -- Avoids the engine from progressing to an ideal activity that was set very recently | EX: Fixes melee attack anims breaking when called right after `self:SCHEDULE_IDLE_STAND()`
+	funcSetIdealActivity(self, ACT_DO_NOT_DISTURB) -- Avoids the engine from progressing to an ideal activity that was set very recently | EX: Fixes melee attack anims breaking when called right after `self:SCHEDULE_IDLE_STAND()`
 		-- Keeps MaintainActivity from overriding sequences as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L6331
 		-- If `m_IdealActivity` is set to ACT_DO_NOT_DISTURB, the engine will understand it's a sequence and will avoid messing with it, described here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/shared/ai_activity.h#L215
 	local seqID = isstring(animation) and self:LookupSequence(animation) or animation
@@ -3446,7 +3425,6 @@ function ENT:StartSoundTrack()
 			net.WriteString(PICK(selfData.SoundTbl_SoundTrack))
 			net.WriteFloat(selfData.SoundTrackVolume)
 			net.WriteFloat(selfData.SoundTrackPlaybackRate)
-			//net.WriteFloat(selfData.SoundTrackFadeOutTime)
 		net.Broadcast()
 	end
 end
@@ -3582,37 +3560,3 @@ function ENT:VJ_CheckAllFourSides(checkDist, returnPos, sides)
 	end
 	return result
 end
---------------------------------------------------------------------------------------------------------------------------------------------
-/* -- Was used in the Human base to handle firing guns while moving
-function ENT:DoWeaponAttackMovementCode(override, moveType)
-	override = override or false -- Overrides some of the checks, only used for the internal task system!
-	moveType = moveType or 0 -- This is used with override | 0 = Run, 1 = Walk
-	if (self.WeaponEntity.IsMeleeWeapon) then
-		self.DoingWeaponAttack = true
-	elseif self.Weapon_CanMoveFire == true then
-		if self.EnemyData.Visible && self:CanFireWeapon(true, false) == true && ((self:IsMoving() && (self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true)) or (override == true)) then
-			if (override == true && moveType == 0) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 1) then
-				local anim = self:TranslateToWeaponAnim(PICK(self.AnimTbl_ShootWhileMovingRun))
-				if VJ.AnimExists(self, anim) == true then
-					self.DoingWeaponAttack = true
-					self.DoingWeaponAttack_Standing = false
-					self:CapabilitiesAdd(CAP_MOVE_SHOOT)
-					self:SetMovementActivity(anim)
-					self:SetArrivalActivity(self.WeaponAttackAnim)
-				end
-			elseif (override == true && moveType == 1) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 0) then
-				local anim = self:TranslateToWeaponAnim(PICK(self.AnimTbl_ShootWhileMovingWalk))
-				if VJ.AnimExists(self, anim) == true then
-					self.DoingWeaponAttack = true
-					self.DoingWeaponAttack_Standing = false
-					self:CapabilitiesAdd(CAP_MOVE_SHOOT)
-					self:SetMovementActivity(anim)
-					self:SetArrivalActivity(self.WeaponAttackAnim)
-				end
-			end
-		end
-	else -- Can't move shoot!
-		self:CapabilitiesRemove(CAP_MOVE_SHOOT) -- Remove the capability if it can't even move-shoot
-	end
-end
-*/

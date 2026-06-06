@@ -347,13 +347,10 @@ function ENT:TranslateNavGoal(ent, goal)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSchedule(schedule)
+	//VJ.DEBUG_Print(self, "StartSchedule", schedule.Name)
 	local selfData = funcGetTable(self)
 	if selfData.MovementType == VJ_MOVETYPE_STATIONARY && schedule.HasMovement then return end -- It's stationary therefore it should not move!
-	-- Certain states should ONLY do animation schedules!
-	if !schedule.IsPlayActivity then
-		local curState = self:GetState()
-		if curState >= VJ_STATE_ONLY_ANIMATION then return end
-	end
+	if !schedule.IsPlayAnim && self:GetState() >= VJ_STATE_ONLY_ANIMATION then return end -- Certain states should ONLY do animation schedules!
 	local curSchedule = selfData.CurrentSchedule
 	if curSchedule then
 		-- If it's the same task AND it's opening a door OR doing a move wait then cancel the new schedule!
@@ -366,49 +363,20 @@ function ENT:StartSchedule(schedule)
 		end
 	end
 	self:ClearCondition(COND_TASK_FAILED)
-	//VJ.DEBUG_Print(self, "StartSchedule", schedule.Name)
-	
-	-- This stops movements from running if another NPC is stuck in it
-	-- Pros:
-		-- Successfully reduces lag when many NPCs are stuck in each other
-	-- Cons:
-		-- When using "BOUNDS_HITBOXES" for "SetSurroundingBoundsType", NPCs often end up inside each other, and this check causes movements to not run (NPCs end up freezing)
-		-- Needed very rarely, not worth running a trace hull and table has value check for every movement task
-	/*if schedule.HasMovement then
-		local tr_addVec = Vector(0, 0, 2)
-		local tr = util.TraceHull({
-			start = self:GetPos(),
-			endpos = self:GetPos(),
-			mins = self:OBBMins() + tr_addVec,
-			maxs = self:OBBMaxs() + tr_addVec,
-			filter = self
-		})
-		if IsValid(tr.Entity) && tr.Entity:IsNPC() && !VJ.HasValue(selfData.EntitiesToNoCollide, tr.Entity:GetClass()) then
-			self:DoRunCode_OnFail(schedule)
-			return
-		end
-	end*/
-	
-	-- No longer needed, `TranslateActivity` handles it now
-	//if schedule.CanShootWhenMoving && selfData.WeaponAttackAnim != nil && IsValid(self:GetEnemy()) then
-		//self:DoWeaponAttackMovementCode(true, (schedule.MoveType == 0 and 1) or 0) -- Send 1 if the current task is walking!
-		//self:SetArrivalActivity(selfData.WeaponAttackAnim)
-	//end
 	
 	-- Handle facing data sent by schedule's "TurnData"
 		-- Type = Type of facing it should do | Target = The vector/ent to face (Not required for enemy facing!)
-	local turnData = schedule.TurnData
-	if turnData then
-		local faceType = turnData.Type
-		if !selfData.CanTurnWhileMoving or !faceType then
-			turnData = nil
-		else
-			local turnTarget = turnData.Target
+	local schedTurnData = schedule.TurnData
+	if schedTurnData && selfData.CanTurnWhileMoving then
+		local faceType = schedTurnData.Type
+		if faceType then
 			self:ResetTurnTarget()
-			selfData.TurnData.Type = faceType
-			selfData.TurnData.Target = isvector(turnTarget) and self:GetTurnAngle((turnTarget - self:GetPos()):Angle()) or turnTarget
-			selfData.TurnData.IsSchedule = true
-			selfData.TurnData.LastYaw = 1 -- So it doesn't face movement direction between move schedules, but should it be kept??
+			local turnTarget = schedTurnData.Target
+			local selfTurnData = selfData.TurnData
+			selfTurnData.Type = faceType
+			selfTurnData.Target = isvector(turnTarget) and self:GetTurnAngle((turnTarget - self:GetPos()):Angle()) or turnTarget
+			selfTurnData.IsSchedule = true
+			selfTurnData.LastYaw = 1 -- So it doesn't face movement direction between move schedules, but should it be kept??
 		end
 	end
 	
