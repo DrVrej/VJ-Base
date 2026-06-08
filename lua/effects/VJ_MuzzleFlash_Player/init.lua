@@ -9,7 +9,7 @@ function EFFECT:Init(data)
 	local owner = ent:GetOwner()
 	if !IsValid(owner) then return end
 	
-	-- (if the owner is NOT the local player OR in third person, then use world model) OR (Use the owner's viewmodel)
+	-- (if the owner is NOT the local player OR in third person, then use world model) OR (Use the owner's view model)
 	local muzEnt = ((owner != LocalPlayer()) or owner:ShouldDrawLocalPlayer()) && ent or owner:GetViewModel()
 	ParticleEffectAttach(VJ.PICK(ent.PrimaryEffects_MuzzleParticles), PATTACH_POINT_FOLLOW, muzEnt, data:GetAttachment())
 end

@@ -11,7 +11,6 @@ ENT.HullType = HULL_TINY
 ENT.MovementType = VJ_MOVETYPE_AERIAL
 ENT.Aerial_AnimTbl_Calm = "mortar_back"
 ENT.Aerial_AnimTbl_Alerted = "mortar_forward"
----------------------------------------------------------------------------------------------------------------------------------------------
 ENT.VJ_NPC_Class = {"CLASS_COMBINE"}
 ENT.BloodColor = VJ.BLOOD_COLOR_OIL
 ENT.HasDeathCorpse = false

@@ -36,13 +36,9 @@ function SWEP:OnPrimaryAttack(status, statusData)
 	if status == "Init" then
 		if CLIENT then return end
 		local owner = self:GetOwner()
-		local projectile = ents.Create("obj_vj_flareround")
 		local spawnPos = self:GetBulletPos()
-		if owner:IsPlayer() then
-			projectile:SetPos(owner:GetShootPos())
-		else
-			projectile:SetPos(spawnPos)
-		end
+		local projectile = ents.Create("obj_vj_flareround")
+		projectile:SetPos(owner:IsPlayer() and owner:GetShootPos() or spawnPos)
 		projectile:SetOwner(owner)
 		projectile:Activate()
 		projectile:Spawn()

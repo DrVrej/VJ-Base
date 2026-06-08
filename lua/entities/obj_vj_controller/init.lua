@@ -180,10 +180,21 @@ function ENT:SetControlledNPC(npc)
 		if npc.NextDoAnyAttackT < CurTime() then
 			npc.NextDoAnyAttackT = CurTime() + 0.5
 		end
-		if npc.MedicData.Status then npc:ResetMedicBehavior() end
+		if npc.MedicData.Status then
+			npc:ResetMedicBehavior()
+		end
 		if npc.VJ_ST_Eating then
 			npc:OnEat("StopEating", "Unspecified") -- So it plays the get up animation
 			npc:ResetEatingBehavior("Unspecified")
+		end
+		-- Make tank gunners pretend to be controlled as well
+		if npc.IsVJBaseSNPC_Tank then
+			local gunner = npc.Gunner
+			if IsValid(gunner) then
+				gunner.VJ_IsBeingControlled = true
+				gunner:ResetEnemy()
+				gunner:SetEnemy(bullseye)
+			end
 		end
 		-- Apply a small delay to assure that the bullseye is in the NPC's "RelationshipEnts"
 		timer.Simple(0.1, function()
@@ -597,6 +608,12 @@ function ENT:StopControlling(keyPressed)
 			npc.ConstantlyFaceEnemy = npcData[20]
 			npc.IsMedic = npcData[21]
 			npc.EnemyDetection = npcData[22]
+			if npc.IsVJBaseSNPC_Tank then
+				local gunner = npc.Gunner
+				if IsValid(gunner) then
+					gunner.VJ_IsBeingControlled = false
+				end
+			end
 		end
 	end
 	self:OnStopControlling(keyPressed)

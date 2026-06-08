@@ -33,9 +33,9 @@ SWEP.PrimaryEffects_SpawnShells = false
 function SWEP:OnPrimaryAttack(status, statusData)
 	if status == "Init" then
 		if CLIENT then return end
-		local projectile = ents.Create("obj_vj_crossbowbolt")
-		local spawnPos = self:GetBulletPos()
 		local owner = self:GetOwner()
+		local spawnPos = self:GetBulletPos()
+		local projectile = ents.Create("obj_vj_crossbowbolt")
 		projectile:SetPos(spawnPos)
 		projectile:SetOwner(owner)
 		projectile:Activate()

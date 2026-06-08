@@ -22,11 +22,13 @@ ENT.HasPainSounds = false
 
 -- Behaviors
 ENT.DisableWandering = true
+ENT.FollowPlayer = false
+ENT.YieldToAlliedPlayers = false
+ENT.CanInvestigate = false
 ENT.CanReceiveOrders = false
-ENT.DeathAllyResponse = "OnlyAlert"
 ENT.DamageAllyResponse = false
 ENT.CombatDamageResponse = false
-ENT.YieldToAlliedPlayers = false
+ENT.DeathAllyResponse = "OnlyAlert"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SCHEDULE_FACE(faceType, customFunc) return end -- Tanks do NOT turn like normal NPCs!
 ---------------------------------------------------------------------------------------------------------------------------------------------

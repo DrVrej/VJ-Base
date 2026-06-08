@@ -44,8 +44,7 @@ ENT.Tank_DeathDriverCorpse = false -- Driver corpse to spawn on death | false = 
 ENT.Tank_DeathDriverCorpseChance = 3 -- Chance that the driver corpse spawns | 1 = always
 ENT.Tank_DeathDecal = "Scorch" -- Decal to spawn under the tank's location on death
 	-- ====== Sounds ====== --
-	-- Driving movement sounds
-	-- Recommended to use looping WAV sound!
+	-- Driving movement sounds | Recommended to use looping WAV sound!
 ENT.HasMoveSound = true
 ENT.Tank_SoundTbl_DrivingEngine = false
 ENT.Tank_SoundTbl_Track = false
@@ -147,10 +146,11 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Tank_IsMoving = false
 ENT.Tank_Status = 1
-ENT.Tank_NextLowHealthSparkT = 0
+ENT.Tank_NextLowHealthSpark = 0
+ENT.Tank_NextRunOverT = 0
 ENT.Tank_NextRunOverSoundT = 0
 ENT.Tank_NextIdleParticles = 0
-local runoverException = {npc_antlionguard = true, npc_turret_ceiling = true, npc_combine_camera = true, npc_rollermine = true}
+local runoverException = {npc_turret_ceiling = true, npc_combine_camera = true, npc_rollermine = true}
 local defAng = Angle(0, 0, 0)
 
 local vj_npc_melee = GetConVar("vj_npc_melee")
@@ -198,18 +198,19 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTouch(ent)
 	if !VJ_CVAR_AI_ENABLED then return end
-	if self.Tank_Status == 0 then
+	if self.Tank_Status == 0 && self.Tank_IsMoving && vj_npc_melee:GetInt() != 0 && self.Tank_NextRunOverT < CurTime() then
 		self:Tank_RunOver(ent)
+		self.Tank_NextRunOverT = CurTime() + 0.2
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_RunOver(ent)
-	if !self.Tank_IsMoving or !IsValid(ent) or (vj_npc_melee:GetInt() == 0 /*or self.HasMeleeAttack == false*/) or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then return end
-	if self:Disposition(ent) == D_HT && ent:Health() > 0 && !ent.VJ_ID_Boss && !ent.VJ_ID_Vehicle && !ent.VJ_ID_Aircraft && ((ent:IsNPC() && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot()) then
+	if ent != self && ent != self.Gunner && ent.VJ_ID_Living && self:Disposition(ent) == D_HT && ent:Alive() && !ent.VJ_ID_Boss && !ent.VJ_ID_Vehicle && !ent.VJ_ID_Aircraft then
+		if (ent:IsNPC() && runoverException[ent:GetClass()]) or (ent:IsPlayer() && VJ_CVAR_IGNOREPLAYERS) then return end
 		self:Tank_OnRunOver(ent)
 		self:Tank_PlaySoundSystem("RunOver")
-		ent:TakeDamage(self:ScaleByDifficulty(8), self, self)
-		VJ.DamageSpecialEnts(self, ent, nil)
+		ent:TakeDamage(self:ScaleByDifficulty(50), self, self)
+		VJ.DamageSpecialEnts(self, ent)
 		ent:SetVelocity(ent:GetForward() * -200)
 	end
 end
@@ -217,36 +218,24 @@ end
 function ENT:OnThink()
 	if self:Tank_OnThink() != true && vj_npc_reduce_vfx:GetInt() == 0 then
 		local selfData = funcGetTable(self)
-		if selfData.Tank_NextIdleParticles < CurTime() then
+		local curTime = CurTime()
+		if curTime > selfData.Tank_NextIdleParticles then
 			self:Tank_UpdateIdleParticles()
-			selfData.Tank_NextIdleParticles = CurTime() + 0.1
+			selfData.Tank_NextIdleParticles = curTime + 0.1
 		end
 	
-		if self:Health() < (selfData.StartHealth * 0.30) && CurTime() > selfData.Tank_NextLowHealthSparkT then
-			//ParticleEffectAttach("vj_rocket_idle2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
-
-			selfData.Spark1 = ents.Create("env_spark")
-			selfData.Spark1:SetKeyValue("MaxDelay", 0.01)
-			selfData.Spark1:SetKeyValue("Magnitude", "8")
-			selfData.Spark1:SetKeyValue("Spark Trail Length", "3")
+		if curTime > selfData.Tank_NextLowHealthSpark && self:Health() < (self:GetMaxHealth() * 0.30) then
+			local spark = ents.Create("env_spark")
+			selfData.Spark1 = spark
+			spark:SetKeyValue("Magnitude", "5")
+			spark:SetKeyValue("TrailLength", "2")
 			self:GetNearDeathSparkPositions()
-			selfData.Spark1:SetAngles(self:GetAngles())
-			//selfData.Spark1:Fire("LightColor", "255 255 255")
-			selfData.Spark1:SetParent(self)
-			selfData.Spark1:Spawn()
-			selfData.Spark1:Activate()
-			selfData.Spark1:Fire("StartSpark")
-			selfData.Spark1:Fire("kill", nil, 0.1)
-			self:DeleteOnRemove(selfData.Spark1)
-
-			/*local effectData = EffectData()
-			effectData:SetOrigin(self:GetPos() + self:GetUp()*60 + self:GetForward()*100)
-			effectData:SetNormal(Vector(0, 0, 0))
-			effectData:SetMagnitude(5)
-			effectData:SetScale(0.1)
-			effectData:SetRadius(10)
-			util.Effect("Sparks", effectData)*/
-			selfData.Tank_NextLowHealthSparkT = CurTime() + math.random(4, 6)
+			spark:SetParent(self)
+			spark:Spawn()
+			spark:Activate()
+			spark:Fire("SparkOnce")
+			spark:Fire("kill", nil, 0.1)
+			selfData.Tank_NextLowHealthSpark = curTime + math.random(4, 6)
 		end
 	end
 end
@@ -350,16 +339,19 @@ function ENT:OnThinkActive()
 			end
 		end
 	end
-	
-	-- Not moving
-	if !hasMoved then
+
+	if hasMoved then
+		local curTime = CurTime()
+		if vj_npc_melee:GetInt() != 0 && selfData.Tank_NextRunOverT < curTime then
+			for _, v in ipairs(ents.FindInSphere(myPos, 100)) do
+				self:Tank_RunOver(v)
+			end
+			selfData.Tank_NextRunOverT = curTime + 0.2
+		end
+	else -- Not moving
 		VJ.STOPSOUND(selfData.CurrentTankMovingSound)
 		VJ.STOPSOUND(selfData.CurrentTankTrackSound)
 		selfData.Tank_IsMoving = false
-	end
-	
-	for _, v in ipairs(ents.FindInSphere(myPos, 100)) do
-		self:Tank_RunOver(v)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -379,8 +371,8 @@ function ENT:SelectSchedule()
 				selfData.Tank_Status = 1
 			end
 		else
-			local eneData = selfData.EnemyData
-			if (eneData.Distance < selfData.Tank_DriveTowardsDistance && eneData.Distance > selfData.Tank_DriveAwayDistance) or selfData.IsGuard then -- If between this two numbers, stay still
+			local eneDist = selfData.EnemyData.Distance
+			if (eneDist < selfData.Tank_DriveTowardsDistance && eneDist > selfData.Tank_DriveAwayDistance) or selfData.IsGuard then -- If between this two numbers, stay still
 				selfData.Tank_Status = 1
 			else
 				selfData.Tank_Status = 0
@@ -399,7 +391,7 @@ function ENT:OnDeath(dmginfo, hitgroup, status)
 		end
 		
 		if self:Tank_OnInitialDeath(dmginfo, hitgroup) != true then
-			for i=0, 1.5, 0.5 do
+			for i = 0, 1.5, 0.5 do
 				timer.Simple(i, function()
 					if IsValid(self) then
 						local myPos = self:GetPos()
@@ -452,8 +444,8 @@ function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpse)
 		-- Effects / Particles
 		if self.HasGibOnDeathEffects && self:Tank_OnDeathCorpse(dmginfo, hitgroup, corpse, "Effects") != true then
 			ParticleEffect("vj_explosion3", myPos, defAng)
-			ParticleEffect("vj_explosion2", myPos + self:GetForward()*-130, defAng)
-			ParticleEffect("vj_explosion2", myPos + self:GetForward()*130, defAng)
+			ParticleEffect("vj_explosion2", myPos + self:GetForward() * -130, defAng)
+			ParticleEffect("vj_explosion2", myPos + self:GetForward() * 130, defAng)
 			ParticleEffectAttach("smoke_burning_engine_01", PATTACH_ABSORIGIN_FOLLOW, corpse, 0)
 			local effectData = EffectData()
 			effectData:SetOrigin(myPos)

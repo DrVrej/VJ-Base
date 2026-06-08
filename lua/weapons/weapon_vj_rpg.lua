@@ -48,8 +48,8 @@ function SWEP:OnPrimaryAttack(status, statusData)
 	if status == "Init" then
 		if CLIENT then return end
 		local owner = self:GetOwner()
-		local projectile = ents.Create("obj_vj_rocket")
 		local spawnPos = self:GetBulletPos()
+		local projectile = ents.Create("obj_vj_rocket")
 		if owner:IsPlayer() then
 			local plyAng = owner:GetAimVector():Angle()
 			projectile:SetPos(owner:GetShootPos() + plyAng:Forward()*-20 + plyAng:Up()*-9 + plyAng:Right()*10)

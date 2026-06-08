@@ -1560,7 +1560,8 @@ function ENT:OnEntityCopyTableFinish(data)
 	-- Tank bases
 	data.Tank_IsMoving = nil
 	data.Tank_Status = nil
-	data.Tank_NextLowHealthSparkT = nil
+	data.Tank_NextLowHealthSpark = nil
+	data.Tank_NextRunOverT = nil
 	data.Tank_NextRunOverSoundT = nil
 	data.Tank_NextIdleParticles = nil
 	data.Tank_FacingTarget = nil

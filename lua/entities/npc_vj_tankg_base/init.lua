@@ -14,6 +14,7 @@ ENT.MovementType = VJ_MOVETYPE_STATIONARY
 ENT.CanTurnWhileStationary = false
 ENT.GodMode = true
 ENT.EnemyDetection = false
+ENT.CallForHelp = false
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Tank Base ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -32,8 +33,7 @@ ENT.Tank_Shell_VelocitySpeed = 4000 -- How fast should the shell travel?
 ENT.Tank_Shell_MuzzleFlashPos = Vector(0, -235, 18)
 ENT.Tank_Shell_ParticlePos = Vector(-205, 0, 72)
 	-- ====== Sounds ====== --
-	-- Gun turning movement sound
-	-- Recommended to use looping WAV sound!
+	-- Gun turning movement sound | Recommended to use looping WAV sound!
 ENT.HasMoveSound = true
 ENT.Tank_SoundTbl_Turning = false
 ENT.Tank_TurningSoundLevel = 80
@@ -220,8 +220,8 @@ function ENT:SelectSchedule()
 			selfData.Tank_Status = 0
 		else
 			-- Between these 2 limits it can fire! --
-			local eneData = selfData.EnemyData
-			if eneData.Distance < selfData.Tank_Shell_FireMax && eneData.Distance > selfData.Tank_Shell_FireMin then
+			local eneDist = selfData.EnemyData.Distance
+			if eneDist < selfData.Tank_Shell_FireMax && eneDist > selfData.Tank_Shell_FireMin then
 				selfData.Tank_Status = 0
 			-- Out of range, can't fire!
 			else
@@ -243,7 +243,7 @@ function ENT:Tank_PrepareShell()
 		self:Tank_PlaySoundSystem("ShellReload")
 		self.Tank_Shell_Status = TANK_SHELL_STATUS_RELOADING
 		local ene = self:GetEnemy()
-		if !ene:IsNPC() or (ene:IsNPC() && ene:GetEnemy() == self:GetParent()) then -- Don't run away when you don't even know that the tank exists!
+		if IsValid(ene) && (!ene:IsNPC() or (ene:IsNPC() && ene:GetEnemy() == self:GetParent())) then -- Don't run away when you don't even know that the tank exists!
 			sound.EmitHint(SOUND_DANGER, ene:GetPos() + ene:OBBCenter(), 80, self.Tank_Shell_TimeUntilFire, self)
 		end
 		timer.Create("timer_shell_attack" .. self:EntIndex(), self.Tank_Shell_TimeUntilFire, 1, function()
@@ -256,7 +256,7 @@ end
 function ENT:Tank_FireShell()
 	local selfData = funcGetTable(self)
 	local ene = self:GetEnemy()
-	if !VJ_CVAR_AI_ENABLED or selfData.Dead or !selfData.Tank_ReachableHeight or !selfData.Tank_FacingTarget or !IsValid(ene) then return end // selfData.Tank_FacingTarget != true
+	if !VJ_CVAR_AI_ENABLED or selfData.Dead or !selfData.Tank_ReachableHeight or !selfData.Tank_FacingTarget or !IsValid(ene) then return end
 	if self:Visible(ene) then
 		self:Tank_PlaySoundSystem("ShellFire")
 		
@@ -269,9 +269,10 @@ function ENT:Tank_FireShell()
 			else
 				spawnPos = self:LocalToWorld(selfData.Tank_Shell_SpawnPos)
 			end
-			local calculatedVel = (ene:GetPos() + ene:OBBCenter() - spawnPos):GetNormal()*selfData.Tank_Shell_VelocitySpeed
-			-- If not facing, then just shoot straight ahead
-			if !selfData.Tank_FacingTarget then
+			local calculatedVel;
+			if selfData.Tank_FacingTarget then
+				calculatedVel = (ene:GetPos() + ene:OBBCenter() - spawnPos):GetNormal() * selfData.Tank_Shell_VelocitySpeed
+			else -- Not facing just shoot straight ahead
 				calculatedVel = self:GetForward()
 				calculatedVel:Rotate(Angle(0, selfData.Tank_AngleOffset, 0))
 				calculatedVel = calculatedVel * selfData.Tank_Shell_VelocitySpeed
