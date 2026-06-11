@@ -216,7 +216,7 @@ function ENT:SelectSchedule()
 	
 	if eneValid then
 		-- Can always fire when being controlled
-		if self:GetParent().VJ_IsBeingControlled then
+		if selfData.VJ_IsBeingControlled then
 			selfData.Tank_Status = 0
 		else
 			-- Between these 2 limits it can fire! --

@@ -531,7 +531,7 @@ end
 function SWEP:Think() -- NOTE: This only runs for players not NPCs!
 	self:OnThink()
 	if SERVER then
-		self:MaintainWorldModel()
+		self:MaintainWorldModel(funcGetTable(self), funcGetOwner(self))
 		self:DoIdleAnimation()
 	end
 end
@@ -1024,7 +1024,7 @@ function SWEP:CanBePickedUpByNPCs()
 	return self.NPC_CanBePickedUp
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:GetWeaponCustomPosition(owner, selfData)
+function SWEP:GetWeaponCustomPosition(selfData, owner)
 	selfData = selfData or funcGetTable(self)
 	local boneID = metaEntity.LookupBone(owner, selfData.WorldModel_CustomPositionBone)
 	if !boneID then return false end
@@ -1039,10 +1039,8 @@ function SWEP:GetWeaponCustomPosition(owner, selfData)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:MaintainWorldModel(selfData, owner)
-	selfData = selfData or funcGetTable(self)
-	owner = owner or funcGetOwner(self)
 	if IsValid(owner) && selfData.WorldModel_UseCustomPosition then
-		local wepPos, wepAng = selfData.GetWeaponCustomPosition(self, owner, selfData)
+		local wepPos, wepAng = selfData.GetWeaponCustomPosition(self, selfData, owner)
 		if wepPos then
 			metaEntity.SetPos(self, wepPos)
 			metaEntity.SetAngles(self, wepAng)
@@ -1067,7 +1065,7 @@ if CLIENT then
 			local owner = funcGetOwner(self)
 			if IsValid(owner) then
 				if owner:IsPlayer() && owner:InVehicle() then return end
-				local wepPos, wepAng = self:GetWeaponCustomPosition(owner)
+				local wepPos, wepAng = self:GetWeaponCustomPosition(selfData, owner)
 				if wepPos then
 					self:SetRenderOrigin(wepPos)
 					self:SetRenderAngles(wepAng)

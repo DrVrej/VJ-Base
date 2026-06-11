@@ -1561,8 +1561,8 @@ function ENT:OnEntityCopyTableFinish(data)
 	data.Tank_IsMoving = nil
 	data.Tank_Status = nil
 	data.Tank_NextLowHealthSpark = nil
-	data.Tank_NextRunOverT = nil
-	data.Tank_NextRunOverSoundT = nil
+	data.Tank_NextRunOver = nil
+	data.Tank_NextRunOverSound = nil
 	data.Tank_NextIdleParticles = nil
 	data.Tank_FacingTarget = nil
 	data.Tank_ReachableHeight = nil
@@ -2397,7 +2397,6 @@ function ENT:Allies_CallHelp(dist)
 		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && metaEntity.Alive(ent) && (funcGetClass(ent) == myClass or metaNPC.Disposition(ent, self) == D_LI) && entData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && funcGetClass(ene) != funcGetClass(ent) && !IsValid(funcGetEnemy(ent)) then
 			-- If it's guarding and enemy is not visible, then don't call!
 			if entData.IsGuard && !funcVisible(ent, ene) then continue end
-
 			local eneIsPlayer = ene:IsPlayer()
 			if ((!eneIsPlayer && metaNPC.Disposition(ent, ene) != D_LI) or eneIsPlayer) then
 				-- Enemy too far away for ent
@@ -2434,7 +2433,7 @@ function ENT:Allies_CallHelp(dist)
 				selfData.OnCallForHelp(self, ent, isFirst)
 				selfData.PlaySoundSystem(self, "CallForHelp")
 				-- Play the animation
-				if curTime > selfData.NextCallForHelpAnimationT then
+				if curTime > selfData.AnimLockTime && curTime > selfData.NextCallForHelpAnimationT then
 					local anims = selfData.AnimTbl_CallForHelp
 					if anims then
 						selfData.PlayAnim(self, anims, true, false, selfData.CallForHelpAnimFaceEnemy)
@@ -3039,12 +3038,13 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
+				local curTime = CurTime()
 				local durLen = SoundDuration(pickedSD)
-				local dur = CurTime() + ((((durLen > 0) and durLen) or 2) + 1)
+				local dur = curTime + (((durLen > 0) and durLen) or 2) + 1
 				selfData.NextIdleSoundT = dur
 				selfData.NextPainSoundT = dur
-				selfData.NextSuppressingSoundT = CurTime() + 4
-				selfData.NextAlertSoundT = CurTime() + math.Rand(selfData.NextSoundTime_Alert.a, selfData.NextSoundTime_Alert.b)
+				selfData.NextSuppressingSoundT = curTime + 4
+				selfData.NextAlertSoundT = curTime + math.Rand(selfData.NextSoundTime_Alert.a, selfData.NextSoundTime_Alert.b)
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.AlertSoundLevel, self:GetSoundPitch(selfData.AlertSoundPitch))
 			end
 		end
@@ -3109,12 +3109,13 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
 				local durLen = SoundDuration(pickedSD)
-				local dur = CurTime() + ((((durLen > 0) and durLen) or 2) + 1)
+				local curTime = CurTime()
+				local dur = curTime + (((durLen > 0) and durLen) or 2) + 1
 				selfData.NextPainSoundT = dur
 				selfData.NextAlertSoundT = dur
-				selfData.NextInvestigateSoundT = CurTime() + 2
-				selfData.IdleSoundBlockTime = CurTime() + math.random(2, 3)
-				selfData.NextSuppressingSoundT = CurTime() + math.random(2.5, 4)
+				selfData.NextInvestigateSoundT = curTime + 2
+				selfData.IdleSoundBlockTime = curTime + math.random(2, 3)
+				selfData.NextSuppressingSoundT = curTime + math.random(2.5, 4)
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.BecomeEnemyToPlayerSoundLevel, self:GetSoundPitch(selfData.BecomeEnemyToPlayerPitch))
 			end
 		end
@@ -3143,19 +3144,20 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			selfData.NextAllyDeathSoundT = CurTime() + math.Rand(selfData.NextSoundTime_AllyDeath.a, selfData.NextSoundTime_AllyDeath.b)
 		end
 	elseif sdSet == "Pain" then
-		if selfData.HasPainSounds && CurTime() > selfData.NextPainSoundT then
+		local curTime = CurTime()
+		if selfData.HasPainSounds && curTime > selfData.NextPainSoundT then
 			local pickedSD = PICK(selfData.SoundTbl_Pain)
 			local sdDur = 2
 			if (pickedSD && math.random(1, selfData.PainSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				selfData.IdleSoundBlockTime = CurTime() + 1
+				selfData.IdleSoundBlockTime = curTime + 1
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.PainSoundLevel, self:GetSoundPitch(selfData.PainSoundPitch))
 				local durLen = SoundDuration(pickedSD)
 				sdDur = (durLen > 0 and durLen) or sdDur
 			end
-			selfData.NextPainSoundT = CurTime() + sdDur
+			selfData.NextPainSoundT = curTime + sdDur
 		end
 	elseif sdSet == "Impact" then
 		if selfData.HasImpactSounds then
@@ -3168,6 +3170,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "DamageByPlayer" then
 		//if selfData.HasDamageByPlayerSounds && CurTime() > selfData.NextDamageByPlayerSoundT then -- This is done in the call instead
 			local pickedSD = PICK(selfData.SoundTbl_DamageByPlayer)
+			local curTime = CurTime()
 			local sdDur = 2
 			if (pickedSD && math.random(1, selfData.DamageByPlayerSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
@@ -3175,11 +3178,11 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				StopSD(selfData.CurrentIdleSound)
 				local durLen = SoundDuration(pickedSD)
 				sdDur = (durLen > 0 and durLen) or sdDur
-				selfData.NextPainSoundT = CurTime() + sdDur
-				selfData.IdleSoundBlockTime = CurTime() + sdDur
+				selfData.NextPainSoundT = curTime + sdDur
+				selfData.IdleSoundBlockTime = curTime + sdDur
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.DamageByPlayerSoundLevel, self:GetSoundPitch(selfData.DamageByPlayerPitch))
 			end
-			selfData.NextDamageByPlayerSoundT = CurTime() + sdDur
+			selfData.NextDamageByPlayerSoundT = curTime + sdDur
 		//end
 	elseif sdSet == "Death" then
 		if selfData.HasDeathSounds then
@@ -3271,16 +3274,17 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 		end
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-- Human Base Sound Systems --=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	elseif sdSet == "Suppressing" then
-		if selfData.HasSuppressingSounds && CurTime() > selfData.NextSuppressingSoundT then
+		local curTime = CurTime()
+		if selfData.HasSuppressingSounds && curTime > selfData.NextSuppressingSoundT then
 			local pickedSD = PICK(selfData.SoundTbl_Suppressing)
 			if (pickedSD && math.random(1, selfData.SuppressingSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
 				StopSD(selfData.CurrentIdleSound)
-				selfData.IdleSoundBlockTime = CurTime() + 2
+				selfData.IdleSoundBlockTime = curTime + 2
 				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.SuppressingSoundLevel, self:GetSoundPitch(selfData.SuppressingPitch))
 			end
-			selfData.NextSuppressingSoundT = CurTime() + math.Rand(selfData.NextSoundTime_Suppressing.a, selfData.NextSoundTime_Suppressing.b)
+			selfData.NextSuppressingSoundT = curTime + math.Rand(selfData.NextSoundTime_Suppressing.a, selfData.NextSoundTime_Suppressing.b)
 		end
 	elseif sdSet == "WeaponReload" then
 		if selfData.HasWeaponReloadSounds then
@@ -3418,8 +3422,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSoundTrack()
 	local selfData = funcGetTable(self)
-	if !selfData.HasSounds or !selfData.HasSoundTrack then return end
-	if math.random(1, selfData.SoundTrackChance) == 1 then
+	if selfData.HasSounds && selfData.HasSoundTrack && math.random(1, selfData.SoundTrackChance) == 1 then
 		selfData.VJ_SD_PlayingMusic = true
 		net.Start("vj_music_cl")
 			net.WriteEntity(self)

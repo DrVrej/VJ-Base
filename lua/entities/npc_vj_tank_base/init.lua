@@ -147,8 +147,8 @@ end
 ENT.Tank_IsMoving = false
 ENT.Tank_Status = 1
 ENT.Tank_NextLowHealthSpark = 0
-ENT.Tank_NextRunOverT = 0
-ENT.Tank_NextRunOverSoundT = 0
+ENT.Tank_NextRunOver = 0
+ENT.Tank_NextRunOverSound = 0
 ENT.Tank_NextIdleParticles = 0
 local runoverException = {npc_turret_ceiling = true, npc_combine_camera = true, npc_rollermine = true}
 local defAng = Angle(0, 0, 0)
@@ -198,9 +198,9 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTouch(ent)
 	if !VJ_CVAR_AI_ENABLED then return end
-	if self.Tank_Status == 0 && self.Tank_IsMoving && vj_npc_melee:GetInt() != 0 && self.Tank_NextRunOverT < CurTime() then
+	if self.Tank_Status == 0 && self.Tank_IsMoving && vj_npc_melee:GetInt() != 0 && self.Tank_NextRunOver < CurTime() then
 		self:Tank_RunOver(ent)
-		self.Tank_NextRunOverT = CurTime() + 0.2
+		self.Tank_NextRunOver = CurTime() + 0.2
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -342,11 +342,11 @@ function ENT:OnThinkActive()
 
 	if hasMoved then
 		local curTime = CurTime()
-		if vj_npc_melee:GetInt() != 0 && selfData.Tank_NextRunOverT < curTime then
+		if vj_npc_melee:GetInt() != 0 && selfData.Tank_NextRunOver < curTime then
 			for _, v in ipairs(ents.FindInSphere(myPos, 100)) do
 				self:Tank_RunOver(v)
 			end
-			selfData.Tank_NextRunOverT = curTime + 0.2
+			selfData.Tank_NextRunOver = curTime + 0.2
 		end
 	else -- Not moving
 		VJ.STOPSOUND(selfData.CurrentTankMovingSound)
@@ -385,9 +385,10 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnDeath(dmginfo, hitgroup, status)
 	if status == "Init" then
-		if IsValid(self.Gunner) then
-			self.Gunner.Dead = true
-			if self:IsOnFire() then self.Gunner:Ignite(math.Rand(8, 10), 0) end
+		local gunner = self.Gunner
+		if IsValid(gunner) then
+			gunner.Dead = true
+			if self:IsOnFire() then gunner:Ignite(math.Rand(8, 10), 0) end
 		end
 		
 		if self:Tank_OnInitialDeath(dmginfo, hitgroup) != true then
@@ -411,9 +412,10 @@ local colorGray = Color(90, 90, 90)
 --
 function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpse)
 	-- Spawn the gunner corpse
-	if IsValid(self.Gunner) then
-		self.Gunner.SavedDmgInfo = self.SavedDmgInfo
-		local gunCorpse = self.Gunner:CreateDeathCorpse(dmginfo, hitgroup)
+	local gunner = self.Gunner
+	if IsValid(gunner) then
+		gunner.SavedDmgInfo = self.SavedDmgInfo
+		local gunCorpse = gunner:CreateDeathCorpse(dmginfo, hitgroup)
 		if IsValid(gunCorpse) then corpse.ChildEnts[#corpse.ChildEnts + 1] = gunCorpse end
 	end
 	
@@ -483,9 +485,9 @@ function ENT:Tank_PlaySoundSystem(sdSet)
 			end
 		end
 	elseif sdSet == "RunOver" then
-		if selfData.HasRunOverSound && CurTime() > selfData.Tank_NextRunOverSoundT then
+		if selfData.HasRunOverSound && CurTime() > selfData.Tank_NextRunOverSound then
 			self:EmitSound(VJ.PICK(selfData.Tank_SoundTbl_RunOver) or "VJ.Gib.Bone_Snap", 80, math.random(80, 100))
-			selfData.Tank_NextRunOverSoundT = CurTime() + 0.2
+			selfData.Tank_NextRunOverSound = CurTime() + 0.2
 		end
 	end
 end
