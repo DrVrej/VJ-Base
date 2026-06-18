@@ -1510,6 +1510,7 @@ function ENT:OnEntityCopyTableFinish(data)
 	data.NextDamageByPlayerSoundT = nil
 	data.NextPainSoundT = nil
 	data.TimersToRemove = nil
+	data.IsInitialized = nil
 	
 	-- Creature
 	data.PropInteraction_Found = nil
@@ -2460,7 +2461,7 @@ function ENT:Allies_Check(dist)
 	local myClass = funcGetClass(self)
 	for _, ent in ipairs(ents.FindInSphere(self:GetPos(), dist or 800)) do
 		local entData = funcGetTable(ent)
-		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && ent:Alive() && (funcGetClass(ent) == myClass or (ent:Disposition(self) == D_LI or entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) then
+		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && entData.IsInitialized && ent:Alive() && (funcGetClass(ent) == myClass or (ent:Disposition(self) == D_LI or entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) then
 			if isPassive then
 				if entData.Behavior == VJ_BEHAVIOR_PASSIVE or entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 					alliesNum = alliesNum + 1

@@ -1663,6 +1663,7 @@ function ENT:Initialize()
 			else
 				VJ.DEBUG_Print(self, false, "warn", "has an existing embedded \"Think\" hook already, which is disallowing the default base hook from assigning. Make sure to handle \"MaintainIdleAnimation\" in the overridden hook!")
 			end
+			self.IsInitialized = true
 		end
 	end)
 end
