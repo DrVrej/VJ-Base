@@ -26,9 +26,7 @@ SWEP.Primary.TracerType = "VJ_Tracer_Red"
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "SMG1"
 SWEP.Primary.Sound = "VJ.Weapon_Blaster.Single" // npc/roller/mine/rmine_explode_shock1.wav
-SWEP.PrimaryEffects_MuzzleParticles = {"vj_muzzle_blaster_red"}
-SWEP.PrimaryEffects_MuzzleParticlesAsOne = true
-SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
+SWEP.PrimaryEffects_MuzzleParticles = "vj_muzzle_blaster_red"
 SWEP.PrimaryEffects_SpawnShells = false
 SWEP.PrimaryEffects_DynamicLightColor = VJ.COLOR_RED
 

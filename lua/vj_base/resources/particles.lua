@@ -3,9 +3,6 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- VJ Base ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 VJ.AddParticle("particles/vj_blood.pcf", {
 	-- Blood pools
 	"vj_blood_pool_blue",
@@ -49,8 +46,6 @@ VJ.AddParticle("particles/vj_explosions.pcf", {
 	"vj_explosionfire1",
 	"vj_explosionfire2",
 	"vj_explosionfire3",
-	"vj_explosionfire4",
-	"vj_explosionfire5",
 	"vj_explosionflash1",
 	"vj_explosionflash2",
 	"vj_explosionspark1",
@@ -59,8 +54,7 @@ VJ.AddParticle("particles/vj_explosions.pcf", {
 	"vj_explosionspark4",
 	"vj_explosion_shockwave1",
 	"vj_explosion_shockwave2",
-	"vj_explosion_smoke1",
-	"vj_explosion_smoke2",
+	"vj_explosion_smoke",
 	"vj_explosion_smoke_spike",
 	"vj_explosion_rocks1",
 	"vj_explosion_rocks2",
@@ -108,6 +102,11 @@ VJ.AddParticle("particles/vj_projectiles.pcf", {
 	"vj_acid_impact3_slime",
 	"vj_acid_impact3_slime_small",
 	"vj_acid_impact3_trails",
+	-- Fireball
+	"vj_fireball_idle",
+	"vj_fireball_idle_fire",
+	"vj_fireball_idle_glow",
+	"vj_fireball_idle_smoke",
 	-- Rockets
 	"vj_rocket_idle1",
 	"vj_rocket_idle1_smoke",
@@ -118,11 +117,6 @@ VJ.AddParticle("particles/vj_projectiles.pcf", {
 	"vj_rocket_idle2_fire",
 	"vj_rocket_idle2_flare",
 	"vj_rocket_idle2_glow",
-	-- Fireball
-	"vj_fireball_idle",
-	"vj_fireball_idle_fire",
-	"vj_fireball_idle_glow",
-	"vj_fireball_idle_smoke",
 })
 VJ.AddParticle("particles/vj_weapons.pcf", {
     "vj_rifle_smoke",
@@ -131,51 +125,26 @@ VJ.AddParticle("particles/vj_weapons.pcf", {
     "vj_rifle_sparks2",
     -- Regular
     "vj_rifle_full",
-    "vj_rifle_glow",
     "vj_rifle_glow_large",
-    "vj_rifle_inner",
-    "vj_rifle_side",
-    "vj_rifle_side_glow",
     "vj_rifle_smoke_flash",
-    "vj_rifle_top",
-    "vj_rifle_top_glow",
-    "vj_rifle_top_left_glow",
-    -- Blue Regular
+    -- Regular (Blue)
     "vj_rifle_full_blue",
-    "vj_rifle_glow_blue",
     "vj_rifle_glow_large_blue",
-    "vj_rifle_inner_blue",
-    "vj_rifle_side_blue",
-    "vj_rifle_side_glow_blue",
     "vj_rifle_smoke_flash_blue",
-    "vj_rifle_top_blue",
-    "vj_rifle_top_glow_blue",
-    "vj_rifle_top_left_glow_blue",
     -- Blaster (Star Wars)
     "vj_muzzle_blaster_red",
     "vj_muzzle_blaster_blue",
 	-- Black Mesa Source Turret fire
 	"vj_bms_turret_full",
-	"vj_bms_turret_muzzle_core",
-	"vj_bms_turret_muzzle_glow",
 	"vj_bms_turret_muzzle_smoke",
-	"vj_bms_turret_muzzle_sparks",
-	"vj_bms_turret_muzzle_sparks2",
 })
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Half Life 2: Episode 2 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Commonly used particles in NPC mods that the base game doesn't precache
 VJ.AddParticle("particles/fire_01.pcf", {
 	"burning_engine_01",
 	"burning_engine_fire",
 	"burning_gib_01",
-	"burning_gib_01_drag",
 	"burning_gib_01_follower1",
 	"burning_gib_01_follower2",
-	"burning_gib_01b",
-	"burning_wood_01",
-	"burning_wood_01b",
-	"burning_wood_01c",
 	"embers_large_01",
 	"embers_large_02",
 	"embers_medium_01",
@@ -190,25 +159,17 @@ VJ.AddParticle("particles/fire_01.pcf", {
 	"env_fire_large",
 	"env_fire_tiny_smoke",
 	"explosion_huge",
-	"explosion_huge_b",
 	"explosion_silo",
 	"fire_jet_01",
 	"fire_jet_01_flame",
 	"fire_large_01",
-	"fire_large_02",
-	"fire_large_02_filler",
-	"fire_large_02_fillerb",
-	"fire_large_base",
 	"fire_medium_01",
 	"fire_medium_01_glow",
 	"fire_medium_02",
 	"fire_medium_02_nosmoke",
-	"fire_medium_heatwave",
 	"fire_small_01",
 	"fire_small_02",
 	"fire_small_03",
-	"fire_small_base",
-	"fire_small_flameouts",
 	"fire_verysmall_01",
 	"smoke_burning_engine_01",
 	"smoke_exhaust_01",
@@ -221,35 +182,9 @@ VJ.AddParticle("particles/fire_01.pcf", {
 	"smoke_large_02b",
 	"smoke_medium_01",
 	"smoke_medium_02",
-	"smoke_medium_02 Version #2",
 	"smoke_medium_02b",
-	"smoke_medium_02b Version #2",
 	"smoke_medium_02c",
 	"smoke_medium_02d",
 	"smoke_small_01",
 	"smoke_small_01b",
-})
-VJ.AddParticle("particles/weapon_fx.pcf", {
-	"explosion_turret_break",
-	"explosion_turret_fizzle",
-	"explosion_turret_break_b",
-	"explosion_turret_break_chunks",
-	"explosion_turret_break_embers",
-	"explosion_turret_break_fire",
-	"explosion_turret_break_fire_over",
-	"explosion_turret_break_flash",
-	"explosion_turret_break_pre_flash",
-	"explosion_turret_break_pre_smoke",
-	"explosion_turret_break_pre_smoke Version #2",
-	"explosion_turret_break_pre_sparks",
-	"explosion_turret_break_sparks",
-	"Weapon_Combine_Ion_Cannon",
-	"Weapon_Combine_Ion_Cannon_Beam",
-	"Weapon_Combine_Ion_Cannon_Black",
-	"Weapon_Combine_Ion_Cannon_Explosion",
-	"Weapon_Combine_Ion_Cannon_Exlposion_c",
-	"Weapon_Combine_Ion_Cannon_Explosion_e",
-	"Weapon_Combine_Ion_Cannon_i",
-	"Weapon_Combine_Ion_Cannon_Intake",
-	"Weapon_Combine_Ion_Cannon_Intake_b",
 })

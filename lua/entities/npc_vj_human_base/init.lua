@@ -1632,7 +1632,6 @@ local VJ_MOVETYPE_GROUND = VJ_MOVETYPE_GROUND
 local VJ_MOVETYPE_AERIAL = VJ_MOVETYPE_AERIAL
 local VJ_MOVETYPE_AQUATIC = VJ_MOVETYPE_AQUATIC
 local VJ_MOVETYPE_STATIONARY = VJ_MOVETYPE_STATIONARY
-local VJ_MOVETYPE_PHYSICS = VJ_MOVETYPE_PHYSICS
 local ANIM_TYPE_GESTURE = VJ.ANIM_TYPE_GESTURE
 
 local metaEntity = FindMetaTable("Entity")
@@ -1730,7 +1729,6 @@ local vj_npc_debug_engine = GetConVar("vj_npc_debug_engine")
 local vj_npc_difficulty = GetConVar("vj_npc_difficulty")
 local vj_npc_sight_distance = GetConVar("vj_npc_sight_distance")
 local vj_npc_health = GetConVar("vj_npc_health")
-local vj_npc_human_jump = GetConVar("vj_npc_human_jump")
 local vj_npc_ply_frag = GetConVar("vj_npc_ply_frag")
 local vj_npc_blood_pool = GetConVar("vj_npc_blood_pool")
 local vj_npc_corpse_undo = GetConVar("vj_npc_corpse_undo")
@@ -1739,7 +1737,7 @@ local vj_npc_corpse_fadetime = GetConVar("vj_npc_corpse_fadetime")
 local ai_serverragdolls = GetConVar("ai_serverragdolls")
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local function InitConvars(self)
+local function initConvars(self)
 	if vj_npc_debug:GetInt() == 1 then self.VJ_DEBUG = true end
 	if vj_npc_poseparams:GetInt() == 0 && !self.OnUpdatePoseParamTracking then self.HasPoseParameterLooking = false end
 	if vj_npc_shadows:GetInt() == 0 then self:DrawShadow(false) end
@@ -2116,13 +2114,13 @@ local capBitsDoors = bit.bor(CAP_OPEN_DOORS, CAP_AUTO_DOORS, CAP_USE)
 local capBitsWeapons = bit.bor(CAP_USE_WEAPONS, CAP_WEAPON_RANGE_ATTACK1)
 local idleFunc = ENT.MaintainIdleAnimation
 --
-local function funcAnimThink(self)
+local function animThink(self)
 	if VJ_CVAR_AI_ENABLED then
 		idleFunc(self)
 	end
 end
 --
-local function funcAnimThinkExtra(self)
+local function animThinkExtra(self)
 	if VJ_CVAR_AI_ENABLED then
 		idleFunc(self)
 	end
@@ -2132,17 +2130,14 @@ end
 function ENT:Initialize()
 	self:PreInit()
 	if self.CustomOnPreInitialize then self:CustomOnPreInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	local curTime = CurTime()
 	
 	self:SetSpawnEffect(false)
 	self:SetRenderMode(RENDERMODE_NORMAL)
 	self:AddEFlags(EFL_NO_DISSOLVE)
 	self:SetUseType(SIMPLE_USE)
-	if !self:GetModel() then
-		local models = PICK(self.Model)
-		if models then
-			self:SetModel(models)
-		end
-	end
+	local mdl = !self:GetModel() and PICK(self.Model)
+	if mdl then self:SetModel(mdl) end
 	self:SetHullType(self.HullType)
 	self:SetHullSizeNormal()
 	self:SetSolid(SOLID_BBOX)
@@ -2150,7 +2145,7 @@ function ENT:Initialize()
 	self:SetMaxYawSpeed(self.TurningSpeed)
 	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
 	
-	-- Set a name if it doesn't have one
+	-- Name
 	if self:GetName() == "" then
 		local findListing = list.Get("NPC")[self:GetClass()]
 		if findListing then
@@ -2158,17 +2153,17 @@ function ENT:Initialize()
 		end
 	end
 	
-	-- Initialize variables
-	InitConvars(self)
+	-- Variables
+	initConvars(self)
 	self.NextProcessTime = vj_npc_processtime:GetFloat()
 	self.SelectedDifficulty = vj_npc_difficulty:GetInt()
 	if !self.RelationshipEnts then self.RelationshipEnts = {} end
 	if !self.RelationshipMemory then self.RelationshipMemory = {} end
 	self.AnimationTranslations = {}
 	self.WeaponInventory = {}
-	self.NextInvestigationMove = CurTime() + 1
-	self.NextDangerDetectionT = CurTime() + 1
-	self.IdleSoundBlockTime = CurTime() + math.random(0.3, 6)
+	self.NextInvestigationMove = curTime + 1
+	self.NextDangerDetectionT = curTime + 1
+	self.IdleSoundBlockTime = curTime + math.random(0.3, 6)
 	self.MainSoundPitchValue = (self.MainSoundPitchStatic and (istable(self.MainSoundPitch) and math.random(self.MainSoundPitch.a, self.MainSoundPitch.b) or self.MainSoundPitch)) or 0
 	local sightConvar = vj_npc_sight_distance:GetInt(); if sightConvar > 0 then self.SightDistance = sightConvar end
 	
@@ -2188,13 +2183,14 @@ function ENT:Initialize()
 	end
 	
 	-- Health
-	local hpConvar = vj_npc_health:GetInt()
-	local hp = hpConvar > 0 && hpConvar or self:ScaleByDifficulty(self.StartHealth)
+	local hp = vj_npc_health:GetInt()
+	hp = hp > 0 and hp or self:ScaleByDifficulty(self.StartHealth)
 	self:SetHealth(hp)
 	self.StartHealth = hp
 	
 	self:Init()
 	ApplyBackwardsCompatibility(self)
+	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (curTime + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
 	
 	-- Collision-based computations
 	//self:SetSurroundingBoundsType(BOUNDS_HITBOXES) -- AVOID! Has to constantly recompute the bounds! | Issues: Entities get stuck inside the NPC, movements failing, unable to grab the NPC with physgun
@@ -2207,120 +2203,84 @@ function ENT:Initialize()
 	if !self.MeleeAttackDamageDistance then self.MeleeAttackDamageDistance = math.abs(collisionMax.x) + 60 end
 	self:SetupBloodColor(self.BloodColor) -- Collision bounds dependent
 	
-	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
-	
 	-- Delayed init
 	timer.Simple(0.1, function()
-		if IsValid(self) then
-			self:SetMaxLookDistance(self.SightDistance)
-			self:SetFOV(self.SightAngle)
-			if self:GetNPCState() <= NPC_STATE_NONE then self:SetNPCState(NPC_STATE_IDLE) end
-			if IsValid(self:GetCreator()) && self:GetCreator():GetInfoNum("vj_npc_spawn_guard", 0) == 1 then self.IsGuard = true end
-			self:StartSoundTrack()
-			
-			-- Setup common default pose parameters
-			if self:LookupPoseParameter("aim_pitch") != -1 then
-				self.PoseParameterLooking_Names.pitch[#self.PoseParameterLooking_Names.pitch + 1] = "aim_pitch"
-			end
-			if self:LookupPoseParameter("head_pitch") != -1 then
-				self.PoseParameterLooking_Names.pitch[#self.PoseParameterLooking_Names.pitch + 1] = "head_pitch"
-			end
-			if self:LookupPoseParameter("aim_yaw") != -1 then
-				self.PoseParameterLooking_Names.yaw[#self.PoseParameterLooking_Names.yaw + 1] = "aim_yaw"
-			end
-			if self:LookupPoseParameter("head_yaw") != -1 then
-				self.PoseParameterLooking_Names.yaw[#self.PoseParameterLooking_Names.yaw + 1] = "head_yaw"
-			end
-			if self:LookupPoseParameter("aim_roll") != -1 then
-				self.PoseParameterLooking_Names.roll[#self.PoseParameterLooking_Names.roll + 1] = "aim_roll"
-			end
-			if self:LookupPoseParameter("head_roll") != -1 then
-				self.PoseParameterLooking_Names.roll[#self.PoseParameterLooking_Names.roll + 1] = "head_roll"
-			end
-			if self.Weapon_Disabled then
+		if !IsValid(self) then return end
+		local creator = self:GetCreator()
+		
+		self:SetMaxLookDistance(self.SightDistance)
+		self:SetFOV(self.SightAngle)
+		if self:GetNPCState() <= NPC_STATE_NONE then self:SetNPCState(NPC_STATE_IDLE) end
+		if IsValid(creator) && creator:GetInfoNum("vj_npc_spawn_guard", 0) == 1 then self.IsGuard = true end
+		self:StartSoundTrack()
+		
+		-- Common pose parameters
+		local poseNames = self.PoseParameterLooking_Names
+		if self:LookupPoseParameter("aim_pitch") != -1 then
+			poseNames.pitch[#poseNames.pitch + 1] = "aim_pitch"
+		end
+		if self:LookupPoseParameter("head_pitch") != -1 then
+			poseNames.pitch[#poseNames.pitch + 1] = "head_pitch"
+		end
+		if self:LookupPoseParameter("aim_yaw") != -1 then
+			poseNames.yaw[#poseNames.yaw + 1] = "aim_yaw"
+		end
+		if self:LookupPoseParameter("head_yaw") != -1 then
+			poseNames.yaw[#poseNames.yaw + 1] = "head_yaw"
+		end
+		if self:LookupPoseParameter("aim_roll") != -1 then
+			poseNames.roll[#poseNames.roll + 1] = "aim_roll"
+		end
+		if self:LookupPoseParameter("head_roll") != -1 then
+			poseNames.roll[#poseNames.roll + 1] = "head_roll"
+		end
+		
+		-- Animations & Weapons
+		if self.Weapon_Disabled then
+			self:UpdateAnimationTranslations()
+		else
+			local wep = funcGetActiveWeapon(self)
+			if IsValid(wep) then
+				self.WeaponEntity = self:DoChangeWeapon() -- Setup the weapon
+				self.WeaponInventory.Primary = wep
+				if !wep.IsVJBaseWeapon && self.CanChatMessage && IsValid(creator) then
+					creator:PrintMessage(HUD_PRINTTALK, "WARNING: " .. VJ.GetName(self) .. " requires a VJ Base weapon to work properly!")
+				end
+				local antiArmor = PICK(self.WeaponInventory_AntiArmorList)
+				if antiArmor && wep:GetClass() != antiArmor then -- If the list isn't empty and it's not the current active weapon
+					self.WeaponInventory.AntiArmor = self:Give(antiArmor)
+					self:SelectWeapon(wep) -- Change the weapon back to the primary weapon
+					wep:Equip(self)
+				end
+				local melee = PICK(self.WeaponInventory_MeleeList)
+				if melee && wep:GetClass() != melee then -- If the list isn't empty and it's not the current active weapon
+					self.WeaponInventory.Melee = self:Give(melee)
+					self:SelectWeapon(wep) -- Change the weapon back to the primary weapon
+					wep:Equip(self)
+				end
+			else
 				self:UpdateAnimationTranslations()
-			else
-				local wep = funcGetActiveWeapon(self)
-				if IsValid(wep) then
-					self.WeaponEntity = self:DoChangeWeapon() -- Setup the weapon
-					self.WeaponInventory.Primary = wep
-					if !wep.IsVJBaseWeapon && self.CanChatMessage && IsValid(self:GetCreator()) then
-						self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: " .. VJ.GetName(self) .. " requires a VJ Base weapon to work properly!")
-					end
-					local antiArmor = PICK(self.WeaponInventory_AntiArmorList)
-					if antiArmor && wep:GetClass() != antiArmor then -- If the list isn't empty and it's not the current active weapon
-						self.WeaponInventory.AntiArmor = self:Give(antiArmor)
-						self:SelectWeapon(wep) -- Change the weapon back to the primary weapon
-						wep:Equip(self)
-					end
-					local melee = PICK(self.WeaponInventory_MeleeList)
-					if melee && wep:GetClass() != melee then -- If the list isn't empty and it's not the current active weapon
-						self.WeaponInventory.Melee = self:Give(melee)
-						self:SelectWeapon(wep) -- Change the weapon back to the primary weapon
-						wep:Equip(self)
-					end
-				else
-					self:UpdateAnimationTranslations()
-					if IsValid(self:GetCreator()) && self.CanChatMessage && !self.Weapon_IgnoreSpawnMenu then
-						self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: " .. VJ.GetName(self) .. " requires a weapon!")
-					end
+				if IsValid(creator) && self.CanChatMessage && !self.Weapon_IgnoreSpawnMenu then
+					creator:PrintMessage(HUD_PRINTTALK, "WARNING: " .. VJ.GetName(self) .. " requires a weapon!")
 				end
 			end
-			if self:GetIdealActivity() == ACT_IDLE then -- Reset the idle animation in case animation translations changed it!
-				self:MaintainIdleAnimation(true)
-			end
-			-- This is needed as setting "NextThink" to CurTime will cause performance drops, so we set the idle maintain in a separate hook that runs every tick
-			local thinkHook = hook.GetTable()["Think"]
-			if (thinkHook && !thinkHook[self]) or (!thinkHook) then
-				if #self:GetBoneFollowers() > 0 then
-					hook.Add("Think", self, funcAnimThinkExtra)
-				else
-					hook.Add("Think", self, funcAnimThink)
-				end
-			else
-				VJ.DEBUG_Print(self, false, "warn", "has an existing embedded \"Think\" hook already, which is disallowing the default base hook from assigning. Make sure to handle \"MaintainIdleAnimation\" in the overridden hook!")
-			end
-			self.IsInitialized = true
 		end
+		if self:GetIdealActivity() == ACT_IDLE then -- Reset the idle animation in case animation translations changed it!
+			self:MaintainIdleAnimation(true)
+		end
+		-- This is needed as setting "NextThink" to CurTime will cause performance drops, so we set the idle maintain in a separate hook that runs every tick
+		local thinkHook = hook.GetTable()["Think"]
+		if (thinkHook && !thinkHook[self]) or (!thinkHook) then
+			if #self:GetBoneFollowers() > 0 then
+				hook.Add("Think", self, animThinkExtra)
+			else
+				hook.Add("Think", self, animThink)
+			end
+		else
+			VJ.DEBUG_Print(self, false, "warn", "has an existing embedded \"Think\" hook already, which is disallowing the default base hook from assigning. Make sure to handle \"MaintainIdleAnimation\" in the overridden hook!")
+		end
+		self.IsInitialized = true
 	end)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-local capBitsGround = bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT)
-local capBitsShared = bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT, CAP_MOVE_FLY)
---
-function ENT:DoChangeMovementType(movType)
-	if movType then
-		self.MovementType = movType
-		if movType == VJ_MOVETYPE_GROUND then
-			self:RemoveFlags(FL_FLY)
-			self:CapabilitiesRemove(CAP_MOVE_FLY)
-			self:SetNavType(NAV_GROUND)
-			self:SetMoveType(MOVETYPE_STEP)
-			self:CapabilitiesAdd(CAP_MOVE_GROUND)
-			if (VJ.AnimExists(self, ACT_JUMP) && vj_npc_human_jump:GetInt() == 1) or self.UsePoseParameterMovement then self:CapabilitiesAdd(CAP_MOVE_JUMP) end
-			//if VJ.AnimExists(self, ACT_CLIMB_UP) then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
-			if !self.Weapon_Disabled && self.Weapon_CanMoveFire then self:CapabilitiesAdd(CAP_MOVE_SHOOT) end
-		elseif movType == VJ_MOVETYPE_AERIAL or movType == VJ_MOVETYPE_AQUATIC then
-			self:CapabilitiesRemove(capBitsGround)
-			self:SetGroundEntity(NULL)
-			self:AddFlags(FL_FLY)
-			self:SetNavType(NAV_FLY)
-			self:SetMoveType(MOVETYPE_STEP) // MOVETYPE_FLY = causes issues like Lerp functions not being smooth
-			self:CapabilitiesAdd(CAP_MOVE_FLY)
-		elseif movType == VJ_MOVETYPE_STATIONARY then
-			self:RemoveFlags(FL_FLY)
-			self:CapabilitiesRemove(capBitsShared)
-			self:SetNavType(NAV_NONE)
-			if !IsValid(self:GetParent()) then -- Only set move type if it does NOT have a parent!
-				self:SetMoveType(MOVETYPE_FLY)
-			end
-		elseif movType == VJ_MOVETYPE_PHYSICS then
-			self:RemoveFlags(FL_FLY)
-			self:CapabilitiesRemove(capBitsShared)
-			self:SetNavType(NAV_NONE)
-			self:SetMoveType(MOVETYPE_VPHYSICS)
-		end
-	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local schedule_alert_chaseLOS = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE_LOS")
@@ -2421,19 +2381,18 @@ end
 function ENT:TranslateActivity(act)
 	//VJ.DEBUG_Print(self, "TranslateActivity", act)
 	local selfData = funcGetTable(self)
+	
 	-- Handle idle scared and angry animations
 	if act == ACT_IDLE then
 		if selfData.Weapon_UnarmedBehavior_Active then
-			//return PICK(selfData.AnimTbl_ScaredBehaviorStand)
-			return ACT_COWER
+			return ACT_COWER // PICK(selfData.AnimTbl_ScaredBehaviorStand)
 		elseif selfData.Alerted && self:GetWeaponState() != VJ.WEP_STATE_HOLSTERED && IsValid(funcGetActiveWeapon(self)) then
-			//return PICK(selfData.AnimTbl_WeaponAim)
-			return ACT_IDLE_ANGRY
+			return ACT_IDLE_ANGRY // PICK(selfData.AnimTbl_WeaponAim)
 		end
 	-- Handle running while scared animation
 	elseif act == ACT_RUN && selfData.Weapon_UnarmedBehavior_Active && !selfData.VJ_IsBeingControlled then
-		// PICK(selfData.AnimTbl_ScaredBehaviorMovement)
-		return ACT_RUN_PROTECTED
+		return ACT_RUN_PROTECTED // PICK(selfData.AnimTbl_ScaredBehaviorMovement)
+	-- Handle movement while alerted
 	elseif (act == ACT_RUN or act == ACT_WALK) && selfData.Alerted then
 		-- Handle aiming while moving animations
 		local eneData = selfData.EnemyData
@@ -2619,7 +2578,8 @@ function ENT:Think()
 			local dur = 10 -- Make the default value large so we don't check it too much!
 			if pickedSD then
 				StopSD(selfData.CurrentBreathSound)
-				dur = (selfData.NextSoundTime_Breath == false and SoundDuration(pickedSD)) or math.Rand(selfData.NextSoundTime_Breath.a, selfData.NextSoundTime_Breath.b)
+				local nextTime = selfData.NextSoundTime_Breath
+				dur = (nextTime == false and SoundDuration(pickedSD)) or math.Rand(nextTime.a, nextTime.b)
 				selfData.CurrentBreathSound = VJ.CreateSound(self, pickedSD, selfData.BreathSoundLevel, self:GetSoundPitch(selfData.BreathSoundPitch))
 			end
 			selfData.NextBreathSoundT = curTime + dur

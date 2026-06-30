@@ -88,6 +88,7 @@ local MEM_CACHE_ENT_TYPE = VJ.MEM_CACHE_ENT_TYPE
 local vj_npc_gib_collision = GetConVar("vj_npc_gib_collision")
 local vj_npc_gib_fade = GetConVar("vj_npc_gib_fade")
 local vj_npc_gib_fadetime = GetConVar("vj_npc_gib_fadetime")
+local vj_npc_human_jump = GetConVar("vj_npc_human_jump")
 
 ENT.VJ_ID_Healable = true
 
@@ -98,7 +99,7 @@ ENT.VJ_IsBeingControlled_Tool = false
 ENT.VJ_TheController = NULL
 ENT.VJ_TheControllerEntity = NULL
 ENT.VJ_TheControllerBullseye = NULL
-ENT.SelectedDifficulty = 1
+ENT.SelectedDifficulty = VJ.DIFFICULTY_NORMAL
 ENT.AIState = VJ_STATE_NONE
 ENT.NextProcessT = 0
 ENT.MedicData = {
@@ -478,6 +479,56 @@ function ENT:OnEat(status, statusData)
 		end
 	end
 	return 0
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+local capBitsGround = bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT)
+local capBitsShared = bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT, CAP_MOVE_FLY)
+--
+function ENT:DoChangeMovementType(movType)
+	if !movType then return end
+	self.MovementType = movType
+	if movType == VJ_MOVETYPE_GROUND then
+		self:RemoveFlags(FL_FLY)
+		self:CapabilitiesRemove(CAP_MOVE_FLY)
+		self:SetNavType(NAV_GROUND)
+		self:SetMoveType(MOVETYPE_STEP)
+		self:CapabilitiesAdd(CAP_MOVE_GROUND)
+		-- NOTE: Humans don't set CAP_MOVE_CLIMB by default!
+		if self.IsVJBaseSNPC_Human then
+			if (VJ.AnimExists(self, ACT_JUMP) && vj_npc_human_jump:GetInt() == 1) or self.UsePoseParameterMovement then
+				self:CapabilitiesAdd(CAP_MOVE_JUMP)
+			end
+			if !self.Weapon_Disabled && self.Weapon_CanMoveFire then
+				self:CapabilitiesAdd(CAP_MOVE_SHOOT)
+			end
+		else
+			if VJ.AnimExists(self, ACT_JUMP) or self.UsePoseParameterMovement then
+				self:CapabilitiesAdd(CAP_MOVE_JUMP)
+			end
+			if VJ.AnimExists(self, ACT_CLIMB_UP) then
+				self:CapabilitiesAdd(CAP_MOVE_CLIMB)
+			end
+		end
+	elseif movType == VJ_MOVETYPE_AERIAL or movType == VJ_MOVETYPE_AQUATIC then
+		self:CapabilitiesRemove(capBitsGround)
+		self:SetGroundEntity(NULL)
+		self:AddFlags(FL_FLY)
+		self:SetNavType(NAV_FLY)
+		self:SetMoveType(MOVETYPE_STEP) // MOVETYPE_FLY = causes issues like Lerp functions not being smooth
+		self:CapabilitiesAdd(CAP_MOVE_FLY)
+	elseif movType == VJ_MOVETYPE_STATIONARY then
+		self:RemoveFlags(FL_FLY)
+		self:CapabilitiesRemove(capBitsShared)
+		self:SetNavType(NAV_NONE)
+		if !IsValid(self:GetParent()) then -- Only set move type if it does NOT have a parent!
+			self:SetMoveType(MOVETYPE_FLY)
+		end
+	elseif movType == VJ_MOVETYPE_PHYSICS then
+		self:RemoveFlags(FL_FLY)
+		self:CapabilitiesRemove(capBitsShared)
+		self:SetNavType(NAV_NONE)
+		self:SetMoveType(MOVETYPE_VPHYSICS)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:UpdateAnimationTranslations(wepHoldType)

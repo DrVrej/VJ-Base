@@ -37,7 +37,7 @@ SWEP.Primary.TracerType = "AR2Tracer"
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "AR2"
 SWEP.Primary.Sound = "VJ.Weapon_AR2.Single"
-SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full_blue"}
+SWEP.PrimaryEffects_MuzzleParticles = "vj_rifle_full_blue"
 SWEP.PrimaryEffects_SpawnShells = false
 SWEP.PrimaryEffects_DynamicLightColor = Color(0, 31, 225)
 

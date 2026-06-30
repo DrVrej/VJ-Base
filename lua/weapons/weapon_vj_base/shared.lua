@@ -150,7 +150,7 @@ SWEP.Primary.DistantSoundPitch = VJ.SET(90, 110)
 SWEP.Primary.DistantSoundVolume = 1
 	-- ====== Effects ====== --
 SWEP.PrimaryEffects_MuzzleFlash = true
-SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full"}
+SWEP.PrimaryEffects_MuzzleParticles = "vj_rifle_full" -- Can be string or table
 SWEP.PrimaryEffects_MuzzleParticlesAsOne = false -- Should all the particles spawn together instead of randomly picking one?
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = true

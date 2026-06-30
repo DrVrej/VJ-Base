@@ -18,5 +18,4 @@ SWEP.Primary.Force = 1
 SWEP.Primary.ClipSize = 45
 SWEP.Primary.Ammo = "SMG1"
 SWEP.Primary.Sound = "VJ.Weapon_K3.Single"
-SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_ShellType = "RifleShellEject"

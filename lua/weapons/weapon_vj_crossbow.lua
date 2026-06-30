@@ -27,7 +27,6 @@ SWEP.Primary.Sound = "weapons/crossbow/fire1.wav"
 SWEP.Primary.DisableBulletCode = true
 SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_smoke", "vj_rifle_smoke_dark", "vj_rifle_smoke_flash", "vj_rifle_sparks2"}
 SWEP.PrimaryEffects_MuzzleParticlesAsOne = true
-SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnPrimaryAttack(status, statusData)
