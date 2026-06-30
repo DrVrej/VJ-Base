@@ -122,7 +122,7 @@ function ENT:Initialize()
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetMoveCollide(MOVECOLLIDE_FLY_BOUNCE)
 	self:SetSolid(SOLID_BBOX)
-	self:ResetSequenceInfo()
+	self:ResetSequenceInfo() -- Make it play ACT_IDLE by default
 	
 	if self.CustomOnInitializeBeforePhys then self:CustomOnInitializeBeforePhys() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self.CustomPhysicsObjectOnInitialize then local phys = self:GetPhysicsObject() if IsValid(phys) then self.InitPhys = function() return true end self:CustomPhysicsObjectOnInitialize(phys) end end
@@ -185,9 +185,9 @@ end
 function ENT:Think()
 	if self.Dead then VJ.STOPSOUND(self.CurrentIdleSound) return end
 	//self:SetAngles(self:GetVelocity():GetNormal():Angle())
+	self:NextThink(CurTime())
 	self:OnThink()
 	self:PlaySound("Idle")
-	self:NextThink(CurTime())
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
