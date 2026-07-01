@@ -971,26 +971,22 @@ end
 		- Number, the chosen pitch number
 -----------------------------------------------------------]]
 function ENT:GetSoundPitch(pitchVar)
-	-- We have been given "false",  use general sound pitch
+	-- false/nil given, use general sound pitch
 	if !pitchVar then
 		-- It's set to use the same sound pitch all the time, so check if we have it
-		local pickedNum = self.MainSoundPitchValue
-		if self.MainSoundPitchStatic && pickedNum != 0 then
+		local selfData = funcGetTable(self)
+		local pickedNum = selfData.MainSoundPitchValue
+		if pickedNum != 0 && selfData.MainSoundPitchStatic then
 			return pickedNum
-		else
-			local mainPitch = self.MainSoundPitch
-			if istable(mainPitch) then
-				return math.random(mainPitch.a, mainPitch.b)
-			end
-			return mainPitch
 		end
-	-- We have been given table (VJ.SET), pick randomly between them
+		local mainPitch = selfData.MainSoundPitch
+		return istable(mainPitch) and math.random(mainPitch.a, mainPitch.b) or mainPitch
+	-- Table given (VJ.SET), pick randomly between them
 	elseif istable(pitchVar) then
 		return math.random(pitchVar.a, pitchVar.b)
-	-- Most likely a number, just return it
-	else
-		return pitchVar
 	end
+	-- Most likely a number, just return it
+	return pitchVar
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1017,13 +1013,12 @@ function ENT:GetAttackTimer(mainTime, executionTime, animDur)
 				return animDur - (executionTime / self.AnimPlaybackRate)
 			end
 		end
-	-- Table has been given, discard "executionTime" and "animDur", then pick randomly
+	-- Table given, discard "executionTime" and "animDur", then pick randomly
 	elseif istable(mainTime) then
 		return math.Rand(mainTime.a, mainTime.b) / self.AnimPlaybackRate
-	-- Number has been given, discard "executionTime" and "animDur"
-	else
-		return mainTime / self.AnimPlaybackRate
 	end
+	-- Number given, discard "executionTime" and "animDur"
+	return mainTime / self.AnimPlaybackRate
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1463,10 +1458,10 @@ function ENT:IsJumpLegal(startPos, apex, endPos)
 		start = endPos,
 		endpos = endPos + vecZN100,
 	})
-	/*VJ.DEBUG_TempEnt(startPos, Angle(0, 0, 0), VJ.COLOR_GREEN)
-	VJ.DEBUG_TempEnt(apex, Angle(0, 0, 0), Color(255, 115, 0))
-	VJ.DEBUG_TempEnt(endPos, Angle(0, 0, 0), VJ.COLOR_RED)
-	VJ.DEBUG_TempEnt(tr.HitPos, Angle(0, 0, 0), Color(132, 0, 255))*/
+	//VJ.DEBUG_TempEnt(startPos, Angle(0, 0, 0), VJ.COLOR_GREEN)
+	//VJ.DEBUG_TempEnt(apex, Angle(0, 0, 0), Color(255, 115, 0))
+	//VJ.DEBUG_TempEnt(endPos, Angle(0, 0, 0), VJ.COLOR_RED)
+	//VJ.DEBUG_TempEnt(tr.HitPos, Angle(0, 0, 0), Color(132, 0, 255))
 	return tr.Hit
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2066,8 +2061,9 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Makes the NPC alerted but only as ready, useful when it's alerted by something unknown
 function ENT:DoReadyAlert()
-	self.EnemyData.Reset = false
-	self.Alerted = ALERT_STATE_READY
+	local selfData = funcGetTable(self)
+	selfData.EnemyData.Reset = false
+	selfData.Alerted = ALERT_STATE_READY
 	self:SetNPCState(NPC_STATE_ALERT)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

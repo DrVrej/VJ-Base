@@ -3338,7 +3338,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		end
 		corpse:SetColor(self:GetColor())
 		corpse:SetMaterial(self:GetMaterial())
-		if corpseMdlCustom == false && self.DeathCorpseSubMaterials != nil then -- Take care of sub materials
+		if !corpseMdlCustom && self.DeathCorpseSubMaterials then -- Take care of sub materials
 			for _, x in ipairs(self.DeathCorpseSubMaterials) do
 				if self:GetSubMaterial(x) != "" then
 					corpse:SetSubMaterial(x, self:GetSubMaterial(x))

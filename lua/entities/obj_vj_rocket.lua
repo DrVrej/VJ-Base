@@ -50,22 +50,8 @@ ENT.SoundTbl_OnCollide = "ambient/explosions/explode_8.wav"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
 	//util.SpriteTrail(self, 0, Color(90, 90, 90, 255), false, 10, 1, 3, 1 / (15 + 1)*0.5, "trails/smoke.vmt")
-	ParticleEffectAttach("vj_rocket_idle1", PATTACH_ABSORIGIN_FOLLOW, self, 0)
-	ParticleEffectAttach("vj_rocket_idle2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
-	//ParticleEffectAttach("rocket_smoke", PATTACH_ABSORIGIN_FOLLOW, self, 0)
-	//ParticleEffectAttach("smoke_burning_engine_01", PATTACH_ABSORIGIN_FOLLOW, self, 0)
-	
-	//local dynLight = ents.Create("light_dynamic")
-	//dynLight:SetKeyValue("brightness", "1")
-	//dynLight:SetKeyValue("distance", "200")
-	//dynLight:SetLocalPos(self:GetPos())
-	//dynLight:SetLocalAngles( self:GetAngles() )
-	//dynLight:Fire("Color", "255 150 0")
-	//dynLight:SetParent(self)
-	//dynLight:Spawn()
-	//dynLight:Activate()
-	//dynLight:Fire("TurnOn")
-	//self:DeleteOnRemove(dynLight)
+	ParticleEffectAttach("vj_rocket_idle1", PATTACH_ABSORIGIN_FOLLOW, self, 0) // "rocket_smoke"
+	ParticleEffectAttach("vj_rocket_idle2", PATTACH_ABSORIGIN_FOLLOW, self, 0) // "smoke_burning_engine_01"
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defAngle = Angle(0, 0, 0)
@@ -77,10 +63,6 @@ function ENT:OnDestroy(data, phys)
 	
 	local effectData = EffectData()
 	effectData:SetOrigin(data.HitPos)
-	//effectData:SetScale(500)
-	//util.Effect("HelicopterMegaBomb", effectData)
-	//util.Effect("ThumperDust", effectData)
-	//util.Effect("Explosion", effectData)
 	util.Effect("VJ_Small_Explosion1", effectData)
 
 	local expLight = ents.Create("light_dynamic")

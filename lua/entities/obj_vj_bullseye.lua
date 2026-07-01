@@ -56,7 +56,7 @@ function ENT:Initialize()
 	end
 	self:SetUseType(SIMPLE_USE)
 	self:SetMaxHealth(999999)
-	self:SetHealth(999999) -- So SNPCs won't think it's dead
+	self:SetHealth(999999) -- So NPCs won't think it's dead
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AcceptInput(key, activator, caller, data)

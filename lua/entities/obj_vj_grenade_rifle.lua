@@ -51,10 +51,6 @@ function ENT:OnDestroy(data, phys)
 	
 	local effectData = EffectData()
 	effectData:SetOrigin(data.HitPos)
-	//effectData:SetScale(500)
-	//util.Effect("HelicopterMegaBomb", effectData)
-	//util.Effect("ThumperDust", effectData)
-	//util.Effect("Explosion", effectData)
 	util.Effect("VJ_Small_Explosion1", effectData)
 
 	local expLight = ents.Create("light_dynamic")

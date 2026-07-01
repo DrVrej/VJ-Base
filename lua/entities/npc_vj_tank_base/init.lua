@@ -20,7 +20,7 @@ ENT.CombatIdleSoundLevel = 70
 ENT.AlertSoundLevel = 70
 ENT.DeathSoundLevel = 100
 
-ENT.SoundTbl_Breath = "vj_base/vehicles/armored/engine_idle.wav" -- Recommended to use looping WAV sound!
+ENT.SoundTbl_Breath = "vj_base/vehicles/armored/engine_idle.wav" -- Recommended to use looping WAV sounds!
 ENT.SoundTbl_Death = "VJ.Explosion"
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Tank Base ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -44,7 +44,7 @@ ENT.Tank_DeathDriverCorpse = false -- Driver corpse to spawn on death | false = 
 ENT.Tank_DeathDriverCorpseChance = 3 -- Chance that the driver corpse spawns | 1 = always
 ENT.Tank_DeathDecal = "Scorch" -- Decal to spawn under the tank's location on death
 	-- ====== Sounds ====== --
-	-- Driving movement sounds | Recommended to use looping WAV sound!
+	-- Driving movement sounds | Recommended to use looping WAV sounds!
 ENT.HasMoveSound = true
 ENT.Tank_SoundTbl_DrivingEngine = false
 ENT.Tank_SoundTbl_Track = false

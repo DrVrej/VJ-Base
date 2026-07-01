@@ -61,7 +61,6 @@ function ENT:Initialize()
 	envFlare:Spawn()
 	envFlare:Fire("Start", tostring(self.FuseTime))
 	envFlare:SetOwner(self)
-	
 	envFlare:SetColor(VJ.COLOR_RED)
 
 	self.CurrentIdleSound = CreateSound(self, "weapons/flaregun/burn.wav")

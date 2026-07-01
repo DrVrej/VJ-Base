@@ -33,7 +33,7 @@ ENT.Tank_Shell_VelocitySpeed = 4000 -- How fast should the shell travel?
 ENT.Tank_Shell_MuzzleFlashPos = Vector(0, -235, 18)
 ENT.Tank_Shell_ParticlePos = Vector(-205, 0, 72)
 	-- ====== Sounds ====== --
-	-- Gun turning movement sound | Recommended to use looping WAV sound!
+	-- Gun turning movement sound | Recommended to use looping WAV sounds!
 ENT.HasMoveSound = true
 ENT.Tank_SoundTbl_Turning = false
 ENT.Tank_TurningSoundLevel = 80
