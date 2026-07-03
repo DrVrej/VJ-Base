@@ -133,7 +133,7 @@ function ENT:OnCollision(data, phys)
 		ent:TakeDamageInfo(dmgInfo, self)
 	end
 
-	if (ent:IsNPC() or ent:IsPlayer()) then return end
+	if ent.VJ_ID_Living then return end
 	
 	self:OnBounce(data, phys)
 

@@ -199,7 +199,7 @@ else
 			local classtbl = net.ReadTable()
 			if #classtbl > 0 then
 				ent.VJ_NPC_Class = classtbl
-				if ent:IsNPC() && table.HasValue(classtbl, "CLASS_PLAYER_ALLY") && ply:GetInfoNum("vj_tool_relationship_allytoplyallies", 1) == 1 then
+				if !ent:IsPlayer() && table.HasValue(classtbl, "CLASS_PLAYER_ALLY") && ply:GetInfoNum("vj_tool_relationship_allytoplyallies", 1) == 1 then
 					ent.AlliedWithPlayerAllies = true
 				end
 			else

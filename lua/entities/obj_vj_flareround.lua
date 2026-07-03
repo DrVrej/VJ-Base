@@ -97,17 +97,18 @@ function ENT:Use(activator, caller)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, physobj)
-	-- Make players and NPCs take damage
+	-- Make living things take damage on collision
 	local hitEnt = data.HitEntity
-	if IsValid(hitEnt) && (hitEnt:IsNPC() or hitEnt:IsPlayer()) then
-		//hitEnt:Ignite(1)
+	if IsValid(hitEnt) && hitEnt.VJ_ID_Living then
+		local owner = self:GetOwner()
 		local dmg = DamageInfo()
 		dmg:SetDamage(math.random(4, 8))
 		dmg:SetDamageType(DMG_BURN)
-		dmg:SetAttacker(self)
+		dmg:SetAttacker(IsValid(owner) and owner or self)
 		dmg:SetInflictor(self)
 		dmg:SetDamagePosition(data.HitPos)
 		hitEnt:TakeDamageInfo(dmg, self)
+		//hitEnt:Ignite(1)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

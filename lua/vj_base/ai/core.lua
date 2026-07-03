@@ -2195,7 +2195,7 @@ function ENT:MaintainRelationships()
 				elseif ent:IsNextBot() then
 					entType = ENT_TYPE_NEXTBOT
 					self:SetRelationshipMemory(ent, MEM_CACHE_ENT_TYPE, ENT_TYPE_NEXTBOT)
-				else -- Other
+				else
 					entType = ENT_TYPE_OTHER
 					self:SetRelationshipMemory(ent, MEM_CACHE_ENT_TYPE, ENT_TYPE_OTHER)
 				end
@@ -2214,15 +2214,14 @@ function ENT:MaintainRelationships()
 				if myClassesChanged or entCachedClasses != entClasses then
 					-- Handle "self.VJ_NPC_Class"
 					for _, friClass in ipairs(myClasses) do
-						//if friClass == "CLASS_PLAYER_ALLY" && !self.PlayerFriendly then self.PlayerFriendly = true end -- If player ally then set the PlayerFriendly to true
 						if entClasses && VJ.HasValue(entClasses, friClass) then
 							if entType == ENT_TYPE_PLAYER then
 								calculatedDisp = D_LI
 							else
-								-- Since we both have "CLASS_PLAYER_ALLY" then we need to do a special check if we both also have "self.AlliedWithPlayerAllies"
+								-- If we both have "CLASS_PLAYER_ALLY" then do a special check if we both have "self.AlliedWithPlayerAllies"
 								-- If we both do NOT have that, then we both like players but not each other!
 								if friClass == "CLASS_PLAYER_ALLY" then
-									if (myFriPlyAllies && ent.AlliedWithPlayerAllies) or ent.IsDefaultNPC then
+									if myFriPlyAllies && ent.AlliedWithPlayerAllies then
 										calculatedDisp = D_LI
 									end
 								else
@@ -2231,11 +2230,6 @@ function ENT:MaintainRelationships()
 							end
 						end
 					end
-					
-					-- Handle "self.PlayerFriendly" AND "self.AlliedWithPlayerAllies" (As a backup in case the NPC doesn't have the "CLASS_PLAYER_ALLY" class)
-					//if !calculatedDisp && self.PlayerFriendly && (entType == ENT_TYPE_PLAYER or (entType == ENT_TYPE_NPC && myFriPlyAllies && ent.PlayerFriendly && ent.AlliedWithPlayerAllies)) then
-						//calculatedDisp = D_LI
-					//end
 					
 					-- Handle caching
 					//VJ.DEBUG_Print(self, false, "not cached", ent, calculatedDisp)

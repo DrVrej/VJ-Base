@@ -177,7 +177,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 			if entIsVJ then
 				entData.NextProcessT = CurTime() + math.Rand(0.15, 1)
 			elseif entInfo then
-				entData.IsDefaultNPC = true
+				entData.AlliedWithPlayerAllies = true
 			end
 			-- Wait 0.1 seconds to make sure the NPC is initialized properly (key values, spawn flags, etc.)
 			timer.Simple(0.1, function()
