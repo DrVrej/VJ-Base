@@ -175,7 +175,6 @@ ENT.Bleeds = true -- Can it bleed? Controls all bleeding related components such
 ENT.BloodColor = VJ.BLOOD_COLOR_NONE -- Its blood type, this will determine the blood decal, particle, etc.
 ENT.HasBloodDecal = true -- Should it spawn a decal when damaged?
 ENT.BloodDecal = {} -- Decals to spawn when it's damaged
-ENT.BloodDecalUseGMod = false -- Should it use the current default decals defined by Garry's Mod? | Only applies for certain blood types!
 ENT.BloodDecalDistance = 150 -- Max distance blood decals can splatter
 ENT.HasBloodParticle = true -- Should it spawn a particle when damaged?
 ENT.BloodParticle = {} -- Particles to spawn when it's damaged
@@ -1020,7 +1019,6 @@ local vj_npc_ply_chat = GetConVar("vj_npc_ply_chat")
 local vj_npc_medic = GetConVar("vj_npc_medic")
 local vj_npc_gib_vfx = GetConVar("vj_npc_gib_vfx")
 local vj_npc_gib = GetConVar("vj_npc_gib")
-local vj_npc_blood_gmod = GetConVar("vj_npc_blood_gmod")
 local vj_npc_sight_xray = GetConVar("vj_npc_sight_xray")
 local vj_npc_snd_gib = GetConVar("vj_npc_snd_gib")
 local vj_npc_snd_track = GetConVar("vj_npc_snd_track")
@@ -1091,7 +1089,6 @@ local function initConvars(self)
 	if vj_npc_medic:GetInt() == 0 then self.IsMedic = false end
 	if vj_npc_gib_vfx:GetInt() == 0 then self.HasGibOnDeathEffects = false end
 	if vj_npc_gib:GetInt() == 0 then self.CanGib = false self.CanGibOnDeath = false end
-	if vj_npc_blood_gmod:GetInt() == 1 then self.BloodDecalUseGMod = true end
 	if vj_npc_sight_xray:GetInt() == 1 then self.SightAngle = 360 self.EnemyXRayDetection = true end
 	if vj_npc_snd_gib:GetInt() == 0 then self.HasGibOnDeathSounds = false end
 	if vj_npc_snd_track:GetInt() == 0 then self.HasSoundTrack = false end
@@ -3288,7 +3285,9 @@ function ENT:FinishDeath(dmginfo, hitgroup)
 	if self.DropDeathLoot then
 		self:CreateDeathLoot(dmginfo, hitgroup)
 	end
-	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then self:CreateDeathCorpse(dmginfo, hitgroup) end
+	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then
+		self:CreateDeathCorpse(dmginfo, hitgroup)
+	end
 	self:Remove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

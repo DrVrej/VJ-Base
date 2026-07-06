@@ -160,7 +160,6 @@ ENT.Bleeds = true -- Can it bleed? Controls all bleeding related components such
 ENT.BloodColor = VJ.BLOOD_COLOR_NONE -- Its blood type, this will determine the blood decal, particle, etc.
 ENT.HasBloodDecal = true -- Should it spawn a decal when damaged?
 ENT.BloodDecal = {} -- Decals to spawn when it's damaged
-ENT.BloodDecalUseGMod = false -- Should it use the current default decals defined by Garry's Mod? | Only applies for certain blood types!
 ENT.BloodDecalDistance = 150 -- Max distance blood decals can splatter
 ENT.HasBloodParticle = true -- Should it spawn a particle when damaged?
 ENT.BloodParticle = {} -- Particles to spawn when it's damaged
@@ -1702,7 +1701,6 @@ local vj_npc_dangerdetection = GetConVar("vj_npc_dangerdetection")
 local vj_npc_wep_drop = GetConVar("vj_npc_wep_drop")
 local vj_npc_gib_vfx = GetConVar("vj_npc_gib_vfx")
 local vj_npc_gib = GetConVar("vj_npc_gib")
-local vj_npc_blood_gmod = GetConVar("vj_npc_blood_gmod")
 local vj_npc_sight_xray = GetConVar("vj_npc_sight_xray")
 local vj_npc_snd_gib = GetConVar("vj_npc_snd_gib")
 local vj_npc_snd_track = GetConVar("vj_npc_snd_track")
@@ -1772,7 +1770,6 @@ local function initConvars(self)
 	if vj_npc_wep_drop:GetInt() == 0 then self.DropWeaponOnDeath = false end
 	if vj_npc_gib_vfx:GetInt() == 0 then self.HasGibOnDeathEffects = false end
 	if vj_npc_gib:GetInt() == 0 then self.CanGib = false self.CanGibOnDeath = false end
-	if vj_npc_blood_gmod:GetInt() == 1 then self.BloodDecalUseGMod = true end
 	if vj_npc_sight_xray:GetInt() == 1 then self.SightAngle = 360 self.EnemyXRayDetection = true end
 	if vj_npc_snd_gib:GetInt() == 0 then self.HasGibOnDeathSounds = false end
 	if vj_npc_snd_track:GetInt() == 0 then self.HasSoundTrack = false end
@@ -2428,11 +2425,16 @@ function ENT:TranslateActivity(act)
 	return act
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Setup or change the weapon of the NPC
+		- wep = Weapon to give or setup | when nil/false, it will setup the current active weapon | DEFAULT: nil/false
+		- invSwitch = Is this an inventory change? If true, it will not delete the previous weapon! | DEFAULT: false
+	Returns
+		- Entity = Weapon entity that was given or setup or switched to, otherwise it will return NULL
+-----------------------------------------------------------]]
 local sdWepSwitch = {"physics/metal/weapon_impact_soft1.wav", "physics/metal/weapon_impact_soft2.wav", "physics/metal/weapon_impact_soft3.wav"}
 --
 function ENT:DoChangeWeapon(wep, invSwitch)
-	wep = wep or nil -- The weapon to give or setup | Setting it nil will only setup the current active weapon
-	invSwitch = invSwitch or false -- If true, it will not delete the previous weapon!
 	local curWep = funcGetActiveWeapon(self)
 	
 	-- If not supposed to have a weapon, then return!
@@ -2441,13 +2443,13 @@ function ENT:DoChangeWeapon(wep, invSwitch)
 		return NULL
 	end
 	
-	-- Only remove and actually give the weapon if the function is given a weapon class to set
-	if wep != nil then
-		if invSwitch then
+	-- Only remove and give the weapon if the function is given a weapon class to set
+	if wep then
+		if invSwitch then -- If this is an inventory switch then keep the previous weapon and just switch to the given weapon
 			self:SelectWeapon(wep)
-			VJ.EmitSound(self, sdWepSwitch, 70)
 			curWep = wep
-		else
+			VJ.EmitSound(self, sdWepSwitch, 70)
+		else -- If this is a new weapon, then remove the previous weapon and give the new one
 			if IsValid(curWep) && self.WeaponInventoryStatus <= VJ.WEP_INVENTORY_PRIMARY then
 				curWep:Remove()
 			end
@@ -2461,7 +2463,9 @@ function ENT:DoChangeWeapon(wep, invSwitch)
 		self.WeaponAttackAnim = ACT_INVALID
 		self:SetWeaponState() -- Reset the weapon state because we do NOT want previous weapon's state to be used!
 		if invSwitch then
-			if curWep.IsVJBaseWeapon then curWep:Equip(self) end
+			if curWep.IsVJBaseWeapon then
+				curWep:Equip(self)
+			end
 		else -- If we are not switching weapons, then we know curWep is the primary weapon
 			self.WeaponInventoryStatus = VJ.WEP_INVENTORY_PRIMARY
 			-- If this is completely new weapon, then set the weapon inventory's primary to this weapon
@@ -3436,45 +3440,34 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Determines whether it's about to fire its current weapon
-		- checkDistance = Should it check for distance and weapon time too? | DEFAULT = false
-		- checkDistanceOnly = Should it only check the above statement? | DEFAULT = false
+		- checkDist = Should it check for distance and weapon time too? | DEFAULT = false
+		- checkDistOnly = Should it only check the above statement? | DEFAULT = false
 	Returns
 		- Boolean, Whether or not it can fire its active weapon
 -----------------------------------------------------------]]
-function ENT:CanFireWeapon(checkDistance, checkDistanceOnly)
+function ENT:CanFireWeapon(checkDist, checkDistOnly)
 	if self:OnWeaponCanFire() == false then return false end
-	local hasDist = false
-	local hasChecks = false
 	local selfData = funcGetTable(self)
 	local curWep = selfData.WeaponEntity
-	
 	if selfData.PauseAttacks or !IsValid(curWep) or self:GetWeaponState() != VJ.WEP_STATE_READY then return false end
+	
 	if selfData.VJ_IsBeingControlled then
-		checkDistance = false
-		if checkDistanceOnly then
-			return true
-		end
-	else
+		return checkDistOnly or (!selfData.AttackType && !self:IsBusy("Activities"))
+	end
+	
+	local hasDist = false
+	if checkDist && CurTime() > selfData.NextWeaponAttackT then
 		local enemyDist = selfData.EnemyData.Distance
-		if checkDistance && CurTime() > selfData.NextWeaponAttackT then
-			if curWep.IsMeleeWeapon then
-				-- Melee weapons only check for distance if not already playing the attack animation
-				if VJ.IsCurrentAnim(self, selfData.WeaponAttackAnim) or enemyDist < selfData.Weapon_MaxDistance then
-					hasDist = true
-				end
-			elseif enemyDist < selfData.Weapon_MaxDistance && enemyDist > selfData.Weapon_MinDistance then
-				hasDist = true
-			end
-		end
-		if checkDistanceOnly then
-			return hasDist
+		if curWep.IsMeleeWeapon then -- Melee weapons skip distance check if attack animation is playing
+			hasDist = VJ.IsCurrentAnim(self, selfData.WeaponAttackAnim) or enemyDist < selfData.Weapon_MaxDistance
+		else
+			hasDist = enemyDist < selfData.Weapon_MaxDistance && enemyDist > selfData.Weapon_MinDistance
 		end
 	end
-	if !selfData.AttackType && !self:IsBusy("Activities") then
-		hasChecks = true
-		if !checkDistance then return true end
+	if checkDistOnly then
+		return hasDist
 	end
-	return hasDist && hasChecks
+	return (!checkDist or hasDist) && !selfData.AttackType && !self:IsBusy("Activities")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local schedule_yield_player = vj_ai_schedule.New("SCHEDULE_YIELD_PLAYER")
@@ -4271,7 +4264,10 @@ function ENT:FinishDeath(dmginfo, hitgroup)
 	if self.DropDeathLoot then
 		self:CreateDeathLoot(dmginfo, hitgroup)
 	end
-	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then self:DeathWeaponDrop(dmginfo, hitgroup) self:CreateDeathCorpse(dmginfo, hitgroup) end
+	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then
+		self:DeathWeaponDrop(dmginfo, hitgroup)
+		self:CreateDeathCorpse(dmginfo, hitgroup)
+	end
 	self:Remove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -156,7 +156,6 @@ local entInfos = {
 	monster_cockroach = {func = function(ent) ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE end},
 	monster_flyer = {func = function(ent) ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE ent.MovementType = VJ_MOVETYPE_AERIAL end},
 }
-
 local ignoredNPCs = {npc_cranedriver = true, npc_missiledefense = true, monster_generic = true, monster_furniture = true, npc_furniture = true, npc_helicoptersensor = true, monster_gman = true, npc_grenade_frag = true, bullseye_strider_focus = true, npc_bullseye = true, npc_enemyfinder = true, hornet = true}
 local dangerEnts = {m9k_thrown_nitrox = true, m9k_nitro_vapor = true, m9k_nervegasnade = true, m9k_released_poison = true, m9k_mad_c4 = true}
 local grenadeEnts = {npc_grenade_frag = true, grenade_hand = true, obj_spore = true, obj_grenade = true, obj_handgrenade = true, doom3_grenade = true, fas2_thrown_m67 = true, cw_grenade_thrown = true, obj_cpt_grenade = true, cw_flash_thrown = true, ent_hl1_grenade = true, rtbr_grenade_frag = true, ent_ins_m67 = true, ent_ins_rgd5 = true, csgo_hegrenade_projectile = true, csgo_incgrenade_projectile = true, bb_throwncssfrag = true, ent_doimills = true, ent_doimk2 = true, ent_doino69 = true, ent_doistielhandgranate = true, m9k_thrown_m61 = true, m9k_thrown_sticky_grenade = true, sent_uh_grenade = true, stalker_grenade_f1_ent = true, stalker_grenade_rgd_ent = true}

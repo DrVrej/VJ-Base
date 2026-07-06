@@ -85,6 +85,7 @@ local MEM_CACHE_CLASSES = VJ.MEM_CACHE_CLASSES
 local MEM_CACHE_DISPOSITION = VJ.MEM_CACHE_DISPOSITION
 local MEM_CACHE_ENT_TYPE = VJ.MEM_CACHE_ENT_TYPE
 
+local vj_npc_blood_gmod = GetConVar("vj_npc_blood_gmod")
 local vj_npc_gib_collision = GetConVar("vj_npc_gib_collision")
 local vj_npc_gib_fade = GetConVar("vj_npc_gib_fade")
 local vj_npc_gib_fadetime = GetConVar("vj_npc_gib_fadetime")
@@ -605,7 +606,7 @@ function ENT:MaintainIdleAnimation(force)
 		end
 	end
 	
-	-- Alternative system: Directly sets the translated activity, but has other downsides
+	-- Alternative system: Directly sets the translated activity, but has other downsides such as not being able to detect if the NPC is idling by checking for ACT_IDLE
 	//if self.CurrentIdleAnimation != self:GetIdealSequence() or CurTime() > self.NextIdleStandTime then
 		//self.CurrentIdleAnimation = self:GetIdealSequence()
 		//self.NextIdleStandTime = CurTime() + (self:SequenceDuration(self:GetIdealSequence()) / self:GetPlaybackRate())
@@ -613,7 +614,7 @@ function ENT:MaintainIdleAnimation(force)
 	//end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MaintainIdleBehavior(idleType) -- idleType: nil = Random | 1 = Wander | 2 = Idle Stand
+function ENT:MaintainIdleBehavior(idleType) -- idleType: nil = Random | 1 = Wander | 2 = Stand
 	local curTime = CurTime()
 	local selfData = funcGetTable(self)
 	if selfData.Dead or selfData.VJ_IsBeingControlled or (selfData.AttackAnimTime > curTime) or (selfData.NextIdleTime > curTime) or selfData.AA_CurrentMovePos or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
@@ -622,21 +623,19 @@ function ENT:MaintainIdleBehavior(idleType) -- idleType: nil = Random | 1 = Wand
 	if self:IsGoalActive() or selfData.DisableWandering or selfData.IsGuard or selfData.MovementType == VJ_MOVETYPE_STATIONARY or !selfData.LastHiddenZone_CanWander or selfData.NextWanderTime > curTime or selfData.IsFollowing or selfData.MedicData.Status then
 		self:SCHEDULE_IDLE_STAND()
 		return -- Don't set NextWanderTime below
-	elseif !idleType && selfData.IdleAlwaysWander then
-		idleType = 1
 	end
 	
-	-- Random (Wander & Idle Stand)
+	-- Random (Wander & Stand)
 	if !idleType then
-		if math.random(1, 3) == 1 then
+		if selfData.IdleAlwaysWander or math.random(1, 3) == 1 then
 			self:SCHEDULE_IDLE_WANDER()
 		else
 			self:SCHEDULE_IDLE_STAND()
 		end
-	-- Wander
+	-- Forced: Wander
 	elseif idleType == 1 then
 		self:SCHEDULE_IDLE_WANDER()
-	-- Idle Stand
+	-- Forced: Stand
 	elseif idleType == 2 then
 		self:SCHEDULE_IDLE_STAND()
 		return -- Don't set NextWanderTime below
@@ -915,14 +914,14 @@ function ENT:IsBusy(checkType)
 	local checkAll = !checkType
 	local selfData = funcGetTable(self)
 	
-	-- Check behaviors
+	-- Behaviors
 	if checkAll then
 		if selfData.FollowData.Moving or selfData.MedicData.Status then return true end
 	elseif checkType == "Behaviors" then
 		return selfData.FollowData.Moving or selfData.MedicData.Status
 	end
 	
-	-- Check activities
+	-- Activities
 	if checkAll or checkType == "Activities" then
 		if selfData.PauseAttacks then return true end
 		local curTime = CurTime()
@@ -1140,8 +1139,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 	return resultAng
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
--- Based on: https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/game/server/ai_motor.cpp#L780
-function ENT:DeltaIdealYaw()
+function ENT:DeltaIdealYaw() -- Based on: https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/game/server/ai_motor.cpp#L780
     local flCurrentYaw = (360 / 65536) * (math.floor(self:GetLocalAngles().y * (65536 / 360)) % 65535)
     if flCurrentYaw == self:GetIdealYaw() then
         return 0
@@ -1946,9 +1944,7 @@ end
 function ENT:MaintainConstantlyFaceEnemy()
 	local selfData = funcGetTable(self)
 	local eneData = selfData.EnemyData
-	if eneData.Distance < selfData.ConstantlyFaceEnemy_MinDistance then
-		-- Handle "IfVisible" and "IfAttacking" cases
-		if (selfData.ConstantlyFaceEnemy_IfVisible && !eneData.Visible) or (!selfData.ConstantlyFaceEnemy_IfAttacking && selfData.AttackType) then return end
+	if eneData.Distance < selfData.ConstantlyFaceEnemy_MinDistance && ((selfData.ConstantlyFaceEnemy_IfVisible && !eneData.Visible) or (!selfData.ConstantlyFaceEnemy_IfAttacking && selfData.AttackType)) then
 		local postures = selfData.ConstantlyFaceEnemy_Postures
 		if (postures == "Both") or (postures == "Moving" && self:IsMoving()) or (postures == "Standing" && !self:IsMoving()) then
 			self:SetTurnTarget("Enemy")
@@ -2150,9 +2146,7 @@ function ENT:MaintainRelationships()
 	local customFunc = self.OnMaintainRelationships
 	local nearestDist = false
 	local it = 1
-	//for k, ent in ipairs(entities) do
-	//for it = 1, #entities do
-	while it <= #entities do
+	while it <= #entities do //for it = 1, #entities do //for k, ent in ipairs(entities) do
 		local ent = entities[it]
 		local entMemory = memories[ent]
 		if !IsValid(ent) then
@@ -2724,7 +2718,7 @@ function ENT:SetupBloodColor(blColor)
 			selfData.BloodParticle = blood.particle
 		end
 		if !PICK(selfData.BloodDecal) then
-			selfData.BloodDecal = selfData.BloodDecalUseGMod and blood.decal_gmod or blood.decal
+			selfData.BloodDecal = vj_npc_blood_gmod:GetInt() == 1 and blood.decal_gmod or blood.decal
 		end
 		if !PICK(selfData.BloodPool) then
 			selfData.BloodPool = blood.pool[npcSize]
@@ -2734,16 +2728,15 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodParticles(dmginfo, hitgroup)
 	local particleName = PICK(self.BloodParticle)
-	if particleName then
-		local dmgPos = dmginfo:GetDamagePosition()
-		local particle = ents.Create("info_particle_system")
-		particle:SetKeyValue("effect_name", particleName)
-		particle:SetPos((dmgPos == defPos and (self:GetPos() + self:OBBCenter())) or dmgPos)
-		particle:Spawn()
-		particle:Activate()
-		particle:Fire("Start")
-		particle:Fire("Kill", nil, 0.1)
-	end
+	if !particleName then return end
+	local dmgPos = dmginfo:GetDamagePosition()
+	local particle = ents.Create("info_particle_system")
+	particle:SetKeyValue("effect_name", particleName)
+	particle:SetPos((dmgPos == defPos and (self:GetPos() + self:OBBCenter())) or dmgPos)
+	particle:Spawn()
+	particle:Activate()
+	particle:Fire("Start")
+	particle:Fire("Kill", nil, 0.1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodDecals(dmginfo, hitgroup)
@@ -2781,23 +2774,22 @@ local vecZ30 = Vector(0, 0, 30)
 local vecZ1 = Vector(0, 0, 1)
 --
 function ENT:SpawnBloodPool(dmginfo, hitgroup, corpse)
-	local getBloodPool = PICK(self.BloodPool)
-	if getBloodPool then
-		timer.Simple(2.2, function()
-			if IsValid(corpse) then
-				local pos = corpse:GetPos() + corpse:OBBCenter()
-				local tr = util.TraceLine({
-					start = pos,
-					endpos = pos - vecZ30,
-					filter = corpse,
-					mask = CONTENTS_SOLID
-				})
-				if tr.HitWorld && (tr.HitNormal == vecZ1) then // (tr.Fraction <= 0.405)
-					ParticleEffect(getBloodPool, tr.HitPos, defAng, nil)
-				end
+	local particleName = PICK(self.BloodPool)
+	if !particleName then return end
+	timer.Simple(2.2, function()
+		if IsValid(corpse) then
+			local pos = corpse:GetPos() + corpse:OBBCenter()
+			local tr = util.TraceLine({
+				start = pos,
+				endpos = pos - vecZ30,
+				filter = corpse,
+				mask = CONTENTS_SOLID
+			})
+			if tr.HitWorld && tr.HitNormal == vecZ1 then // tr.Fraction <= 0.405
+				ParticleEffect(particleName, tr.HitPos, defAng, nil)
 			end
-		end)
-	end
+		end
+	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlayFootstepSound(customSD)

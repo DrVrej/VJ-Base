@@ -11,34 +11,26 @@ local colorEnt = Color(255, 255, 255, 150)
 --[[---------------------------------------------------------
 	Prints the giving arguments in a organized fashion
 		- ent = Entity that the debug is being called from | DEFAULT = NULL
-		- name = Name of the call, usually the name of the function | DEFAULT = false
+		- callName = Name of the call, usually the name of the function | DEFAULT = false
 		- type = Type of debug | If it doesn't match one of the following types then it will just act as another print value
 			-> "error" | "warn"
 -----------------------------------------------------------]]
-function VJ.DEBUG_Print(ent, name, type, ...)
-	-- Check if a name was given
-	local printName = ""
-	if name then
-		printName = " | " .. name
-	end
-	
+function VJ.DEBUG_Print(ent, callName, type, ...)
 	-- Check if a type was given
-	local colorType = VJ.COLOR_SERVER
-	local typeIsValid = false -- Was a specific type found?
+	local colorType = CLIENT and VJ.COLOR_CLIENT or VJ.COLOR_SERVER
+	local typeGiven = false -- Was a valid type given?
     if type == "error" then
-		typeIsValid = true
+		typeGiven = true
         colorType = VJ.COLOR_RED
     elseif type == "warn" then
-		typeIsValid = true
+		typeGiven = true
         colorType = VJ.COLOR_ORANGE
-	elseif CLIENT then
-		colorType = VJ.COLOR_CLIENT
     end
 	
 	-- Unpack the arguments
     local args = {...}
 	local printTbl = {}
-	if !typeIsValid then
+	if !typeGiven then
 		table.insert(args, 1, type)
 	end
     for _, arg in ipairs(args) do
@@ -50,7 +42,7 @@ function VJ.DEBUG_Print(ent, name, type, ...)
     end
 	
 	-- Output
-    MsgC(colorEnt, ent, printName, " : ", colorType, unpack(printTbl))
+    MsgC(colorEnt, ent, callName and (" | " .. callName) or "", " : ", colorType, unpack(printTbl))
 	MsgC(colorType, "\n")
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
@@ -79,22 +71,26 @@ function VJ.DEBUG_TempEnt(pos, ang, color, time, mdl)
 	timer.Simple(time or 3, function() if IsValid(ent) then ent:Remove() end end)
 	return ent
 end
+--------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Runs the given function x amount of times and prints how long it took to run it
 		- count = Number of times to execute the given function
 		- func = Function to execute on every counter
 	EXAMPLE:
-		VJ_StressTest(1000, function()
-			-- Some code
+		VJ.DEBUG_Stress(1000, function()
+			-- code
 		end)
 -----------------------------------------------------------]]
 function VJ.DEBUG_Stress(count, func)
+	local memStart = collectgarbage("count")
 	local startTime = SysTime()
     for _ = 1, count do
 		func()
     end
 	local totalTime = SysTime() - startTime
-	print("Total: " .. string.format("%f", totalTime) .. " sec | Average: " .. string.format("%f", totalTime / count) .. " sec")
+	local memEnd = collectgarbage("count")
+	collectgarbage("collect")
+	print(string.format("TOTAL (%d) = %f sec | AVG = %f sec | MEMORY = %.2f -> %.2f kb (%.2f kb)", count, totalTime, totalTime / count, memStart, memEnd, memEnd - memStart))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Version for all VJ NPCs
@@ -124,24 +120,6 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated_Test", function(ent)
 		debug.setmetatable(ent, mt)
 	end
 end)
-*/
----------------------------------------------------------------------------------------------------------------------------------------------
--- Version for individual NPCs
--- ISSUE: Performance loss
-/*
-local metaOrg = debug.getmetatable(self)
-local metaVJ = {}
-local function newIndex(ent, key)
-	local val = metaVJ[key]
-	if val != nil then return val end
-	return metaOrg.__index(ent, key)
-end
-function metaVJ:SetMaxLookDistance(dist)
-	metaOrg.SetMaxLookDistance(self, dist)
-end
-local mt = table.Merge({}, metaOrg) -- Create a new table to avoid overflow!
-mt.__index = newIndex
-debug.setmetatable(self, mt)
 */
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Retrieving outputs from NPCs or other entities | Outputs: https://developer.valvesoftware.com/wiki/Base.fgd/Garry%27s_Mod

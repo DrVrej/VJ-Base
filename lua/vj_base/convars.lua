@@ -146,23 +146,22 @@ VJ.AddClientConVar("vj_wep_shells", 1, "Should weapons drop bullet shells?")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if SERVER then
 	concommand.Add("vj_run_npc_num", function(ply, cmd, args)
-		if IsValid(ply) && ply:IsAdmin() then
-			local numNPC = 0
-			local numVJ = 0
-			local numNextBot = 0
-			for _, v in ipairs(ents.GetAll()) do
-				if v:IsNPC() then
-					numNPC = numNPC + 1
-					if v.IsVJBaseSNPC then
-						numVJ = numVJ + 1
-					end
-				elseif v:IsNextBot() then
-					numNextBot = numNextBot + 1
+		if IsValid(ply) && !ply:IsAdmin() then return end
+		local numNPC = 0
+		local numVJ = 0
+		local numNextBot = 0
+		for _, ent in ipairs(ents.GetAll()) do
+			if ent:IsNPC() then
+				numNPC = numNPC + 1
+				if ent.IsVJBaseSNPC then
+					numVJ = numVJ + 1
 				end
+			elseif ent:IsNextBot() then
+				numNextBot = numNextBot + 1
 			end
-			ply:ChatPrint("Total NPCs: " .. numNPC .. " | VJ NPCs: " .. numVJ .. " | NextBots: " .. numNextBot)
 		end
-	end, nil, "Prints the number of NPCs in the map. It's admin only!", FCVAR_DONTRECORD)
+		ply:ChatPrint("Total NPCs: " .. numNPC .. " | VJ NPCs: " .. numVJ .. " | NextBots: " .. numNextBot)
+	end, nil, "Prints the number of NPCs in the map. Admin only!", FCVAR_DONTRECORD)
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	local cTypes = {
 		vjnpcs = "VJ NPCs",
@@ -179,7 +178,7 @@ if SERVER then
 	concommand.Add("vj_run_cleanup", function(ply, cmd, args)
 		if IsValid(ply) && !ply:IsAdmin() then return end
 		local cType = args[1]
-		local i = 0
+		local count = 0
 		if !cType then -- Not type given, so it means its a clean up all!
 			game.CleanUpMap()
 		elseif cType == "decals" then
@@ -191,18 +190,12 @@ if SERVER then
 		elseif IsValid(ply) && cType == "allammo" then
 			ply:RemoveAllAmmo()
 		else
-			for _, v in ipairs(ents.GetAll()) do
-				if (v:IsNPC() && (cType == "npcs" or (cType == "vjnpcs" && v.IsVJBaseSNPC))) or (cType == "spawners" && v.IsVJBaseSpawner) or (cType == "corpses" && (v.IsVJBaseCorpse or v.IsVJBaseCorpse_Gib)) or (cType == "gibs" && v.IsVJBaseCorpse_Gib) or (cType == "groundweapons" && v:IsWeapon() && v:GetOwner() == NULL) or (cType == "props" && v:GetClass() == "prop_physics" && (v:GetParent() == NULL or (IsValid(v:GetParent()) && v:GetParent():Health() <= 0 && (v:GetParent():IsNPC() or v:GetParent():IsPlayer())))) then
-					//undo.ReplaceEntity(v, NULL)
-					v:Remove()
-					i = i + 1
+			for _, ent in ipairs(ents.GetAll()) do
+				if (ent:IsNPC() && (cType == "npcs" or (cType == "vjnpcs" && ent.IsVJBaseSNPC))) or (cType == "spawners" && ent.IsVJBaseSpawner) or (cType == "corpses" && (ent.IsVJBaseCorpse or ent.IsVJBaseCorpse_Gib)) or (cType == "gibs" && ent.IsVJBaseCorpse_Gib) or (cType == "groundweapons" && ent:IsWeapon() && ent:GetOwner() == NULL) or (cType == "props" && ent:GetClass() == "prop_physics" && (ent:GetParent() == NULL or (IsValid(ent:GetParent()) && ent:GetParent():Health() <= 0 && (ent:GetParent():IsNPC() or ent:GetParent():IsPlayer())))) then
+					ent:Remove()
+					count = count + 1
 				end
 			end
-			-- Clean up client side corpses
-			-- DOES NOT WORK, FUNCTION IS BROKEN!
-			//if cType == "corpses" then
-				//game.RemoveRagdolls()
-			//end
 		end
 		if IsValid(ply) then
 			if !cType then
@@ -210,18 +203,17 @@ if SERVER then
 			elseif cType == "decals" or cType == "allweapons" or cType == "allammo" then
 				ply:SendLua("GAMEMODE:AddNotify(\"" .. cTypes[cType] .. "\", NOTIFY_CLEANUP, 5)")
 			else
-				ply:SendLua("GAMEMODE:AddNotify(\"Removed " .. i .. " " .. cTypes[cType] .. "\", NOTIFY_CLEANUP, 5)")
+				ply:SendLua("GAMEMODE:AddNotify(\"Removed " .. count .. " " .. cTypes[cType] .. "\", NOTIFY_CLEANUP, 5)")
 			end
 			ply:EmitSound("buttons/button15.wav")
 		end
-	end, nil, "Used to cleanup various things in the map. It's admin only!", FCVAR_DONTRECORD)
+	end, nil, "Used to cleanup various things in the map. Admin only!", FCVAR_DONTRECORD)
 	---------------------------------------------------------------------------------------------------------------------------------------------
 elseif CLIENT then
 	concommand.Add("vj_run_meme", function(ply, cmd, args)
-		if ply:SteamID() == "STEAM_0:0:22688298" then
-			net.Start("vj_meme_sv")
-				net.WriteUInt(tonumber(args[1]) or 0, 1)
-			net.SendToServer()
-		end
+		if ply:SteamID() != "STEAM_0:0:22688298" then return end
+		net.Start("vj_meme_sv")
+			net.WriteUInt(tonumber(args[1]) or 0, 1)
+		net.SendToServer()
 	end, nil, "Used by DrVrej for friend servers.", FCVAR_DONTRECORD)
 end

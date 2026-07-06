@@ -29,7 +29,7 @@ function VJ.PICK(values)
 	if type(values) == "table" then
 		return values[math.random(1, #values)] or false -- "or false" = To make sure it doesn't return nil when the table is empty!
 	end
-	return values -- Not a table, so just return it
+	return values
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
