@@ -69,7 +69,7 @@ if CLIENT then
 		end
 		
 		local function InsertToTable(val)
-			if string.len(val) > 0 then
+			if #val > 0 then
 				val = string.upper(val)
 				if VJ.HasValue(VJ_TOOL_RELATIONSHIP_LIST, val) then -- Fail
 					chat.AddText(Color(220, 20, 60), "ERROR! ", VJ.COLOR_ORANGE_VIVID, val .. " ", Color(220, 20, 60), "already exists in the table!")

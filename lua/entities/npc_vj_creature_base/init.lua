@@ -986,67 +986,10 @@ ENT.IsAbleToLeapAttack = true
 ENT.LeapAttackHasJumped = false
 //ENT.EatingData = {} -- Set later
 
-local vj_npc_debug = GetConVar("vj_npc_debug")
 local vj_npc_processtime = GetConVar("vj_npc_processtime")
-local vj_npc_poseparams = GetConVar("vj_npc_poseparams")
-local vj_npc_shadows = GetConVar("vj_npc_shadows")
-local vj_npc_snd = GetConVar("vj_npc_snd")
-local vj_npc_fri_base = GetConVar("vj_npc_fri_base")
-local vj_npc_fri_player = GetConVar("vj_npc_fri_player")
-local vj_npc_fri_antlion = GetConVar("vj_npc_fri_antlion")
-local vj_npc_fri_combine = GetConVar("vj_npc_fri_combine")
-local vj_npc_fri_zombie = GetConVar("vj_npc_fri_zombie")
-local vj_npc_allies = GetConVar("vj_npc_allies")
-local vj_npc_anim_death = GetConVar("vj_npc_anim_death")
-local vj_npc_corpse = GetConVar("vj_npc_corpse")
-local vj_npc_loot = GetConVar("vj_npc_loot")
-local vj_npc_melee_bleed = GetConVar("vj_npc_melee_bleed")
-local vj_npc_melee_ply_speed = GetConVar("vj_npc_melee_ply_speed")
-local vj_npc_wander = GetConVar("vj_npc_wander")
-local vj_npc_chase = GetConVar("vj_npc_chase")
-local vj_npc_flinch = GetConVar("vj_npc_flinch")
-local vj_npc_melee = GetConVar("vj_npc_melee")
-local vj_npc_range = GetConVar("vj_npc_range")
-local vj_npc_leap = GetConVar("vj_npc_leap")
-local vj_npc_blood = GetConVar("vj_npc_blood")
-local vj_npc_god = GetConVar("vj_npc_god")
-local vj_npc_ply_betray = GetConVar("vj_npc_ply_betray")
-local vj_npc_callhelp = GetConVar("vj_npc_callhelp")
-local vj_npc_investigate = GetConVar("vj_npc_investigate")
-local vj_npc_eat = GetConVar("vj_npc_eat")
-local vj_npc_ply_follow = GetConVar("vj_npc_ply_follow")
-local vj_npc_ply_chat = GetConVar("vj_npc_ply_chat")
-local vj_npc_medic = GetConVar("vj_npc_medic")
-local vj_npc_gib_vfx = GetConVar("vj_npc_gib_vfx")
-local vj_npc_gib = GetConVar("vj_npc_gib")
-local vj_npc_sight_xray = GetConVar("vj_npc_sight_xray")
-local vj_npc_snd_gib = GetConVar("vj_npc_snd_gib")
-local vj_npc_snd_track = GetConVar("vj_npc_snd_track")
-local vj_npc_snd_footstep = GetConVar("vj_npc_snd_footstep")
-local vj_npc_snd_idle = GetConVar("vj_npc_snd_idle")
-local vj_npc_snd_breath = GetConVar("vj_npc_snd_breath")
-local vj_npc_snd_alert = GetConVar("vj_npc_snd_alert")
-local vj_npc_snd_melee = GetConVar("vj_npc_snd_melee")
-local vj_npc_snd_plyspeed = GetConVar("vj_npc_snd_plyspeed")
-local vj_npc_snd_range = GetConVar("vj_npc_snd_range")
-local vj_npc_snd_leap = GetConVar("vj_npc_snd_leap")
-local vj_npc_snd_pain = GetConVar("vj_npc_snd_pain")
-local vj_npc_snd_death = GetConVar("vj_npc_snd_death")
-local vj_npc_snd_plyfollow = GetConVar("vj_npc_snd_plyfollow")
-local vj_npc_snd_plybetrayal = GetConVar("vj_npc_snd_plybetrayal")
-local vj_npc_snd_plydamage = GetConVar("vj_npc_snd_plydamage")
-local vj_npc_snd_plysight = GetConVar("vj_npc_snd_plysight")
-local vj_npc_snd_medic = GetConVar("vj_npc_snd_medic")
-local vj_npc_snd_callhelp = GetConVar("vj_npc_snd_callhelp")
-local vj_npc_snd_receiveorder = GetConVar("vj_npc_snd_receiveorder")
-local vj_npc_creature_opendoor = GetConVar("vj_npc_creature_opendoor")
-local vj_npc_melee_propint = GetConVar("vj_npc_melee_propint")
-local vj_npc_corpse_collision = GetConVar("vj_npc_corpse_collision")
-local vj_npc_debug_engine = GetConVar("vj_npc_debug_engine")
 local vj_npc_difficulty = GetConVar("vj_npc_difficulty")
 local vj_npc_sight_distance = GetConVar("vj_npc_sight_distance")
 local vj_npc_health = GetConVar("vj_npc_health")
-local vj_npc_melee_ply_dsp = GetConVar("vj_npc_melee_ply_dsp")
 local vj_npc_ply_frag = GetConVar("vj_npc_ply_frag")
 local vj_npc_blood_pool = GetConVar("vj_npc_blood_pool")
 local vj_npc_corpse_undo = GetConVar("vj_npc_corpse_undo")
@@ -1054,476 +997,6 @@ local vj_npc_corpse_fade = GetConVar("vj_npc_corpse_fade")
 local vj_npc_corpse_fadetime = GetConVar("vj_npc_corpse_fadetime")
 local ai_serverragdolls = GetConVar("ai_serverragdolls")
 
----------------------------------------------------------------------------------------------------------------------------------------------
-local function initConvars(self)
-	if vj_npc_debug:GetInt() == 1 then self.VJ_DEBUG = true end
-	if vj_npc_poseparams:GetInt() == 0 && !self.OnUpdatePoseParamTracking then self.HasPoseParameterLooking = false end
-	if vj_npc_shadows:GetInt() == 0 then self:DrawShadow(false) end
-	if vj_npc_snd:GetInt() == 0 then self.HasSounds = false end
-	if vj_npc_fri_base:GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_VJ_BASE" end
-	if vj_npc_fri_player:GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_PLAYER_ALLY" end
-	if vj_npc_fri_antlion:GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ANTLION" end
-	if vj_npc_fri_combine:GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_COMBINE" end
-	if vj_npc_fri_zombie:GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ZOMBIE" end
-	if vj_npc_allies:GetInt() == 0 then self.CanAlly = false end
-	if vj_npc_anim_death:GetInt() == 0 then self.HasDeathAnimation = false end
-	if vj_npc_corpse:GetInt() == 0 then self.HasDeathCorpse = false end
-	if vj_npc_loot:GetInt() == 0 then self.DropDeathLoot = false end
-	if vj_npc_melee_bleed:GetInt() == 0 then self.MeleeAttackBleedEnemy = false end
-	if vj_npc_melee_ply_dsp:GetInt() == 0 then self.MeleeAttackDSP = false end
-	if vj_npc_melee_ply_speed:GetInt() == 0 then self.MeleeAttackPlayerSpeed = false end
-	if vj_npc_wander:GetInt() == 0 then self.DisableWandering = true end
-	if vj_npc_chase:GetInt() == 0 then self.DisableChasingEnemy = true end
-	if vj_npc_flinch:GetInt() == 0 then self.CanFlinch = false end
-	if vj_npc_melee:GetInt() == 0 then self.HasMeleeAttack = false end
-	if vj_npc_range:GetInt() == 0 then self.HasRangeAttack = false end
-	if vj_npc_leap:GetInt() == 0 then self.HasLeapAttack = false end
-	if vj_npc_blood:GetInt() == 0 then self.Bleeds = false end
-	if vj_npc_god:GetInt() == 1 then self.GodMode = true end
-	if vj_npc_ply_betray:GetInt() == 0 then self.BecomeEnemyToPlayer = false end
-	if vj_npc_callhelp:GetInt() == 0 then self.CallForHelp = false end
-	if vj_npc_investigate:GetInt() == 0 then self.CanInvestigate = false end
-	if vj_npc_eat:GetInt() == 0 then self.CanEat = false end
-	if vj_npc_ply_follow:GetInt() == 0 then self.FollowPlayer = false end
-	if vj_npc_ply_chat:GetInt() == 0 then self.CanChatMessage = false end
-	if vj_npc_medic:GetInt() == 0 then self.IsMedic = false end
-	if vj_npc_gib_vfx:GetInt() == 0 then self.HasGibOnDeathEffects = false end
-	if vj_npc_gib:GetInt() == 0 then self.CanGib = false self.CanGibOnDeath = false end
-	if vj_npc_sight_xray:GetInt() == 1 then self.SightAngle = 360 self.EnemyXRayDetection = true end
-	if vj_npc_snd_gib:GetInt() == 0 then self.HasGibOnDeathSounds = false end
-	if vj_npc_snd_track:GetInt() == 0 then self.HasSoundTrack = false end
-	if vj_npc_snd_footstep:GetInt() == 0 then self.HasFootstepSounds = false end
-	if vj_npc_snd_idle:GetInt() == 0 then self.HasIdleSounds = false end
-	if vj_npc_snd_breath:GetInt() == 0 then self.HasBreathSound = false end
-	if vj_npc_snd_alert:GetInt() == 0 then self.HasAlertSounds = false end
-	if vj_npc_snd_melee:GetInt() == 0 then self.HasMeleeAttackSounds = false self.HasExtraMeleeAttackSounds = false self.HasMeleeAttackMissSounds = false end
-	if vj_npc_snd_plyspeed:GetInt() == 0 then self.HasMeleeAttackPlayerSpeedSounds = false end
-	if vj_npc_snd_range:GetInt() == 0 then self.HasRangeAttackSounds = false end
-	if vj_npc_snd_leap:GetInt() == 0 then self.HasBeforeLeapAttackSounds = false self.HasLeapAttackJumpSounds = false self.HasLeapAttackDamageSounds = false self.HasLeapAttackDamageMissSounds = false end
-	if vj_npc_snd_pain:GetInt() == 0 then self.HasPainSounds = false end
-	if vj_npc_snd_death:GetInt() == 0 then self.HasDeathSounds = false end
-	if vj_npc_snd_plyfollow:GetInt() == 0 then self.HasFollowPlayerSounds = false end
-	if vj_npc_snd_plybetrayal:GetInt() == 0 then self.HasBecomeEnemyToPlayerSounds = false end
-	if vj_npc_snd_plydamage:GetInt() == 0 then self.HasDamageByPlayerSounds = false end
-	if vj_npc_snd_plysight:GetInt() == 0 then self.HasOnPlayerSightSounds = false end
-	if vj_npc_snd_medic:GetInt() == 0 then self.HasMedicSounds = false end
-	if vj_npc_snd_callhelp:GetInt() == 0 then self.HasCallForHelpSounds = false end
-	if vj_npc_snd_receiveorder:GetInt() == 0 then self.HasReceiveOrderSounds = false end
-	if vj_npc_creature_opendoor:GetInt() == 0 then self.CanOpenDoors = false end
-	local propAPType = vj_npc_melee_propint:GetInt()
-	if propAPType != 1 then
-		if propAPType == 0 then -- Disable
-			self.PropInteraction = false
-		elseif propAPType == 2 && self.PropInteraction != "OnlyPush" then -- Only damage
-			if self.PropInteraction == "OnlyDamage" then
-				self.PropInteraction = false
-			else
-				self.PropInteraction = "OnlyDamage"
-			end
-		elseif propAPType == 3 && self.PropInteraction != "OnlyDamage" then -- Only push
-			if self.PropInteraction == "OnlyPush" then
-				self.PropInteraction = false
-			else
-				self.PropInteraction = "OnlyPush"
-			end
-		end
-	end
-	local corpseCollision = vj_npc_corpse_collision:GetInt()
-	if corpseCollision != 0 && self.DeathCorpseCollisionType == COLLISION_GROUP_DEBRIS then
-		if corpseCollision == 1 then
-			self.DeathCorpseCollisionType = COLLISION_GROUP_NONE
-		elseif corpseCollision == 2 then
-			self.DeathCorpseCollisionType = COLLISION_GROUP_WORLD
-		elseif corpseCollision == 3 then
-			self.DeathCorpseCollisionType = COLLISION_GROUP_INTERACTIVE
-		elseif corpseCollision == 4 then
-			self.DeathCorpseCollisionType = COLLISION_GROUP_WEAPON
-		elseif corpseCollision == 5 then
-			self.DeathCorpseCollisionType = COLLISION_GROUP_PASSABLE_DOOR
-		elseif corpseCollision == 6 then
-			self.DeathCorpseCollisionType = COLLISION_GROUP_NONE
-		end
-	end
-	-- Enables source engine debug overlays (some commands like 'npc_conditions' need it)
-	if self.VJ_DEBUG && vj_npc_debug_engine:GetInt() == 1 then
-		self:SetSaveValue("m_debugOverlays", bit.bor(0x00000001, 0x00000002, 0x00000004, 0x00000008, 0x00000010, 0x00000020, 0x00000040, 0x00000080, 0x00000100, 0x00000200, 0x00001000, 0x00002000, 0x00004000, 0x00008000, 0x00020000, 0x00040000, 0x00080000, 0x00100000, 0x00200000, 0x00400000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000))
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-local function ApplyBackwardsCompatibility(self)
-	-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
-	-- Most of these are pre-revamp variables & functions
-	if self.CustomOnInitialize then self:CustomOnInitialize() end
-	if self.CustomInitialize then self:CustomInitialize() end
-	if self.CustomOn_PoseParameterLookingCode then self.OnUpdatePoseParamTracking = function(_, pitch, yaw, roll) self:CustomOn_PoseParameterLookingCode(pitch, yaw, roll) end end
-	if self.CustomOnAlert then self.OnAlert = function(_, ent) self:CustomOnAlert(ent) end end
-	if self.CustomOnInvestigate then self.OnInvestigate = function(_, ent) self:CustomOnInvestigate(ent) end end
-	if self.CustomOnFootStepSound then self.OnFootstepSound = function(_, moveType, sdFile) self:CustomOnFootStepSound(moveType, sdFile) end end
-	if self.CustomOnCallForHelp then self.OnCallForHelp = function(_, ally, isFirst) self:CustomOnCallForHelp(ally, isFirst) end end
-	if self.CustomOnPlayerSight then self.OnPlayerSight = function(_, ent) self:CustomOnPlayerSight(ent) end end
-	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end
-	if self.CustomOnThink_AIEnabled then self.OnThinkActive = function() self:CustomOnThink_AIEnabled() end end
-	if self.CustomOnTakeDamage_OnBleed then self.OnBleed = function(_, dmginfo, hitgroup) self:CustomOnTakeDamage_OnBleed(dmginfo, hitgroup) end end
-	if self.CustomOnAcceptInput then self.OnInput = function(_, key, activator, caller, data) self:CustomOnAcceptInput(key, activator, caller, data) end end
-	if self.CustomOnHandleAnimEvent then self.OnAnimEvent = function(_, ev, evTime, evCycle, evType, evOptions) self:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions) end end
-	if self.CustomOnDeath_AfterCorpseSpawned then self.OnCreateDeathCorpse = function(_, dmginfo, hitgroup, corpse) self:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpse) end end
-	if self.PlayerFriendly == true then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_PLAYER_ALLY" end
-	if self.HasHealthRegeneration then self.HealthRegenParams.Enabled = true end
-	if self.HealthRegenerationAmount then self.HealthRegenParams.Amount = self.HealthRegenerationAmount end
-	if self.HealthRegenerationDelay then self.HealthRegenParams.Delay = self.HealthRegenerationDelay end
-	if self.HealthRegenerationResetOnDmg then self.HealthRegenParams.ResetOnDmg = self.HealthRegenerationResetOnDmg end
-	if self.FriendsWithAllPlayerAllies != nil then self.AlliedWithPlayerAllies = self.FriendsWithAllPlayerAllies end
-	if self.Medic_CanBeHealed == false then self.VJ_ID_Healable = false end
-	if self.Immune_AcidPoisonRadiation != nil then self.Immune_Toxic = self.Immune_AcidPoisonRadiation end
-	if self.Immune_Blast != nil then self.Immune_Explosive = self.Immune_Blast end
-	if self.FindEnemy_CanSeeThroughWalls == true then self.EnemyXRayDetection = true end
-	if self.DisableFindEnemy == true then self.EnemyDetection = false end
-	if self.DisableTouchFindEnemy == true then self.EnemyTouchDetection = false end
-	if self.HasFootStepSound then self.HasFootstepSounds = self.HasFootStepSound end
-	if self.FootStepPitch then self.FootstepSoundPitch = self.FootStepPitch end
-	if self.FootStepSoundLevel then self.FootstepSoundLevel = self.FootStepSoundLevel end
-	if self.FootStepTimeWalk then self.FootstepSoundTimerWalk = self.FootStepTimeWalk end
-	if self.FootStepTimeRun then self.FootstepSoundTimerRun = self.FootStepTimeRun end
-	if self.HitGroupFlinching_Values then self.FlinchHitGroupMap = self.HitGroupFlinching_Values end
-	if self.HitGroupFlinching_DefaultWhenNotHit != nil then self.FlinchHitGroupPlayDefault = self.HitGroupFlinching_DefaultWhenNotHit end
-	if self.NextFlinchTime != nil then self.FlinchCooldown = self.NextFlinchTime end
-	if self.NextCallForHelpTime then self.CallForHelpCooldown = self.NextCallForHelpTime end
-	if self.CallForHelpAnimationFaceEnemy != nil then self.CallForHelpAnimFaceEnemy = self.CallForHelpAnimationFaceEnemy end
-	if self.NextCallForHelpAnimationTime != nil then self.CallForHelpAnimCooldown = self.NextCallForHelpAnimationTime end
-	if self.InvestigateSoundDistance != nil then self.InvestigateSoundMultiplier = self.InvestigateSoundDistance end
-	if self.SoundTbl_OnKilledEnemy != nil then self.SoundTbl_KilledEnemy = self.SoundTbl_OnKilledEnemy end
-	if self.HasOnKilledEnemySounds != nil then self.HasKilledEnemySounds = self.HasOnKilledEnemySounds end
-	if self.OnKilledEnemySoundChance then self.OnKilledEnemySoundChance = self.OnKilledEnemySoundChance end
-	if self.NextSoundTime_OnKilledEnemy then self.NextSoundTime_KilledEnemy = self.NextSoundTime_OnKilledEnemy end
-	if self.OnKilledEnemySoundLevel then self.KilledEnemySoundLevel = self.OnKilledEnemySoundLevel end
-	if self.OnKilledEnemySoundPitch != nil then self.KilledEnemySoundPitch = self.OnKilledEnemySoundPitch end
-	if self.IdleSounds_PlayOnAttacks != nil then self.IdleSoundsWhileAttacking = self.IdleSounds_PlayOnAttacks end
-	if self.IdleSounds_NoRegularIdleOnAlerted != nil then self.IdleSoundsRegWhileAlert = self.IdleSounds_NoRegularIdleOnAlerted end
-	if self.HasOnReceiveOrderSounds != nil then self.HasReceiveOrderSounds = self.HasOnReceiveOrderSounds end
-	if self.SoundTbl_OnReceiveOrder != nil then self.SoundTbl_ReceiveOrder = self.SoundTbl_OnReceiveOrder end
-	if self.OnReceiveOrderSoundChance != nil then self.ReceiveOrderSoundChance = self.OnReceiveOrderSoundChance end
-	if self.OnReceiveOrderSoundLevel != nil then self.ReceiveOrderSoundLevel = self.OnReceiveOrderSoundLevel end
-	if self.OnReceiveOrderSoundPitch != nil then self.ReceiveOrderSoundPitch = self.OnReceiveOrderSoundPitch end
-	if self.SoundTbl_MedicAfterHeal != nil then self.SoundTbl_MedicOnHeal = self.SoundTbl_MedicAfterHeal end
-	if self.MedicAfterHealSoundChance != nil then self.MedicOnHealSoundChance = self.MedicAfterHealSoundChance end
-	if self.BeforeHealSoundLevel != nil then self.MedicBeforeHealSoundLevel = self.BeforeHealSoundLevel end
-	if self.AfterHealSoundLevel != nil then self.MedicOnHealSoundLevel = self.AfterHealSoundLevel end
-	if self.BeforeHealSoundPitch != nil then self.MedicBeforeHealSoundPitch = self.BeforeHealSoundPitch end
-	if self.AfterHealSoundPitch != nil then self.MedicOnHealSoundPitch = self.AfterHealSoundPitch end
-	if self.Immune_Physics then self:SetPhysicsDamageScale(0) end
-	if self.SlowPlayerOnMeleeAttack then self.MeleeAttackPlayerSpeed = true end
-	if self.SlowPlayerOnMeleeAttack_WalkSpeed then self.MeleeAttackPlayerSpeedWalk = self.SlowPlayerOnMeleeAttack_WalkSpeed end
-	if self.SlowPlayerOnMeleeAttack_RunSpeed then self.MeleeAttackPlayerSpeedRun = self.SlowPlayerOnMeleeAttack_RunSpeed end
-	if self.SlowPlayerOnMeleeAttackTime then self.MeleeAttackPlayerSpeedTime = self.SlowPlayerOnMeleeAttackTime end
-	if self.HasMeleeAttackSlowPlayerSound != nil then self.HasMeleeAttackPlayerSpeedSounds = self.HasMeleeAttackSlowPlayerSound end
-	if self.SoundTbl_MeleeAttackSlowPlayer != nil then self.SoundTbl_MeleeAttackPlayerSpeed = self.SoundTbl_MeleeAttackSlowPlayer end
-	if self.MeleeAttackSlowPlayerSoundLevel != nil then self.MeleeAttackPlayerSpeedSoundLevel = self.MeleeAttackSlowPlayerSoundLevel end
-	if self.StopMeleeAttackAfterFirstHit != nil then self.MeleeAttackStopOnHit = self.StopMeleeAttackAfterFirstHit end
-	if self.StopLeapAttackAfterFirstHit != nil then self.LeapAttackStopOnHit = self.StopLeapAttackAfterFirstHit end
-	if self.NextLeapAttackTime_DoRand then self.NextLeapAttackTime = VJ.SET(self.NextLeapAttackTime, self.NextLeapAttackTime_DoRand) end
-	if self.NextAnyAttackTime_Leap_DoRand then self.NextAnyAttackTime_Leap = VJ.SET(self.NextAnyAttackTime_Leap, self.NextAnyAttackTime_Leap_DoRand) end
-	if self.NextRangeAttackTime_DoRand then self.NextRangeAttackTime = VJ.SET(self.NextRangeAttackTime, self.NextRangeAttackTime_DoRand) end
-	if self.NextAnyAttackTime_Range_DoRand then self.NextAnyAttackTime_Range = VJ.SET(self.NextAnyAttackTime_Range, self.NextAnyAttackTime_Range_DoRand) end
-	if self.MeleeAttackDSPSoundType != nil then self.MeleeAttackDSP = self.MeleeAttackDSPSoundType end
-	if self.MeleeAttackDSPSoundUseDamage == false then self.MeleeAttackDSPLimit = false end
-	if self.MeleeAttackDSPSoundUseDamageAmount then self.MeleeAttackDSPLimit = self.MeleeAttackDSPSoundUseDamageAmount end
-	if self.DisableMeleeAttackAnimation == true then self.AnimTbl_MeleeAttack = false end
-	if self.DisableRangeAttackAnimation == true then self.AnimTbl_RangeAttack = false end
-	if self.DisableLeapAttackAnimation == true then self.AnimTbl_LeapAttack = false end
-	if self.RangeAttackEntityToSpawn then self.RangeAttackProjectiles = self.RangeAttackEntityToSpawn end
-	if self.RangeDistance then self.RangeAttackMaxDistance = self.RangeDistance end
-	if self.RangeToMeleeDistance then self.RangeAttackMinDistance = self.RangeToMeleeDistance end
-	if self.LeapDistance then self.LeapAttackMaxDistance = self.LeapDistance end
-	if self.LeapToMeleeDistance then self.LeapAttackMinDistance = self.LeapToMeleeDistance end
-	if self.Passive_RunOnDamage == false then self.DamageResponse = false end
-	if self.HideOnUnknownDamage == false then self.DamageResponse = "OnlySearch" end
-	if self.DisableTakeDamageFindEnemy == true then if self.HideOnUnknownDamage == false then self.DamageResponse = false else self.DamageResponse = "OnlyMove" end end
-	if self.CanFlinch == 0 then self.CanFlinch = false
-	elseif self.CanFlinch == 1 then self.CanFlinch = true
-	elseif self.CanFlinch == 2 then self.CanFlinch = "DamageTypes" end
-	if self.BringFriendsOnDeath != nil or self.AlertFriendsOnDeath != nil then
-		if self.AlertFriendsOnDeath == true && (self.BringFriendsOnDeath == false or self.BringFriendsOnDeath == nil) then
-			self.DeathAllyResponse = "OnlyAlert"
-		elseif self.BringFriendsOnDeath == false && self.AlertFriendsOnDeath == false then
-			self.DeathAllyResponse = false
-		end
-	end
-	if self.BringFriendsOnDeathLimit then self.DeathAllyResponse_MoveLimit = self.BringFriendsOnDeathLimit end
-	if self.VJC_Data then self.ControllerParams = self.VJC_Data end
-	if self.HasCallForHelpAnimation == false then self.AnimTbl_CallForHelp = false end
-	if self.Medic_DisableAnimation == true then self.AnimTbl_Medic_GiveHealth = false end
-	if self.ConstantlyFaceEnemyDistance then self.ConstantlyFaceEnemy_MinDistance = self.ConstantlyFaceEnemyDistance end
-	if self.CallForBackUpOnDamage != nil then self.DamageAllyResponse = self.CallForBackUpOnDamage end
-	if self.NextCallForBackUpOnDamageTime then self.DamageAllyResponse_Cooldown = self.NextCallForBackUpOnDamageTime end
-	if self.CallForBackUpOnDamageAnimation then self.AnimTbl_DamageAllyResponse = self.CallForBackUpOnDamageAnimation end
-	if self.UseTheSameGeneralSoundPitch != nil then self.MainSoundPitchStatic = self.UseTheSameGeneralSoundPitch end
-	if self.GeneralSoundPitch1 or self.GeneralSoundPitch2 then self.MainSoundPitch = VJ.SET(self.GeneralSoundPitch1 or 90, self.GeneralSoundPitch2 or 100) end
-	if self.PropAP_MaxSize then self.PropInteraction_MaxScale = self.PropAP_MaxSize end
-	if self.AttackProps == false or self.PushProps == false then
-		if self.AttackProps == false && self.PushProps == false then
-			self.PropInteraction = false
-		elseif self.AttackProps == false then
-			self.PropInteraction = "OnlyPush"
-		elseif self.PushProps == false then
-			self.PropInteraction = "OnlyDamage"
-		end
-	end
-	if self.NoChaseAfterCertainRange then self.LimitChaseDistance = self.NoChaseAfterCertainRange end
-	if self.NoChaseAfterCertainRange_CloseDistance then self.LimitChaseDistance_Min = self.NoChaseAfterCertainRange_CloseDistance end
-	if self.NoChaseAfterCertainRange_FarDistance then self.LimitChaseDistance_Max = self.NoChaseAfterCertainRange_FarDistance end
-	if self.NoChaseAfterCertainRange_Type then
-		if self.NoChaseAfterCertainRange_Type == "Regular" then
-			self.LimitChaseDistance = true
-		elseif self.NoChaseAfterCertainRange_Type == "OnlyRange" then
-			self.LimitChaseDistance = "OnlyRange"
-		end
-	end
-	if self.AlertedToIdleTime then self.AlertTimeout = self.AlertedToIdleTime end
-	if self.SoundTbl_MoveOutOfPlayersWay then self.SoundTbl_YieldToPlayer = self.SoundTbl_MoveOutOfPlayersWay end
-	if self.MaxJumpLegalDistance then self.JumpParams.MaxRise = self.MaxJumpLegalDistance.a; self.JumpParams.MaxDrop = self.MaxJumpLegalDistance.b end
-	if self.VJ_IsHugeMonster then self.VJ_ID_Boss = self.VJ_IsHugeMonster end
-	if self.Medic_HealthAmount then self.Medic_HealAmount = self.Medic_HealthAmount end
-	if self.UsePlayerModelMovement then self.UsePoseParameterMovement = true end
-	if self.MoveOutOfFriendlyPlayersWay != nil then self.YieldToAlliedPlayers = self.MoveOutOfFriendlyPlayersWay end
-	if self.WaitBeforeDeathTime then self.DeathDelayTime = self.WaitBeforeDeathTime end
-	if self.HasDeathRagdoll != nil then self.HasDeathCorpse = self.HasDeathRagdoll end
-	if self.AllowedToGib != nil then self.CanGib = self.AllowedToGib end
-	if self.HasGibOnDeath != nil then self.CanGibOnDeath = self.HasGibOnDeath end
-	if self.HasGibDeathParticles != nil then self.HasGibOnDeathEffects = self.HasGibDeathParticles else self.HasGibDeathParticles = self.HasGibOnDeathEffects end
-	if self.HasItemDropsOnDeath != nil then self.DropDeathLoot = self.HasItemDropsOnDeath end
-	if self.ItemDropsOnDeathChance != nil then self.DeathLootChance = self.ItemDropsOnDeathChance end
-	if self.ItemDropsOnDeath_EntityList != nil then self.DeathLoot = self.ItemDropsOnDeath_EntityList end
-	if self.AllowMovementJumping != nil then self.JumpParams.Enabled = self.AllowMovementJumping end
-	if self.OnlyDoKillEnemyWhenClear != nil then self.KilledEnemySoundLast = self.OnlyDoKillEnemyWhenClear end
-	if self.DisableFootStepOnWalk then self.FootstepSoundTimerWalk = false end
-	if self.DisableFootStepOnRun then self.FootstepSoundTimerRun = false end
-	if self.FindEnemy_UseSphere then self.SightAngle = 360 end
-	if self.IsMedicSNPC then self.IsMedic = self.IsMedicSNPC end
-	if self.BecomeEnemyToPlayer == true then self.BecomeEnemyToPlayer = self.BecomeEnemyToPlayerLevel or 2 end
-	if self.CustomBlood_Particle then self.BloodParticle = self.CustomBlood_Particle end
-	if self.CustomBlood_Pool then self.BloodPool = self.CustomBlood_Pool end
-	if self.CustomBlood_Decal then self.BloodDecal = self.CustomBlood_Decal end
-	if self.GibOnDeathDamagesTable then
-		for _, v in ipairs(self.GibOnDeathDamagesTable) do
-			if v == "All" then
-				self.GibOnDeathFilter = false
-			end
-		end
-	end
-	if self.SetUpGibesOnDeath then
-		self.HandleGibOnDeath = function(_, dmginfo, hitgroup)
-			local gibbed, overrides = self:SetUpGibesOnDeath(dmginfo, hitgroup)
-			local tbl = {}
-			if overrides then
-				if overrides.AllowCorpse then tbl.AllowCorpse = true end
-				if overrides.DeathAnim then tbl.AllowAnim = true end
-			end
-			if self.CustomGibOnDeathSounds && !self:CustomGibOnDeathSounds(dmginfo, hitgroup) then
-				tbl.AllowSound = false
-			end
-			return gibbed, tbl
-		end
-	end
-	if self.CustomOnDoKilledEnemy then
-		self.OnKilledEnemy = function(_, ent, inflictor, wasLast)
-			if (self.KilledEnemySoundLast == false) or (self.KilledEnemySoundLast == true && wasLast) then
-				self:CustomOnDoKilledEnemy(ent, self, inflictor)
-			end
-		end
-	end
-	if self.CustomOnMedic_BeforeHeal or self.CustomOnMedic_OnHeal or self.CustomOnMedic_OnReset then
-		self.OnMedicBehavior = function(_, status, statusData)
-			if status == "BeforeHeal" && self.CustomOnMedic_BeforeHeal then
-				self:CustomOnMedic_BeforeHeal()
-			elseif status == "OnHeal" && self.CustomOnMedic_OnHeal then
-				return self:CustomOnMedic_OnHeal(statusData)
-			elseif status == "OnReset" && self.CustomOnMedic_OnReset then
-				self:CustomOnMedic_OnReset()
-			end
-		end
-	end
-	if self.CustomOnTakeDamage_BeforeImmuneChecks or self.CustomOnTakeDamage_BeforeDamage or self.CustomOnTakeDamage_AfterDamage then
-		self.OnDamaged = function(_, dmginfo, hitgroup, status)
-			if status == "Init" && self.CustomOnTakeDamage_BeforeImmuneChecks then
-				self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo, hitgroup)
-			elseif status == "PreDamage" && self.CustomOnTakeDamage_BeforeDamage then
-				self:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup)
-			elseif status == "PostDamage" && self.CustomOnTakeDamage_AfterDamage then
-				self:CustomOnTakeDamage_AfterDamage(dmginfo, hitgroup)
-			end
-		end
-	end
-	if self.CustomOnFlinch_BeforeFlinch or self.CustomOnFlinch_AfterFlinch then
-		self.OnFlinch = function(_, dmginfo, hitgroup, status)
-			if status == "Init" then
-				if self.CustomOnFlinch_BeforeFlinch then
-					return !self:CustomOnFlinch_BeforeFlinch(dmginfo, hitgroup)
-				end
-			elseif status == "Execute" then
-				if self.CustomOnFlinch_AfterFlinch then
-					self:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup)
-				end
-			end
-		end
-	end
-	if self.CustomOnInitialKilled or self.CustomOnPriorToKilled or self.CustomDeathAnimationCode or self.CustomOnKilled or self.CustomOnDeath_BeforeCorpseSpawned then
-		self.OnDeath = function(_, dmginfo, hitgroup, status)
-			if status == "Init" then
-				if self.CustomOnInitialKilled then
-					self:CustomOnInitialKilled(dmginfo, hitgroup)
-				end
-				if self.CustomOnPriorToKilled then
-					self:CustomOnPriorToKilled(dmginfo, hitgroup)
-				end
-			elseif status == "DeathAnim" && self.CustomDeathAnimationCode then
-				self:CustomDeathAnimationCode(dmginfo, hitgroup)
-			elseif status == "Finish" then
-				if self.CustomOnKilled then
-					self:CustomOnKilled(dmginfo, hitgroup)
-				end
-				if self.CustomOnDeath_BeforeCorpseSpawned then
-					self:CustomOnDeath_BeforeCorpseSpawned(dmginfo, hitgroup)
-				end
-			end
-		end
-	end
-	if self.HasWorldShakeOnMove && !self.OnFootstepSound then
-		-- Only do this if "self.OnFootstepSound" isn't already being used
-		self.OnFootstepSound = function()
-			util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000)
-		end
-	end
-	if self.MeleeAttackKnockBack_Forward1 or self.MeleeAttackKnockBack_Forward2 or self.MeleeAttackKnockBack_Up1 or self.MeleeAttackKnockBack_Up2 then
-		self.MeleeAttackKnockbackVelocity = function()
-			return self:GetForward()*math.random(self.MeleeAttackKnockBack_Forward1 or 100, self.MeleeAttackKnockBack_Forward2 or 100) + self:GetUp()*math.random(self.MeleeAttackKnockBack_Up1 or 10, self.MeleeAttackKnockBack_Up2 or 10) + self:GetRight()*math.random(self.MeleeAttackKnockBack_Right1 or 0, self.MeleeAttackKnockBack_Right2 or 0)
-		end
-	end
-	if self.DeathCorpseSkin && self.DeathCorpseSkin != -1 then
-		local orgFunc = self.OnCreateDeathCorpse
-		self.OnCreateDeathCorpse = function(_, dmginfo, hitgroup, corpse)
-			orgFunc(self, dmginfo, hitgroup, corpse)
-			corpse:SetSkin(self.DeathCorpseSkin)
-		end
-	end
-	if self.CustomOnTouch then
-		self.OnTouch = function(_, ent)
-			self:CustomOnTouch(ent)
-		end
-	end
-	if self.RangeUseAttachmentForPos then
-		self.RangeAttackProjPos = function(_, projectile)
-			return self:GetAttachment(self:LookupAttachment(self.RangeUseAttachmentForPosID)).Pos
-		end
-	elseif self.RangeAttackPos_Up or self.RangeAttackPos_Forward or self.RangeAttackPos_Right then
-		self.RangeAttackProjPos = function(_, projectile)
-			return self:GetPos() + self:GetUp()*(self.RangeAttackPos_Up or 20) + self:GetForward()*(self.RangeAttackPos_Forward or 0) + self:GetRight()*(self.RangeAttackPos_Right or 0)
-		end
-	end
-	if self.RangeAttackCode_GetShootPos then
-		self.RangeAttackProjVel = function(_, projectile)
-			return self.RangeAttackCode_GetShootPos(self, projectile)
-		end
-	end
-	if self.LeapAttackVelocityForward or self.LeapAttackVelocityUp or self.CustomAttackCheck_LeapAttack or self.CustomOnLeapAttack_BeforeStartTimer or self.CustomOnLeapAttack_AfterStartTimer then
-		self.OnLeapAttack = function(_, status, enemy)
-			if status == "PreInit" && self.CustomAttackCheck_LeapAttack then
-				return !self:CustomAttackCheck_LeapAttack(enemy)
-			elseif status == "Init" && self.CustomOnLeapAttack_BeforeStartTimer then
-				self:CustomOnLeapAttack_BeforeStartTimer(self.AttackSeed)
-			elseif status == "PostInit" && self.CustomOnLeapAttack_AfterStartTimer then
-				self:CustomOnLeapAttack_AfterStartTimer(self.AttackSeed)
-			elseif status == "Jump" && (self.LeapAttackVelocityForward or self.LeapAttackVelocityUp) then
-				local ene = funcGetEnemy(self)
-				return ((ene:GetPos() + ene:OBBCenter()) - (self:GetPos() + self:OBBCenter())):GetNormal()*400 + self:GetForward()*(self.LeapAttackVelocityForward or 2000) + self:GetUp()*(self.LeapAttackVelocityUp or 200)
-			end
-		end
-	end
-	if self.CustomOnLeapAttack_BeforeChecks or self.CustomOnLeapAttack_AfterChecks or self.CustomOnLeapAttack_Miss then
-		self.OnLeapAttackExecute = function(_, status, ent)
-			if status == "Init" && self.CustomOnLeapAttack_BeforeChecks then
-				self:CustomOnLeapAttack_BeforeChecks()
-			elseif status == "PreDamage" && self.CustomOnLeapAttack_AfterChecks then
-				self:CustomOnLeapAttack_AfterChecks(ent)
-			elseif status == "Miss" && self.CustomOnLeapAttack_Miss then
-				self:CustomOnLeapAttack_Miss()
-			end
-		end
-	end
-	if self.CustomAttack or self.MultipleMeleeAttacks or self.MultipleRangeAttacks or self.MultipleLeapAttacks then
-		self.OnThinkAttack = function(_, isAttacking, enemy)
-			if self.CustomAttack then self:CustomAttack(enemy, self.EnemyData.Visible) end
-			if isAttacking then return end
-			if self.MultipleMeleeAttacks then self:MultipleMeleeAttacks() end
-			if self.MultipleRangeAttacks then self:MultipleRangeAttacks() end
-			if self.MultipleLeapAttacks then self:MultipleLeapAttacks() end
-		end
-	end
-	if self.CustomAttackCheck_RangeAttack or self.CustomOnRangeAttack_BeforeStartTimer or self.CustomOnRangeAttack_AfterStartTimer then
-		self.OnRangeAttack = function(_, status, enemy)
-			if status == "PreInit" && self.CustomAttackCheck_RangeAttack then
-				return !self:CustomAttackCheck_RangeAttack(enemy)
-			elseif status == "Init" && self.CustomOnRangeAttack_BeforeStartTimer then
-				self:CustomOnRangeAttack_BeforeStartTimer(self.AttackSeed)
-			elseif status == "PostInit" && self.CustomOnRangeAttack_AfterStartTimer then
-				self:CustomOnRangeAttack_AfterStartTimer(self.AttackSeed)
-			end
-		end
-	end
-	if self.DisableDefaultRangeAttackCode or self.CustomRangeAttackCode or self.CustomRangeAttackCode_BeforeProjectileSpawn or self.CustomRangeAttackCode_AfterProjectileSpawn then
-		self.OnRangeAttackExecute = function(_, status, enemy, projectile)
-			if status == "Init" && (self.CustomRangeAttackCode or self.DisableDefaultRangeAttackCode) then
-				if self.CustomRangeAttackCode then
-					self:CustomRangeAttackCode()
-				end
-				if self.DisableDefaultRangeAttackCode then
-					return true
-				end
-			elseif status == "PreSpawn" && self.CustomRangeAttackCode_BeforeProjectileSpawn then
-				self:CustomRangeAttackCode_BeforeProjectileSpawn(projectile)
-			elseif status == "PostSpawn" && self.CustomRangeAttackCode_AfterProjectileSpawn then
-				self:CustomRangeAttackCode_AfterProjectileSpawn(projectile)
-			end
-		end
-	end
-	if self.CustomAttackCheck_MeleeAttack or self.CustomOnMeleeAttack_BeforeStartTimer or self.CustomOnMeleeAttack_AfterStartTimer then
-		self.OnMeleeAttack = function(_, status, enemy)
-			if status == "PreInit" && self.CustomAttackCheck_MeleeAttack then
-				return !self:CustomAttackCheck_MeleeAttack(enemy)
-			elseif status == "Init" && self.CustomOnMeleeAttack_BeforeStartTimer then
-				self:CustomOnMeleeAttack_BeforeStartTimer(self.AttackSeed)
-			elseif status == "PostInit" && self.CustomOnMeleeAttack_AfterStartTimer then
-				self:CustomOnMeleeAttack_AfterStartTimer(self.AttackSeed)
-			end
-		end
-	end
-	if self.DisableDefaultMeleeAttackCode or self.MeleeAttackWorldShakeOnMiss or self.CustomOnMeleeAttack_BeforeChecks or self.CustomOnMeleeAttack_AfterChecks or self.CustomOnMeleeAttack_Miss then
-		self.OnMeleeAttackExecute = function(_, status, ent, isProp)
-			if status == "Init" && (self.CustomOnMeleeAttack_BeforeChecks or self.DisableDefaultMeleeAttackCode) then
-				if self.CustomOnMeleeAttack_BeforeChecks then
-					self:CustomOnMeleeAttack_BeforeChecks()
-				end
-				if self.DisableDefaultMeleeAttackCode then
-					return true
-				end
-			elseif status == "PreDamage" && self.CustomOnMeleeAttack_AfterChecks then
-				return self:CustomOnMeleeAttack_AfterChecks(ent, isProp)
-			elseif status == "Miss" && (self.CustomOnMeleeAttack_Miss or self.MeleeAttackWorldShakeOnMiss) then
-				if self.CustomOnMeleeAttack_Miss then
-					self:CustomOnMeleeAttack_Miss()
-				end
-				if self.MeleeAttackWorldShakeOnMiss then
-					util.ScreenShake(self:GetPos(), self.MeleeAttackWorldShakeOnMissAmplitude or 16, 100, self.MeleeAttackWorldShakeOnMissDuration or 1, self.MeleeAttackWorldShakeOnMissRadius or 2000)
-				end
-			end
-		end
-	end
-	if self.GetMeleeAttackDamageOrigin then
-		self.MeleeAttackTraceOrigin = function()
-			return self:GetMeleeAttackDamageOrigin()
-		end
-	end
-	-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
-end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defShootVec = Vector(0, 0, 55)
 local capBitsDefault = bit.bor(CAP_SKIP_NAV_GROUND_CHECK, CAP_TURN_HEAD)
@@ -1570,7 +1043,7 @@ function ENT:Initialize()
 	end
 	
 	-- Variables
-	initConvars(self)
+	self:InitConvars()
 	self.NextProcessTime = vj_npc_processtime:GetFloat()
 	self.SelectedDifficulty = vj_npc_difficulty:GetInt()
 	if !self.RelationshipEnts then self.RelationshipEnts = {} end
@@ -1597,7 +1070,7 @@ function ENT:Initialize()
 	self.StartHealth = hp
 	
 	self:Init()
-	ApplyBackwardsCompatibility(self)
+	self:ApplyBackwardsCompatibility()
 	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (curTime + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
 	
 	-- Collision-based computations
@@ -2118,7 +1591,7 @@ function ENT:Think()
 				eneData.Visible = eneIsVisible
 				eneData.Distance = eneDist
 				eneData.DistanceNearest = eneDistNear
-				if eneIsVisible && self:IsInViewCone(enePos) && (eneDist < self:GetMaxLookDistance()) then
+				if eneIsVisible && eneDist < self:GetMaxLookDistance() && self:IsInViewCone(enePos) then
 					eneData.VisibleTime = curTime
 					-- Why 2 vars? Because the last "Visible" tick is usually not updated in time, causing the engine to give false positive, thinking the enemy IS visible
 					eneData.VisiblePos = eneData.VisiblePosReal
@@ -2870,7 +2343,7 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 	end
 	if checkVis then
 		-- If the current number of reachable enemies is higher then 1, then don't reset
-		local curEnemies = eneData.VisibleCount //selfData.CurrentReachableEnemies
+		local curEnemies = eneData.VisibleCount
 		if (eneValid && (curEnemies - 1) >= 1) or (!eneValid && curEnemies >= 1) then
 			self:MaintainRelationships() -- Select a new enemy
 			-- Check that the reset enemy wasn't the only visible enemy
@@ -3343,17 +2816,9 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 					corpse:SetSubMaterial(x, self:GetSubMaterial(x))
 				end
 			end
-			 -- This causes lag, not a very good way to do it.
-			/*for x = 0, #self:GetMaterials() do
-				if self:GetSubMaterial(x) != "" then
-					corpse:SetSubMaterial(x, self:GetSubMaterial(x))
-				end
-			end*/
 		end
-		//corpse:SetName("corpse" .. self:EntIndex())
-		//corpse:SetModelScale(self:GetModelScale())
-		corpse.FadeCorpseType = (corpse:GetClass() == "prop_ragdoll" and "FadeAndRemove") or "kill"
 		corpse.IsVJBaseCorpse = true
+		corpse.FadeCorpseType = (corpse:GetClass() == "prop_ragdoll" and "FadeAndRemove") or "kill"
 		corpse.DamageInfo = dmginfo
 		corpse.ChildEnts = self.DeathCorpse_ChildEnts or {}
 		corpse.BloodData = {Color = self.BloodColor, Particle = self.BloodParticle, Decal = self.BloodDecal}
@@ -3368,7 +2833,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			undo.ReplaceEntity(self, corpse)
 		else -- Keep corpses is not enabled...
 			VJ.Corpse_Add(corpse)
-			if vj_npc_corpse_undo:GetInt() == 1 then undo.ReplaceEntity(self, corpse) end -- Undoable
+			if vj_npc_corpse_undo:GetInt() == 1 then undo.ReplaceEntity(self, corpse) end
 		end
 		cleanup.ReplaceEntity(self, corpse) -- Delete on cleanup
 		
@@ -3386,7 +2851,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			corpse:Dissolve(0, 1)
 		end
 		
-		-- Bone and Angle
+		-- Bone & Angle
 		-- If it's a bullet, it will use localized velocity on each bone depending on how far away the bone is from the dmg position
 		local useLocalVel = (bit.band(self.SavedDmgInfo.type, DMG_BULLET) != 0 and self.SavedDmgInfo.pos != defPos) or false
 		local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
