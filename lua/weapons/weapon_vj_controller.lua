@@ -41,19 +41,11 @@ function SWEP:PrimaryAttack()
 	
 	local ent = util.TraceLine(util.GetPlayerTrace(owner)).Entity
 	if IsValid(ent) then
-		if ent:IsPlayer() then
-			owner:ChatPrint("That's a player dumbass.")
-			return
-		elseif ent:GetClass() == "prop_ragdoll" then
-			owner:ChatPrint("You are about to become that corpse.")
-			return
-		elseif ent:GetClass() == "prop_physics" then
-			owner:ChatPrint("Uninstall your game. Now.")
-			return
-		elseif !ent:IsNPC() then
+		if !ent:IsNPC() then
 			owner:ChatPrint("This isn't an NPC, therefore you can't control it.")
 			return
-		elseif ent.VJ_IsBeingControlled then
+		end
+		if ent.VJ_IsBeingControlled then
 			owner:ChatPrint("You can't control this NPC, it's already being controlled by someone else.")
 			return
 		end
