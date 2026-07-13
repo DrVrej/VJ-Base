@@ -4,7 +4,7 @@ SWEP.Base = "weapon_vj_base"
 SWEP.PrintName = "NPC Controller"
 SWEP.Author = "DrVrej"
 SWEP.Contact = "http://steamcommunity.com/groups/vrejgaming"
-SWEP.Purpose = "Made to control VJ NPCs."
+SWEP.Purpose = "Made to control VJ Base NPCs."
 SWEP.Instructions = "Press PRIMARY FIRE to control the NPC you are looking at."
 SWEP.Category = "VJ Base"
 SWEP.Spawnable = true
@@ -19,44 +19,43 @@ SWEP.Slot = 5
 SWEP.SlotPos = 7
 SWEP.UseHands = true
 
-SWEP.Primary.Sound = {"physics/flesh/flesh_squishy_impact_hard1.wav", "physics/flesh/flesh_squishy_impact_hard2.wav", "physics/flesh/flesh_squishy_impact_hard3.wav", "physics/flesh/flesh_squishy_impact_hard4.wav"}
+local sdMain = {"physics/flesh/flesh_squishy_impact_hard1.wav", "physics/flesh/flesh_squishy_impact_hard2.wav", "physics/flesh/flesh_squishy_impact_hard3.wav", "physics/flesh/flesh_squishy_impact_hard4.wav"}
 SWEP.Primary.ClipSize = -1
 SWEP.Primary.DefaultClip = -1
 SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = "none"
 
-SWEP.DeploySound = {"physics/flesh/flesh_squishy_impact_hard1.wav", "physics/flesh/flesh_squishy_impact_hard2.wav", "physics/flesh/flesh_squishy_impact_hard3.wav", "physics/flesh/flesh_squishy_impact_hard4.wav"}
+SWEP.DeploySound = sdMain
+
+local msg_player = {"You know NPC stands for Non-Player-Character, right?", "Looks like a player is already controlling this entity.", "You're about to become an NPC if you do that again."}
+local msg_ragdoll = {"You're being as productive as that corpse.", "Maybe try controlling it before it died?"}
+local msg_prop = {"This isn't prop hunt.", "Do you know how to turn the stove on?"}
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttack()
 	local owner = self:GetOwner()
-	if CLIENT or owner:IsNPC() then return end
+	if CLIENT or !owner:IsPlayer() then return end
 	
-	owner:SetAnimation(PLAYER_ATTACK1)
 	local delayTime = CurTime() + VJ.AnimDuration(owner:GetViewModel(), ACT_VM_SECONDARYATTACK)
+	owner:SetAnimation(PLAYER_ATTACK1)
 	self:SendWeaponAnim(ACT_VM_SECONDARYATTACK)
 	self.PLY_NextIdleAnimT = delayTime
 	self.PLY_NextReloadT = delayTime
 	self:SetNextPrimaryFire(delayTime)
-	self:EmitSound(VJ.PICK(self.Primary.Sound), 80, 140, 1, CHAN_WEAPON, 0, 0, VJ_RecipientFilter)
+	self:EmitSound(VJ.PICK(sdMain), 80, 140, 1, CHAN_WEAPON, 0, 0, VJ_RecipientFilter)
 	
-	local ent = util.TraceLine(util.GetPlayerTrace(owner)).Entity
-	if IsValid(ent) then
-		if ent:IsPlayer() then
-			owner:ChatPrint("That's a player dumbass.")
-			return
-		elseif ent:GetClass() == "prop_ragdoll" then
-			owner:ChatPrint("You are about to become that corpse.")
-			return
-		elseif ent:GetClass() == "prop_physics" then
-			owner:ChatPrint("Uninstall your game. Now.")
-			return
-		elseif !ent:IsNPC() then
-			owner:ChatPrint("This isn't an NPC, therefore you can't control it.")
-			return
-		elseif ent.VJ_IsBeingControlled then
-			owner:ChatPrint("You can't control this NPC, it's already being controlled by someone else.")
-			return
-		end
+	local ent = owner:GetEyeTrace().Entity
+	if !IsValid(ent) then return end
+	if ent:IsPlayer() then
+		owner:ChatPrint(VJ.PICK(msg_player))
+	elseif ent:GetClass() == "prop_ragdoll" then
+		owner:ChatPrint(VJ.PICK(msg_ragdoll))
+	elseif VJ.IsProp(ent) then
+		owner:ChatPrint(VJ.PICK(msg_prop))
+	elseif !ent:IsNPC() then
+		owner:ChatPrint("This isn't an NPC, therefore you can't control it.")
+	elseif ent.VJ_IsBeingControlled then
+		owner:ChatPrint("NPC is currently controlled by someone else.")
+	else
 		if !ent.IsVJBaseSNPC then
 			owner:ChatPrint("NOTE: NPC Controller is mainly made for VJ Base NPCs!")
 		end
