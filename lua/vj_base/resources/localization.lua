@@ -500,8 +500,8 @@ local strings_english = {
 	["vjbase.campfire.print.activated"] = "You turned on the campfire.",
 	["vjbase.campfire.print.deactivated"] = "You turned off the campfire.",
 	
-	["vjbase.spawnpoint.print.activated"] = "Spawnpoint activated!",
-	["vjbase.spawnpoint.print.deactivated"] = "spawnpoint deactivated!",
+	["vjbase.spawnpoint.print.activated"] = "Spawn Point activated!",
+	["vjbase.spawnpoint.print.deactivated"] = "Spawn Point deactivated!",
 }
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local strings_russian = {

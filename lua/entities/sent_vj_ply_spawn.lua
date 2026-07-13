@@ -7,7 +7,7 @@ AddCSLuaFile()
 
 ENT.Base 			= "base_anim"
 ENT.Type 			= "anim"
-ENT.PrintName 		= "Player Spawnpoint"
+ENT.PrintName 		= "Player Spawn Point"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Information 	= "Sets an spawn point for all the players.\nPress USE to toggle it."
@@ -25,7 +25,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.Active = true -- Is this spawn point active?
+ENT.Active = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetModel("models/props_junk/sawblade001a.mdl")
@@ -40,12 +40,12 @@ function ENT:Use(activator, caller)
 	if activator:IsPlayer() && activator:IsAdmin() then
 		if self.Active then
 			self.Active = false
-			self:EmitSound("hl1/fvox/deactivated.wav", 70, 100)
+			self:EmitSound("hl1/fvox/deactivated.wav")
 			self:SetColor(VJ.COLOR_RED)
 			activator:PrintMessage(HUD_PRINTTALK, "#vjbase.spawnpoint.print.deactivated")
 		else
 			self.Active = true
-			self:EmitSound("hl1/fvox/activated.wav", 70, 100)
+			self:EmitSound("hl1/fvox/activated.wav")
 			self:SetColor(VJ.COLOR_GREEN)
 			activator:PrintMessage(HUD_PRINTTALK, "#vjbase.spawnpoint.print.activated")
 		end

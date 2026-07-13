@@ -39,28 +39,25 @@ function Schedule:EngTask(taskName, taskData) -- Set an engine defined task
 	local newTask = vj_ai_task.New()
 	newTask:InitEngine(taskName, taskData)
 	self.TaskCount = table.insert(self.Tasks, newTask)
-	-- Handle movement tasks
-	if tasksMove[taskName] then
+	if tasksMove[taskName] then -- Handle movement tasks
 		self.HasMovement = true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Schedule:AddTask(taskName, data) -- Set a custom task where the task name, start function, and run function are all named the same
+function Schedule:AddTask(taskName, taskData) -- Set a custom task where the task name, start function, and run function are all named the same
 	local newTask = vj_ai_task.New()
-	newTask:InitCustom(taskName, taskName, taskName, data)
+	newTask:InitCustom(taskName, taskName, taskName, taskData)
 	self.TaskCount = table.insert(self.Tasks, newTask)
-	-- Handle movement tasks
-	if tasksMove[taskName] then
+	if tasksMove[taskName] then -- Handle movement tasks
 		self.HasMovement = true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Schedule:AddTaskEx(taskName, startFunc, runFunc, data) -- Set a custom task with custom start and run function names
+function Schedule:AddTaskEx(taskName, startFunc, runFunc, taskData) -- Set a custom task with custom start and run function names
 	local newTask = vj_ai_task.New()
-	newTask:InitCustom(taskName, startFunc, runFunc, data)
+	newTask:InitCustom(taskName, startFunc, runFunc, taskData)
 	self.TaskCount = table.insert(self.Tasks, newTask)
-	-- Handle movement tasks
-	if tasksMove[taskName] then
+	if tasksMove[taskName] then -- Handle movement tasks
 		self.HasMovement = true
 	end
 end

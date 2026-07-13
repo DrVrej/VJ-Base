@@ -24,7 +24,7 @@ function ENT:SetupDataTables()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	ENT.NextActivationCheckT = 0
+	ENT.NextActivationCheck = 0
 	ENT.CreatedParticles = false
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	function ENT:Draw()
@@ -33,7 +33,7 @@ if CLIENT then
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	function ENT:Think()
 		local curTime = CurTime()
-		if curTime > self.NextActivationCheckT then
+		if curTime > self.NextActivationCheck then
 			if self:GetActivated() then
 				-- Needs to be done here instead of server side due to a GMod bug where particles don't show for the server host and certain clients while in multiplayer
 				if !self.CreatedParticles then
@@ -56,7 +56,7 @@ if CLIENT then
 				self:StopParticles() -- Sometimes server side call doesn't work while in multiplayer
 				self.CreatedParticles = false
 			end
-			self.NextActivationCheckT = curTime + 0.2
+			self.NextActivationCheck = curTime + 0.2
 		end
 	end
 end
@@ -84,15 +84,15 @@ function ENT:CampfireToggle(activate)
 		self:SetActivated(true)
 		self.IsOn = true
 		self:EmitSound("ambient/fire/ignite.wav", 60, 100)
-		self.CurrentFireSound = CreateSound(self, "ambient/fire/fire_small_loop1.wav")
-		self.CurrentFireSound:SetSoundLevel(60)
-		self.CurrentFireSound:PlayEx(1, 100)
+		self.FireSound = CreateSound(self, "ambient/fire/fire_small_loop1.wav")
+		self.FireSound:SetSoundLevel(60)
+		self.FireSound:Play()
 	else
 		self:SetActivated(false)
 		self.IsOn = false
 		self:EmitSound("ambient/fire/mtov_flame2.wav", 60, 100)
 		self:StopParticles()
-		VJ.STOPSOUND(self.CurrentFireSound)
+		VJ.STOPSOUND(self.FireSound)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -118,5 +118,5 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
 	self:StopParticles()
-	VJ.STOPSOUND(self.CurrentFireSound)
+	VJ.STOPSOUND(self.FireSound)
 end

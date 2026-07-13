@@ -63,9 +63,9 @@ function ENT:Initialize()
 	envFlare:SetOwner(self)
 	envFlare:SetColor(VJ.COLOR_RED)
 
-	self.CurrentIdleSound = CreateSound(self, "weapons/flaregun/burn.wav")
-	self.CurrentIdleSound:SetSoundLevel(60)
-	self.CurrentIdleSound:PlayEx(1, 100)
+	self.IdleSound = CreateSound(self, "weapons/flaregun/burn.wav")
+	self.IdleSound:SetSoundLevel(60)
+	self.IdleSound:Play()
 	
 	-- Make it drop after some time in the air
 	timer.Simple(2, function()
@@ -117,6 +117,6 @@ function ENT:OnTakeDamage(dmginfo)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
-	VJ.STOPSOUND(self.CurrentIdleSound)
+	VJ.STOPSOUND(self.IdleSound)
 	self:StopParticles()
 end

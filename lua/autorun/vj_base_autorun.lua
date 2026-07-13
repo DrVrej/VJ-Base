@@ -100,7 +100,7 @@ VJ.AddNPC("Interactive NPC", "npc_vj_test_interactive", spawnCategory, true)
 VJ.AddNPC_HUMAN("Player NPC", "npc_vj_test_player", {"weapon_vj_ak47", "weapon_vj_glock17", "weapon_vj_m16a1", "weapon_vj_mp40", "weapon_vj_9mmpistol", "weapon_vj_357", "weapon_vj_ar2", "weapon_vj_blaster", "weapon_vj_smg1", "weapon_vj_spas12", "weapon_vj_k3", "weapon_vj_crossbow", "weapon_vj_ssg08"}, spawnCategory)
 	-- ====== Entities ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 VJ.AddEntity("Admin Health Kit", "sent_vj_ply_healthkit", "DrVrej", true, 0, true, spawnCategory)
-VJ.AddEntity("Player Spawnpoint", "sent_vj_ply_spawn", "DrVrej", true, 0, true, spawnCategory)
+VJ.AddEntity("Player Spawn Point", "sent_vj_ply_spawn", "DrVrej", true, 0, true, spawnCategory)
 VJ.AddEntity("Campfire", "sent_vj_campfire", "DrVrej", false, 0, true, spawnCategory)
 VJ.AddEntity("Wooden Board", "prop_vj_board", "DrVrej", false, 0, true, spawnCategory)
 VJ.AddEntity("Grenade", "obj_vj_grenade", "DrVrej", false, 0, true, spawnCategory)

@@ -24,50 +24,49 @@ local TYPE_ENGINE = 1
 local TYPE_CUSTOM = 2
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:Init()
-	self.TaskType = nil
+	self.Type = nil
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Task:InitEngine(taskName, taskData) -- Creates an engine based task
-	self.TaskName = taskName
-	self.TaskID = nil
-	self.TaskData = taskData
-	self.TaskType = TYPE_ENGINE
+function Task:InitEngine(name, data) -- Creates an engine based task
+	self.Name = name
+	self.Data = data or 0 -- Engine data must be a number
+	self.Type = TYPE_ENGINE
+	//self.EngineID -- Set later
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Task:InitCustom(taskName, startFunc, endFunc, taskData) -- Create a custom task
-	self.TaskName = taskName
-	self.TaskFunc_Start = startFunc
-	self.TaskFunc_Run = endFunc
-	self.TaskID = nil -- Custom function do NOT have an ID!
-	self.TaskData = taskData
-	self.TaskType = TYPE_CUSTOM
+function Task:InitCustom(name, startFunc, endFunc, data) -- Create a custom task
+	self.Name = name
+	self.Data = data
+	self.Type = TYPE_CUSTOM
+	self.CustomStart = startFunc
+	self.CustomRun = endFunc
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Task:Start(npc)
-	if self.TaskType == TYPE_CUSTOM then
-		if (!self.TaskFunc_Start) then return end
-		npc[self.TaskFunc_Start](npc, TASKSTATUS_NEW, self.TaskData)
-	elseif self.TaskType == TYPE_ENGINE then
-		if (!self.TaskID) then self.TaskID = ai.GetTaskID(self.TaskName) end
-		npc:StartEngineTask(self.TaskID, self.TaskData or 0)
+function Task:Start(ent)
+	if self.Type == TYPE_CUSTOM then
+		if !self.CustomStart then return end
+		ent[self.CustomStart](ent, TASKSTATUS_NEW, self.Data)
+	elseif self.Type == TYPE_ENGINE then
+		self.EngineID = ai.GetTaskID(self.Name) -- Must be delayed otherwise it can return -1
+		ent:StartEngineTask(self.EngineID, self.Data)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Task:Run(npc)
-	if self.TaskType == TYPE_CUSTOM then
-		if (!self.TaskFunc_Run) then return end
-		npc[self.TaskFunc_Run](npc, TASKSTATUS_RUN_TASK, self.TaskData)
-	elseif self.TaskType == TYPE_ENGINE then
-		npc:RunEngineTask(self.TaskID, self.TaskData or 0)
+function Task:Run(ent)
+	if self.Type == TYPE_CUSTOM then
+		if !self.CustomRun then return end
+		ent[self.CustomRun](ent, TASKSTATUS_RUN_TASK, self.Data)
+	elseif self.Type == TYPE_ENGINE then
+		ent:RunEngineTask(self.EngineID, self.Data)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:IsEngineType()
-	return self.TaskType == TYPE_ENGINE
+	return self.Type == TYPE_ENGINE
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:IsCustomType()
-	return self.TaskType == TYPE_CUSTOM
+	return self.Type == TYPE_CUSTOM
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function New()

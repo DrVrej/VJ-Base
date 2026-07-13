@@ -183,47 +183,54 @@ if CLIENT then
 	
 	--[-------------------------------------------------------]--
 	-- Adds the searching functionality for the VJ Base spawn menu.
-	-- Note: This is based on the default GMod code.
-	search.AddProvider(function(str)
+	-- Taken from: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/gamemodes/sandbox/gamemode/cl_search_models.lua
+	search.AddProvider( function( str )
+
 		local results = {}
-		local entities = {}
 		
-		local function searchList(lname, lctype)
-			for k, v in pairs(list.Get(lname)) do
-				v.ClassName = k
-				v.PrintName = v.PrintName or v.Name
-				v.ScriptedEntityType = lctype
-				table.insert(entities, v)
-			end
-		end
-		searchList("VJBASE_SPAWNABLE_NPC", "npc")
-		searchList("VJBASE_SPAWNABLE_WEAPON", "weapon")
-		searchList("VJBASE_SPAWNABLE_ENTITIES", "entity")
-		// searchList("VJBASE_SPAWNABLE_VEHICLES", "vehicle") -- vehicle (Not yet lol)
+		local function AddSearchProvider( listname, ctype )
+			for name_c, v in pairs( list.Get( listname ) ) do
+				if ( !istable( v ) ) then continue end -- Some mod doing something wrong
+				if ( listname == "VJBASE_SPAWNABLE_WEAPON" and !v.Spawnable ) then continue end
 
-		for _, v in pairs(entities) do
-			local name = v.PrintName
-			local name_c = v.ClassName
-			if (!name && !name_c) then continue end
-			
-			if ((name && name:lower():find(str, nil, true)) or (name_c && name_c:lower():find(str, nil, true))) then
-				local entry = {
-					text = v.PrintName or v.ClassName,
-					icon = spawnmenu.CreateContentIcon(v.ScriptedEntityType or "entity", nil, {
-						nicename = v.PrintName or v.ClassName,
-						spawnname = v.ClassName,
-						material = "entities/" .. v.ClassName .. ".png",
+				local name = v.PrintName or v.Name
+				if ( !isstring( name ) and !isstring( name_c ) ) then continue end
+
+				local name_lang = ( isstring( name ) and language.GetPhrase( name ) or name )
+				if ( ( isstring( name_lang ) and name_lang:lower():find( str, nil, true ) ) or
+					( isstring( name_c ) and name_c:lower():find( str, nil, true ) ) ) then
+
+					local contentIconData = {
+						nicename = name or name_c,
+						spawnname = name_c,
+						material = "entities/" .. name_c .. ".png",
 						admin = v.AdminOnly
-					}),
-					words = {v}
-				}
+					}
 
-				table.insert(results, entry)
+					if ( listname == "VJBASE_SPAWNABLE_NPC" ) then contentIconData.weapon = v.Weapons end
+
+					local entry = {
+						text = name or name_c,
+						icon = spawnmenu.CreateContentIcon( ctype or "entity", nil, contentIconData ),
+						words = { v }
+					}
+
+					table.insert( results, entry )
+
+				end
+
+				//if ( #results >= sbox_search_maxresults:GetInt() / 4 ) then break end
+
 			end
 		end
-		table.SortByMember(results, "text", true)
+		AddSearchProvider("VJBASE_SPAWNABLE_NPC", "npc")
+		AddSearchProvider("VJBASE_SPAWNABLE_WEAPON", "weapon")
+		AddSearchProvider("VJBASE_SPAWNABLE_ENTITIES", "entity")
+
+		table.SortByMember( results, "text", true )
 		return results
-	end, "vjbase")
+
+	end, "vjbase" )
 
 	--[-------------------------------------------------------]--
 	-- Create the main spawn menu tab, set it to be placed after the default "Vehicles" tab
@@ -385,8 +392,10 @@ local function InternalSpawnNPC( NPCData, ply, Position, Normal, Class, Equipmen
 	--
 	-- Does this NPC have a specified model? If so, use it.
 	--
-	if ( NPCData.Model ) then
-		NPC:SetModel( NPCData.Model )
+	local NPCModel = NPCData.Model
+	if ( istable( NPCModel ) ) then NPCModel = NPCModel[ math.random( #NPCModel ) ] end
+	if ( NPCModel ) then
+		NPC:SetModel( NPCModel )
 	end
 
 	--
@@ -481,8 +490,8 @@ local function InternalSpawnNPC( NPCData, ply, Position, Normal, Class, Equipmen
 	-- For those NPCs that set their model/skin in Spawn function
 	-- We have to keep the call above for NPCs that want a model set by Spawn() time
 	-- BAD: They may adversly affect entity collision bounds
-	if ( NPCData.Model && NPC:GetModel():lower() != NPCData.Model:lower() ) then
-		NPC:SetModel( NPCData.Model )
+	if ( NPCModel && NPC:GetModel():lower() != NPCModel:lower() ) then
+		NPC:SetModel( NPCModel )
 	end
 	if ( NPCData.Skin ) then
 		NPC:SetSkin( NPCData.Skin )

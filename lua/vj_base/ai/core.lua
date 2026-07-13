@@ -869,7 +869,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, delay, extra
 			if customFunc then customFunc(schedule, animation) end
 			self:StartSchedule(schedule)
 			if doRealAnimTime then -- Get the calculated duration (Only done in Activity type)
-				animTime = self.CurrentTask.TaskData.duration
+				animTime = self.CurrentTask.Data.duration
 			end
 			if faceEnemy then
 				self:SetTurnTarget("Enemy", animTime, false, faceEnemy == "Visible")
