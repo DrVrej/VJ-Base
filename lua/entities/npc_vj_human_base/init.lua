@@ -333,7 +333,6 @@ ENT.FootstepSoundTimerRun = 0.25 -- Delay between footstep sounds while it is ru
 	-- ====== Idle Sound ====== --
 ENT.HasIdleSounds = true -- Can it play idle sounds? | Controls "self.SoundTbl_Idle", "self.SoundTbl_IdleDialogue", "self.SoundTbl_CombatIdle"
 ENT.IdleSoundsWhileAttacking = false -- Can it play idle sounds while performing an attack?
-ENT.IdleSoundsRegWhileAlert = false -- Should it disable playing regular idle sounds when combat idle sound is empty?
 	-- ====== Idle Dialogue Sound ====== --
 	-- When an allied NPC or player is within range, it will play these sounds rather than regular idle sounds
 	-- If the ally is a VJ NPC and has dialogue answer sounds, it will respond back
@@ -413,7 +412,7 @@ ENT.SoundTbl_DamageByPlayer = false
 ENT.SoundTbl_Death = false
 	-- ====== Sound Chance ====== --
 	-- Higher number = less chance of playing | 1 = Always play
-ENT.IdleSoundChance = 3
+ENT.IdleSoundChance = 3 -- Controls "self.SoundTbl_Idle", "self.SoundTbl_IdleDialogue"
 ENT.IdleDialogueAnswerSoundChance = 1
 ENT.CombatIdleSoundChance = 1
 ENT.ReceiveOrderSoundChance = 1
@@ -499,7 +498,7 @@ ENT.IdleSoundPitch = false
 ENT.IdleDialogueSoundPitch = false -- Controls "self.SoundTbl_IdleDialogue", "self.SoundTbl_IdleDialogueAnswer"
 ENT.CombatIdleSoundPitch = false
 ENT.ReceiveOrderSoundPitch = false
-ENT.FollowPlayerPitch = false -- Controls "self.SoundTbl_FollowPlayer", "self.SoundTbl_UnFollowPlayer"
+ENT.FollowPlayerSoundPitch = false -- Controls "self.SoundTbl_FollowPlayer", "self.SoundTbl_UnFollowPlayer"
 ENT.YieldToPlayerSoundPitch = false
 ENT.MedicBeforeHealSoundPitch = false
 ENT.MedicOnHealSoundPitch = 100
@@ -509,12 +508,12 @@ ENT.InvestigateSoundPitch = false
 ENT.LostEnemySoundPitch = false
 ENT.AlertSoundPitch = false
 ENT.CallForHelpSoundPitch = false
-ENT.BecomeEnemyToPlayerPitch = false
+ENT.BecomeEnemyToPlayerSoundPitch = false
 ENT.BeforeMeleeAttackSoundPitch = false
 ENT.MeleeAttackSoundPitch = VJ.SET(95, 100)
 ENT.ExtraMeleeSoundPitch = VJ.SET(80, 100)
 ENT.MeleeAttackMissSoundPitch = VJ.SET(90, 100)
-ENT.SuppressingPitch = false
+ENT.SuppressingSoundPitch = false
 ENT.WeaponReloadSoundPitch = false
 ENT.GrenadeAttackSoundPitch = false
 ENT.DangerSightSoundPitch = false -- Controls "self.SoundTbl_DangerSight", "self.SoundTbl_GrenadeSight"
@@ -522,7 +521,7 @@ ENT.KilledEnemySoundPitch = false
 ENT.AllyDeathSoundPitch = false
 ENT.PainSoundPitch = false
 ENT.ImpactSoundPitch = VJ.SET(80, 100)
-ENT.DamageByPlayerPitch = false
+ENT.DamageByPlayerSoundPitch = false
 ENT.DeathSoundPitch = false
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3059,7 +3058,7 @@ function ENT:SelectSchedule()
 	local curTime = CurTime()
 	local ene = funcGetEnemy(self)
 	local eneValid = IsValid(ene)
-	self:PlayIdleSound(nil, nil, eneValid)
+	self:PlayIdleSound(eneValid)
 	
 	-- Idle Behavior --
 	if !eneValid then
@@ -3172,7 +3171,7 @@ function ENT:SelectSchedule()
 								self:MaintainIdleBehavior(2) -- Make it play idle stand (Which will turn into ACT_IDLE_ANGRY)
 								selfData.NextChaseTime = curTime + math.Rand(selfData.Weapon_OcclusionDelayTime.a, selfData.Weapon_OcclusionDelayTime.b)
 							-- I am hidden, so stand up in case I am crouching if I had detected to be in a hidden position and the enemy may be visible!
-							elseif curTime < selfData.LastHiddenZoneT && !self:DoCoverTrace(myPosCentered + self:GetUp()*30, enePos_Eye + self:GetUp()*30, true) then
+							elseif curTime < selfData.LastHiddenZoneT && !self:DoCoverTrace(myPosCentered + self:GetUp() * 30, enePos_Eye + self:GetUp() * 30, true) then
 								self:MaintainIdleBehavior(2) -- Make it play idle stand (Which will turn into ACT_IDLE_ANGRY)
 								goto goto_checkwep
 							else

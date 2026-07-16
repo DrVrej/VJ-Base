@@ -211,7 +211,7 @@ function ENT:SelectSchedule()
 	if selfData.Dead then return end
 	
 	local eneValid = IsValid(self:GetEnemy())
-	self:PlayIdleSound(nil, nil, eneValid)
+	self:PlayIdleSound(eneValid)
 	self:MaintainIdleBehavior()
 	
 	if eneValid then

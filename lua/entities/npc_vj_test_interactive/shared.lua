@@ -85,19 +85,5 @@ if CLIENT then
 		button_tp.DoClick = function()
 			if ply:IsAdmin() then RunConsoleCommand("thirdperson") end
 		end
-		
-		if ply:SteamID() == "STEAM_0:0:22688298" then
-			local button_vj = vgui.Create("DButton", frame)
-			button_vj:SetText("Illuminati")
-			button_vj:SetPos(10, 170)
-			button_vj:SetSize(100, 30)
-			button_vj:SetConsoleCommand("vj_run_meme", "0")
-			
-			local button_sd = vgui.Create("DButton", frame)
-			button_sd:SetText("THIRSTY")
-			button_sd:SetPos(120, 170 )
-			button_sd:SetSize(100, 30)
-			button_sd:SetConsoleCommand("vj_run_meme", "1")
-		end
 	end)
 end

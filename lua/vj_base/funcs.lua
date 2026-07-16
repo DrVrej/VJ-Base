@@ -70,16 +70,15 @@ function VJ.STOPSOUND(sdName)
 	if sdName then sdName:Stop() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ.CreateSound(ent, sdFile, sdLevel, sdPitch, customFunc)
+function VJ.CreateSound(ent, sdFile, sdLevel, sdPitch)
 	if !sdFile then return end
 	if type(sdFile) == "table" then
 		sdFile = sdFile[math.random(1, #sdFile)]
-		if !sdFile then return end -- If the table is empty then end it
+		if !sdFile then return end -- Table is empty
 	end
-	local funcCustom = ent.OnPlaySound; if funcCustom then sdFile = funcCustom(ent, sdFile) end -- Will allow people to alter sounds before they are played
+	local funcCustom = ent.OnPlaySound; if funcCustom then sdFile = funcCustom(ent, sdFile) end -- Allow altering sounds before they are played
 	local sdID = CreateSound(ent, sdFile, VJ_RecipientFilter)
 	sdID:SetSoundLevel(sdLevel or 75)
-	if (customFunc) then customFunc(sdID) end
 	sdID:PlayEx(1, sdPitch or 100)
 	local funcCustom2 = ent.OnCreateSound; if funcCustom2 then funcCustom2(ent, sdID, sdFile) end
 	return sdID
@@ -89,10 +88,10 @@ function VJ.EmitSound(ent, sdFile, sdLevel, sdPitch, sdVolume, sdChannel)
 	if !sdFile then return end
 	if type(sdFile) == "table" then
 		sdFile = sdFile[math.random(1, #sdFile)]
-		if !sdFile then return end -- If the table is empty then end it
+		if !sdFile then return end -- Table is empty
 	end
-	local funcCustom = ent.OnPlaySound; if funcCustom then sdFile = funcCustom(ent, sdFile) end -- Will allow people to alter sounds before they are played
-	ent:EmitSound(sdFile, sdLevel, sdPitch, sdVolume, sdChannel, 0, 0, VJ_RecipientFilter)
+	local funcCustom = ent.OnPlaySound; if funcCustom then sdFile = funcCustom(ent, sdFile) end -- Allow altering sounds before they are played
+	ent:EmitSound(sdFile, sdLevel, sdPitch, sdVolume, sdChannel, 0, 1, VJ_RecipientFilter)
 	local funcCustom2 = ent.OnEmitSound; if funcCustom2 then funcCustom2(ent, sdFile) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

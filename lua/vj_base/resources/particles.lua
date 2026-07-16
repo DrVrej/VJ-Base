@@ -39,7 +39,13 @@ VJ.AddParticle("particles/vj_blood.pcf", {
 	"vj_blood_impact_white",
 	"vj_blood_impact_yellow",
 })
-VJ.AddParticle("particles/vj_explosions.pcf", {
+VJ.AddParticle("particles/vj_environment.pcf", {
+	-- Aurora
+	"vj_aurora_shockwave",
+	"vj_aurora_shockwave_ring",
+	"vj_aurora_shockwave_trails",
+	"vj_aurora_floaters",
+	-- Explosions
 	"vj_explosion1",
 	"vj_explosion2",
 	"vj_explosion3",
@@ -60,13 +66,6 @@ VJ.AddParticle("particles/vj_explosions.pcf", {
 	"vj_explosion_rocks2",
 	"vj_explosion_debris",
 	"vj_explosion_dirt",
-})
-VJ.AddParticle("particles/vj_environment.pcf", {
-	-- Aurora
-	"vj_aurora_shockwave",
-	"vj_aurora_shockwave_ring",
-	"vj_aurora_shockwave_trails",
-	"vj_aurora_floaters",
 	-- Smoke (Black)
 	"vj_smoke_black1",
 	"vj_smoke_black2",

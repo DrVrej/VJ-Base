@@ -339,7 +339,6 @@ ENT.FootstepSoundTimerRun = 0.5 -- Delay between footstep sounds while it is run
 	-- ====== Idle Sound ====== --
 ENT.HasIdleSounds = true -- Can it play idle sounds? | Controls "self.SoundTbl_Idle", "self.SoundTbl_IdleDialogue", "self.SoundTbl_CombatIdle"
 ENT.IdleSoundsWhileAttacking = false -- Can it play idle sounds while performing an attack?
-ENT.IdleSoundsRegWhileAlert = false -- Should it disable playing regular idle sounds when combat idle sound is empty?
 	-- ====== Idle Dialogue Sound ====== --
 	-- When an allied NPC or player is within range, it will play these sounds rather than regular idle sounds
 	-- If the ally is a VJ NPC and has dialogue answer sounds, it will respond back
@@ -371,10 +370,7 @@ ENT.HasExtraMeleeAttackSounds = false -- Can it play extra melee attack sound ef
 ENT.HasMeleeAttackMissSounds = true -- Can it play melee attack miss sounds?
 ENT.HasMeleeAttackPlayerSpeedSounds = true -- Does it have a sound when it slows down the player?
 ENT.HasRangeAttackSounds = true -- Can it play range attack sounds? | Controls "self.SoundTbl_BeforeRangeAttack", "self.SoundTbl_RangeAttack"
-ENT.HasBeforeLeapAttackSounds = true -- Can it play leap attack before jump sounds?
-ENT.HasLeapAttackJumpSounds = true -- Can it play leap attack jump sounds?
-ENT.HasLeapAttackDamageSounds = true -- Can it play leap attack damage sounds?
-ENT.HasLeapAttackDamageMissSounds = true -- Can it play leap attack miss sounds?
+ENT.HasLeapAttackSounds = true -- Can it play leap attack sounds? | Controls "self.SoundTbl_BeforeLeapAttack", "self.SoundTbl_LeapAttackJump", "self.SoundTbl_LeapAttackDamage", "self.SoundTbl_LeapAttackDamageMiss"
 ENT.HasAllyDeathSounds = true -- Can it play sounds when an ally dies?
 ENT.HasPainSounds = true -- Can it play pain sounds?
 ENT.HasImpactSounds = true -- Can it play impact sound effects?
@@ -423,7 +419,7 @@ ENT.SoundTbl_DamageByPlayer = false
 ENT.SoundTbl_Death = false
 	-- ====== Sound Chance ====== --
 	-- Higher number = less chance of playing | 1 = Always play
-ENT.IdleSoundChance = 2
+ENT.IdleSoundChance = 2 -- Controls "self.SoundTbl_Idle", "self.SoundTbl_IdleDialogue"
 ENT.IdleDialogueAnswerSoundChance = 1
 ENT.CombatIdleSoundChance = 1
 ENT.ReceiveOrderSoundChance = 1
@@ -513,7 +509,7 @@ ENT.IdleSoundPitch = false
 ENT.IdleDialogueSoundPitch = false -- Controls "self.SoundTbl_IdleDialogue", "self.SoundTbl_IdleDialogueAnswer"
 ENT.CombatIdleSoundPitch = false
 ENT.ReceiveOrderSoundPitch = false
-ENT.FollowPlayerPitch = false -- Controls "self.SoundTbl_FollowPlayer", "self.SoundTbl_UnFollowPlayer"
+ENT.FollowPlayerSoundPitch = false -- Controls "self.SoundTbl_FollowPlayer", "self.SoundTbl_UnFollowPlayer"
 ENT.YieldToPlayerSoundPitch = false
 ENT.MedicBeforeHealSoundPitch = false
 ENT.MedicOnHealSoundPitch = 100
@@ -523,13 +519,13 @@ ENT.InvestigateSoundPitch = false
 ENT.LostEnemySoundPitch = false
 ENT.AlertSoundPitch = false
 ENT.CallForHelpSoundPitch = false
-ENT.BecomeEnemyToPlayerPitch = false
+ENT.BecomeEnemyToPlayerSoundPitch = false
 ENT.BeforeMeleeAttackSoundPitch = false
 ENT.MeleeAttackSoundPitch = false
 ENT.ExtraMeleeSoundPitch = VJ.SET(80, 100)
 ENT.MeleeAttackMissSoundPitch = VJ.SET(90, 100)
-ENT.BeforeRangeAttackPitch = false
-ENT.RangeAttackPitch = false
+ENT.BeforeRangeAttackSoundPitch = false
+ENT.RangeAttackSoundPitch = false
 ENT.BeforeLeapAttackSoundPitch = false
 ENT.LeapAttackJumpSoundPitch = false
 ENT.LeapAttackDamageSoundPitch = false
@@ -538,7 +534,7 @@ ENT.KilledEnemySoundPitch = false
 ENT.AllyDeathSoundPitch = false
 ENT.PainSoundPitch = false
 ENT.ImpactSoundPitch = VJ.SET(80, 100)
-ENT.DamageByPlayerPitch = false
+ENT.DamageByPlayerSoundPitch = false
 ENT.DeathSoundPitch = false
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2250,7 +2246,7 @@ function ENT:SelectSchedule()
 	
 	local curTime = CurTime()
 	local eneValid = IsValid(funcGetEnemy(self))
-	self:PlayIdleSound(nil, nil, eneValid)
+	self:PlayIdleSound(eneValid)
 	
 	-- Handle move away behavior
 	if funcHasCondition(self, COND_PLAYER_PUSHING) && curTime > selfData.TakingCoverT && !self:IsBusy("Activities") then

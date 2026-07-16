@@ -195,9 +195,8 @@ if SERVER then
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_meme_sv", function(len, ply)
 		if ply:IsPlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
-			local memeType = net.ReadUInt(1) -- 2 types total
-			PrintMessage(HUD_PRINTTALK, memeType == 1 and "Are you thirsty?" or "Hello from DrVrej! :D")
-			local sd = CreateSound(game.GetWorld(), memeType == 1 and "vj_base/player/areyouthristy.wav" or "vj_base/player/illuminati.mp3", VJ_RecipientFilter)
+			PrintMessage(HUD_PRINTTALK, "Hello from DrVrej! :D")
+			local sd = CreateSound(game.GetWorld(), "vj_base/player/illuminati.mp3", VJ_RecipientFilter)
 			sd:SetSoundLevel(0)
 			sd:Play()
 		end
@@ -228,7 +227,7 @@ if SERVER && (!isfunction(FindMetaTable("Entity").SetSurroundingBoundsType) or !
 		if !VJBASE_ERROR_OUTDATED_GAME then
 			VJBASE_ERROR_OUTDATED_GAME = true
 			timer.Simple(2, function()
-				PrintMessage(HUD_PRINTTALK, "VJ Base: ERROR - Outdated game detected! Garry's Mod is running on an old unsupported version! Expect errors, bugs, and crashes!")
+				PrintMessage(HUD_PRINTTALK, "VJ Base: ERROR - Outdated game detected! Garry's Mod is running on an old unsupported version! Expect errors, and bugs!")
 			end)
 		end
 	end)

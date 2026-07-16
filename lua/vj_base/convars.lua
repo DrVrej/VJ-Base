@@ -213,7 +213,6 @@ elseif CLIENT then
 	concommand.Add("vj_run_meme", function(ply, cmd, args)
 		if ply:SteamID() != "STEAM_0:0:22688298" then return end
 		net.Start("vj_meme_sv")
-			net.WriteUInt(tonumber(args[1]) or 0, 1)
 		net.SendToServer()
 	end, nil, "Used by DrVrej for friend servers.", FCVAR_DONTRECORD)
 end
