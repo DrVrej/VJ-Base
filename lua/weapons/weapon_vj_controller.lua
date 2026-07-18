@@ -49,7 +49,7 @@ function SWEP:PrimaryAttack()
 		owner:ChatPrint(VJ.PICK(msg_player))
 	elseif ent:GetClass() == "prop_ragdoll" then
 		owner:ChatPrint(VJ.PICK(msg_ragdoll))
-	elseif VJ.IsProp(ent) then
+	elseif ent.VJ_ID_Prop then
 		owner:ChatPrint(VJ.PICK(msg_prop))
 	elseif !ent:IsNPC() then
 		owner:ChatPrint("This isn't an NPC, therefore you can't control it.")

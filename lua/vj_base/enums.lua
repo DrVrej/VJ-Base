@@ -323,6 +323,7 @@ VJ_ST_BeingEaten				bool		It's being eaten by something
 
 -- Identifiers & Tags
 VJ_ID_Living					bool		It's a living entity and should be detected by VJ NPCs | Default includes: Players, NPCs, NextBots
+VJ_ID_Prop						bool		Includes all the different types of physics prop entities
 VJ_ID_Attackable				bool		Can it be attacked or pushed by NPCs in certain cases? (Ex: It's in the way while an NPC is chasing)
 VJ_ID_Destructible				bool		Can it be damaged by attacks, projectiles, etc? (Ex: It's in the crossfire of a melee attack)
 VJ_ID_Grabbable					bool		Can it be grabbed up by NPCs (Ex: Humanoids picking up grenades)

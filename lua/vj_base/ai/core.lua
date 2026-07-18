@@ -213,7 +213,7 @@ ENT.TimersToRemove = {
 	Creates a extra corpse entity, use this function to create extra corpse entities when the NPC is killed
 		- class = The object class to use, common types: "prop_ragdoll", "prop_physics"
 		- models = Model(s) to use, can be a table which it will pick randomly from it OR a string | "None" = Doesn't set a model
-		- extraOptions = Table that holds extra options to modify parts of the code
+		- extra = Table that holds extra options to modify parts of the code
 			- Pos = Sets the spawn position
 			- Ang = Sets the spawn angle
 			- Vel = Sets the velocity | "UseDamageForce" = To use the damage's force only | DEFAULT = Uses damage force
@@ -225,17 +225,17 @@ ENT.TimersToRemove = {
 -----------------------------------------------------------]]
 local colorGrey = Color(90, 90, 90)
 --
-function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
+function ENT:CreateExtraDeathCorpse(class, models, extra, customFunc)
 	-- Should only be ran after self.Corpse has been created!
 	local corpse = self.Corpse
 	if !IsValid(corpse) then return end
 	local dmginfo = corpse.DamageInfo
 	if dmginfo == nil then return end
-	extraOptions = extraOptions or {}
+	extra = extra or {}
 	local ent = ents.Create(class or "prop_ragdoll")
 	if models != "None" then ent:SetModel(PICK(models)) end
-	ent:SetPos(extraOptions.Pos or self:GetPos())
-	ent:SetAngles(extraOptions.Ang or self:GetAngles())
+	ent:SetPos(extra.Pos or self:GetPos())
+	ent:SetAngles(extra.Ang or self:GetAngles())
 	ent:Spawn()
 	ent:Activate()
 	ent:SetColor(corpse:GetColor())
@@ -245,22 +245,22 @@ function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 		ent:Ignite(math.Rand(8, 10), 0)
 		ent:SetColor(colorGrey)
 	end
-	if extraOptions.HasVel != false then
+	if extra.HasVel != false then
 		local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
 		if self.DeathAnimationCodeRan then
 			dmgForce = self:GetGroundSpeedVelocity()
 		end
-		ent:GetPhysicsObject():AddVelocity(extraOptions.Vel or dmgForce)
+		ent:GetPhysicsObject():AddVelocity(extra.Vel or dmgForce)
 	end
-	if extraOptions.ShouldFade == true then
-		local fadeTime = extraOptions.ShouldFadeTime or 0
+	if extra.ShouldFade == true then
+		local fadeTime = extra.ShouldFadeTime or 0
 		if funcGetClass(ent) == "prop_ragdoll" then
 			ent:Fire("FadeAndRemove", nil, fadeTime)
 		else
 			ent:Fire("kill", nil, fadeTime)
 		end
 	end
-	if extraOptions.RemoveOnCorpseDelete != false then //corpse:DeleteOnRemove(ent)
+	if extra.RemoveOnCorpseDelete != false then //corpse:DeleteOnRemove(ent)
 		corpse.ChildEnts[#corpse.ChildEnts + 1] = ent
 	end
 	if (customFunc) then customFunc(ent) end
@@ -272,7 +272,7 @@ end
 		- class = The object class to use, recommended to use "obj_vj_gib", and for ragdoll type of gib use "prop_ragdoll"
 		- models = Model(s) to use, can be a table which it will pick randomly from it OR a string
 			- Defined strings: "UseAlien_Small", "UseAlien_Big", "UseHuman_Small", "UseHuman_Big"
-		- extraOptions = Table that holds extra options to modify parts of the code
+		- extra = Table that holds extra options to modify parts of the code
 			- Pos = Sets the spawn position
 			- Ang = Sets the spawn angle | DEFAULT = Random angle
 			- Vel = Sets the velocity | "UseDamageForce" = To use the damage's force only | DEFAULT = Random velocity
@@ -291,7 +291,7 @@ local gib_mdlABig = {"models/vj_base/gibs/alien/gib1.mdl", "models/vj_base/gibs/
 local gib_mdlHSmall = {"models/vj_base/gibs/human/gib_small1.mdl", "models/vj_base/gibs/human/gib_small2.mdl", "models/vj_base/gibs/human/gib_small3.mdl"}
 local gib_mdlHBig = {"models/vj_base/gibs/human/gib1.mdl", "models/vj_base/gibs/human/gib2.mdl", "models/vj_base/gibs/human/gib3.mdl", "models/vj_base/gibs/human/gib4.mdl", "models/vj_base/gibs/human/gib5.mdl", "models/vj_base/gibs/human/gib6.mdl", "models/vj_base/gibs/human/gib7.mdl"}
 --
-function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
+function ENT:CreateGibEntity(class, models, extra, customFunc)
 	if !self.CanGib then return end
 	local bloodType = false
 	if models == "UseAlien_Small" then
@@ -312,33 +312,33 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 			bloodType = VJ.BLOOD_COLOR_YELLOW
 		end
 	end
-	extraOptions = extraOptions or {}
-		local vel = extraOptions.Vel or Vector(math.Rand(-100, 100), math.Rand(-100, 100), math.Rand(150, 250))
+	extra = extra or {}
+		local vel = extra.Vel or Vector(math.Rand(-100, 100), math.Rand(-100, 100), math.Rand(150, 250))
 		if self.SavedDmgInfo then
 			local dmgForce = self.SavedDmgInfo.force / 70
-			if extraOptions.Vel_ApplyDmgForce != false && extraOptions.Vel != "UseDamageForce" then -- Use both damage force AND given velocity
+			if extra.Vel_ApplyDmgForce != false && extra.Vel != "UseDamageForce" then -- Use both damage force AND given velocity
 				vel = vel + dmgForce
-			elseif extraOptions.Vel == "UseDamageForce" then -- Use damage force
+			elseif extra.Vel == "UseDamageForce" then -- Use damage force
 				vel = dmgForce
 			end
 		end
-		bloodType = (extraOptions.BloodType or bloodType or self.BloodColor) -- Certain entities such as the VJ Gib entity, you can use this to set its gib type
+		bloodType = (extra.BloodType or bloodType or self.BloodColor) -- Certain entities such as the VJ Gib entity, you can use this to set its gib type
 	
 	local gib = ents.Create(class or "obj_vj_gib")
 	gib:SetModel(models)
-	gib:SetPos(extraOptions.Pos or (self:GetPos() + self:OBBCenter()))
-	gib:SetAngles(extraOptions.Ang or Angle(math.Rand(-180, 180), math.Rand(-180, 180), math.Rand(-180, 180)))
+	gib:SetPos(extra.Pos or (self:GetPos() + self:OBBCenter()))
+	gib:SetAngles(extra.Ang or Angle(math.Rand(-180, 180), math.Rand(-180, 180), math.Rand(-180, 180)))
 	if funcGetClass(gib) == "obj_vj_gib" then
 		gib.BloodType = bloodType
-		if extraOptions.CollisionDecal != nil then
-			gib.CollisionDecal = extraOptions.CollisionDecal
-		elseif extraOptions.BloodDecal then -- Backwards compatibility
-			gib.CollisionDecal = extraOptions.BloodDecal
+		if extra.CollisionDecal != nil then
+			gib.CollisionDecal = extra.CollisionDecal
+		elseif extra.BloodDecal then -- Backwards compatibility
+			gib.CollisionDecal = extra.BloodDecal
 		end
-		if extraOptions.CollisionSound != nil then
-			gib.CollisionSound = extraOptions.CollisionSound
-		elseif extraOptions.CollideSound then -- Backwards compatibility
-			gib.CollisionSound = extraOptions.CollideSound
+		if extra.CollisionSound != nil then
+			gib.CollisionSound = extra.CollisionSound
+		elseif extra.CollideSound then -- Backwards compatibility
+			gib.CollisionSound = extra.CollideSound
 		end
 		//gib.BloodData = {Color = bloodType, Particle = self.BloodParticle, Decal = self.CollisionDecal} -- For eating system
 	end
@@ -349,9 +349,9 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 	local phys = gib:GetPhysicsObject()
 	if IsValid(phys) then
 		phys:AddVelocity(vel)
-		phys:AddAngleVelocity(extraOptions.AngVel or Vector(math.Rand(-200, 200), math.Rand(-200, 200), math.Rand(-200, 200)))
+		phys:AddAngleVelocity(extra.AngVel or Vector(math.Rand(-200, 200), math.Rand(-200, 200), math.Rand(-200, 200)))
 	end
-	if extraOptions.NoFade != true && vj_npc_gib_fade:GetInt() == 1 then
+	if extra.NoFade != true && vj_npc_gib_fade:GetInt() == 1 then
 		local gibClass = funcGetClass(gib)
 		if gibClass == "obj_vj_gib" then
 			timer.Simple(vj_npc_gib_fadetime:GetInt(), function() if IsValid(gib) then gib:Remove() end end)
@@ -663,7 +663,7 @@ end
 			- true = Constantly face the enemy even behind walls, objects, etc.
 			- "Visible" = Only face the enemy while it's visible
 		- delay = Delays the animation by the given amount of time | DEFAULT: 0
-		- extraOptions = Table that holds extra options to modify parts of the code
+		- extra = Table that holds extra options to modify parts of the code
 			- OnFinish(interrupted, anim) = A function that runs when the animation finishes | DEFAULT: nil
 				- interrupted = Was the animation cut off? (Something stopped it before the animation completed)
 				- anim = Animation it played, can be a string or an activity enum
@@ -683,7 +683,7 @@ end
 -----------------------------------------------------------]]
 local emptyTbl = {}
 --
-function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, delay, extraOptions, customFunc)
+function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, delay, extra, customFunc)
 	animation = PICK(animation)
 	if !animation then return ACT_INVALID, 0, ANIM_TYPE_NONE end
 	
@@ -691,7 +691,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, delay, extra
 	lockAnimTime = lockAnimTime or false
 	faceEnemy = faceEnemy or false
 	delay = tonumber(delay) or 0
-	extraOptions = extraOptions or emptyTbl
+	extra = extra or emptyTbl
 	local isString = isstring(animation)
 	local isSequence = false
 	local isGesture = false
@@ -715,8 +715,8 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, delay, extra
 		end
 	end
 	
-	if extraOptions.AlwaysUseGesture then isGesture = true end
-	if extraOptions.AlwaysUseSequence then -- Must play as a sequence
+	if extra.AlwaysUseGesture then isGesture = true end
+	if extra.AlwaysUseSequence then -- Must play as a sequence
 		//isGesture = false -- Leave this alone to allow gesture-sequences to play even when "AlwaysUseSequence" is true!
 		isSequence = true
 		if isnumber(animation) then -- If it's an activity, then convert it to a sequence
@@ -760,7 +760,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, delay, extra
 	
 	local function PlayAct()
 		local originalPlaybackRate = self.AnimPlaybackRate
-		local customPlaybackRate = extraOptions.PlayBackRate
+		local customPlaybackRate = extra.PlayBackRate
 		local playbackRate = customPlaybackRate or originalPlaybackRate
 		self:SetPlaybackRate(playbackRate) -- Call this to change "self.AnimPlaybackRate" so "VJ.AnimDurationEx" can be calculated correctly
 		local animTime = VJ.AnimDurationEx(self, animation, false)
@@ -772,7 +772,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, delay, extra
 				lockAnimTime = animTime
 			else -- Manually calculated
 				doRealAnimTime = false
-				if !extraOptions.PlayBackRateCalculated then -- Make sure not to calculate the playback rate when it already has!
+				if !extra.PlayBackRateCalculated then -- Make sure not to calculate the playback rate when it already has!
 					lockAnimTime = lockAnimTime / playbackRate
 				end
 				animTime = lockAnimTime
@@ -839,7 +839,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, delay, extra
 					playbackRate = customPlaybackRate or false,
 					duration = animTime
 				})
-				//self:PlaySequence(animation, playbackRate, extraOptions.SequenceDuration != false, dur)
+				//self:PlaySequence(animation, playbackRate, extra.SequenceDuration != false, dur)
 				animTime = animTime + transitionAnimTime -- Adjust the animation time in case we have a transition animation!
 			else -- Activity
 				//self:SetActivity(ACT_RESET)
@@ -877,10 +877,10 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, delay, extra
 		end
 		
 		-- If it has a OnFinish function, then set the timer to run it when it finishes!
-		if extraOptions.OnFinish then
+		if extra.OnFinish then
 			timer.Simple(animTime, function()
 				if IsValid(self) && !self.Dead then
-					extraOptions.OnFinish(self.LastAnimSeed != seed, animation)
+					extra.OnFinish(self.LastAnimSeed != seed, animation)
 				end
 			end)
 		end
@@ -1257,7 +1257,7 @@ end
 			-> This will make sure it will return 1 if cooldown is over, otherwise it will cause the final spread result to be 0!
 		12. Multiply the spread result by the calculated value
 		--
-		-- Other modifiers
+		-- Misc modifiers
 		13. Multiply it by the owner's weapon accuracy (Weapon_Accuracy)
 		14. Apply the modifier parameter, if any
 -----------------------------------------------------------]]
@@ -1306,7 +1306,7 @@ end
 		- startPos = Start position of the trace | DEFAULT = Center of the NPC
 		- endPos = End position of the trace | DEFAULT = Enemy's eye position
 		- acceptWorld = If it hits the world, it will accept it as a cover | DEFAULT = false
-		- extraOptions = Table that holds extra options to modify parts of the code
+		- extra = Table that holds extra options to modify parts of the code
 			- SetLastHiddenTime = If true, it will reset the "LastHidden" time, which makes the NPC stick to a position if it's well covered | DEFAULT = false
 			- Debug = Used for debugging, spawns a cube at the hit position and prints the trace result | DEFAULT = false
 	Returns 2 values
@@ -1316,13 +1316,13 @@ end
 		- 2:
 			- Table, trace result
 -----------------------------------------------------------]]
-function ENT:DoCoverTrace(startPos, endPos, acceptWorld, extraOptions)
+function ENT:DoCoverTrace(startPos, endPos, acceptWorld, extra)
 	local ene = funcGetEnemy(self)
 	if !IsValid(ene) then return false, {} end
 	startPos = startPos or (self:GetPos() + self:OBBCenter())
 	endPos = endPos or ene:EyePos()
-	extraOptions = extraOptions or {}
-		local setLastHiddenTime = extraOptions.SetLastHiddenTime or false
+	extra = extra or {}
+		local setLastHiddenTime = extra.SetLastHiddenTime or false
 	local tr = util.TraceLine({
 		start = startPos,
 		endpos = endPos,
@@ -1332,7 +1332,7 @@ function ENT:DoCoverTrace(startPos, endPos, acceptWorld, extraOptions)
 	})
 	local hitPos = tr.HitPos
 	local hitEnt = tr.Entity
-	if extraOptions.Debug then
+	if extra.Debug then
 		debugoverlay.Box(startPos, Vector(-2, -2, -2), Vector(2, 2, 2), 1, VJ.COLOR_GREEN)
 		debugoverlay.Text(startPos, "DoCoverTrace - startPos", 1)
 		debugoverlay.Box(endPos, Vector(-2, -2, -2), Vector(2, 2, 2), 1, VJ.COLOR_RED)
@@ -1371,7 +1371,7 @@ end
 	Forces the NPC to jump.
 		- vel = Velocity for the jump
 	EX: Force the NPC to jump to the location of another entity:
-		self:ForceMoveJump((activator:GetPos() - self:GetPos()):GetNormal()*200 + Vector(0, 0, 300))
+		self:ForceMoveJump((activator:GetPos() - self:GetPos()):GetNormal() * 200 + Vector(0, 0, 300))
 -----------------------------------------------------------]]
 function ENT:ForceMoveJump(vel)
 	self:SetNavType(NAV_JUMP)
@@ -1388,7 +1388,7 @@ function ENT:GetLastDamageHitGroup()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Time since the NPC has been damaged (Used CurTime!)
+	Time since the NPC has been damaged (Uses CurTime!)
 	Returns
 		- number, time
 -----------------------------------------------------------]]
@@ -1462,12 +1462,12 @@ function ENT:IsJumpLegal(startPos, apex, endPos)
 	return tr.Hit
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnChangeActivity(newAct)
+//function ENT:OnChangeActivity(newAct)
 	//VJ.DEBUG_Print(self, "OnChangeActivity", newAct)
 	//if newAct == ACT_TURN_LEFT or newAct == ACT_TURN_RIGHT then
 		//self.NextIdleStandTime = CurTime() + VJ.AnimDuration(self, self:GetSequenceName(self:GetSequence()))
 	//end
-end
+//end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- When engine saves or map transitions are loaded
 function ENT:OnRestore()
@@ -1489,9 +1489,9 @@ function ENT:OnRestore()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- When GMod saves or duplicator tool are loaded
-function ENT:OnDuplicated(entTable)
+//function ENT:OnDuplicated(entTable)
 	//VJ.DEBUG_Print(self, "OnDuplicated")
-end
+//end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- When GMod saves or duplicator tool are used to copy this NPC
 function ENT:OnEntityCopyTableFinish(data)
@@ -3396,17 +3396,16 @@ function ENT:ValidateNoCollide(ent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Checks if the given damage type(s) contains 1 or more of the default gibbing damage types.
-		- dmgType = The damage type(s) to check for
-			EX: dmginfo:GetDamageType()
+	Checks if the given damage type(s) contains 1 or more of the default gibbing damage types
+		- dmgType = Damage type(s) to check | EX: dmginfo:GetDamageType()
 	Returns
 		- true, At least 1 damage type is included
 		- false, NO damage type is included
 	Notes
 		- DMG_ALWAYSGIB = Skip if it's a bullet because engine sets DMG_ALWAYSGIB for "FireBullets" if it's more than 16 otherwise it sets DMG_NEVERGIB
+		- DMG_DIRECT -- Disabled because default fire and related weapons use it!
 -----------------------------------------------------------]]
 local GIB_DAMAGE_MASK = bit.bor(DMG_ALWAYSGIB, DMG_ENERGYBEAM, DMG_BLAST, DMG_VEHICLE, DMG_CRUSH, DMG_DISSOLVE, DMG_SLOWBURN, DMG_PHYSGUN, DMG_PLASMA, DMG_SONIC)
-//DMG_DIRECT -- Disabled because default fire and intended weapons use it!
 --
 function ENT:IsGibDamage(dmgType)
 	return bAND(dmgType, DMG_NEVERGIB) == 0 && bAND(dmgType, GIB_DAMAGE_MASK) != 0 && (bAND(dmgType, DMG_ALWAYSGIB) == 0 || bAND(dmgType, DMG_BULLET) == 0)
@@ -3660,11 +3659,7 @@ function ENT:InitConvars()
 	end
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ ///// Backwards Compatibility | Do not to use! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local dispToVal = {[D_LI] = false, [D_HT] = true, [D_NU] = "Neutral"}
 function ENT:DoRelationshipCheck(ent) return dispToVal[self:CheckRelationship(ent)] end
@@ -3680,7 +3675,7 @@ function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc) self:SCHEDULE_COVER_
 function ENT:VJ_TASK_COVER_FROM_ORIGIN(moveType, customFunc) self:SCHEDULE_COVER_ORIGIN(moveType, customFunc) end
 function ENT:VJ_TASK_IDLE_WANDER() self:SCHEDULE_IDLE_WANDER() end
 function ENT:VJ_TASK_IDLE_STAND() self:SCHEDULE_IDLE_STAND() end
-function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, delay, extraOptions, customFunc) return self:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, delay, extraOptions, customFunc) end
+function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, delay, extra, customFunc) return self:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, delay, extra, customFunc) end
 function ENT:VJ_DecideSoundPitch(pitch1, pitch2) return self:GetSoundPitch(pitch1) end
 function ENT:VJ_GetDifficultyValue(num) return self:ScaleByDifficulty(num) end
 function ENT:VJ_GetNearestPointToEntity(ent, centerNPC) return VJ.GetNearestPositions(self, ent, centerNPC) end

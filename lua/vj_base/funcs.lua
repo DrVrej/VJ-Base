@@ -471,18 +471,19 @@ end
 --[[---------------------------------------------------------
 	Retrieves all the pose the parameters of the entity and returns it.
 		- ent = The entity to retrieve pose parameters
-		- prt = Should it print the pose parameters? | DEFAULT: true
+		- prt = Should it print the pose parameters? | DEFAULT: false
 	Returns
 		- table of all the pose parameters
 -----------------------------------------------------------]]
 function VJ.GetPoseParameters(ent, prt)
 	local result = {}
 	for i = 0, ent:GetNumPoseParameters() - 1 do
+		local name = ent:GetPoseParameterName(i)
+		result[i + 1] = name
 		if prt then
 			local min, max = ent:GetPoseParameterRange(i)
-			print(ent:GetPoseParameterName(i) .. " " .. min .. " / " .. max)
+			print(name .. " : " .. min .. " / " .. max)
 		end
-		table.insert(result, ent:GetPoseParameterName(i))
 	end
 	return result
 end
@@ -511,14 +512,14 @@ end
 				--- WARNING: Prediction will mess up when using a curved algorithm with a large arc
 		- strength = How strong or fast the velocity should be (Depends on the algorithm type)
 			-- For "Line" it's the speed, for all others it's the arc of the curve
-		- extraOptions = Table that holds extra options to modify parts of the code
+		- extra = Table that holds extra options to modify parts of the code
 			- ApplyDist = Instead of only applying the given strength to the arc, it will also account for the distance between the start and target positions | DEFAULT: true
 				-- NOTE: If the base detects that the projectile can't reach, it will override this option to true! | EX: Strength is set to very low number and enemy is very far away
 	Returns
 		- Vector, the calculated velocity
 -----------------------------------------------------------]]
-function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos, strength, extraOptions)
-	extraOptions = extraOptions or {}
+function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos, strength, extra)
+	extra = extra or {}
 	local predict = false
 	local predictProjSpeed = 1
 	if type(targetPos) == "number" then
@@ -545,7 +546,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 		local gravity = math.abs(physenv.GetGravity().z)
 		local dist = startPos:Distance(targetPos)
 		local midPoint = startPos + (targetPos - startPos) * 0.5 -- The halfway point of the start and end positions, basically the RIGHT side of a triangle
-		local applyDist = extraOptions.ApplyDist; if applyDist == nil then applyDist = true end
+		local applyDist = extra.ApplyDist; if applyDist == nil then applyDist = true end
 		-- Adjust the Z-axis to account for the following:
 			-- 1. How high/low the end position is
 			-- 2. Apply the strength to adjust the size of the arc
@@ -642,7 +643,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 	-- Return the result and redo it with prediction if needed!
 	if predict then
 		//print(predictProjSpeed, startPos:Distance(target:GetPos()))
-		return VJ.CalculateTrajectory(self, target, algorithmType, startPos, self:GetAimPosition(target, startPos, predict, predictProjSpeed), strength, extraOptions)
+		return VJ.CalculateTrajectory(self, target, algorithmType, startPos, self:GetAimPosition(target, startPos, predict, predictProjSpeed), strength, extra)
 	else
 		return result
 	end
@@ -703,10 +704,10 @@ end
 		- dmgType = The damage type | DEFAULT = DMG_BLAST
 		- ignoreInnocents = Should it ignore NPCs/Players that are friendly OR have no-target on (Including ignore players) | DEFAULT = true
 		- realisticRadius = Should it use a realistic radius? Entities farther away receive less damage and force | DEFAULT = true
-		- extraOptions = Table that holds extra options to modify parts of the code
+		- extra = Table that holds extra options to modify parts of the code
 			- DisableVisibilityCheck = Should it disable the visibility check? | DEFAULT = false
 			- Force = The force to apply when damage is applied | DEFAULT = false
-			- UpForce = Optional setting for extraOptions.Force that override the up force | DEFAULT = extraOptions.Force
+			- UpForce = Optional setting for extra.Force that override the up force | DEFAULT = extra.Force
 			- DamageAttacker = Should it damage the attacker as well? | DEFAULT = false
 			- UseConeDegree = Set to a number to use a cone-based radius | DEFAULT = nil
 			- UseConeDirection = The direction (position) the cone goes to | DEFAULT = attacker:GetForward()
@@ -716,15 +717,15 @@ end
 -----------------------------------------------------------]]
 local specialDmgEnts = {npc_strider = true, npc_combinedropship = true, npc_combinegunship = true, npc_helicopter = true} -- Entities that need special code to be damaged
 --
-function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, dmgType, ignoreInnocents, realisticRadius, extraOptions, customFunc)
+function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, dmgType, ignoreInnocents, realisticRadius, extra, customFunc)
 	startPos = startPos or attacker:GetPos()
 	dmgRadius = dmgRadius or 150
 	dmgMax = dmgMax or 15
-	extraOptions = extraOptions or {}
-		local disableVisibilityCheck = extraOptions.DisableVisibilityCheck or false
-		local baseForce = extraOptions.Force or false
+	extra = extra or {}
+		local disableVisibilityCheck = extra.DisableVisibilityCheck or false
+		local baseForce = extra.Force or false
 	local hitEnts = {}
-	for _, ent in ipairs((type(extraOptions.UseConeDegree) == "number" and ents.FindInCone(startPos, extraOptions.UseConeDirection or attacker:GetForward(), dmgRadius, math_cos(math_rad(extraOptions.UseConeDegree or 90)))) or ents.FindInSphere(startPos, dmgRadius)) do
+	for _, ent in ipairs((type(extra.UseConeDegree) == "number" and ents.FindInCone(startPos, extra.UseConeDirection or attacker:GetForward(), dmgRadius, math_cos(math_rad(extra.UseConeDegree or 90)))) or ents.FindInSphere(startPos, dmgRadius)) do
 		if (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) or ent.VJ_IsControllingNPC then continue end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
 		if disableVisibilityCheck or (!disableVisibilityCheck && (ent:VisibleVec(startPos) or ent:Visible(attacker))) then
 			local entClass = ent:GetClass()
@@ -747,8 +748,8 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 					dmgInfo:SetDamagePosition(nearestPos)
 					if baseForce != false then
 						local force = baseForce
-						local forceUp = extraOptions.UpForce or false
-						if VJ.IsProp(ent) or entClass == "prop_ragdoll" then
+						local forceUp = extra.UpForce or false
+						if ent.VJ_ID_Prop or entClass == "prop_ragdoll" then
 							local phys = ent:GetPhysicsObject()
 							if IsValid(phys) then
 								if forceUp == false then forceUp = force / 9.4 end
@@ -767,7 +768,7 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 			end
 			-- Self
 			if ent == attacker then
-				if extraOptions.DamageAttacker then DealDamage() end -- If it can't self hit, then skip
+				if extra.DamageAttacker then DealDamage() end -- If it can't self hit, then skip
 			-- Other entities
 			elseif (ignoreInnocents == false) or (!ent:IsNPC() && !ent:IsPlayer()) or (ent:IsNPC() && entClass != attacker:GetClass() && ent:Alive() && (attacker:IsPlayer() or (attacker:IsNPC() && attacker:Disposition(ent) != D_LI))) or (ent:IsPlayer() && ent:Alive() && (attacker:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !ent:IsFlagSet(FL_NOTARGET)))) then
 				DealDamage()
@@ -851,18 +852,6 @@ function VJ.GetName(ent, useClassFallback)
 	end
 	return entClass
 end
---------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
-	Checks if the given entity is a prop
-		- ent = The entity to check if it's a prop
-	Returns
-		- Boolean, true = entity is considered a prop
------------------------------------------------------------]]
-local props = {prop_physics = true, prop_physics_multiplayer = true, prop_physics_respawnable = true, prop_physics_override = true, prop_sphere = true}
---
-function VJ.IsProp(ent)
-	return props[ent:GetClass()] == true -- Without == check, it would return nil on false
-end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ.RoundToMultiple(num, multiple)
 	local div = num / multiple
@@ -870,13 +859,11 @@ function VJ.RoundToMultiple(num, multiple)
 	return rounded == div and num or rounded * multiple
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local RGB3, RGB2 = 7 / 255, 3 / 255
---
 function VJ.Color2Byte(color)
-	return bShiftL(math_floor(color.r * RGB3), 5) + bShiftL(math_floor(color.g * RGB3), 2) + math_floor(color.b * RGB2)
+	return bShiftL(math_floor(color.r * 0.027450980392157), 5) + bShiftL(math_floor(color.g * 0.027450980392157), 2) + math_floor(color.b * 0.011764705882353)
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Meta Edits ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Meta Additions & Edits ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local metaEntity = FindMetaTable("Entity")
 local metaNPC = FindMetaTable("NPC")
@@ -902,26 +889,7 @@ if !metaNPC.IsVJBaseEdited then
 		orgSetPlaybackRate(self, num)
 	end
 end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Meta Additions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Variable:		self.VJ_NPC_Class
--- Access: 			self.VJ_NPC_Class.CLASS_COMBINE
--- Remove: 			self.VJ_NPC_Class.CLASS_COMBINE = nil
--- Add: 			self:VJ_CLASS_ADD("CLASS_COMBINE", "CLASS_ZOMBIE", ...)
---
-/*local numericClasses = self.VJ_NPC_Class
-self.VJ_NPC_Class = {}
-for _, class in ipairs(numericClasses) do
-	self:VJ_CLASS_ADD(class)
-end*/
-
-/*function metaEntity:VJ_CLASS_ADD(...)
-	//PrintTable({...})
-	for _, class in ipairs({...}) do
-		self.VJ_NPC_Class[class] = true
-	end
-end*/
+---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Overrides how a VJ NPC should feel towards towards the calling entity (otherEnt)
 	1. otherEnt [entity] : The other entity that is testing to see how it should feel towards us
@@ -935,6 +903,7 @@ end*/
 --	VJ.DEBUG_Print(self, "HandlePerceivedRelationship", otherEnt, distance, isFriendly)
 --	return
 --end
+---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Determines whether or not this entity should be engaged by an enemy
 	1. otherEnt [entity] : The other entity that is testing to see if it can engage this entity
@@ -947,14 +916,26 @@ end*/
 --	VJ.DEBUG_Print(self, "CanBeEngaged", otherEnt, distance)
 --	return true
 --end
----------------------------------------------------------------------------------------------------------------------------------------------
--- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// Backwards Compatibility | Do not to use! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function metaEntity:CalculateProjectile(algorithmType, startPos, targetPos, strength)
-	local ene = self:GetEnemy()
-	local isVJ = self.IsVJBaseSNPC
-	if algorithmType == "Line" then
-		return VJ.CalculateTrajectory(self, (isVJ and IsValid(ene)) and ene or NULL, "Line", startPos, isVJ and 1 or targetPos, strength)
-	elseif algorithmType == "Curve" then
-		return VJ.CalculateTrajectory(self, (isVJ and IsValid(ene)) and ene or NULL, "CurveOld", startPos, targetPos, strength)
-	end
+	local ene, isVJ = self:GetEnemy(), self.IsVJBaseSNPC
+	if algorithmType == "Line" then return VJ.CalculateTrajectory(self, (isVJ and IsValid(ene)) and ene or NULL, "Line", startPos, isVJ and 1 or targetPos, strength) elseif algorithmType == "Curve" then return VJ.CalculateTrajectory(self, (isVJ and IsValid(ene)) and ene or NULL, "CurveOld", startPos, targetPos, strength) end
 end
+function VJ.IsProp(ent) return ent.VJ_ID_Prop end
+VJ_PICK = VJ.PICK
+VJ_PICKRANDOMTABLE = VJ.PICK
+VJ_STOPSOUND = VJ.STOPSOUND
+VJ_Set = VJ.SET
+VJ_HasValue = VJ.HasValue
+VJ_Color2Byte = VJ.Color2Byte
+VJ_CreateSound = VJ.CreateSound
+VJ_EmitSound = VJ.EmitSound
+VJ_AnimationExists = VJ.AnimExists
+VJ_GetSequenceDuration = VJ.AnimDuration
+VJ_SequenceToActivity = VJ.SequenceToActivity
+VJ_IsCurrentAnimation = VJ.IsCurrentAnim
+VJ_IsProp = VJ.IsProp
+VJ_DestroyCombineTurret = VJ.DamageSpecialEnts
+util.VJ_SphereDamage = VJ.ApplyRadiusDamage

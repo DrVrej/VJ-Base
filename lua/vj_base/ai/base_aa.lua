@@ -45,7 +45,7 @@ end
 		- dest = The destination to move to, it can be an entity or a vector
 		- playAnim = Should it play movement animation? | DEFAULT: true
 		- moveType = Type of movement animation it should do | DEFAULT: "Calm"
-		- extraOptions = Table that holds extra options to modify parts of the code
+		- extra = Table that holds extra options to modify parts of the code
 			- AddPos = Position that will be added to the given destination | DEFAULT: Vector(0, 0, 0)
 			- FaceDest = Should it face the destination? | DEFAULT: true
 			- FaceDestTarget = If the destination is an entity, it will face the entity instead of the move position | DEFAULT: false
@@ -54,14 +54,14 @@ end
 local vecStart = Vector(0, 0, 30)
 local vecEnd = Vector(0, 0, 40)
 --
-function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
+function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 	local destVec = isvector(dest) and dest
 	local selfData = funcGetTable(self)
 	if selfData.Dead or (!destVec && !IsValid(dest)) then return end
 	moveType = moveType or "Calm" -- "Calm" | "Alert"
-	extraOptions = extraOptions or {}
-		local addPos = extraOptions.AddPos or defPos -- This will be added to the given entity's position
-		local chaseEnemy = extraOptions.ChaseEnemy or false -- Used internally by ChaseEnemy, enables code that's used only for that
+	extra = extra or {}
+		local addPos = extra.AddPos or defPos -- This will be added to the given entity's position
+		local chaseEnemy = extra.ChaseEnemy or false -- Used internally by ChaseEnemy, enables code that's used only for that
 	local moveSpeed = (moveType == "Calm" and selfData.Aerial_FlyingSpeed_Calm) or selfData.Aerial_FlyingSpeed_Alerted
 	local debug = selfData.VJ_DEBUG
 	local myPos = self:GetPos()
@@ -122,7 +122,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	-- Preform ground check if:
 		-- It's an aerial NPC AND it is not ignoring ground AND-
 		-- It's NOT a chase enemy OR it is but the NPC doesn't have a melee attack
-	if selfData.MovementType == VJ_MOVETYPE_AERIAL && extraOptions.IgnoreGround != true && ((!chaseEnemy) or (chaseEnemy && !selfData.HasMeleeAttack)) then
+	if selfData.MovementType == VJ_MOVETYPE_AERIAL && extra.IgnoreGround != true && ((!chaseEnemy) or (chaseEnemy && !selfData.HasMeleeAttack)) then
 		local tr_check1 = util.TraceLine({start = startPos, endpos = startPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
 		local tr_check2 = util.TraceLine({start = trHitPos, endpos = trHitPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
 		if debug then
@@ -231,8 +231,8 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 		selfData.AA_CurrentMoveTime = velTimeCur
 		//selfData.NextIdleTime = velTimeCur
 	end
-	if extraOptions.FaceDest != false then
-		if extraOptions.FaceDestTarget == true then
+	if extra.FaceDest != false then
+		if extra.FaceDestTarget == true then
 			self:SetTurnTarget((chaseEnemy && selfData.CanTurnWhileMoving) and "Enemy" or dest, velTime)
 		else
 			-- Offset the arrival position so it does NOT turn 180 degrees back from where it traveled from
@@ -263,11 +263,11 @@ end
 	Makes the NPC wander, if it's aquatic then it will move deeper into water if it finds it necessary
 		- playAnim = Should it play movement animation? | DEFAULT: true
 		- moveType = Type of movement animation it should do | DEFAULT: "Calm"
-		- extraOptions = Table that holds extra options to modify parts of the code
+		- extra = Table that holds extra options to modify parts of the code
 			- FaceDest = Should it face the destination? | DEFAULT: true
 			- IgnoreGround = If true, it will not do any ground checks | DEFAULT: false
 -----------------------------------------------------------]]
-function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
+function ENT:AA_IdleWander(playAnim, moveType, extra)
 	local selfData = funcGetTable(self)
 	moveType = moveType or "Calm" -- "Calm" | "Alert"
 	local moveSpeed = (moveType == "Calm" and selfData.Aerial_FlyingSpeed_Calm) or selfData.Aerial_FlyingSpeed_Alerted
@@ -285,7 +285,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 	end
 	
 	local debug = selfData.VJ_DEBUG
-	extraOptions = extraOptions or {}
+	extra = extra or {}
 	
 	-- Movement Calculations
 	local myPos = self:GetPos()
@@ -300,7 +300,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 	local finalPos = tr.HitPos
 	//PrintTable(tr)
 	-- If we aren't being forced to move down, then make sure we limit how close we get to the ground!
-	if extraOptions.IgnoreGround != true && !moveDown && selfData.MovementType == VJ_MOVETYPE_AERIAL then
+	if extra.IgnoreGround != true && !moveDown && selfData.MovementType == VJ_MOVETYPE_AERIAL then
 		local tr_check = util.TraceLine({start = finalPos, endpos = finalPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
 		if debug then
 			print("[IdleWander] checking...")
@@ -336,7 +336,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 		selfData.AA_CurrentMoveTime = velTimeCur
 		//selfData.NextIdleTime = velTimeCur
 	end
-	if extraOptions.FaceDest != false then
+	if extra.FaceDest != false then
 		self:SetTurnTarget(finalPos, velTime)
 		//selfData.AA_CurrentTurnAng = self:GetTurnAngle((finalPos - tr.StartPos):Angle())
 		//self:SetLocalAngularVelocity(self:GetTurnAngle((finalPos-tr.StartPos):Angle()))

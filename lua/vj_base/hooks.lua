@@ -17,7 +17,7 @@ local funcGetClass = metaEntity.GetClass
 local funcGetTable = metaEntity.GetTable
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local entInfos = {
-	-- Resistance NPCs
+	-- Resistance
 	npc_citizen = {classNPC = "CLASS_PLAYER_ALLY", func = function(ent)
 		if ent:HasSpawnFlags(SF_CITIZEN_MEDIC) then -- Medic rebels
 			ent.IsMedic = true
@@ -42,7 +42,7 @@ local entInfos = {
 	monster_scientist = {classNPC = "CLASS_PLAYER_ALLY", func = function(ent) ent.VJ_ID_Civilian = true end},
 	monster_sitting_scientist = {classNPC = "CLASS_PLAYER_ALLY", func = function(ent) ent.VJ_ID_Civilian = true end},
 	
-	-- Combine NPCs
+	-- Combine
 	npc_breen = {classNPC = "CLASS_COMBINE"},
 	npc_combine_s = {classNPC = "CLASS_COMBINE"},
 	npc_sniper = {classNPC = "CLASS_COMBINE"},
@@ -79,7 +79,7 @@ local entInfos = {
 	npc_combine_camera = {classNPC = "CLASS_COMBINE"},
 	npc_enemyfinder_combinecannon = {classNPC = "CLASS_COMBINE"},
 	
-	-- Zombie NPCs
+	-- Zombies
 	npc_zombie_torso = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
 	npc_zombie = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
 	npc_fastzombie = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
@@ -95,13 +95,13 @@ local entInfos = {
 	monster_headcrab = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Headcrab = true end},
 	monster_babycrab = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Headcrab = true end},
 	
-	-- Antlion NPCs
+	-- Antlions
 	npc_antlion = {classNPC = "CLASS_ANTLION"},
 	npc_antlionguard = {classNPC = "CLASS_ANTLION", func = function(ent) ent.VJ_ID_Boss = true end},
 	npc_antlion_worker = {classNPC = "CLASS_ANTLION"},
 	npc_antlion_grub = {classNPC = "CLASS_ANTLION"},
 
-	-- Xen NPCs
+	-- Xen
 	npc_ichthyosaur = {classNPC = "CLASS_XEN"},
 	monster_bullchicken = {classNPC = "CLASS_XEN"},
 	monster_alien_grunt = {classNPC = "CLASS_XEN"},
@@ -114,22 +114,22 @@ local entInfos = {
 	monster_ichthyosaur = {classNPC = "CLASS_XEN", func = function(ent) ent.MovementType = VJ_MOVETYPE_AQUATIC end},
 	monster_leech = {classNPC = "CLASS_XEN", func = function(ent) ent.MovementType = VJ_MOVETYPE_AQUATIC end},
 	
-	-- HECU NPCs
+	-- HECU
 	monster_human_grunt = {classNPC = "CLASS_UNITED_STATES"},
 	monster_sentry = {classNPC = "CLASS_UNITED_STATES", func = function(ent) ent.VJ_ID_Turret = true end},
 	monster_apache = {classNPC = "CLASS_UNITED_STATES", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
 	monster_osprey = {classNPC = "CLASS_UNITED_STATES", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
 	
-	-- Black Ops NPCs
+	-- Black Ops
 	monster_human_assassin = {classNPC = "CLASS_BLACKOPS"},
 	
-	-- Portal NPCs
+	-- Portal
 	npc_portal_turret_floor = {classNPC = "CLASS_APERTURE", func = function(ent) ent.VJ_ID_Turret = true end},
 	npc_rocket_turret = {classNPC = "CLASS_APERTURE"},
 	npc_security_camera = {classNPC = "CLASS_APERTURE"},
 	npc_wheatley_boss = {classNPC = "CLASS_APERTURE", func = function(ent) ent.VJ_ID_Boss = true end},
 	
-	-- Hostile to all NPCs
+	-- Hostile to all
 	npc_barnacle = {func = function(ent)
 		ent.CanBeEngaged = function(_, otherEnt, distance)
 			if otherEnt.IsVJBaseSNPC_Human then
@@ -149,7 +149,7 @@ local entInfos = {
 		end
 	end},
 	
-	-- Nature NPCs (Passive animals)
+	-- Nature (Passive animals)
 	npc_crow = {func = function(ent) ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE ent.MovementType = VJ_MOVETYPE_AERIAL end},
 	npc_pigeon = {func = function(ent) ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE ent.MovementType = VJ_MOVETYPE_AERIAL end},
 	npc_seagull = {func = function(ent) ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE ent.MovementType = VJ_MOVETYPE_AERIAL end},
@@ -160,8 +160,9 @@ local ignoredNPCs = {npc_cranedriver = true, npc_missiledefense = true, monster_
 local dangerEnts = {m9k_thrown_nitrox = true, m9k_nitro_vapor = true, m9k_nervegasnade = true, m9k_released_poison = true, m9k_mad_c4 = true}
 local grenadeEnts = {npc_grenade_frag = true, grenade_hand = true, obj_spore = true, obj_grenade = true, obj_handgrenade = true, doom3_grenade = true, fas2_thrown_m67 = true, cw_grenade_thrown = true, obj_cpt_grenade = true, cw_flash_thrown = true, ent_hl1_grenade = true, rtbr_grenade_frag = true, ent_ins_m67 = true, ent_ins_rgd5 = true, csgo_hegrenade_projectile = true, csgo_incgrenade_projectile = true, bb_throwncssfrag = true, ent_doimills = true, ent_doimk2 = true, ent_doino69 = true, ent_doistielhandgranate = true, m9k_thrown_m61 = true, m9k_thrown_sticky_grenade = true, sent_uh_grenade = true, stalker_grenade_f1_ent = true, stalker_grenade_rgd_ent = true}
 local grenadeGrabbableEnts = {npc_grenade_frag = true, obj_spore = true, obj_handgrenade = true, obj_cpt_grenade = true, cw_grenade_thrown = true, cw_flash_thrown = true, cw_smoke_thrown = true, ent_hl1_grenade = true, rtbr_grenade_frag = true, ent_ins_m67 = true, ent_ins_rgd5 = true, csgo_hegrenade_projectile = true, bb_throwncssfrag = true, ent_doimills = true, ent_doimk2 = true, ent_doino69 = true, ent_doistielhandgranate = true, m9k_thrown_m61 = true, sent_uh_grenade = true, stalker_grenade_f1_ent = true, stalker_grenade_rgd_ent = true}
-local attackableEnts = {prop_physics = true, prop_physics_multiplayer = true, prop_physics_respawnable = true, func_breakable = true, func_physbox = true, prop_door_rotating = true, item_item_crate = true, prop_glados_core = true, weapon_striderbuster = true}
+local attackableEnts = {prop_physics = true, prop_physics_multiplayer = true, prop_physics_respawnable = true, prop_physics_override = true, prop_sphere = true, func_breakable = true, func_physbox = true, prop_door_rotating = true, item_item_crate = true, prop_glados_core = true, weapon_striderbuster = true}
 local destructibleEnts = {func_breakable_surf = true, sent_sakariashelicopter = true}
+local propEnts = {prop_physics = true, prop_physics_multiplayer = true, prop_physics_respawnable = true, prop_physics_override = true, prop_sphere = true}
 --
 hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 	local entClass = funcGetClass(ent)
@@ -245,6 +246,9 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 		end
 		if attackableEnts[entClass] then
 			entData.VJ_ID_Attackable = true
+			if propEnts[entClass] then
+				entData.VJ_ID_Prop = true
+			end
 		end
 		if destructibleEnts[entClass] or entData.IsScar then
 			entData.VJ_ID_Destructible = true
@@ -393,7 +397,8 @@ cvars.AddChangeCallback("ai_ignoreplayers", function(name, oldValue, newValue)
 						if IsValid(relationEnt) && relationEnt:IsPlayer() then
 							ent:AddEntityRelationship(relationEnt, D_NU, 10) -- Make the player neutral
 							-- Reset the NPC's enemy if it's a player
-							if IsValid(ent:GetEnemy()) && ent:GetEnemy() == relationEnt then
+							local ene = ent:GetEnemy()
+							if IsValid(ene) && ene == relationEnt then
 								ent:ResetEnemy()
 							end
 							table_remove(relationEnts, it) -- Remove the player from possible enemy table

@@ -2017,15 +2017,15 @@ function ENT:ExecuteMeleeAttack(isPropAttack)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoMeleeAttackPlayerSpeed(ent, walkSpeed, runSpeed, speedTime, sdData, extraOptions, customFunc)
+function ENT:DoMeleeAttackPlayerSpeed(ent, walkSpeed, runSpeed, speedTime, sdData, extra, customFunc)
 	speedTime = speedTime or 5
 	sdData = sdData or {}
 		local vSD_PlaySound = sdData.PlaySound or false -- Should it play a sound?
 		local vSD_SoundTable = sdData.SoundTable or {} -- Sounds it should play (Picks randomly)
 		local vSD_SoundLevel = sdData.SoundLevel or 100 -- How loud should the sound play?
 		local vSD_FadeOutTime = sdData.FadeOutTime or 1 -- How long until it the sound fully fades out?
-	extraOptions = extraOptions or {}
-		local vEF_NoInterrupt = extraOptions.NoInterrupt or false -- If set to true, the player's speed won't change by another instance of this code
+	extra = extra or {}
+		local vEF_NoInterrupt = extra.NoInterrupt or false -- If set to true, the player's speed won't change by another instance of this code
 	local walkspeed_before = ent:GetWalkSpeed()
 	local runspeed_before = ent:GetRunSpeed()
 	if ent.VJ_SpeedModified && ent.VJ_SpeedModified_NoInterrupt then return end

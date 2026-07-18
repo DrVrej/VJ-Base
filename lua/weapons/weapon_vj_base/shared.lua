@@ -531,8 +531,17 @@ end
 function SWEP:Think() -- NOTE: This only runs for players not NPCs!
 	self:OnThink()
 	if SERVER then
-		self:MaintainWorldModel(funcGetTable(self), funcGetOwner(self))
-		self:DoIdleAnimation()
+		local selfData = funcGetTable(self)
+		local owner = funcGetOwner(self)
+		local curTime = CurTime()
+		self:MaintainWorldModel(selfData, owner)
+		-- Idle Animation
+		if selfData.HasIdleAnimation && curTime > selfData.PLY_NextIdleAnimT && IsValid(owner) then
+			owner:SetAnimation(PLAYER_IDLE)
+			local anim = VJ.PICK(selfData.AnimTbl_Idle)
+			self:SendWeaponAnim(anim)
+			selfData.PLY_NextIdleAnimT = curTime + VJ.AnimDuration(owner:GetViewModel(), anim)
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -801,7 +810,6 @@ function SWEP:PrimaryAttack()
 	
 	selfData.PrimaryAttackEffects(self, owner)
 	if isPly then
-		//self:ShootEffects("ToolTracer") -- Deprecated
 		owner:ViewPunch(Angle(-selfData.Primary.Recoil, 0, 0))
 		owner:SetAnimation(PLAYER_ATTACK1)
 		local anim = VJ.PICK(selfData.AnimTbl_PrimaryFire)
@@ -811,7 +819,6 @@ function SWEP:PrimaryAttack()
 		selfData.PLY_NextReloadT = curTime + animTime
 	end
 	selfData.OnPrimaryAttack(self, "PostFire")
-	//self:SetNextPrimaryFire(curTime + self.Primary.Delay)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttackEffects(owner)
@@ -878,7 +885,7 @@ function SWEP:PrimaryAttackEffects(owner)
 	if !owner:IsPlayer() && selfData.PrimaryEffects_SpawnShells && vj_wep_shells:GetInt() == 1 then
 		local shellAttach = selfData.PrimaryEffects_ShellAttachment
 		shellAttach = funcGetAttachment(self, isnumber(shellAttach) and shellAttach or self:LookupAttachment(shellAttach))
-		if !shellAttach then -- No attachment found, so just use some default pos & ang
+		if !shellAttach then -- No attachment found, use fallback data
 			shellAttach = {Pos = owner:GetShootPos(), Ang = metaEntity.GetAngles(self)}
 		end
 		local effectData = EffectData()
@@ -908,19 +915,6 @@ function SWEP:SecondaryAttack()
 	self.PLY_NextReloadT = curTime + animTime
 	
 	self:SetNextSecondaryFire(curTime + (self.Secondary.Delay == false and animTime or self.Secondary.Delay))
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:DoIdleAnimation()
-	local curTime = CurTime()
-	if !self.HasIdleAnimation or curTime < self.PLY_NextIdleAnimT then return end
-	local owner = funcGetOwner(self)
-	if IsValid(owner) then
-		owner:SetAnimation(PLAYER_IDLE)
-		local anim = VJ.PICK(self.AnimTbl_Idle)
-		local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
-		self:SendWeaponAnim(anim)
-		self.PLY_NextIdleAnimT = curTime + animTime
-	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:TranslateActivity(act)
