@@ -14,8 +14,6 @@ function EFFECT:Init(data)
 	ParticleEffectAttach(VJ.PICK(ent.PrimaryEffects_MuzzleParticles), PATTACH_POINT_FOLLOW, muzEnt, data:GetAttachment())
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function EFFECT:Think()
-	return false
-end
+function EFFECT:Think() return false end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function EFFECT:Render() end -- To avoid "ERROR" from appearing for single a tick
+function EFFECT:Render() end -- Avoid "ERROR" from appearing for single a tick

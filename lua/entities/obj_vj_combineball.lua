@@ -41,11 +41,7 @@ function ENT:InitPhys()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetCoreType(capture)
-	if capture then
-		self:SetSubMaterial(0, "models/effects/comball_glow1")
-	else
-		self:SetSubMaterial(0, "vj_base/effects/comball_glow2")
-	end
+	self:SetSubMaterial(0, capture and "models/effects/comball_glow1" or "vj_base/effects/comball_glow2")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local colorWhite = Color(255, 255, 255, 255)

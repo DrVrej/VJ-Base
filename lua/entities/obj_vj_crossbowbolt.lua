@@ -40,8 +40,7 @@ function ENT:OnCollision(data, phys)
 	local hitEnt = data.HitEntity
 	if IsValid(hitEnt) then
 		self.SoundTbl_OnCollide = sdHitEnt
-		-- Ignite small NPCs
-		if hitEnt:IsNPC() && hitEnt:GetHullType() == HULL_TINY then
+		if hitEnt:IsNPC() && hitEnt:GetHullType() == HULL_TINY then -- Ignite small NPCs
 			hitEnt:Ignite(3)
 		end
 	else

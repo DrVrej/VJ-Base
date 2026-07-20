@@ -30,7 +30,7 @@ function ENT:SetupDataTables()
 	self:NetworkVar("Entity", "NPCWeapon")
 	self:NetworkVar("Int", "NPCWeaponAmmo")
 	
-	-- HUD values
+	-- HUD
 	self:NetworkVar("Bool", "HUDEnabled")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -175,13 +175,9 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlayerBindPress(ply, bind, pressed)
 	-- Scroll wheel zooming
-	if IsValid(self) && self:GetPlayer() == ply && (bind == "invprev" or bind == "invnext") && IsValid(self:GetCamera()) && self:GetCameraMode() != 2 then
-		if bind == "invprev" then
-			self.VJC_Camera_Zoom = math_clamp(self.VJC_Camera_Zoom - ply:GetInfoNum("vj_npc_cont_cam_zoom_speed", 10), 0, 500)
-		else
-			self.VJC_Camera_Zoom = math_clamp(self.VJC_Camera_Zoom + ply:GetInfoNum("vj_npc_cont_cam_zoom_speed", 10), 0, 500)
-		end
-	end
+	if !IsValid(self) or self:GetPlayer() != ply or (bind != "invprev" && bind != "invnext") or !IsValid(self:GetCamera()) or self:GetCameraMode() == 2 then return end
+	local speed = ply:GetInfoNum("vj_npc_cont_cam_zoom_speed", 10)
+	self.VJC_Camera_Zoom = math_clamp(self.VJC_Camera_Zoom + (bind == "invprev" && -speed or speed), 0, 500)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Settings
@@ -217,63 +213,56 @@ local ScrW, ScrH = ScrW, ScrH
 --
 function ENT:HUD()
 	local ply = LocalPlayer()
-	if !IsValid(self) or self:GetPlayer() != ply then return end
-	if !self:GetHUDEnabled() or ply:GetInfoNum("vj_npc_cont_hud", 1) == 0 then return end
+	if !IsValid(self) or self:GetPlayer() != ply or !self:GetHUDEnabled() or ply:GetInfoNum("vj_npc_cont_hud", 1) == 0 then return end
 	local npc = self:GetNPC()
 	if !IsValid(npc) then return end
 	local srcW, srcH = ScrW(), ScrH()
-	local health = npc:Health()
-	local healthMax = npc:GetMaxHealth()
-	local atkMelee = self:GetNPCAttackMelee()
-	local atkRange = self:GetNPCRangeAttack()
-	local atkLeap = self:GetNPCLeapAttack()
-	local atkGrenade = self:GetNPCGrenadeAttack()
-	local atkWeapon = IsValid(self:GetNPCWeapon())
-	local atkWeaponAmmo = self:GetNPCWeaponAmmo()
+	local health, healthMax = npc:Health(), npc:GetMaxHealth()
+	local atkWeapon, atkWeaponAmmo = IsValid(self:GetNPCWeapon()), self:GetNPCWeaponAmmo()
 	
 	draw_RoundedBox(box_roundness, srcW / 2.24, srcH - 130, 215, 100, color_box)
-	draw_SimpleText(self:GetNPCName(), "VJBaseSmallMedium", srcW / 2.21, srcH - 125, color_white, 0, 0)
+	draw_SimpleText(self:GetNPCName(), "VJBaseSmallMedium", srcW / 2.21, srcH - 125, color_white)
 	
 	-- Health
 	lerp_hp = Lerp(8 * FrameTime(), lerp_hp, health)
 	draw_RoundedBox(box_roundness, srcW / 2.21, srcH - 105, 190, 20, color_cyan_muted)
 	draw_RoundedBox(box_roundness, srcW / 2.21 + box_border_thickness, srcH - 105 + box_border_thickness, 190 - box_border_thickness * 2, 20 - box_border_thickness * 2, color_box_under)
 	draw_RoundedBox(box_roundness, srcW / 2.21 + box_border_thickness, srcH - 105 + box_border_thickness, ((190 * math_clamp(lerp_hp, 0, healthMax)) / healthMax) - box_border_thickness * 2, 20 - box_border_thickness * 2, color_cyan_muted)
-	draw_SimpleText(string.format("%.0f",  lerp_hp) .. "/" .. healthMax,  "VJBaseSmallMedium", (srcW / 1.99) - ((surface.GetTextSize(health .. "/" .. healthMax)) / 2), srcH - 103, color_white)
+	draw_SimpleText(string.format("%.0f",  lerp_hp) .. "/" .. healthMax,  "VJBaseSmallMedium", srcW / 2, srcH - 103, color_white, TEXT_ALIGN_CENTER)
 	
 	-- Attack Icons
 	surface_SetMaterial(mat_icon_melee)
-	surface_SetDrawColor(attack_icon_color[atkMelee] or color_green)
+	surface_SetDrawColor(attack_icon_color[self:GetNPCAttackMelee()] or color_green)
 	surface_DrawTexturedRect(srcW / 2.21, srcH - 83, 28, 28)
 	
 	surface_SetMaterial(mat_icon_range)
-	surface_SetDrawColor(attack_icon_color[atkRange] or color_green)
+	surface_SetDrawColor(attack_icon_color[self:GetNPCRangeAttack()] or color_green)
 	surface_DrawTexturedRect(srcW / 2.14, srcH - 83, 28, 28)
 	
 	surface_SetMaterial(mat_icon_leap)
-	surface_SetDrawColor(attack_icon_color[atkLeap] or color_green)
+	surface_SetDrawColor(attack_icon_color[self:GetNPCLeapAttack()] or color_green)
 	surface_DrawTexturedRect(srcW / 2.065, srcH - 83, 28, 28)
 	
 	surface_SetMaterial(mat_icon_grenade)
-	surface_SetDrawColor(attack_icon_color[atkGrenade] or color_green)
+	surface_SetDrawColor(attack_icon_color[self:GetNPCGrenadeAttack()] or color_green)
 	surface_DrawTexturedRect(srcW / 2.005, srcH - 83, 28, 28)
 	
 	surface_SetMaterial(mat_icon_gun)
 	surface_SetDrawColor((!atkWeapon and color_red) or ((atkWeaponAmmo <= 0 and color_orange) or color_green))
 	surface_DrawTexturedRect(srcW / 1.94, srcH - 83, 28, 28)
 	if atkWeapon then
-		draw_SimpleText(atkWeaponAmmo, "VJBaseMedium", srcW / 1.885, srcH - 80, (atkWeaponAmmo <= 0 and color_orange) or color_green, 0, 0)
+		draw_SimpleText(atkWeaponAmmo, "VJBaseMedium", srcW / 1.885, srcH - 80, (atkWeaponAmmo <= 0 and color_orange) or color_green)
 	end
 	
 	-- Camera Mode
 	surface_SetMaterial(mat_icon_camera)
 	surface_SetDrawColor(color_white)
 	surface_DrawTexturedRect(srcW / 2.21, srcH - 55, 22, 22)
-	draw_SimpleText((self:GetCameraMode() == 1 and "Third") or "First", "VJBaseMedium", srcW / 2.14, srcH - 55, color_white, 0, 0)
+	draw_SimpleText((self:GetCameraMode() == 1 and "Third") or "First", "VJBaseMedium", srcW / 2.14, srcH - 55, color_white)
 	
 	-- Camera Zoom
 	surface_SetMaterial(mat_icon_zoom)
 	surface_SetDrawColor(color_white)
 	surface_DrawTexturedRect(srcW / 1.94, srcH - 55, 22, 22)
-	draw_SimpleText(self.VJC_Camera_Zoom, "VJBaseMedium", srcW / 1.885, srcH - 55, color_white, 0, 0)
+	draw_SimpleText(self.VJC_Camera_Zoom, "VJBaseMedium", srcW / 1.885, srcH - 55, color_white)
 end

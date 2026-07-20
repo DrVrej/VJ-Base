@@ -14,14 +14,14 @@
 local bAND = bit.band
 local bShiftR = bit.rshift
 --
-local function Color8Bit2Color(bits)
-	return Color(bShiftR(bits, 5) * 255 / 7, bAND(bShiftR(bits, 2), 0x07) * 255 / 7, bAND(bits, 0x03) * 255 / 3)
+local function color8Bit2Color(bits)
+	return Color(bShiftR(bits, 5) * 255 / 7, bAND(bShiftR(bits, 2), 0x07) * 255 / 7, bAND(bits, 0x03) * 85)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function EFFECT:Init(data)
 	local origin = data:GetOrigin()
 	local scale = data:GetScale()
-	local color = Color8Bit2Color(data:GetColor())
+	local color = color8Bit2Color(data:GetColor())
 	local emitter = ParticleEmitter(origin)
 	
 	-- Blood mist
@@ -45,8 +45,6 @@ function EFFECT:Init(data)
 	emitter:Finish()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function EFFECT:Think()
-	return false
-end
+function EFFECT:Think() return false end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function EFFECT:Render() end -- To avoid "ERROR" from appearing for single a tick
+function EFFECT:Render() end -- Avoid "ERROR" from appearing for single a tick

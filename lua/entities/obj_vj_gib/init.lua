@@ -65,9 +65,8 @@ function ENT:Initialize()
 	end
 	
 	-- Used to correct the blood data (Ex: Eating system uses this!)
-	local bloodData = self.BloodData
-	if bloodData then
-		bloodData.Decal = self.CollisionDecal
+	if self.BloodData then
+		self.BloodData.Decal = self.CollisionDecal
 	else
 		self.BloodData = {Decal = self.CollisionDecal}
 	end
