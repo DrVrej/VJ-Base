@@ -12,6 +12,7 @@ ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Information 	= "Extremely based Armenian flag!"
 ENT.Category		= "VJ Base"
+ENT.Spawnable		= true
 
 ENT.PhysicsSounds = true
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

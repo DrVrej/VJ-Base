@@ -52,7 +52,12 @@ local entInfos = {
 	npc_hunter = {classNPC = "CLASS_COMBINE"},
 	npc_cscanner = {classNPC = "CLASS_COMBINE", func = function(ent) ent.MovementType = VJ_MOVETYPE_AERIAL end},
 	npc_clawscanner = {classNPC = "CLASS_COMBINE", func = function(ent) ent.MovementType = VJ_MOVETYPE_AERIAL end},
-	npc_manhack = {classNPC = "CLASS_COMBINE", func = function(ent) ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	npc_manhack = {classNPC = "CLASS_COMBINE", func = function(ent)
+		ent.MovementType = VJ_MOVETYPE_AERIAL
+		if ent:HasSpawnFlags(2097152) then -- Hacked manhack (SF_MANHACK_HACKED)
+			return "CLASS_PLAYER_ALLY"
+		end
+	end},
 	npc_apcdriver = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Boss = true end},
 	npc_combinedropship = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
 	npc_combinegunship = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
@@ -62,7 +67,7 @@ local entInfos = {
 		ent.CanBeEngaged = function(_, otherEnt, distance)
 			return distance <= 256
 		end
-		if ent:HasSpawnFlags(262144) then -- Hacked rollermine (262144 = SF_ROLLERMINE_HACKED)
+		if ent:HasSpawnFlags(262144) then -- Hacked rollermine (SF_ROLLERMINE_HACKED)
 			return "CLASS_PLAYER_ALLY"
 		elseif ent:HasSpawnFlags(SF_ROLLERMINE_FRIENDLY) then -- Harmless rollermine
 			ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE

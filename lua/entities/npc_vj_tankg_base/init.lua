@@ -103,12 +103,13 @@ function ENT:Tank_OnFireShell(status, statusData) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_UpdateIdleParticles()
 	-- Example:
+	//local spawnPos = self:GetPos() + self:GetForward() * -100 + self:GetUp() * 40
 	//local effectData = EffectData()
 	//effectData:SetScale(1)
 	//effectData:SetEntity(self)
-	//effectData:SetOrigin(self:GetPos() + self:GetForward() * -130 + self:GetRight() * 25  + self:GetUp() * 45)
+	//effectData:SetOrigin(spawnPos + self:GetRight() * 20)
 	//util.Effect("VJ_VehicleExhaust", effectData, true, true)
-	//effectData:SetOrigin(self:GetPos() + self:GetForward() * -130 + self:GetRight() * -28 + self:GetUp() * 45)
+	//effectData:SetOrigin(spawnPos + self:GetRight() * -20)
 	//util.Effect("VJ_VehicleExhaust", effectData, true, true)
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
