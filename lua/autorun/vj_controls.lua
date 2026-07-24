@@ -16,6 +16,7 @@ if !VJ.Plugins then VJ.Plugins = {} end
 VJ.AddPlugin = function(name, type, version)
 	table.insert(VJ.Plugins, {Name = name or "Unknown", Type = type or "N/A", Version = version or "N/A"})
 end
+VJ.AddAddonProperty = VJ.AddPlugin -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Registers spawn menu category information
@@ -27,9 +28,7 @@ VJ.AddCategoryInfo = function(category, options)
 	if options.Icon then -- To support default GMod icon list
 		list.Set("ContentCategoryIcons", category, options.Icon)
 	end
-	list.Set("VJBASE_CATEGORY_INFO", category, {
-		icon = options.Icon or "icon16/monkey.png",
-	})
+	//list.Set("VJBASE_CATEGORY_INFO", category, {icon = options.Icon or "icon16/monkey.png"})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -65,18 +64,23 @@ end
 VJ.AddKillIcon = addKillIcon
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Adds an NPC to the spawn menu
+	Adds an entity to the NPC spawn list
 		- name = NPC's name
 		- class = NPC's class
-		- category = The spawn menu category it should be in
-		- adminOnly = Is this an admin only NPC?
-		- customFunc(property) = Used to apply more options (Located in GMod's source code) | EX: OnCeiling, Offset, etc.
+		- category = Spawn menu category it should be in
+		- extra = Extra options to set to the entity | EX: AdminOnly, OnCeiling, Offset, etc.
 -----------------------------------------------------------]]
-VJ.AddNPC = function(name, class, category, adminOnly, customFunc)
-	local property = {Name = name, Class = class, Category = category, AdminOnly = adminOnly}
-	if (customFunc) then customFunc(property) end
-	list.Set("NPC", class, property)
-	list.Set("VJBASE_SPAWNABLE_NPC", class, property)
+VJ.AddNPC = function(name, class, category, extra, old1)
+	local data = {Name = name, Class = class, Category = category}
+	if extra != nil then
+		if type(extra) == "boolean" then  -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+			data.AdminOnly = extra; if old1 then old1(data) end
+		else
+			table.Merge(data, extra)
+		end
+	end
+	list.Set("NPC", class, data)
+	list.Set("VJBASE_SPAWNABLE_NPC", class, data)
 	if CLIENT && !killicon.Exists(class) then
 		addKillIcon(class, name, VJ.KILLICON_DEFAULT)
 	end
@@ -84,79 +88,81 @@ VJ.AddNPC = function(name, class, category, adminOnly, customFunc)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Adds a human NPC to the spawn menu
+	Adds an entity with weapons to the NPC spawn list
 		- name = NPC's name
 		- class = NPC's class
 		- weapons = Default weapon list for this NPC
-		- category = The spawn menu category it should be in
-		- adminOnly = Is this an admin only NPC?
-		- customFunc(property) = Used to apply more options (Located in GMod's source code) | EX: OnCeiling, Offset, etc.
+		- category = Spawn menu category it should be in
+		- extra = Extra options to set to the entity | EX: AdminOnly, OnCeiling, Offset, etc.
 -----------------------------------------------------------]]
-VJ.AddNPC_HUMAN = function(name, class, weapons, category, adminOnly, customFunc)
-	local property = {Name = name, Class = class, Weapons = weapons, Category = category, AdminOnly = adminOnly}
-	if (customFunc) then customFunc(property) end
-	list.Set("NPC", class, property)
-	list.Set("VJBASE_SPAWNABLE_NPC", class, property)
-	if CLIENT && !killicon.Exists(class) then
-		addKillIcon(class, name, VJ.KILLICON_DEFAULT)
-	end
-	duplicator.RegisterEntityClass(class, VJ.CreateDupe_NPC, "Model", "Class", "Equipment", "SpawnFlags", "Data")
+VJ.AddNPC_HUMAN = function(name, class, weapons, category, extra, old1)
+	extra = extra or {}
+	extra.Weapons = weapons
+	VJ.AddNPC(name, class, category, extra, old1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Adds a weapon to the NPC weapon override list
+	Adds an entity to the NPC weapon override list
 		- name = Weapon's name
 		- class = Weapon's class
-		- category = The category group it should be in
+		- category = Group it should be in
 -----------------------------------------------------------]]
 VJ.AddNPCWeapon = function(name, class, category)
-	local property = {title = name, class = class, category = category or "VJ Base"}
-	list.Add("NPCUsableWeapons", property)
-	list.Add("VJBASE_SPAWNABLE_NPC_WEAPON", property)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
-	Adds a weapon to the weapon spawn list
-		- name = Weapon's name
-		- class = Weapon's class
-		- adminOnly = Is this an admin only weapon?
-		- category = The spawn menu category it should be in
-		- customFunc(property) = Used to apply more options (Located in GMod's source code)
------------------------------------------------------------]]
-VJ.AddWeapon = function(name, class, adminOnly, category, customFunc)
-	local property = {PrintName = name, ClassName = class, Category = category, AdminOnly = adminOnly, Spawnable = true}
-	if (customFunc) then customFunc(property) end
-	list.Set("Weapon", class, property)
-	list.Set("VJBASE_SPAWNABLE_WEAPON", class, property)
-	duplicator.RegisterEntityClass(class, VJ.CreateDupe_Weapon, "Data")
+	local data = {title = name, class = class, category = category or "VJ Base"}
+	list.Add("NPCUsableWeapons", data)
+	list.Add("VJBASE_SPAWNABLE_NPC_WEAPON", data)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Adds an entity to the weapon spawn list
+		- name = Weapon's name
+		- class = Weapon's class
+		- category = Spawn menu category it should be in
+		- extra = Extra options to set to the entity | EX: AdminOnly, etc.
+-----------------------------------------------------------]]
+VJ.AddWeapon = function(name, class, category, extra, old1)
+	local data = {PrintName = name, ClassName = class, Category = category, Spawnable = true}
+	if extra != nil then
+		if type(category) == "boolean" && type(extra) == "string" then  -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+			data.AdminOnly = category; data.Category = extra; if old1 then old1(data) end
+		else
+			table.Merge(data, extra)
+		end
+	end
+	list.Set("Weapon", class, data)
+	list.Set("VJBASE_SPAWNABLE_WEAPON", class, data)
+	duplicator.RegisterEntityClass(class, VJ.CreateDupe_Weapon, "Data")
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Adds an entity to the entity spawn list
 		- name = Entity's name
 		- class = Entity's class
-		- author = Author's name
-		- adminOnly = Is this an admin only entity?
-		- offset = Spawn offset
-		- dropToFloor = Should it drop to the floor on spawn?
-		- category = The spawn menu category it should be in
-		- customFunc(property) = Used to apply more options (Located in GMod's source code)
+		- category = Spawn menu category it should be in
+		- extra = Extra options to set to the entity | EX: AdminOnly, etc.
 -----------------------------------------------------------]]
-VJ.AddEntity = function(name, class, author, adminOnly, offset, dropToFloor, category, customFunc)
-	local Ent = {PrintName = name, ClassName = class, Author = author, AdminOnly = adminOnly, NormalOffset = offset, DropToFloor = dropToFloor, Category = category, Spawnable = true}
-	if (customFunc) then customFunc(Ent) end
-	list.Set("SpawnableEntities", class, Ent)
-	list.Set("VJBASE_SPAWNABLE_ENTITIES", class, Ent)
+VJ.AddEntity = function(name, class, category, extra, old1, old2, old3, old4)
+	local data = {PrintName = name, ClassName = class, Category = category, Spawnable = true, DropToFloor = true}
+	if extra != nil then
+		if type(category) == "string" && type(extra) == "boolean" && type(old1) == "number" && type(old2) == "boolean" then  -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+			data.Author = category; data.AdminOnly = extra; data.NormalOffset = old1; data.DropToFloor = old2; data.Category = old3; if old4 then old4(data) end
+		else
+			table.Merge(data, extra)
+		end
+	end
+	list.Set("SpawnableEntities", class, data)
+	list.Set("VJBASE_SPAWNABLE_ENTITIES", class, data)
 	duplicator.RegisterEntityClass(class, VJ.CreateDupe_Entity, "Data")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Adds and registers a particle file
-		- fileName = Addon name | EX: "particles/explosion.pcf"
+	Registers a particle file
+		- fileName = Particle directory | EX: "particles/explosion.pcf"
 		- particleList = List of particles to precache from the given particle file
 -----------------------------------------------------------]]
-VJ.AddParticle = function(fileName, particleList)
-	game.AddParticles(fileName)
+VJ.AddParticle = function(fileDir, particleList)
+	game.AddParticles(fileDir)
+	if !particleList then return end
 	for _, name in ipairs(particleList) do
 		PrecacheParticleSystem(name)
 	end
@@ -164,9 +170,9 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Registers a ConVar
-		- name = Convar name
+		- name = ConVar name
 		- defValue = Default value
-		- flags = Convar's flags | Can be a bit flag or a table | Flag List: https://wiki.facepunch.com/gmod/Enums/FCVAR
+		- flags = ConVar's flags | Can be a bit flag or a table | Flag List: https://wiki.facepunch.com/gmod/Enums/FCVAR
 		- helpText = Help text to display in the console
 		- min = If set, the ConVar cannot be changed to a number lower than this value
 		- max = If set, the ConVar cannot be changed to a number higher than this value
@@ -187,8 +193,3 @@ end
 VJ.AddClientConVar = function(name, defValue, helpText, min, max, save)
 	return CreateClientConVar(name, defValue, save != false, true, helpText or "", min, max)
 end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Backwards Compatibility ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!!
-VJ.AddAddonProperty = VJ.AddPlugin

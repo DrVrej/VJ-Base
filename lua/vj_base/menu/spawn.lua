@@ -8,182 +8,132 @@
 ------ Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local function VJ_PopulateTrees(pnlContent, tree, nodeMain, vjTreeName, vjIcon, vjList)
-		local roottree = tree:AddNode(vjTreeName, vjIcon)
-		if vjTreeName == "NPCs" then
-			roottree:MoveToFront() -- Make this the main tree
+	local translatedCategories = {
+		["VJ Base"] = "Default",
+		["Other"] = "#spawnmenu.category.other",
+		["Animals"] = "#spawnmenu.category.animals",
+		["Combine"] = "#spawnmenu.category.combine",
+		["Humans + Resistance"] = "#spawnmenu.category.humans_resistance",
+		["Zombies + Enemy Aliens"] = "#spawnmenu.category.zombies_aliens",
+		["Fun + Games"] = "#spawnmenu.category.fun_games",
+	}
+	--
+	local function populateTree(pnlContent, tree, browseNode, rootName, rootIcon, spawnList)
+		local rootTree = tree:AddNode(rootName, rootIcon)
+		timer.Simple(0.4, function() rootTree:SetExpanded(true, true) end) -- Timer is needed otherwise top folder will be minimized
+		local rootPropPanel = vgui.Create("ContentContainer", pnlContent)
+			rootPropPanel:SetVisible(false)
+			rootPropPanel:SetTriggerSpawnlistChange(false) -- Make it read-only so it can't be edited
+		rootTree.PropPanel = rootPropPanel
+		function rootTree:Root() -- "DTree_Node" doesn't have this method, make it pretend to be a "DTree"
+			return pnlContent.ContentNavBar.Tree.RootNode
 		end
-		roottree.PropPanel = vgui.Create("ContentContainer", pnlContent)
-		roottree.PropPanel:SetVisible(false)
-		roottree.PropPanel:SetTriggerSpawnlistChange(false) -- Make it read-only so it can't be edited
-		
-		function roottree:DoClick()
+		function rootTree:DoClick()
 			pnlContent:SwitchPanel(self.PropPanel)
 		end
 		
-		local EntList = list.Get(vjList)
-		local CatInfoList = list.Get("VJBASE_CATEGORY_INFO")
-		
-		-- Categorize them
-		local Categories = {}
-		for k, v in pairs(EntList) do
-			local Category = v.Category or "Uncategorized"
-			if Category == "VJ Base" then Category = "Default" end
-			local Tab = Categories[Category] or {}
-			Tab[k] = v
-			Categories[Category] = Tab
-		end
-		
-		-- Create an icon for each one and put them on the panel
-		for CategoryName, v in SortedPairs(Categories) do
-			-- Category icon
-			local icon = list.HasEntry("VJBASE_CATEGORY_INFO", CategoryName) and CatInfoList[CategoryName].icon or vjIcon
-			if CategoryName == "Default" then
-				icon = "vj_base/icons/vrejgaming.png"
-			end
-			
-			local node = roottree:AddNode(CategoryName, icon)
-			local CatPropPanel = vgui.Create("ContentContainer", pnlContent)
-			CatPropPanel:SetVisible(false)
-			CatPropPanel:SetTriggerSpawnlistChange(false) -- Make it read-only so it can't be edited
-			
-			-- Post the name of the category in the all entities menu
-			local generalHeader = vgui.Create("ContentHeader", roottree.PropPanel)
-			generalHeader:SetText(CategoryName)
-			roottree.PropPanel:Add(generalHeader)
-			
-			-- Post the name of the category in the specific tree
-			//local catHeader = vgui.Create("ContentHeader", CatPropPanel)
-			//catHeader:SetText(CategoryName)
-			//CatPropPanel:Add(catHeader)
-			
-			if vjTreeName == "NPCs" then
-				for name, ent in SortedPairsByMemberValue(v, "Name") do
-					local t = {
-						nicename	= ent.Name or name,
-						spawnname	= name,
-						material	= ent.IconOverride or "entities/" .. name .. ".png",
+		-- Build each category and its content icons
+		if rootName == "NPCs" then
+			pnlContent:PopulateFromList(spawnList, rootTree, {
+				SortName = "Name",
+				CategoryIcon = rootIcon,
+				TranslateNames = translatedCategories,
+				CreateIconFunc = function(ent, propPanel)
+					return spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "npc", propPanel, {
+						nicename	= ent.Name or ent.SpawnName,
+						spawnname	= ent.SpawnName,
+						material	= ent.IconOverride or ("entities/" .. ent.SpawnName .. ".png"),
 						weapon		= ent.Weapons,
 						admin		= ent.AdminOnly
-					}
-					spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "npc", CatPropPanel, t)
-					spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "npc", roottree.PropPanel, t)
+					})
 				end
-			elseif vjTreeName == "Weapons" then
-				for _, ent in SortedPairsByMemberValue(v, "PrintName") do
-					local t = {
+			})
+		elseif rootName == "Weapons" then
+			pnlContent:PopulateFromList(spawnList, rootTree, {
+				SortName = "PrintName",
+				CategoryIcon = rootIcon,
+				TranslateNames = translatedCategories,
+				CreateIconFunc = function(ent, propPanel)
+					return spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "weapon", propPanel, {
 						nicename	= ent.PrintName or ent.ClassName,
 						spawnname	= ent.ClassName,
-						material	= ent.IconOverride or "entities/" .. ent.ClassName .. ".png",
+						material	= ent.IconOverride or ("entities/" .. ent.ClassName .. ".png"),
 						admin		= ent.AdminOnly
-					}
-					spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "weapon", CatPropPanel, t)
-					spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "weapon", roottree.PropPanel, t)
+					})
 				end
-			elseif vjTreeName == "Entities" then
-				for _, ent in SortedPairsByMemberValue(v, "PrintName") do
-					local t = {
-						nicename	= ent.PrintName or ent.ClassName,
-						spawnname	= ent.ClassName,
-						material	= ent.IconOverride or "entities/" .. ent.ClassName .. ".png",
+			})
+		elseif rootName == "Entities" then
+			pnlContent:PopulateFromList(spawnList, rootTree, {
+				SortName = "PrintName",
+				CategoryIcon = rootIcon,
+				TranslateNames = translatedCategories,
+				CreateIconFunc = function(ent, propPanel)
+					return spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "entity", propPanel, {
+						nicename	= ent.PrintName or ent.SpawnName,
+						spawnname	= ent.SpawnName,
+						material	= ent.IconOverride or ("entities/" .. ent.SpawnName .. ".png"),
 						admin		= ent.AdminOnly
-					}
-					spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "entity", CatPropPanel, t)
-					spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "entity", roottree.PropPanel, t)
+					})
 				end
-			end
-			function node:DoClick()
-				pnlContent:SwitchPanel(CatPropPanel)
-			end
+			})
 		end
-		roottree:SetExpanded(true)
-		if vjTreeName == "NPCs" then
-			roottree:InternalDoClick() -- Automatically select this folder when the menu first opens
+		
+		-- Build root folders
+			-- catName [string]   |   catNode [DTree_Node]
+			-- catNode.PropPanel [ContentContainer]   |   catNode.PropPanel.IconList [DTileLayout]   |   catNode.PropPanel.IconList child [ContentIcon]
+		for catName, catNode in pairs(rootTree.Categories) do
+			catNode:DoPopulate() -- Force it to generate now otherwise "catNode.PropPanel" will be nil!
+			if catName == "Default" then
+				catNode:SetIcon("vj_base/icons/vrejgaming.png")
+			end
+			if !catNode.PropPanel then return end
+			local catHeader = vgui.Create("ContentHeader", rootPropPanel) -- Add each category as a header
+				catHeader:SetText(catName)
+			rootPropPanel:Add(catHeader)
+			for _, child in ipairs(catNode.PropPanel.IconList:GetChildren()) do -- Add all the icons from each category
+				rootPropPanel:Add(child:Copy())
+			end
 		end
 	end
 	--[-------------------------------------------------------]--
-	/*
-	hook.Add("VJ_PopulateSpawn_Home", "VJ_PopulateSpawn_Home", function(pnlContent, tree, node)
-		local hometree = tree:AddNode("Home", "icon16/monkey.png")
-		hometree.PropPanel = vgui.Create("ContentContainer", pnlContent)
-		hometree.PropPanel:SetVisible(false)
-		hometree.PropPanel:SetTriggerSpawnlistChange(false)
-		//hometree.PropPanel:MoveToFront()
+	hook.Add("VJBASE_MENU_SPAWN", "VJBASE_MENU_SPAWN", function(pnlContent, tree, browseNode)
+		populateTree(pnlContent, tree, browseNode, "NPCs", "icon16/monkey.png", "VJBASE_SPAWNABLE_NPC")
+		populateTree(pnlContent, tree, browseNode, "Weapons", "icon16/gun.png", "VJBASE_SPAWNABLE_WEAPON")
+		populateTree(pnlContent, tree, browseNode, "Entities", "icon16/bricks.png", "VJBASE_SPAWNABLE_ENTITIES")
 		
-		function hometree:DoClick()
-			pnlContent:SwitchPanel(self.PropPanel)
-		end
-		
-		local Header1 = vgui.Create("DLabel")
-		Header1:SetPos(40, 40)
-		Header1:SetSize(200, 70)
-		Header1:SetTextColor(Color(255, 102, 0, 255))
-		Header1:SetText("Welcome to VJ Base!")
-		hometree.PropPanel:Add(Header1)
-		
-		local Text1 = vgui.Create("DLabel")
-		Header1:SetPos(80, 80)
-		Text1:SetSize(100, 35)
-		Text1:SetTextColor(Color(102, 204, 255, 255))
-		Text1:SetText("By: DrVrej")
-		hometree.PropPanel:Add(Text1)
-		
-		hometree:InternalDoClick()
-	end)
-	*/
-	--[-------------------------------------------------------]--
-	hook.Add("VJ_PopulateSpawn_Main", "VJ_PopulateSpawn_Main", function(pnlContent, tree, node)
-		VJ_PopulateTrees(pnlContent, tree, node, "NPCs", "icon16/monkey.png", "VJBASE_SPAWNABLE_NPC")
-		VJ_PopulateTrees(pnlContent, tree, node, "Weapons", "icon16/gun.png", "VJBASE_SPAWNABLE_WEAPON")
-		VJ_PopulateTrees(pnlContent, tree, node, "Entities", "icon16/bricks.png", "VJBASE_SPAWNABLE_ENTITIES")
-		
-		-- START of tools category
-		local tooltree = tree:AddNode("Tools", "icon16/bullet_wrench.png")
-		tooltree.PropPanel = vgui.Create("ContentContainer", pnlContent)
-		tooltree.PropPanel:SetVisible(false)
-		tooltree.PropPanel:SetTriggerSpawnlistChange(false)
-		function tooltree:DoClick()
-			pnlContent:SwitchPanel(self.PropPanel)
-		end
-		local ToolList = spawnmenu.GetTools()
-		if ToolList then
-			for _, nv in pairs(ToolList) do
+		-- START: Tools category
+		local toolTree = tree:AddNode("Tools", "icon16/bullet_wrench.png")
+		local toolList = spawnmenu.GetTools()
+		if toolList then
+			for _, nv in pairs(toolList) do
 				if nv.Name == "DrVrej" then
 					for _, nv2 in pairs(nv.Items) do
 						if nv2.ItemName == "Tools" then
-							//local node = tooltree:AddNode("Default", "icon16/bullet_wrench.png")
-							local CatPropPanel = vgui.Create("ContentContainer", pnlContent)
-							CatPropPanel:SetVisible(false)
-							CatPropPanel:SetTriggerSpawnlistChange(false) -- Make it read-only so it can't be edited
-							local Header = vgui.Create("ContentHeader", tooltree.PropPanel)
-							Header:SetText("Tools")
-							tooltree.PropPanel:Add(Header)
-							for _, nv3 in pairs(nv2) do
-								if !istable(nv3) then continue end
-									local t = {
-										nicename	= nv3.Text,
-										spawnname	= nv3.ItemName,
-										//material	= "entities/" .. ent.ClassName .. ".png",
-										//admin		= ent.AdminOnly
-									}
-									spawnmenu.CreateContentIcon("tool", CatPropPanel, t)
-									spawnmenu.CreateContentIcon("tool", tooltree.PropPanel, t)
-								end
-							function tooltree:DoClick()
-								pnlContent:SwitchPanel(CatPropPanel)
+							//local node = toolTree:AddNode("Default", "icon16/bullet_wrench.png")
+							local catPropPanel = vgui.Create("ContentContainer", pnlContent)
+							catPropPanel:SetVisible(false)
+							catPropPanel:SetTriggerSpawnlistChange(false) -- Make it read-only so it can't be edited
+							for _, tool in pairs(nv2) do
+								if !istable(tool) then continue end
+								spawnmenu.CreateContentIcon("tool", catPropPanel, {
+									nicename	= tool.Text,
+									spawnname	= tool.ItemName,
+								})
+							end
+							function toolTree:DoClick()
+								pnlContent:SwitchPanel(catPropPanel)
 							end
 						end
 					end
 				end
 			end
 		end
-		tooltree:SetExpanded(true)
-		-- END of tools category
+		-- END: Tools category
 	end)
 	
 	--[-------------------------------------------------------]--
 	-- Adds the searching functionality for the VJ Base spawn menu.
-	-- Taken from: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/gamemodes/sandbox/gamemode/cl_search_models.lua
+	-- Based on: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/gamemodes/sandbox/gamemode/cl_search_models.lua
 	search.AddProvider( function( str )
 
 		local results = {}
@@ -237,13 +187,8 @@ if CLIENT then
 	if VJBASE_DISABLE_MENU_SPAWN != true then
 		spawnmenu.AddCreationTab("VJ Base", function()
 			local ctrl = vgui.Create("SpawnmenuContentPanel")
-			ctrl:EnableSearch("vjbase", "VJ_PopulateSpawn_Main")
-			ctrl:CallPopulateHook("VJ_PopulateSpawn_Main")
-			//ctrl:CallPopulateHook("VJ_PopulateSpawn_Home")
-			//ctrl:CallPopulateHook("VJ_PopulateSpawn_NPC")
-			//ctrl:CallPopulateHook("VJ_PopulateSpawn_Weapons")
-			//ctrl:CallPopulateHook("VJ_PopulateSpawn_Entities")
-			//ctrl:CallPopulateHook("VJ_PopulateSpawn_Tools")
+			ctrl:EnableSearch("vjbase", "VJBASE_MENU_SPAWN")
+			ctrl:CallPopulateHook("VJBASE_MENU_SPAWN")
 			
 			local sidebar = ctrl.ContentNavBar
 			sidebar.Options = vgui.Create("VJ_SpawnmenuNPCSidebarToolbox", sidebar)
@@ -254,7 +199,7 @@ if CLIENT then
 	end
 	
 	--[-------------------------------------------------------]--
-	-- Based on GMod's SpawnmenuNPCSidebarToolbox but with some changes
+	-- Based on: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/gamemodes/sandbox/gamemode/spawnmenu/creationmenu/content/contenttypes/npcs.lua
 	local PANEL = {}
 	Derma_Hook(PANEL, "Paint", "Paint", "Tree")
 	PANEL.m_bBackground = true -- Hack for above
@@ -321,7 +266,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC Duplicator & Save Support ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Taken from: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/gamemodes/sandbox/gamemode/commands.lua
+-- Based on: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/gamemodes/sandbox/gamemode/commands.lua
 --
 local function InternalSpawnNPC( NPCData, ply, Position, Normal, Class, Equipment, SpawnFlagsSaved, NoDropToFloor )
 
@@ -567,7 +512,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Entity & Weapon Duplicator & Save Support ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Taken from: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/lua/autorun/game_hl2.lua
+-- Based on: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/lua/autorun/game_hl2.lua
 --
 VJ.CreateDupe_Entity = function( ply, data )
 	if ( IsValid( ply ) && !gamemode.Call( "PlayerSpawnSENT", ply, data.Class ) ) then return NULL end
