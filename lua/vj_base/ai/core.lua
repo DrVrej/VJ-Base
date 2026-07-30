@@ -1451,10 +1451,7 @@ function ENT:IsJumpLegal(startPos, apex, endPos)
 	end
 	
 	-- Make sure there is a ground under where it will land!
-	local tr = util.TraceLine({
-		start = endPos,
-		endpos = endPos + vecZN100,
-	})
+	local tr = util.TraceLine({start = endPos, endpos = endPos + vecZN100})
 	//VJ.DEBUG_TempEnt(startPos, Angle(0, 0, 0), VJ.COLOR_GREEN)
 	//VJ.DEBUG_TempEnt(apex, Angle(0, 0, 0), Color(255, 115, 0))
 	//VJ.DEBUG_TempEnt(endPos, Angle(0, 0, 0), VJ.COLOR_RED)

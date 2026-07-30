@@ -11,9 +11,10 @@ SWEP.Spawnable = true
 
 SWEP.ViewModel = "models/vj_base/weapons/c_controller.mdl"
 SWEP.WorldModel = "models/vj_base/gibs/human/brain.mdl"
-SWEP.WorldModel_UseCustomPosition = true
-SWEP.WorldModel_CustomPositionAngle = Vector(0, 0, 0)
-SWEP.WorldModel_CustomPositionOrigin = Vector(0, 4, -1.1)
+SWEP.WorldModelOffsetParams = {
+	Enabled = true,
+	Pos = Vector(4, 0, -1.1)
+}
 SWEP.HoldType = "pistol"
 SWEP.Slot = 5
 SWEP.SlotPos = 7

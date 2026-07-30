@@ -11,11 +11,13 @@ if CLIENT then
 	VJ.AddKillIcon("weapon_vj_rpg", SWEP.PrintName, VJ.KILLICON_TYPE_ALIAS, "rpg_missile")
 end
 
-SWEP.ViewModel = "models/vj_base/weapons/c_rpg7.mdl" // "models/weapons/c_rpg.mdl"
-SWEP.WorldModel = "models/vj_base/weapons/w_rpg7.mdl" // "models/weapons/w_rocket_launcher.mdl"
-SWEP.WorldModel_UseCustomPosition = true
-SWEP.WorldModel_CustomPositionAngle = Vector(-10, 0, 180)
-SWEP.WorldModel_CustomPositionOrigin = Vector(-1.5, -0.5, 1)
+SWEP.ViewModel = "models/vj_base/weapons/c_rpg7.mdl"
+SWEP.WorldModel = "models/vj_base/weapons/w_rpg7.mdl"
+SWEP.WorldModelOffsetParams = {
+	Enabled = true,
+	Pos = Vector(-0.666, -1.5, -0.898),
+	Ang = Angle(10, 0, -180)
+}
 SWEP.HoldType = "rpg"
 SWEP.ViewModelFOV = 60
 SWEP.Slot = 4

@@ -9,9 +9,11 @@ SWEP.Spawnable = true
 
 SWEP.ViewModel = "models/weapons/cstrike/c_rif_m4a1.mdl"
 SWEP.WorldModel = "models/vj_base/weapons/w_m4a1_s.mdl"
-SWEP.WorldModel_UseCustomPosition = true
-SWEP.WorldModel_CustomPositionAngle = Vector(0, 90, 180)
-SWEP.WorldModel_CustomPositionOrigin = Vector(-3.4, -1, 0)
+SWEP.WorldModelOffsetParams = {
+	Enabled = true,
+	Pos = Vector(3.4, -1, 0),
+	Ang = Angle(0, 90, -180)
+}
 SWEP.HoldType = "ar2"
 SWEP.ViewModelFlip = false
 SWEP.Slot = 2

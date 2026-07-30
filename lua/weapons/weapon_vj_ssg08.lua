@@ -8,9 +8,11 @@ SWEP.Category = "VJ Base"
 
 SWEP.MadeForNPCsOnly = true
 SWEP.WorldModel = "models/vj_base/weapons/w_ssg08.mdl"
-SWEP.WorldModel_UseCustomPosition = true
-SWEP.WorldModel_CustomPositionAngle = Vector(-8, 90, 180)
-SWEP.WorldModel_CustomPositionOrigin = Vector(-4.4, -1, -0.5)
+SWEP.WorldModelOffsetParams = {
+	Enabled = true,
+	Pos = Vector(4.427, -1, -0.117),
+	Ang = Angle(0, 90, -172)
+}
 SWEP.HoldType = "ar2"
 
 SWEP.NPC_NextPrimaryFire = 2

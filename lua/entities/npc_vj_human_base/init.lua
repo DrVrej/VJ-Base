@@ -1610,7 +1610,6 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local defPos = Vector(0, 0, 0)
-
 local StopSD = VJ.STOPSOUND
 local CurTime = CurTime
 local IsValid = IsValid
@@ -4016,7 +4015,7 @@ function ENT:DeathWeaponDrop(dmginfo, hitgroup)
 	-- because doing DropWeapon will mess up its spawn pos and ang, example: K-3 will spawn floating above the NPC
 	local orgPos, orgAng = activeWep:GetPos(), activeWep:GetAngles()
 	self:DropWeapon(activeWep, nil, self:GetForward()) -- Override the velocity so it doesn't throw the weapon (default source behavior)
-	if activeWep.WorldModel_UseCustomPosition then
+	if activeWep.IsVJBaseWeapon && activeWep.WorldModelOffsetParams.Enabled then
 		activeWep:SetPos(orgPos)
 		activeWep:SetAngles(orgAng)
 	end
@@ -4024,7 +4023,7 @@ function ENT:DeathWeaponDrop(dmginfo, hitgroup)
 	if IsValid(phys) then
 		if (bit.band(self.SavedDmgInfo.type, DMG_DISSOLVE) != 0) or (IsValid(self.SavedDmgInfo.inflictor) && self.SavedDmgInfo.inflictor:GetClass() == "prop_combine_ball") then
 			phys:EnableGravity(false)
-			phys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100, -100) + self:GetUp()*50)
+			phys:SetVelocity(self:GetForward() * -150 + self:GetRight() * math.Rand(100, -100) + self:GetUp() * 50)
 		else
 			local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
 			if self.DeathAnimationCodeRan then

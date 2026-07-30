@@ -25,10 +25,12 @@ SWEP.HoldType = "ar2"
 ------ World Model ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.WorldModel = "models/weapons/w_rif_ak47.mdl"
-SWEP.WorldModel_UseCustomPosition = false -- Should the gun use custom position? This can be used to fix guns that are in the crotch
-SWEP.WorldModel_CustomPositionAngle = Vector(0, 0, 0)
-SWEP.WorldModel_CustomPositionOrigin = Vector(0, 0, 0)
-SWEP.WorldModel_CustomPositionBone = "ValveBiped.Bip01_R_Hand" -- The bone it will use as the main point (Owner's bone)
+SWEP.WorldModelOffsetParams = {
+	Enabled = true, -- Enables manual world model positioning when engine bonemerging isn't possible
+	Bone = "ValveBiped.Bip01_R_Hand", -- Owner bone used as the transform origin
+	Pos = Vector(0, 0, 0),
+	Ang = Angle(0, 0, 0)
+}
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC Only ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -294,11 +296,11 @@ local funcGetTable = metaEntity.GetTable
 local funcGetPos = metaEntity.GetPos
 local funcGetOwner = metaEntity.GetOwner
 local funcGetAttachment = metaEntity.GetAttachment
+local funcGetBonePosition = metaEntity.GetBonePosition
+local funcLookupBone = metaEntity.LookupBone
 --
 local metaNPC = FindMetaTable("NPC")
 local funcGetActiveWeapon = metaNPC.GetActiveWeapon
---
-local metaAngle = FindMetaTable("Angle")
 --
 local vj_wep_muzzleflash = GetConVar("vj_wep_muzzleflash")
 local vj_wep_muzzleflash_light = GetConVar("vj_wep_muzzleflash_light")
@@ -355,6 +357,20 @@ function SWEP:Initialize()
 	end
 	if self.CustomOnPrimaryAttack_BulletCallback then self.OnPrimaryAttack_BulletCallback = function(_, attacker, tr, dmginfo) return self:CustomOnPrimaryAttack_BulletCallback(attacker, tr, dmginfo) end end
 	if self.CustomOnSecondaryAttack then self.OnSecondaryAttack = function() return !self:CustomOnSecondaryAttack() end end
+	if self.WorldModel_UseCustomPosition then
+		-- Reproduce the old rotation order then convert the old rotated Right/Forward/Up offsets into standard local XYZ coordinates
+		local oldPos = self.WorldModel_CustomPositionOrigin
+		local oldAng = self.WorldModel_CustomPositionAngle
+		local ang = Angle()
+		ang:RotateAroundAxis(ang:Right(), oldAng.x or oldAng.p)
+		ang:RotateAroundAxis(ang:Up(), oldAng.y)
+		ang:RotateAroundAxis(ang:Forward(), oldAng.z or oldAng.r)
+		local pos = ang:Right() * oldPos.x
+		pos:Add(ang:Forward() * oldPos.y)
+		pos:Add(ang:Up() * oldPos.z)
+		self.WorldModelOffsetParams = {Enabled = true, Bone = self.WorldModel_CustomPositionBone or "ValveBiped.Bip01_R_Hand", Pos = pos, Ang = ang}
+		if self:GetOwner().VJ_DEBUG then print(string.format("Pos = Vector(%g, %g, %g), Ang = Angle(%g, %g, %g)", math.Round(pos.x, 3), math.Round(pos.y, 3), math.Round(pos.z, 3), math.Round(ang.p, 3), math.Round(ang.y, 3), math.Round(ang.r, 3))) end
+	end
 	--
 	
 	self:SetDefaultValues(self.HoldType)
@@ -518,9 +534,9 @@ function SWEP:GetBulletPos()
 	end
 	
 	-- Try to find a common bone
-	local bone = owner:LookupBone("ValveBiped.Bip01_R_Hand")
+	local bone = funcLookupBone(owner, "ValveBiped.Bip01_R_Hand")
 	if bone then
-		return owner:GetBonePosition(bone)
+		return funcGetBonePosition(owner, bone)
 	end
 	
 	-- Everything else has failed, post a warning and use eye position!
@@ -530,18 +546,18 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Think() -- NOTE: This only runs for players not NPCs!
 	self:OnThink()
-	if SERVER then
-		local selfData = funcGetTable(self)
-		local owner = funcGetOwner(self)
-		local curTime = CurTime()
-		self:MaintainWorldModel(selfData, owner)
-		-- Idle Animation
-		if selfData.HasIdleAnimation && curTime > selfData.PLY_NextIdleAnimT && IsValid(owner) then
-			owner:SetAnimation(PLAYER_IDLE)
-			local anim = VJ.PICK(selfData.AnimTbl_Idle)
-			self:SendWeaponAnim(anim)
-			selfData.PLY_NextIdleAnimT = curTime + VJ.AnimDuration(owner:GetViewModel(), anim)
-		end
+	if !SERVER then return end
+	local owner = funcGetOwner(self)
+	if !IsValid(owner) then return end
+	local selfData = funcGetTable(self)
+	local curTime = CurTime()
+	self:MaintainWorldModel(selfData, owner)
+	-- Idle Animation
+	if selfData.HasIdleAnimation && curTime > selfData.PLY_NextIdleAnimT then
+		owner:SetAnimation(PLAYER_IDLE)
+		local anim = VJ.PICK(selfData.AnimTbl_Idle)
+		self:SendWeaponAnim(anim)
+		selfData.PLY_NextIdleAnimT = curTime + VJ.AnimDuration(owner:GetViewModel(), anim)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -918,7 +934,6 @@ function SWEP:SecondaryAttack()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:TranslateActivity(act)
-	local selfData = funcGetTable(self)
 	local owner = funcGetOwner(self)
 	local ownerData = funcGetTable(owner)
 	if ownerData.IsVJBaseSNPC then
@@ -929,24 +944,21 @@ function SWEP:TranslateActivity(act)
 			end
 			return translation
 		end
-	-- Non-VJ NPCs
-	elseif owner:IsNPC() && selfData.ActivityTranslateAI[act] then
-		return selfData.ActivityTranslateAI[act]
-	-- Players
-	elseif selfData.ActivityTranslate[act] then
-		return selfData.ActivityTranslate[act]
+	else
+		local selfData = funcGetTable(self)
+		-- Non-VJ NPCs
+		if owner:IsNPC() && selfData.ActivityTranslateAI[act] then
+			return selfData.ActivityTranslateAI[act]
+		-- Players
+		elseif selfData.ActivityTranslate[act] then
+			return selfData.ActivityTranslate[act]
+		end
 	end
 	return -1
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:FireAnimationEvent(pos, ang, event, options)
-	if self:OnAnimEvent(pos, ang, event, options) == true then
-		return true
-	elseif event == 22 or event == 6001 then
-		return true
-	elseif vj_wep_muzzleflash:GetInt() == 0 && (event == 21 or event == 5001 or event == 5003) then
-		return true
-	elseif vj_wep_shells:GetInt() == 0 && event == 20 then
+	if self:OnAnimEvent(pos, ang, event, options) == true or event == 22 or event == 6001 or (vj_wep_muzzleflash:GetInt() == 0 && (event == 21 or event == 5001 or event == 5003)) or (vj_wep_shells:GetInt() == 0 && event == 20) then
 		return true
 	end
 end
@@ -1012,33 +1024,33 @@ function SWEP:OwnerChanged()
 	if IsValid(owner) then
 		self.OwnerIsNPC = owner:IsNPC()
 	end
+	self.WorldModelOffsetParams.Cache_Bone = nil
+	self.WorldModelOffsetParams.Cache_BoneID = nil
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CanBePickedUpByNPCs()
 	return self.NPC_CanBePickedUp
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:GetWeaponCustomPosition(selfData, owner)
-	selfData = selfData or funcGetTable(self)
-	local boneID = metaEntity.LookupBone(owner, selfData.WorldModel_CustomPositionBone)
+function SWEP:GetWorldModelOffset(data, owner)
+	local boneName = data.Bone
+	local boneID = data.Cache_BoneID
+	if boneName != data.Cache_Bone then
+		boneID = funcLookupBone(owner, data.Bone)
+		data.Cache_Bone = boneName
+		data.Cache_BoneID = boneID
+	end
 	if !boneID then return false end
-	local customPos = selfData.WorldModel_CustomPositionOrigin
-	local customAng = selfData.WorldModel_CustomPositionAngle
-	local pos, ang = metaEntity.GetBonePosition(owner, boneID)
-	metaAngle.RotateAroundAxis(ang, metaAngle.Right(ang), customAng.x)
-	metaAngle.RotateAroundAxis(ang, metaAngle.Up(ang), customAng.y)
-	metaAngle.RotateAroundAxis(ang, metaAngle.Forward(ang), customAng.z)
-	pos = pos + (customPos.x * metaAngle.Right(ang) + customPos.y * metaAngle.Forward(ang) + customPos.z * metaAngle.Up(ang))
-	return pos, ang
+	return LocalToWorld(data.Pos, data.Ang, funcGetBonePosition(owner, boneID))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:MaintainWorldModel(selfData, owner)
-	if IsValid(owner) && selfData.WorldModel_UseCustomPosition then
-		local wepPos, wepAng = selfData.GetWeaponCustomPosition(self, selfData, owner)
-		if wepPos then
-			metaEntity.SetPos(self, wepPos)
-			metaEntity.SetAngles(self, wepAng)
-		end
+	local offsetData = selfData.WorldModelOffsetParams
+	if !offsetData.Enabled then return end
+	local wepPos, wepAng = selfData.GetWorldModelOffset(self, offsetData, owner)
+	if wepPos then
+		metaEntity.SetPos(self, wepPos)
+		metaEntity.SetAngles(self, wepAng)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1054,12 +1066,12 @@ if CLIENT then
 		local drawMdl = true
 		local selfData = funcGetTable(self)
 		if !self:OnDrawWorldModel() or !self:GetDrawWorldModel() then drawMdl = false end
-		
-		if selfData.WorldModel_UseCustomPosition then
+		local offsetData = selfData.WorldModelOffsetParams
+		if offsetData.Enabled then
 			local owner = funcGetOwner(self)
 			if IsValid(owner) then
 				if owner:IsPlayer() && owner:InVehicle() then return end
-				local wepPos, wepAng = self:GetWeaponCustomPosition(selfData, owner)
+				local wepPos, wepAng = selfData.GetWorldModelOffset(self, offsetData, owner)
 				if wepPos then
 					self:SetRenderOrigin(wepPos)
 					self:SetRenderAngles(wepAng)
