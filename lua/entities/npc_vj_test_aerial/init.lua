@@ -39,7 +39,7 @@ function ENT:Init()
 	self:SetPos(self:GetPos() + spawnPos)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local defAng = Angle(0, 0, 0)
+local defAng = Angle()
 --
 function ENT:OnDeath(dmginfo, hitgroup, status)
 	if status == "Init" then

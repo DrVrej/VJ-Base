@@ -5,7 +5,6 @@
 -----------------------------------------------*/
 local CurTime = CurTime
 local IsValid = IsValid
-local GetConVar = GetConVar
 local tonumber = tonumber
 local string_sub = string.sub
 local table_remove = table.remove
@@ -172,12 +171,11 @@ local propEnts = {prop_physics = true, prop_physics_multiplayer = true, prop_phy
 hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 	local entClass = funcGetClass(ent)
 	local entData = funcGetTable(ent)
-	local entInfo = entInfos[entClass]
-	local isNPC = ent:IsNPC()
-
-	if isNPC or ent:IsNextBot() then
+	
+	if ent:IsNPC() or ent:IsNextBot() then
 		entData.VJ_ID_Living = true
 		if SERVER && !ignoredNPCs[entClass] then
+			local entInfo = entInfos[entClass]
 			local entIsVJ = entData.IsVJBaseSNPC
 			if entIsVJ then
 				entData.NextProcessT = CurTime() + math.Rand(0.15, 1)
@@ -213,7 +211,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 				local cvSeePlys = !VJ_CVAR_IGNOREPLAYERS
 				local entEneCount = 1
 				local entIsNature = false
-				if isNPC && entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
+				if entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 					entIsNature = true
 				end
 				for _, other in ents.Iterator() do
@@ -237,6 +235,28 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 					end
 				end
 			end)
+		end
+	elseif ent:IsPlayer() then
+		entData.VJ_ID_Living = true
+		entData.VJ_ID_Healable = true
+		entData.VJ_SD_InvestTime = 0
+		entData.VJ_SD_InvestLevel = 0
+		if SERVER then
+			if !entData.VJ_NPC_Class then
+				entData.VJ_NPC_Class = {"CLASS_PLAYER_ALLY"}
+			end
+			if !VJ_CVAR_IGNOREPLAYERS then
+				for _, npc in ipairs(ents.GetAll()) do
+					if npc:IsNPC() && npc.IsVJBaseSNPC then
+						npc.RelationshipEnts[#npc.RelationshipEnts + 1] = ent
+						npc.RelationshipMemory[ent] = {}
+					end
+				end
+			end
+			if !VJ_RecipientFilter then
+				VJ_RecipientFilter = RecipientFilter()
+			end
+			VJ_RecipientFilter:AddAllPlayers()
 		end
 	else
 		-- Run for server AND client to make sure the tags are shared!
@@ -265,47 +285,6 @@ hook.Add("Initialize", "VJ_Initialize", function()
 	RunConsoleCommand("sv_pvsskipanimation", "0") -- Fix attachments, bones, positions, angles etc. being broken in NPCs!
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("PlayerSelectSpawn", "VJ_PlayerSelectSpawn", function(ply)
-	local points = {}
-	for _, sPoint in ipairs(ents.FindByClass("sent_vj_ply_spawn")) do
-		if sPoint.Active then
-			points[#points + 1] = sPoint
-		end
-	end
-	local result = VJ.PICK(points)
-	if result then
-		return result
-	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
-	if IsValid(ply) then
-		ply.VJ_ID_Living = true
-		ply.VJ_ID_Healable = true
-		ply.VJ_SD_InvestTime = 0
-		ply.VJ_SD_InvestLevel = 0
-		if SERVER then
-			if !ply.VJ_NPC_Class then
-				ply.VJ_NPC_Class = {"CLASS_PLAYER_ALLY"}
-			end
-			
-			if !VJ_CVAR_IGNOREPLAYERS then
-				for _, ent in ipairs(ents.GetAll()) do
-					if ent:IsNPC() && ent.IsVJBaseSNPC then
-						ent.RelationshipEnts[#ent.RelationshipEnts + 1] = ply
-						ent.RelationshipMemory[ply] = {}
-					end
-				end
-			end
-			
-			if !VJ_RecipientFilter then -- In case it wasn't created
-				VJ_RecipientFilter = RecipientFilter()
-			end
-			VJ_RecipientFilter:AddAllPlayers()
-		end
-	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 	//print("---------------------------")
 	//PrintTable(data)
@@ -325,48 +304,63 @@ hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("EntityFireBullets", "VJ_EntityFireBullets", function(ent, data)
-	if IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC then
-		local funcCustom = ent.OnFireBullet; if funcCustom then funcCustom(ent, data) end
-	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
-local function VJ_NPCPLY_DEATH(ent, attacker, inflictor)
-	if ent != attacker && IsValid(attacker) && attacker.IsVJBaseSNPC then
-		local wasLast = (!IsValid(attacker:GetEnemy()) or (attacker.EnemyData.VisibleCount <= 1))
-		attacker:OnKilledEnemy(ent, inflictor, wasLast)
-		-- If its the last enemy then --> (If there no valid enemy) OR (The number of enemies is 1 or less)
-		if (!attacker.KilledEnemySoundLast) or (wasLast && attacker.KilledEnemySoundLast) then
-			attacker:PlaySoundSystem("KilledEnemy")
+if SERVER then
+	hook.Add("EntityFireBullets", "VJ_EntityFireBullets", function(ent, data)
+		if IsValid(ent) && ent.IsVJBaseSNPC then
+			local funcCustom = ent.OnFireBullet; if funcCustom then funcCustom(ent, data) end
 		end
-		attacker:MaintainRelationships()
+	end)
+	---------------------------------------------------------------------------------------------------------------------------------------------
+	local function VJ_NPCPLY_DEATH(ent, attacker, inflictor)
+		if ent != attacker && IsValid(attacker) && attacker.IsVJBaseSNPC then
+			local wasLast = (!IsValid(attacker:GetEnemy()) or (attacker.EnemyData.VisibleCount <= 1))
+			attacker:OnKilledEnemy(ent, inflictor, wasLast)
+			-- If its the last enemy then --> (If there no valid enemy) OR (The number of enemies is 1 or less)
+			if (!attacker.KilledEnemySoundLast) or (wasLast && attacker.KilledEnemySoundLast) then
+				attacker:PlaySoundSystem("KilledEnemy")
+			end
+			attacker:MaintainRelationships()
+		end
 	end
+	hook.Add("OnNPCKilled", "VJ_OnNPCKilled", VJ_NPCPLY_DEATH)
+	hook.Add("PlayerDeath", "VJ_PlayerDeath", function(victim, inflictor, attacker)
+		VJ_NPCPLY_DEATH(victim, attacker, inflictor) -- Arguments are flipped between the hooks for some reason...
+		
+		-- Let allied VJ NPCs know that the player died
+		for _, ent in ipairs(ents.FindInSphere(victim:GetPos(), 800)) do
+			if ent.IsVJBaseSNPC && ent:Disposition(victim) == D_LI then
+				ent:OnAllyKilled(victim)
+				ent:PlaySoundSystem("AllyDeath")
+			end
+		end
+	end)
+	---------------------------------------------------------------------------------------------------------------------------------------------
+	hook.Add("PlayerCanPickupWeapon", "VJ_PlayerCanPickupWeapon", function(ply, wep)
+		if wep.IsVJBaseWeapon then
+			if (CurTime() - wep.InitTime) < 0.15 then
+				return true
+			elseif wep.OwnerIsNPC && vj_npc_wep_ply_pickup:GetInt() == 0 then
+				return false
+			elseif ply:GetInfoNum("vj_wep_autopickup", 0) == 1 then
+				return true
+			end
+			return ply:KeyPressed(IN_USE) && ply:GetEyeTrace().Entity == wep
+		end
+	end)
+	---------------------------------------------------------------------------------------------------------------------------------------------
+	hook.Add("PlayerSelectSpawn", "VJ_PlayerSelectSpawn", function(ply)
+		local points = {}
+		for _, sPoint in ipairs(ents.FindByClass("sent_vj_ply_spawn")) do
+			if sPoint.Active then
+				points[#points + 1] = sPoint
+			end
+		end
+		local result = VJ.PICK(points)
+		if result then
+			return result
+		end
+	end)
 end
-hook.Add("OnNPCKilled", "VJ_OnNPCKilled", VJ_NPCPLY_DEATH)
-hook.Add("PlayerDeath", "VJ_PlayerDeath", function(victim, inflictor, attacker)
-	VJ_NPCPLY_DEATH(victim, attacker, inflictor) -- Arguments are flipped between the hooks for some reason...
-	
-	-- Let allied VJ NPCs know that the player died
-	for _, ent in ipairs(ents.FindInSphere(victim:GetPos(), 800)) do
-		if ent.IsVJBaseSNPC && ent:Disposition(victim) == D_LI then
-			ent:OnAllyKilled(victim)
-			ent:PlaySoundSystem("AllyDeath")
-		end
-	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("PlayerCanPickupWeapon", "VJ_PlayerCanPickupWeapon", function(ply, wep)
-	if wep.IsVJBaseWeapon then
-		if (CurTime() - wep.InitTime) < 0.15 then
-			return true
-		elseif wep.OwnerIsNPC && vj_npc_wep_ply_pickup:GetInt() == 0 then
-			return false
-		elseif ply:GetInfoNum("vj_wep_autopickup", 0) == 1 then
-			return true
-		end
-		return ply:KeyPressed(IN_USE) && ply:GetEyeTrace().Entity == wep
-	end
-end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Convar Callbacks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

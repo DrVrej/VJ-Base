@@ -102,7 +102,7 @@ ENT.NextIdleSoundT = 0
 ENT.PaintedFinalDecal = false
 ENT.NextPersistCollisionT = 0
 
-local defVec = Vector(0, 0, 0)
+local defVec = Vector()
 local PICK = VJ.PICK
 local PROJ_COLLISION_REMOVE = VJ.PROJ_COLLISION_REMOVE
 local PROJ_COLLISION_PERSIST = VJ.PROJ_COLLISION_PERSIST

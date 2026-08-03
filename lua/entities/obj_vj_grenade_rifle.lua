@@ -42,7 +42,7 @@ function ENT:Init()
 	ParticleEffectAttach("Rocket_Smoke_Trail", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local defAngle = Angle(0, 0, 0)
+local defAngle = Angle()
 --
 function ENT:OnDestroy(data, phys)
 	VJ.EmitSound(self, "VJ.Explosion")

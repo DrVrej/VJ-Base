@@ -42,8 +42,8 @@ local funcSetIdealActivity = metaNPC.SetIdealActivity
 local funcAddEntityRelationship = metaNPC.AddEntityRelationship
 local funcIsInViewCone = metaNPC.IsInViewCone
 
-local defPos = Vector(0, 0, 0)
-local defAng = Angle(0, 0, 0)
+local defPos = Vector()
+local defAng = Angle()
 local CurTime = CurTime
 local IsValid = IsValid
 local GetConVar = GetConVar
@@ -125,8 +125,8 @@ ENT.EnemyData = {
 	Visible = false, -- Is the enemy visible? | Updated every "Think" run!
 	VisibleCount = 0, -- Number of visible enemies
 	VisibleTime = 0, -- Last time the enemy was visible (CurTime)
-	VisiblePos = Vector(0, 0, 0), -- Last visible position of the enemy, based on "EyePos", for origin call "self:GetEnemyLastSeenPos()"
-	VisiblePosReal = Vector(0, 0, 0), -- Last calculated visible position of the enemy, it's often wrong! | Mostly a backend variable
+	VisiblePos = Vector(), -- Last visible position of the enemy, based on "EyePos", for origin call "self:GetEnemyLastSeenPos()"
+	VisiblePosReal = Vector(), -- Last calculated visible position of the enemy, it's often wrong! | Mostly a backend variable
 	Reset = true -- Enemy has reset | Mostly a backend variable
 }
 ENT.TurnData = {
@@ -1452,10 +1452,10 @@ function ENT:IsJumpLegal(startPos, apex, endPos)
 	
 	-- Make sure there is a ground under where it will land!
 	local tr = util.TraceLine({start = endPos, endpos = endPos + vecZN100})
-	//VJ.DEBUG_TempEnt(startPos, Angle(0, 0, 0), VJ.COLOR_GREEN)
-	//VJ.DEBUG_TempEnt(apex, Angle(0, 0, 0), Color(255, 115, 0))
-	//VJ.DEBUG_TempEnt(endPos, Angle(0, 0, 0), VJ.COLOR_RED)
-	//VJ.DEBUG_TempEnt(tr.HitPos, Angle(0, 0, 0), Color(132, 0, 255))
+	//VJ.DEBUG_TempEnt(startPos, defAng, VJ.COLOR_GREEN)
+	//VJ.DEBUG_TempEnt(apex, defAng, Color(255, 115, 0))
+	//VJ.DEBUG_TempEnt(endPos, defAng, VJ.COLOR_RED)
+	//VJ.DEBUG_TempEnt(tr.HitPos, defAng, Color(132, 0, 255))
 	return tr.Hit
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3356,11 +3356,6 @@ function ENT:RemoveTimers()
 	local myIndex = self:EntIndex()
 	for _, name in ipairs(self.TimersToRemove) do
 		timer.Remove(name .. myIndex)
-	end
-	if self.AttackTimersCustom then -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
-		for _, name in ipairs(self.AttackTimersCustom) do
-			timer.Remove(name .. myIndex)
-		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

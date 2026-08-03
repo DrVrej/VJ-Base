@@ -152,7 +152,7 @@ function VJ.GetNearestPositions(ent1, ent2, centerEnt1)
 		//ent2NearPos.z = ent1Pos.z
 	end
 	local ent2NearPos = ent2:NearestPoint(ent1NearPos)
-	//VJ.DEBUG_TempEnt(ent1NearPos, Angle(0, 0, 0), VJ.COLOR_GREEN)
+	//VJ.DEBUG_TempEnt(ent1NearPos, Angle(), VJ.COLOR_GREEN)
 	//VJ.DEBUG_TempEnt(ent2NearPos)
 	return ent1NearPos, ent2NearPos
 end
@@ -175,7 +175,7 @@ function VJ.GetNearestDistance(ent1, ent2, centerEnt1)
 		ent1NearPos.y = ent1Pos.y
 	end
 	local ent2NearPos = ent2:NearestPoint(ent1NearPos)
-	//VJ.DEBUG_TempEnt(ent1NearPos, Angle(0, 0, 0), VJ.COLOR_GREEN)
+	//VJ.DEBUG_TempEnt(ent1NearPos, Angle(), VJ.COLOR_GREEN)
 	//VJ.DEBUG_TempEnt(ent2NearPos)
 	return ent2NearPos:Distance(ent1NearPos)
 end
@@ -924,6 +924,7 @@ function metaEntity:CalculateProjectile(algorithmType, startPos, targetPos, stre
 	if algorithmType == "Line" then return VJ.CalculateTrajectory(self, (isVJ and IsValid(ene)) and ene or NULL, "Line", startPos, isVJ and 1 or targetPos, strength) elseif algorithmType == "Curve" then return VJ.CalculateTrajectory(self, (isVJ and IsValid(ene)) and ene or NULL, "CurveOld", startPos, targetPos, strength) end
 end
 function VJ.IsProp(ent) return ent.VJ_ID_Prop end
+function VJ_IsProp(ent) return ent.VJ_ID_Prop end
 VJ_PICK = VJ.PICK
 VJ_PICKRANDOMTABLE = VJ.PICK
 VJ_STOPSOUND = VJ.STOPSOUND
@@ -936,6 +937,5 @@ VJ_AnimationExists = VJ.AnimExists
 VJ_GetSequenceDuration = VJ.AnimDuration
 VJ_SequenceToActivity = VJ.SequenceToActivity
 VJ_IsCurrentAnimation = VJ.IsCurrentAnim
-VJ_IsProp = VJ.IsProp
 VJ_DestroyCombineTurret = VJ.DamageSpecialEnts
 util.VJ_SphereDamage = VJ.ApplyRadiusDamage

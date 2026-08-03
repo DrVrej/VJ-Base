@@ -4,7 +4,7 @@
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
 local IsValid = IsValid
-local defAng = Angle(0, 0, 0)
+local defAng = Angle()
 local MsgC = MsgC
 local colorEnt = Color(255, 255, 255, 150)
 --------------------------------------------------------------------------------------------------------------------------------------------
@@ -76,67 +76,18 @@ end
 	Runs the given function x amount of times and prints how long it took to run it
 		- count = Number of times to execute the given function
 		- func = Function to execute on every counter
+		- skipMem = Skip calculating memory
 	EXAMPLE:
 		VJ.DEBUG_Stress(1000, function()
 			-- code
 		end)
 -----------------------------------------------------------]]
-function VJ.DEBUG_Stress(count, func)
-	local memStart = collectgarbage("count")
+function VJ.DEBUG_Stress(count, func, skipMem)
+	local memStart = skipMem and 0 or collectgarbage("count")
 	local startTime = SysTime()
-    for _ = 1, count do
-		func()
-    end
+    for _ = 1, count do func() end
 	local totalTime = SysTime() - startTime
-	local memEnd = collectgarbage("count")
-	collectgarbage("collect")
-	print(string.format("TOTAL (%d) = %f sec | AVG = %f sec | MEMORY = %.2f -> %.2f kb (%.2f kb)", count, totalTime, totalTime / count, memStart, memEnd, memEnd - memStart))
+	local memEnd = skipMem and 0 or collectgarbage("count")
+	if !skipMem then collectgarbage("collect") end
+	print(string.format("TOTAL (%d) = %f sec | AVG = %f sec" .. (!skipMem and " | MEMORY = %.2f -> %.2f KB (%.2f KB)" or ""), count, totalTime, totalTime / count, memStart, memEnd, memEnd - memStart))
 end
----------------------------------------------------------------------------------------------------------------------------------------------
--- Version for all VJ NPCs
--- ISSUE: Performance loss
-/*
-local metaNPC = FindMetaTable("NPC")
-local metaVJ = {}
-local function __index(self, key)
-	local val = metaVJ[key]
-	if val != nil then return val end
-	//if ( key == "Example1" ) then return self.Example2 end
-	return metaNPC.__index(self, key)
-end
-
-function metaVJ:GetIdealMoveSpeed(example)
-	if example then
-		return 1000
-	else
-		return metaNPC.GetIdealMoveSpeed(self)
-	end
-end
-
-hook.Add("OnEntityCreated", "VJ_OnEntityCreated_Test", function(ent)
-	if scripted_ents.IsBasedOn(ent:GetClass(), "npc_vj_creature_base") or scripted_ents.IsBasedOn(ent:GetClass(), "npc_vj_human_base") then
-		local mt = table.Merge({}, debug.getmetatable(ent)) -- Create a new table to avoid overflow!
-		mt.__index = __index
-		debug.setmetatable(ent, mt)
-	end
-end)
-*/
----------------------------------------------------------------------------------------------------------------------------------------------
--- Retrieving outputs from NPCs or other entities | Outputs: https://developer.valvesoftware.com/wiki/Base.fgd/Garry%27s_Mod
-/*
-local triggerLua = ents.Create("lua_run")
-triggerLua:SetName("triggerhook")
-triggerLua:Spawn()
-
-hook.Add("OnEntityCreated", "VJ_OnEntityCreated_Outputs", function(ent)
-	if ent:IsNPC() && ent.IsVJBaseSNPC then
-		-- Format: <output name> <targetname>:<inputname>:<parameter>:<delay>:<max times to fire, -1 means infinite>
-		self:Fire("AddOutput", "OnIgnite triggerhook:RunPassedCode:hook.Run( 'OnOutput' ):0:-1")
-	end
-end)
-
-hook.Add("OnOutput", "VJ_OnOutput", function()
-	local activator, caller = ACTIVATOR, CALLER
-	print(activator, caller)
-end )
-*/

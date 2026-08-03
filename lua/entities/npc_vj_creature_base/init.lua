@@ -27,7 +27,7 @@ ENT.EntitiesToNoCollide = false -- Set to a table of entity class names for it t
 	-- ====== NPC Controller ====== --
 ENT.ControllerParams = {
 	CameraMode = 1, -- Sets the default camera mode | 1 = Third Person, 2 = First Person
-	ThirdP_Offset = Vector(0, 0, 0), -- The offset for the controller when the camera is in third person
+	ThirdP_Offset = Vector(), -- The offset for the controller when the camera is in third person
 	FirstP_Bone = "ValveBiped.Bip01_Head1", -- If left empty, the base will attempt to calculate a position for first person
 	FirstP_Offset = Vector(0, 0, 5), -- The offset for the controller when the camera is in first person
 	FirstP_ShrinkBone = true, -- Should the bone shrink? Useful if the bone is obscuring the player's view
@@ -61,7 +61,7 @@ ENT.JumpParams = {
 ENT.CanTurnWhileStationary = true -- Can it turn while using stationary move type?
 	-- ====== AERIAL & AQUATIC ====== --
 ENT.AA_GroundLimit = 100 -- If the NPC's distance from itself to the ground is less than this, it will attempt to move up
-ENT.AA_MinWanderDist = 150 -- Minimum distance that it should move when wandering
+ENT.AA_MinWanderDist = 150 -- Min distance that it should move when wandering
 ENT.AA_MoveAccelerate = 5 -- It will gradually speed up to the max movement speed as it moves towards its destination | Calculation = FrameTime * x
 	-- 0 = Constant max speed | 1 = Slight acceleration | 50 = Rapid acceleration
 ENT.AA_MoveDecelerate = 5 -- It will slow down as it approaches its destination | Calculation = MaxSpeed / x
@@ -138,7 +138,7 @@ ENT.Medic_SpawnPropOnHealAttachment = "anim_attachment_LH" -- The attachment it 
 	-- Associated variables: self.FollowData, self.IsFollowing
 	-- NOTE: Stationary NPCs can't use follow system!
 ENT.FollowPlayer = true -- Should it follow allied players when the player presses the USE key?
-ENT.FollowMinDistance = 100 -- Minimum distance it should come when following something | The base automatically adds the NPC's size to this variable to account for different sizes!
+ENT.FollowMinDistance = 100 -- Min distance it should come when following something | The base automatically adds the NPC's size to this variable to account for different sizes!
 	-- ====== Constantly Face Enemy ====== --
 ENT.ConstantlyFaceEnemy = false -- Should it face the enemy constantly?
 ENT.ConstantlyFaceEnemy_IfVisible = true -- Should it only face the enemy if it's visible?
@@ -940,11 +940,10 @@ function ENT:SetAnimationTranslations(wepHoldType) end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-local defPos = Vector(0, 0, 0)
+local defPos = Vector()
 local StopSD = VJ.STOPSOUND
 local CurTime = CurTime
 local IsValid = IsValid
-local GetConVar = GetConVar
 local math_min = math.min
 local math_max = math.max
 local math_rad = math.rad
@@ -1083,7 +1082,6 @@ function ENT:Initialize()
 	timer.Simple(0.1, function()
 		if !IsValid(self) then return end
 		local creator = self:GetCreator()
-		
 		self:SetMaxLookDistance(self.SightDistance)
 		self:SetFOV(self.SightAngle)
 		if self:GetNPCState() <= NPC_STATE_NONE then self:SetNPCState(NPC_STATE_IDLE) end
@@ -2436,7 +2434,7 @@ function ENT:OnTakeDamage(dmginfo)
 	local function DoBleed()
 		if selfData.Bleeds then
 			self:OnBleed(dmginfo, hitgroup)
-			-- Spawn the blood particle only if it's not caused by the default fire entity [Causes the damage position to be at Vector(0, 0, 0)]
+			-- Spawn the blood particle only if it's not caused by the default fire entity [Causes the damage position to be at Vector()]
 			if selfData.HasBloodParticle && !isFireEnt then self:SpawnBloodParticles(dmginfo, hitgroup) end
 			if selfData.HasBloodDecal then self:SpawnBloodDecals(dmginfo, hitgroup) end
 			self:PlaySoundSystem("Impact")

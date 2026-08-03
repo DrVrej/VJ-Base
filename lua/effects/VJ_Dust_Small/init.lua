@@ -20,7 +20,7 @@ function EFFECT:Init(data)
 			dust:SetRoll(math.Rand(480, 540))
 			dust:SetRollDelta(math.Rand(-0.2, 0.2))
 			dust:SetColor(80, 60, 20)
-			dust:SetGravity(Vector(0, 0, 0))
+			dust:SetGravity(Vector())
 			dust:SetAirResistance(15)
 			dust:SetCollide(true)
 		end

@@ -153,7 +153,7 @@ ENT.Tank_NextRunOver = 0
 ENT.Tank_NextRunOverSound = 0
 ENT.Tank_NextIdleParticles = 0
 local runoverException = {npc_turret_ceiling = true, npc_combine_camera = true, npc_rollermine = true}
-local defAng = Angle(0, 0, 0)
+local defAng = Angle()
 
 local vj_npc_melee = GetConVar("vj_npc_melee")
 local vj_npc_reduce_vfx = GetConVar("vj_npc_reduce_vfx")

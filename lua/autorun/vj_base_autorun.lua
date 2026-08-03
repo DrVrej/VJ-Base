@@ -184,7 +184,7 @@ if SERVER then
 		end
 	end)
 	---------------------------------------------------------------------------------------------------------------------------------------------
-	hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn_Msg", function(ply, transition)
+	hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 		timer.Simple(1, function()
 			if VJBASE_DISABLE_INIT_MESSAGE != true then
 				net.Start("vj_welcome_cl")
@@ -194,12 +194,11 @@ if SERVER then
 	end)
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_meme_sv", function(len, ply)
-		if ply:IsPlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
-			PrintMessage(HUD_PRINTTALK, "Hello from DrVrej! :D")
-			local sd = CreateSound(game.GetWorld(), "vj_base/player/illuminati.mp3", VJ_RecipientFilter)
-			sd:SetSoundLevel(0)
-			sd:Play()
-		end
+		if ply:SteamID() != "STEAM_0:0:22688298" then return end
+		PrintMessage(HUD_PRINTTALK, "Hello from DrVrej! :D")
+		local sd = CreateSound(game.GetWorld(), "vj_base/player/illuminati.mp3", VJ_RecipientFilter)
+		sd:SetSoundLevel(0)
+		sd:Play()
 	end)
 elseif CLIENT then
 	hook.Add("AddToolMenuTabs", "VJ_AddToolMenuTabs", function()

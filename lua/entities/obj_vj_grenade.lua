@@ -65,7 +65,7 @@ function ENT:OnCollision(data, phys)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local defAngle = Angle(0, 0, 0)
+local defAngle = Angle()
 local vecZ4 = Vector(0, 0, 4)
 local vezZ100 = Vector(0, 0, 100)
 --

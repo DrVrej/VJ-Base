@@ -18,8 +18,8 @@ ENT.AA_CurrentMoveDist = -1 -- Used to make sure we are making progress in case 
 ENT.AA_LastChasePos = nil
 ENT.AA_DoingLastChasePos = false
 
-local defPos = Vector(0, 0, 0)
-local defAng = Angle(0, 0, 0)
+local defPos = Vector()
+local defAng = Angle()
 
 local metaEntity = FindMetaTable("Entity")
 local funcGetTable = metaEntity.GetTable
@@ -46,7 +46,7 @@ end
 		- playAnim = Should it play movement animation? | DEFAULT: true
 		- moveType = Type of movement animation it should do | DEFAULT: "Calm"
 		- extra = Table that holds extra options to modify parts of the code
-			- AddPos = Position that will be added to the given destination | DEFAULT: Vector(0, 0, 0)
+			- AddPos = Position that will be added to the given destination | DEFAULT: Vector()
 			- FaceDest = Should it face the destination? | DEFAULT: true
 			- FaceDestTarget = If the destination is an entity, it will face the entity instead of the move position | DEFAULT: false
 			- IgnoreGround = If true, it will not do any ground checks | DEFAULT: false

@@ -42,10 +42,10 @@ function ENT:OnStopControlling(keyPressed) end
 ENT.VJC_SavedVars_PLY = nil -- A hash table to hold all the values that need to be reset after the player stops controlling
 ENT.VJC_SavedVars_NPC = nil -- A hash table to hold all the values that need to be reset after the NPC is uncontrolled
 ENT.VJC_Camera_Mode = 1 -- Current camera mode | 1 = Third, 2 = First
-ENT.VJC_Camera_CurZoom = Vector(0, 0, 0)
+ENT.VJC_Camera_CurZoom = Vector()
 ENT.VJC_Key_Last = BUTTON_CODE_NONE -- The last button the user pressed
 ENT.VJC_Key_LastTime = 0 -- Time since the user last pressed a key
-ENT.VJC_NPC_LastPos = Vector(0, 0, 0)
+ENT.VJC_NPC_LastPos = Vector()
 ENT.VJC_Removed = false
 
 /* Important entities:
@@ -55,7 +55,7 @@ ENT.VJC_Removed = false
 	- self.VJCE_Camera		The camera entity used for the player
 */
 
-local vecDef = Vector(0, 0, 0)
+local vecDef = Vector()
 local math_min = math.min
 local math_max = math.max
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -99,7 +99,7 @@ function ENT:SetControlledNPC(npc)
 	if !npc.ControllerParams then
 		npc.ControllerParams = {
 			CameraMode = 1,
-			ThirdP_Offset = Vector(0, 0, 0),
+			ThirdP_Offset = Vector(),
 			FirstP_Bone = "ValveBiped.Bip01_Head1",
 			FirstP_Offset = Vector(0, 0, 5),
 			FirstP_ShrinkBone = true,

@@ -38,10 +38,10 @@ if !CLIENT then return end
 
 ENT.VJC_Camera_Zoom = 100
 
-local vec0 = Vector(0, 0, 0)
+local vec0 = Vector()
 local vec1 = Vector(1, 1, 1)
-local viewLerpVec = Vector(0, 0, 0)
-local viewLerpAng = Angle(0, 0, 0)
+local viewLerpVec = Vector()
+local viewLerpAng = Angle()
 local math_clamp = math.Clamp
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Draw()
@@ -160,7 +160,7 @@ function ENT:CalcView(ply, origin, angles, fov)
 			return true
 		end,
 	})
-	//ParticleEffect("vj_impact_dirty", tr.HitPos, Angle(0, 0, 0), npc)
+	//ParticleEffect("vj_impact_dirty", tr.HitPos, Angle(), npc)
 	net.Start("vj_controller_sv")
 		net.WriteVector(tr.HitPos)
 	net.SendToServer()

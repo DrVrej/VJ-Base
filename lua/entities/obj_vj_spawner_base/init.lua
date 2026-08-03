@@ -24,7 +24,7 @@ ENT.EntitiesToSpawn = {}
 			- ":" = Add at the end to apply a chance, it starts from 1
 				- ":1" = Spawn always or leave it empty
 				- WARNING: If no entity is left empty or set to ":1" then during randomization, the base will spawn the last NPC it checks if no other passes!
-		SpawnPosition = Vector(0, 0, 0) -- Spawn position of the entity based on the spawner's position | OPTIONAL | DEFAULT: Origin of the spawner
+		SpawnPosition = Vector() -- Spawn position of the entity based on the spawner's position | OPTIONAL | DEFAULT: Origin of the spawner
 		SpawnAngle = Angle(0, 0, 0) -- Spawn angle of the entity based on the spawner's angle | OPTIONAL | DEFAULT: Spawners current angle
 		WeaponsList = {} -- List of weapons it can randomly spawn with | OPTIONAL | DEFAULT: Empty table
 			- "default" = Spawns the NPC with its default weapons list from the spawn menu
@@ -79,8 +79,8 @@ ENT.Dead = false
 ENT.NextIdleSoundT = 0
 
 local string_explode = string.Explode
-local defPos = Vector(0, 0, 0)
-local defAng = Angle(0, 0, 0)
+local defPos = Vector()
+local defAng = Angle()
 
 local metaEntity = FindMetaTable("Entity")
 local funcGetTable = metaEntity.GetTable

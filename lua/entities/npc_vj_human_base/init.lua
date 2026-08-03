@@ -27,7 +27,7 @@ ENT.EntitiesToNoCollide = false -- Set to a table of entity class names for it t
 	-- ====== NPC Controller ====== --
 ENT.ControllerParams = {
 	CameraMode = 1, -- Sets the default camera mode | 1 = Third Person, 2 = First Person
-	ThirdP_Offset = Vector(0, 0, 0), -- The offset for the controller when the camera is in third person
+	ThirdP_Offset = Vector(), -- The offset for the controller when the camera is in third person
 	FirstP_Bone = "ValveBiped.Bip01_Head1", -- If left empty, the base will attempt to calculate a position for first person
 	FirstP_Offset = Vector(0, 0, 5), -- The offset for the controller when the camera is in first person
 	FirstP_ShrinkBone = true, -- Should the bone shrink? Useful if the bone is obscuring the player's view
@@ -119,7 +119,7 @@ ENT.Medic_SpawnPropOnHealAttachment = "anim_attachment_LH" -- The attachment it 
 	-- Associated variables: self.FollowData, self.IsFollowing
 	-- NOTE: Stationary NPCs can't use follow system!
 ENT.FollowPlayer = true -- Should it follow allied players when the player presses the USE key?
-ENT.FollowMinDistance = 100 -- Minimum distance it should come when following something | The base automatically adds the NPC's size to this variable to account for different sizes!
+ENT.FollowMinDistance = 100 -- Min distance it should come when following something | The base automatically adds the NPC's size to this variable to account for different sizes!
 	-- ====== Constantly Face Enemy ====== --
 ENT.ConstantlyFaceEnemy = false -- Should it face the enemy constantly?
 ENT.ConstantlyFaceEnemy_IfVisible = true -- Should it only face the enemy if it's visible?
@@ -292,8 +292,8 @@ ENT.Weapon_OcclusionDelayMinDist = 100 -- Skip this behavior if the occluded ene
 	-- ====== Distance ====== --
 ENT.Weapon_MinDistance = 10 -- Min distance it can fire a weapon
 ENT.Weapon_MaxDistance = 3000 -- Max distance it can fire a weapon
-ENT.Weapon_RetreatDistance = 150 -- Minimum distance an enemy has to be for it to retreat back | 0 = Never retreat
-ENT.Weapon_AimTurnDiff = false -- Weapon aim turning threshold between 0 and 1 | "self.HasPoseParameterLooking" must be set to true!
+ENT.Weapon_RetreatDistance = 150 -- Min distance an enemy has to be for it to retreat back | 0 = Never retreat
+ENT.Weapon_AimTurnDiff = false -- Weapon aim turning threshold between 0 and 1 | "self.HasPoseParameterLooking" must be enabled!
 	-- EXAMPLES: 0.707106781187 = 45 degrees | 0.866025403784 = 30 degrees | 1 = 0 degrees, always turn!
 	-- false = Let base decide based on animation set and weapon hold type
 	-- ====== Primary Fire ====== --
@@ -311,13 +311,13 @@ ENT.Weapon_CanReload = true -- Can it reload weapons?
 ENT.Weapon_FindCoverOnReload = true -- Should it attempt to find cover before proceeding to reload?
 ENT.AnimTbl_WeaponReload = ACT_RELOAD
 ENT.AnimTbl_WeaponReloadCovered = ACT_RELOAD_LOW
-ENT.DisableWeaponReloadAnimation = false -- Disables the default reload animation
+ENT.DisableWeaponReloadAnimation = false
 	-- ====== Weapon Inventory ====== --
 	-- Weapons are given on spawn and it will only switch to those if the requirements are met
 	-- All are stored in "self.WeaponInventory" with the following keys:
 		-- Primary		: Default weapon
 		-- AntiArmor	: Enemy is an armored tank/vehicle or a boss
-		-- Melee		: Enemy is (very close and the NPC is out of ammo) OR (in melee attack distance) + NPC must have more than 25% health
+		-- Melee		: Enemy is (very close and NPC is out of ammo) OR (in melee attack distance) AND NPC has more than 25% health
 ENT.WeaponInventory_AntiArmorList = false -- Anti-armor weapons to give on spawn | Can be table or string
 ENT.WeaponInventory_MeleeList = false -- Melee weapons to give on spawn | Can be table or string
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1208,7 +1208,7 @@ function ENT:SetAnimationTranslations(wepHoldType)
 	------ Player ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	elseif self.AnimModelSet == VJ.ANIM_SET_PLAYER then
-		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.61155587434769	end
+		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.61155587434769 end
 		self.AnimationTranslations[ACT_COWER] 							= ACT_HL2MP_IDLE_COWER
 		self.AnimationTranslations[ACT_RUN_PROTECTED] 					= ACT_HL2MP_RUN_PROTECTED
 		
@@ -1609,11 +1609,10 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-local defPos = Vector(0, 0, 0)
+local defPos = Vector()
 local StopSD = VJ.STOPSOUND
 local CurTime = CurTime
 local IsValid = IsValid
-local GetConVar = GetConVar
 local math_min = math.min
 local math_max = math.max
 local math_rad = math.rad
@@ -1775,7 +1774,6 @@ function ENT:Initialize()
 	timer.Simple(0.1, function()
 		if !IsValid(self) then return end
 		local creator = self:GetCreator()
-		
 		self:SetMaxLookDistance(self.SightDistance)
 		self:SetFOV(self.SightAngle)
 		if self:GetNPCState() <= NPC_STATE_NONE then self:SetNPCState(NPC_STATE_IDLE) end
@@ -3499,7 +3497,7 @@ function ENT:OnTakeDamage(dmginfo)
 	local function DoBleed()
 		if selfData.Bleeds then
 			self:OnBleed(dmginfo, hitgroup)
-			-- Spawn the blood particle only if it's not caused by the default fire entity [Causes the damage position to be at Vector(0, 0, 0)]
+			-- Spawn the blood particle only if it's not caused by the default fire entity [Causes the damage position to be at Vector()]
 			if selfData.HasBloodParticle && !isFireEnt then self:SpawnBloodParticles(dmginfo, hitgroup) end
 			if selfData.HasBloodDecal then self:SpawnBloodDecals(dmginfo, hitgroup) end
 			self:PlaySoundSystem("Impact")
