@@ -230,7 +230,7 @@ function ENT:CreateExtraDeathCorpse(class, models, extra, customFunc)
 	local corpse = self.Corpse
 	if !IsValid(corpse) then return end
 	local dmginfo = corpse.DamageInfo
-	if dmginfo == nil then return end
+	if !dmginfo then return end
 	extra = extra or {}
 	local ent = ents.Create(class or "prop_ragdoll")
 	if models != "None" then ent:SetModel(PICK(models)) end

@@ -49,7 +49,7 @@ ENT.SoundTbl_Idle = "weapons/rpg/rocket1.wav"
 ENT.SoundTbl_OnCollide = "ambient/explosions/explode_8.wav"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
-	//util.SpriteTrail(self, 0, Color(90, 90, 90, 255), false, 10, 1, 3, 1 / (15 + 1)*0.5, "trails/smoke.vmt")
+	//util.SpriteTrail(self, 0, Color(90, 90, 90, 255), false, 10, 1, 3, 1 / (15 + 1) * 0.5, "trails/smoke.vmt")
 	ParticleEffectAttach("vj_rocket_idle1", PATTACH_ABSORIGIN_FOLLOW, self, 0) // "rocket_smoke"
 	ParticleEffectAttach("vj_rocket_idle2", PATTACH_ABSORIGIN_FOLLOW, self, 0) // "smoke_burning_engine_01"
 end

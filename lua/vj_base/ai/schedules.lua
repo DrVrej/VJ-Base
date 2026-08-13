@@ -273,40 +273,39 @@ end
 function ENT:OnTaskFailed(failCode, failString)
 	//VJ.DEBUG_Print(self, "OnTaskFailed", "warn", failCode, failString)
 	local curSchedule = self.CurrentSchedule
-	if curSchedule then
-		//VJ.DEBUG_Print(self, "OnTaskFailed", "warn", "Run fail")
-		-- Give it a very small delay to let the engine set its values before we continue
-		timer.Simple(0.05, function()
-			if IsValid(self) then
-				local curScheduleNew = self.CurrentSchedule
-				if curScheduleNew && curSchedule == curScheduleNew then -- Make sure the schedule hasn't changed!
-					curSchedule = curScheduleNew
-					if curSchedule.ResetOnFail then
-						curSchedule.FailureHandled = true
-						self:StopMoving()
-						//self:SelectSchedule()
-						//self:ClearCondition(COND_TASK_FAILED) -- Won't do anything, engine will set COND_TASK_FAILED right after
-					end
-					if failCode != 14 or (failCode == 14 && !self.UsePoseParameterMovement) then -- Skip this part for "FAIL_NO_ROUTE_ILLEGAL" to allow things like player model movement to work
-						self:ClearGoal() -- Otherwise we may get stuck in movement (if schedule had a movement!)
-						self:NextTask(curSchedule) -- Attempt to move on to the next task!
-					end
-					-- Handle "RunCode_OnFail"
-					if !curSchedule.OnFailExecuted && curSchedule.RunCode_OnFail != nil then
-						curSchedule.OnFailExecuted = true
-						curSchedule.RunCode_OnFail(failCode, failString)
-					end
+	if !curSchedule then return end
+	//VJ.DEBUG_Print(self, "OnTaskFailed", "warn", "Run fail")
+	-- Give it a very small delay to let the engine set its values before we continue
+	timer.Simple(0.05, function()
+		if IsValid(self) then
+			local curScheduleNew = self.CurrentSchedule
+			if curScheduleNew && curSchedule == curScheduleNew then -- Make sure the schedule hasn't changed!
+				curSchedule = curScheduleNew
+				if curSchedule.ResetOnFail then
+					curSchedule.FailureHandled = true
+					self:StopMoving()
+					//self:SelectSchedule()
+					//self:ClearCondition(COND_TASK_FAILED) -- Won't do anything, engine will set COND_TASK_FAILED right after
+				end
+				if failCode != 14 or (failCode == 14 && !self.UsePoseParameterMovement) then -- Skip this part for "FAIL_NO_ROUTE_ILLEGAL" to allow things like player model movement to work
+					self:ClearGoal() -- Otherwise we may get stuck in movement (if schedule had a movement!)
+					self:NextTask(curSchedule) -- Attempt to move on to the next task!
+				end
+				-- Handle "RunCode_OnFail"
+				if !curSchedule.OnFailExecuted && curSchedule.RunCode_OnFail then
+					curSchedule.OnFailExecuted = true
+					curSchedule.RunCode_OnFail(failCode, failString)
 				end
 			end
-		end)
-	end
+		end
+	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnMovementFailed()
 	//VJ.DEBUG_Print(self, "OnMovementFailed", "warn")
 	-- Now handled in `OnTaskFailed`
 	/*local curSchedule = self.CurrentSchedule
-	if curSchedule != nil then
+	if curSchedule then
 		if self:DoRunCode_OnFail(curSchedule) == true then
 			self:ClearCondition(COND_TASK_FAILED)
 		end
@@ -432,7 +431,7 @@ function ENT:ScheduleFinished(schedule)
 	local selfData = funcGetTable(self)
 	if schedule then
 		-- Handle "RunCode_OnFinish"
-		if !schedule.OnFinishExecuted && schedule.RunCode_OnFinish != nil then
+		if !schedule.OnFinishExecuted && schedule.RunCode_OnFinish then
 			schedule.OnFinishExecuted = true
 			schedule.RunCode_OnFinish()
 		end

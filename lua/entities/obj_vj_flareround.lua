@@ -37,6 +37,7 @@ function ENT:Initialize()
 	self:SetSolid(SOLID_VPHYSICS)
 	self:SetColor(VJ.COLOR_RED)
 	self:SetUseType(SIMPLE_USE)
+	self:AddEFlags(EFL_DONTBLOCKLOS)
 	self:SetModelScale(0.5)
 
 	-- Physics
@@ -48,7 +49,7 @@ function ENT:Initialize()
 	end
 
 	-- Effects
-	//util.SpriteTrail(self, 0, Color(90, 90, 90, 255), false, 10, 1, 3, 1 / (15 + 1)*0.5, "trails/smoke.vmt")
+	//util.SpriteTrail(self, 0, Color(90, 90, 90, 255), false, 10, 1, 3, 1 / (15 + 1) * 0.5, "trails/smoke.vmt")
 	//ParticleEffectAttach("vj_rocket_idle2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 	util.SpriteTrail(self, 0, colorTrailRed, false, 1, 100, 5, 5 / ((2 + 10) * 0.5), "trails/smoke.vmt")
 

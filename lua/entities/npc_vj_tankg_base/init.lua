@@ -185,14 +185,14 @@ function ENT:OnThinkActive()
 				end
 			-- Turn Left
 			elseif angDiffuse > selfData.Tank_AngleDiffuseFiringLimit then
-				if selfData.Tank_TurningLerp == nil then selfData.Tank_TurningLerp = self:GetLocalAngles() end
+				if !selfData.Tank_TurningLerp then selfData.Tank_TurningLerp = self:GetLocalAngles() end
 				selfData.Tank_TurningLerp = LerpAngle(1, selfData.Tank_TurningLerp, selfData.Tank_TurningLerp + Angle(0, math.Clamp(angDiffuse, 0, selfData.Tank_TurningSpeed), 0))
 				self:SetLocalAngles(selfData.Tank_TurningLerp)
 				turning = true
 				selfData.Tank_FacingTarget = false
 			-- Turn Right
 			elseif angDiffuse < -selfData.Tank_AngleDiffuseFiringLimit then
-				if selfData.Tank_TurningLerp == nil then selfData.Tank_TurningLerp = self:GetLocalAngles() end
+				if !selfData.Tank_TurningLerp then selfData.Tank_TurningLerp = self:GetLocalAngles() end
 				selfData.Tank_TurningLerp = LerpAngle(1, selfData.Tank_TurningLerp, selfData.Tank_TurningLerp + Angle(0, -math.Clamp(math.abs(angDiffuse), 0, selfData.Tank_TurningSpeed), 0))
 				self:SetLocalAngles(selfData.Tank_TurningLerp)
 				turning = true

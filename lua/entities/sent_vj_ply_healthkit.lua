@@ -38,6 +38,7 @@ function ENT:Initialize()
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetSolid(SOLID_VPHYSICS)
 	self:SetUseType(SIMPLE_USE)
+	self:AddEFlags(EFL_DONTBLOCKLOS)
 	
 	local phys = self:GetPhysicsObject()
 	if IsValid(phys) then
