@@ -337,7 +337,7 @@ if SERVER then
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	hook.Add("PlayerCanPickupWeapon", "VJ_PlayerCanPickupWeapon", function(ply, wep)
 		if wep.IsVJBaseWeapon then
-			if (CurTime() - wep.InitTime) < 0.15 then
+			if (CurTime() - wep:GetCreationTime()) < 0.15 then
 				return true
 			elseif wep.OwnerIsNPC && vj_npc_wep_ply_pickup:GetInt() == 0 then
 				return false

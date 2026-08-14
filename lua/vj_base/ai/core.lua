@@ -216,7 +216,7 @@ ENT.TimersToRemove = {
 		- extra = Table that holds extra options to modify parts of the code
 			- Pos = Sets the spawn position
 			- Ang = Sets the spawn angle
-			- Vel = Sets the velocity | "UseDamageForce" = To use the damage's force only | DEFAULT = Uses damage force
+			- Vel = Sets the velocity | DEFAULT = Uses damage force + NPC velocity
 			- HasVel = If set to false, it won't set any velocity, allowing you to code your own in customFunc | DEFAULT = true
 			- ShouldFade = Should it fade away after certain time | DEFAULT = false
 			- ShouldFadeTime = How much time until the entity fades away | DEFAULT = 0
@@ -361,7 +361,7 @@ function ENT:CreateGibEntity(class, models, extra, customFunc)
 			gib:Fire("kill", nil, vj_npc_gib_fadetime:GetInt())
 		end
 	end
-	if removeOnCorpseDelete then //self.Corpse:DeleteOnRemove(extraent)
+	if extra.RemoveOnCorpseDelete then //self.Corpse:DeleteOnRemove(extraent)
 		if !self.DeathCorpse_ChildEnts then self.DeathCorpse_ChildEnts = {} end -- If it doesn't exist, then create it!
 		self.DeathCorpse_ChildEnts[#self.DeathCorpse_ChildEnts + 1] = gib
 	end
@@ -1272,7 +1272,7 @@ function ENT:GetAimSpread(target, goalPos, modifier)
 		result = result + math_min(VJ.GetMoveVelocity(target):LengthSqr() * aimMaxMove, 0.05) -- Target movement modifier
 		result = result * (2.5 - math_min((CurTime() - self:GetLastDamageTime()) / damageCooldown, 1.5)) -- Suppression modifier (Inverse effect over time)
 	end
-	return result * (self.Weapon_Accuracy or 1) * modifier
+	return result * (self.Weapon_Accuracy or 1) * (modifier or 1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1891,7 +1891,7 @@ function ENT:MaintainMedicBehavior()
 			self:SetTurnTarget(ally, timeUntilHeal)
 			
 			-- Make the ally turn and look at me
-			if !ally:IsPlayer() && (ally.MovementType != VJ_MOVETYPE_STATIONARY or (ally.MovementType == VJ_MOVETYPE_STATIONARY && ally.CanTurnWhileStationary == false)) then
+			if !ally:IsPlayer() && (ally.MovementType != VJ_MOVETYPE_STATIONARY or (ally.MovementType == VJ_MOVETYPE_STATIONARY && ally.CanTurnWhileStationary)) then
 				selfData.NextWanderTime = CurTime() + 2
 				selfData.NextChaseTime = CurTime() + 2
 				ally:StopMoving()
@@ -1941,7 +1941,7 @@ end
 function ENT:MaintainConstantlyFaceEnemy()
 	local selfData = funcGetTable(self)
 	local eneData = selfData.EnemyData
-	if eneData.Distance < selfData.ConstantlyFaceEnemy_MinDistance && ((selfData.ConstantlyFaceEnemy_IfVisible && !eneData.Visible) or (!selfData.ConstantlyFaceEnemy_IfAttacking && selfData.AttackType)) then
+	if eneData.Distance < selfData.ConstantlyFaceEnemy_MinDistance && ((!selfData.ConstantlyFaceEnemy_IfVisible or eneData.Visible) or (!selfData.ConstantlyFaceEnemy_IfAttacking && selfData.AttackType)) then
 		local postures = selfData.ConstantlyFaceEnemy_Postures
 		if (postures == "Both") or (postures == "Moving" && self:IsMoving()) or (postures == "Standing" && !self:IsMoving()) then
 			self:SetTurnTarget("Enemy")
@@ -2541,13 +2541,13 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 				if formType == "Random" then
 					local randPos = math.random(1, 4)
 					if randPos == 1 then
-						ent:SetLastPosition(myPos + self:GetRight()*math.random(20, 50))
+						ent:SetLastPosition(myPos + self:GetRight() * math.random(20, 50))
 					elseif randPos == 2 then
-						ent:SetLastPosition(myPos + self:GetRight()*math.random(-20, -50))
+						ent:SetLastPosition(myPos + self:GetRight() * math.random(-50, -20))
 					elseif randPos == 3 then
-						ent:SetLastPosition(myPos + self:GetForward()*math.random(20, 50))
+						ent:SetLastPosition(myPos + self:GetForward() * math.random(20, 50))
 					elseif randPos == 4 then
-						ent:SetLastPosition(myPos + self:GetForward()*math.random(-20, -50))
+						ent:SetLastPosition(myPos + self:GetForward() * math.random(-50, -20))
 					end
 				elseif formType == "Diamond" then
 					ent:DoGroupFormation("Diamond", self, it)
@@ -3143,7 +3143,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			selfData.NextKilledEnemySoundT = CurTime() + math.Rand(selfData.NextSoundTime_KilledEnemy.a, selfData.NextSoundTime_KilledEnemy.b)
 		end
 	elseif sdSet == "AllyDeath" then
-		if selfData.HasKilledEnemySounds && CurTime() > selfData.NextAllyDeathSoundT then
+		if selfData.HasAllyDeathSounds && CurTime() > selfData.NextAllyDeathSoundT then
 			local pickedSD = PICK(selfData.SoundTbl_AllyDeath)
 			if (pickedSD && math.random(1, selfData.AllyDeathSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
@@ -3684,7 +3684,6 @@ function ENT:GetFaceAngle(ang) return self:GetTurnAngle(ang) end
 function ENT:DoFlinch(dmginfo, hitgroup) self:Flinch(dmginfo, hitgroup) end
 ENT.LatestEnemyDistance = 0 -- Only here to avoid errors
 ENT.NearestPointToEnemyDistance = 0 -- Only here to avoid errors
-ENT.FootStepPitch = VJ.SET(80, 100) -- Only here to avoid errors
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_CheckAllFourSides(checkDist, returnPos, sides)
 	checkDist = checkDist or 200
@@ -3747,7 +3746,7 @@ function ENT:ApplyBackwardsCompatibility()
 	if self.HasHealthRegeneration then self.HealthRegenParams.Enabled = true end
 	if self.HealthRegenerationAmount then self.HealthRegenParams.Amount = self.HealthRegenerationAmount end
 	if self.HealthRegenerationDelay then self.HealthRegenParams.Delay = self.HealthRegenerationDelay end
-	if self.HealthRegenerationResetOnDmg then self.HealthRegenParams.ResetOnDmg = self.HealthRegenerationResetOnDmg end
+	if self.HealthRegenerationResetOnDmg != nil then self.HealthRegenParams.ResetOnDmg = self.HealthRegenerationResetOnDmg end
 	if self.FriendsWithAllPlayerAllies != nil then self.AlliedWithPlayerAllies = self.FriendsWithAllPlayerAllies end
 	if self.Medic_CanBeHealed == false then self.VJ_ID_Healable = false end
 	if self.Immune_AcidPoisonRadiation != nil then self.Immune_Toxic = self.Immune_AcidPoisonRadiation end
@@ -3755,8 +3754,8 @@ function ENT:ApplyBackwardsCompatibility()
 	if self.FindEnemy_CanSeeThroughWalls == true then self.EnemyXRayDetection = true end
 	if self.DisableFindEnemy == true then self.EnemyDetection = false end
 	if self.DisableTouchFindEnemy == true then self.EnemyTouchDetection = false end
-	if self.HasFootStepSound then self.HasFootstepSounds = self.HasFootStepSound end
-	if self.FootStepPitch then self.FootstepSoundPitch = self.FootStepPitch end
+	if self.HasFootStepSound != nil then self.HasFootstepSounds = self.HasFootStepSound end
+	if self.FootStepPitch then self.FootstepSoundPitch = self.FootStepPitch else self.FootStepPitch = VJ.SET(80, 100) end
 	if self.FootStepSoundLevel then self.FootstepSoundLevel = self.FootStepSoundLevel end
 	if self.FootStepTimeWalk then self.FootstepSoundTimerWalk = self.FootStepTimeWalk end
 	if self.FootStepTimeRun then self.FootstepSoundTimerRun = self.FootStepTimeRun end
@@ -3769,7 +3768,7 @@ function ENT:ApplyBackwardsCompatibility()
 	if self.InvestigateSoundDistance != nil then self.InvestigateSoundMultiplier = self.InvestigateSoundDistance end
 	if self.SoundTbl_OnKilledEnemy != nil then self.SoundTbl_KilledEnemy = self.SoundTbl_OnKilledEnemy end
 	if self.HasOnKilledEnemySounds != nil then self.HasKilledEnemySounds = self.HasOnKilledEnemySounds end
-	if self.OnKilledEnemySoundChance then self.OnKilledEnemySoundChance = self.OnKilledEnemySoundChance end
+	if self.OnKilledEnemySoundChance then self.KilledEnemySoundChance = self.OnKilledEnemySoundChance end
 	if self.NextSoundTime_OnKilledEnemy then self.NextSoundTime_KilledEnemy = self.NextSoundTime_OnKilledEnemy end
 	if self.OnKilledEnemySoundLevel then self.KilledEnemySoundLevel = self.OnKilledEnemySoundLevel end
 	if self.OnKilledEnemySoundPitch != nil then self.KilledEnemySoundPitch = self.OnKilledEnemySoundPitch end

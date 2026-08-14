@@ -1027,6 +1027,8 @@ function ENT:Initialize()
 	self:SetCollisionGroup(COLLISION_GROUP_NPC)
 	self:SetMaxYawSpeed(self.TurningSpeed)
 	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
+	self:SetMaxLookDistance(self.SightDistance)
+	self:SetFOV(self.SightAngle)
 	
 	-- Name
 	if self:GetName() == "" then
@@ -2513,7 +2515,7 @@ function ENT:OnTakeDamage(dmginfo)
 					-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 				if selfData.HasDamageByPlayerSounds && curTime > selfData.NextDamageByPlayerSoundT && self:Visible(dmgAttacker) then
 					local dispLvl = selfData.DamageByPlayerDispositionLevel
-					if (dispLvl == 0 or (dispLvl == 1 && self:Disposition(dmgAttacker) == D_LI) or (dispLvl == 2 && self:Disposition(dmgAttacker) != D_HT)) then
+					if (dispLvl == 0 or (dispLvl == 1 && self:CheckRelationship(dmgAttacker) == D_LI) or (dispLvl == 2 && self:CheckRelationship(dmgAttacker) == D_HT)) then
 						self:PlaySoundSystem("DamageByPlayer")
 					end
 				end

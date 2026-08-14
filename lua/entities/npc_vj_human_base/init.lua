@@ -1711,6 +1711,8 @@ function ENT:Initialize()
 	self:SetCollisionGroup(COLLISION_GROUP_NPC)
 	self:SetMaxYawSpeed(self.TurningSpeed)
 	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
+	self:SetMaxLookDistance(self.SightDistance)
+	self:SetFOV(self.SightAngle)
 	
 	-- Name
 	if self:GetName() == "" then
@@ -2637,7 +2639,7 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 		end
 	end
 	
-	if self:OnGrenadeAttack("Init", customEnt) then return false end
+	if self:OnGrenadeAttack("Init", customEnt, landDir) then return false end
 	local seed = CurTime(); self.AttackSeed = seed
 	
 	-- Handle animations
@@ -2658,12 +2660,12 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 			self:SetTurnTarget("Enemy")
 		end
 	elseif landDir == "EnemyLastVis" then -- Face enemy's last visible pos
-		self:SetTurnTarget(eneData.VisiblePos, self.AttackAnimDuration or 1.5)
+		self:SetTurnTarget(eneData.VisiblePos, self.AttackAnimDuration > 0 and self.AttackAnimDuration or 1.5)
 	else -- Face best pos
 		local bestPos = PICK(VJ.TraceDirections(self, "Quick", 200, true, false, 8))
 		if bestPos then
 			landDir = bestPos -- Save the position so it can be used when it's thrown
-			self:SetTurnTarget(bestPos, self.AttackAnimDuration or 1.5)
+			self:SetTurnTarget(bestPos, self.AttackAnimDuration > 0 and self.AttackAnimDuration or 1.5)
 		end
 	end
 	
@@ -2852,11 +2854,11 @@ function ENT:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
 	-- Handle throw velocity
 	local postSpawnResult = self:OnGrenadeAttackExecute("PostSpawn", grenade, customEnt, landDir, landingPos)
 	if postSpawnResult != true then
-		local vel = postSpawnResult or ((landingPos - grenade:GetPos()) + (self:GetUp()*200 + self:GetForward()*500 + self:GetRight()*math.Rand(-20, 20)))
+		local vel = postSpawnResult or ((landingPos - grenade:GetPos()) + (self:GetUp() * 200 + self:GetForward() * 500 + self:GetRight() * math.random(-20, 20)))
 		local phys = grenade:GetPhysicsObject()
 		if IsValid(phys) then
 			phys:Wake()
-			phys:AddAngleVelocity(Vector(math.Rand(500, 500), math.Rand(500, 500), math.Rand(500, 500)))
+			phys:AddAngleVelocity(Vector(math.random(-500, 500), math.random(-500, 500), math.random(-500, 500)))
 			phys:SetVelocity(vel)
 		else -- If we don't have a physics object, then attempt to set the entity's velocity directly
 			grenade:SetVelocity(vel)
@@ -3576,7 +3578,7 @@ function ENT:OnTakeDamage(dmginfo)
 					-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 				if selfData.HasDamageByPlayerSounds && curTime > selfData.NextDamageByPlayerSoundT && self:Visible(dmgAttacker) then
 					local dispLvl = selfData.DamageByPlayerDispositionLevel
-					if (dispLvl == 0 or (dispLvl == 1 && self:Disposition(dmgAttacker) == D_LI) or (dispLvl == 2 && self:Disposition(dmgAttacker) != D_HT)) then
+					if (dispLvl == 0 or (dispLvl == 1 && self:CheckRelationship(dmgAttacker) == D_LI) or (dispLvl == 2 && self:CheckRelationship(dmgAttacker) == D_HT)) then
 						self:PlaySoundSystem("DamageByPlayer")
 					end
 				end
@@ -3594,13 +3596,13 @@ function ENT:OnTakeDamage(dmginfo)
 						selfData.NextChaseTime = curTime + hideTime
 						selfData.TakingCoverT = curTime + hideTime
 						selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
-						selfData.NextCombatDamageResponseT = curTime + math.random(selfData.CombatDamageResponse_Cooldown.a, selfData.CombatDamageResponse_Cooldown.b)
+						selfData.NextCombatDamageResponseT = curTime + math.Rand(selfData.CombatDamageResponse_Cooldown.a, selfData.CombatDamageResponse_Cooldown.b)
 						canMove = false
 					end
 				end
 				if canMove && !self:IsMoving() && (!IsValid(wep) or (IsValid(wep) && !wep.IsMeleeWeapon)) then -- Run away if not moving AND has a non-melee weapon
 					self:SCHEDULE_COVER_ENEMY("TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.TurnData = {Type = VJ.FACE_ENEMY} end)
-					selfData.NextCombatDamageResponseT = curTime + math.random(selfData.CombatDamageResponse_Cooldown.a, selfData.CombatDamageResponse_Cooldown.b)
+					selfData.NextCombatDamageResponseT = curTime + math.Rand(selfData.CombatDamageResponse_Cooldown.a, selfData.CombatDamageResponse_Cooldown.b)
 				end
 			end
 			
