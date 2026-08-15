@@ -1732,7 +1732,7 @@ function ENT:Initialize()
 	self.WeaponInventory = {}
 	self.NextInvestigationMove = curTime + 1
 	self.NextDangerDetectionT = curTime + 1
-	self.IdleSoundBlockTime = curTime + math.random(0.3, 6)
+	self.IdleSoundBlockTime = curTime + math.Rand(0.3, 6)
 	self.MainSoundPitchValue = (self.MainSoundPitchStatic and (istable(self.MainSoundPitch) and math.random(self.MainSoundPitch.a, self.MainSoundPitch.b) or self.MainSoundPitch)) or 0
 	local sightConvar = vj_npc_sight_distance:GetInt(); if sightConvar > 0 then self.SightDistance = sightConvar end
 	
@@ -2488,12 +2488,10 @@ function ENT:Think()
 							x.CanShootWhenMoving = true
 							x.TurnData = {Type = VJ.FACE_ENEMY}
 							x.RunCode_OnFinish = function()
-								timer.Simple(0.01, function()
-									if IsValid(self) && !self:IsMoving() && !self:IsBusy("Activities") && selfData.IsGuard && guardData.Position then
-										self:SetLastPosition(guardData.Direction)
-										self:SCHEDULE_FACE("TASK_FACE_LASTPOSITION")
-									end
-								end)
+								if !self:IsMoving() && !self:IsBusy("Activities") && selfData.IsGuard && guardData.Position then
+									self:SetLastPosition(guardData.Direction)
+									self:SCHEDULE_FACE("TASK_FACE_LASTPOSITION")
+								end
 							end
 						end)
 					end
@@ -3885,7 +3883,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		corpse:Spawn()
 		corpse:Activate()
 		corpse:SetSkin(self:GetSkin())
-		for i = 0, self:GetNumBodyGroups() do
+		for i = 0, self:GetNumBodyGroups() - 1 do
 			corpse:SetBodygroup(i, self:GetBodygroup(i))
 		end
 		corpse:SetColor(self:GetColor())

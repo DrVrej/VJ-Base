@@ -145,6 +145,9 @@ function ENT:TASK_VJ_PLAY_SEQUENCE(taskStatus, data)
 		local playbackRate = data.playbackRate or self.AnimPlaybackRate -- Since setting a new animation resets the playback rate, make sure to capture it before anything!
 		data.seqID = self:PlaySequence(data.animation)
 		self:SetPlaybackRate(playbackRate, true)
+		if !isnumber(data.duration) then
+			data.duration = self:SequenceDuration(data.seqID) / playbackRate
+		end
 		data.animEndTime = CurTime() + data.duration
 	else
 		if (CurTime() > data.animEndTime) or (self:IsSequenceFinished()) or (data.seqID != self:GetSequence()) then
@@ -363,6 +366,11 @@ function ENT:StartSchedule(schedule)
 	end
 	self:ClearCondition(COND_TASK_FAILED)
 	
+	-- Reset flags in case it's a reused schedule
+	schedule.OnFinishExecuted = false
+	schedule.OnFailExecuted = false
+	schedule.FailureHandled = false
+	
 	-- Handle facing data sent by schedule's "TurnData"
 		-- Type = Type of facing it should do | Target = The vector/ent to face (Not required for enemy facing!)
 	local schedTurnData = schedule.TurnData
@@ -373,7 +381,7 @@ function ENT:StartSchedule(schedule)
 			local turnTarget = schedTurnData.Target
 			local selfTurnData = selfData.TurnData
 			selfTurnData.Type = faceType
-			selfTurnData.Target = isvector(turnTarget) and self:GetTurnAngle((turnTarget - self:GetPos()):Angle()) or turnTarget
+			selfTurnData.Target = turnTarget
 			selfTurnData.IsSchedule = true
 			selfTurnData.LastYaw = 1 -- So it doesn't face movement direction between move schedules, but should it be kept??
 		end
@@ -429,11 +437,13 @@ end
 function ENT:ScheduleFinished(schedule)
 	//VJ.DEBUG_Print(self, "ScheduleFinished", schedule)
 	local selfData = funcGetTable(self)
+	local runFinish = false
 	if schedule then
 		-- Handle "RunCode_OnFinish"
 		if !schedule.OnFinishExecuted && schedule.RunCode_OnFinish then
 			schedule.OnFinishExecuted = true
-			schedule.RunCode_OnFinish()
+			schedule.HasMovement = false -- Otherwise it can leak into the next schedule if OnFinish calls one, can break things like turning animations
+			runFinish = schedule.RunCode_OnFinish
 		end
 		-- Handle COND_TASK_FAILED, unless we have handled the failure case, we should keep the failure condition forever until it's handled or new schedule is ran
 		if schedule.FailureHandled then
@@ -452,6 +462,7 @@ function ENT:ScheduleFinished(schedule)
 	selfData.CurrentScheduleName = nil
 	selfData.CurrentTask = nil
 	selfData.CurrentTaskID = nil
+	if runFinish then runFinish() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetTask(task)
@@ -471,6 +482,7 @@ function ENT:NextTask(schedule)
 		return
 	end
 	self.CurrentTaskID = taskID
+	self:SetTaskStatus(TASKSTATUS_RUN_TASK)
 	self:SetTask(schedule:GetTask(taskID)) -- Switch to the next task
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -515,6 +527,6 @@ end
 -- Engine tasks / schedules ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartEngineTask(iTaskID, taskData) end
 function ENT:RunEngineTask(iTaskID, taskData) end
-function ENT:StartEngineSchedule(scheduleID) self:ScheduleFinished() self.bDoingEngineSchedule = true end
+function ENT:StartEngineSchedule(scheduleID) self:ScheduleFinished(self.CurrentSchedule) self.bDoingEngineSchedule = true end
 function ENT:EngineScheduleFinish() self.bDoingEngineSchedule = nil end
 function ENT:DoingEngineSchedule() return self.bDoingEngineSchedule end

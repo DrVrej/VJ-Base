@@ -60,6 +60,7 @@ function VJ.HasValue(tbl, val)
 	else
 		return tbl == val
 	end
+	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -217,7 +218,7 @@ function VJ.TraceDirections(ent, trType, maxDist, requireFullDist, returnAsDict,
 			trData.endpos = entPosCentered + (dir * maxDist)
 			local tr = util.TraceLine(trData)
 			local hitPos = tr.HitPos
-			if !requireFullDist or entPos:Distance(hitPos) >= maxDist then
+			if !requireFullDist or tr.Fraction == 1 then
 				//VJ.DEBUG_TempEnt(hitPos)
 				hitPos.z = entPosZ -- Reset it to ent:GetPos() z-axis
 				if returnAsDict then
@@ -270,7 +271,7 @@ function VJ.TraceDirections(ent, trType, maxDist, requireFullDist, returnAsDict,
 			trData.endpos = entPosCentered + (dir * maxDist)
 			local tr = util.TraceLine(trData)
 			local hitPos = tr.HitPos
-			if !requireFullDist or entPos:Distance(hitPos) >= maxDist then
+			if !requireFullDist or tr.Fraction == 1 then
 				//VJ.DEBUG_TempEnt(hitPos)
 				hitPos.z = entPosZ -- Reset it to ent:GetPos() z-axis
 				if returnAsDict then
@@ -542,6 +543,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 		result = ((targetPos - startPos):GetNormal()) * strength
 		predictProjSpeed = result:Length() * 0.8
 	elseif algorithmType == "Curve" then
+		if startPos == targetPos then return Vector() end -- Zero-distance trajectory return empty vector to avoid invalid values
 		local doDebug = self.VJ_DEBUG
 		local gravity = math.abs(physenv.GetGravity().z)
 		local dist = startPos:Distance(targetPos)
@@ -629,6 +631,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 		result = result:GetNormal() * strength
 		predictProjSpeed = strength
 	elseif algorithmType == "CurveAntlion" then
+		if startPos == targetPos then return Vector() end -- Zero-distance trajectory return empty vector to avoid invalid values
 		local gravity = math.abs(physenv.GetGravity().z)
 		result = targetPos - startPos
 		local time = result:Length() / strength -- Throw at a constant time
@@ -654,9 +657,6 @@ end
 		- ent = The entity to apply the speed modification
 		- speed = The speed, 1.0 is the normal speed
 		- setTime = How long should this be in effect? | DEFAULT = 1
-	Returns
-		- false, effect did NOT apply
-		- true, effect applied
 -----------------------------------------------------------]]
 function VJ.ApplySpeedEffect(ent, speed, setTime)
     ent.VJ_SpeedEffectT = ent.VJ_SpeedEffectT or 0

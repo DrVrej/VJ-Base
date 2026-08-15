@@ -30,7 +30,7 @@ function Schedule:Init(Name)
 	self.CanBeInterrupted = false -- Can this schedule be interrupted? Especially by regular things like idle / alert maintain
 	self.CanShootWhenMoving = false -- Can the NPC fire its active weapon while doing this schedule?
 	self.RunCode_OnFail = nil -- Code that will run ONLY when it fails!
-	self.RunCode_OnFinish = nil -- Code that will run once the task finished (Will run even if failed)
+	self.RunCode_OnFinish = nil -- Code that will run once the schedule finished (Will run even if failed)
 	self.OnFailExecuted = false
 	self.OnFinishExecuted = false
 end

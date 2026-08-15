@@ -1046,7 +1046,7 @@ function ENT:Initialize()
 	if !self.RelationshipMemory then self.RelationshipMemory = {} end
 	self.AnimationTranslations = {}
 	self.NextInvestigationMove = curTime + 1
-	self.IdleSoundBlockTime = curTime + math.random(0.3, 6)
+	self.IdleSoundBlockTime = curTime + math.Rand(0.3, 6)
 	self.MainSoundPitchValue = (self.MainSoundPitchStatic and (istable(self.MainSoundPitch) and math.random(self.MainSoundPitch.a, self.MainSoundPitch.b) or self.MainSoundPitch)) or 0
 	local sightConvar = vj_npc_sight_distance:GetInt(); if sightConvar > 0 then self.SightDistance = sightConvar end
 	
@@ -1805,12 +1805,13 @@ function ENT:Think()
 							x.CanShootWhenMoving = true
 							x.TurnData = {Type = VJ.FACE_ENEMY}
 							x.RunCode_OnFinish = function()
-								timer.Simple(0.01, function()
 									if IsValid(self) && !self:IsMoving() && !self:IsBusy("Activities") && selfData.IsGuard && guardData.Position then
 										self:SetLastPosition(guardData.Direction)
-										self:SCHEDULE_FACE("TASK_FACE_LASTPOSITION")
-									end
 								end)
+								if !self:IsMoving() && !self:IsBusy("Activities") && selfData.IsGuard && guardData.Position then
+									self:SetLastPosition(guardData.Direction)
+									self:SCHEDULE_FACE("TASK_FACE_LASTPOSITION")
+								end
 							end
 						end)
 					end
@@ -1925,9 +1926,8 @@ function ENT:ExecuteMeleeAttack(isPropAttack)
 							constraint.RemoveConstraints(ent, "Weld") //constraint.RemoveAll(ent)
 							if propBehavior == true or propBehavior == "OnlyPush" then
 								hitRegistered = true
-								local curEnemy = funcGetEnemy(self)
 								local physMass = phys:GetMass()
-								phys:ApplyForceCenter((IsValid(curEnemy) and curEnemy:GetPos() or myPos) + self:GetForward() * (physMass * 700) + self:GetUp() * (physMass * 200))
+								phys:ApplyForceCenter(self:GetForward() * (physMass * 700) + self:GetUp() * (physMass * 200))
 							end
 						end
 					else -- We can't damage or push props
@@ -2051,12 +2051,12 @@ function ENT:DoMeleeAttackPlayerSpeed(ent, walkSpeed, runSpeed, speedTime, sdDat
 		return
 	end
 	timer.Create(timerName, speedTime, 1, function()
+		if !IsValid(ent) then timer.Remove(timerName) return end
 		ent:SetWalkSpeed(ent.VJ_SlowDownPlayerWalkSpeed)
 		ent:SetRunSpeed(ent.VJ_SlowDownPlayerRunSpeed)
 		ent.VJ_SpeedModified = false
 		ent.VJ_SpeedModified_NoInterrupt = false
 		if pickedSD then pickedSD:FadeOut(sdFadeTime) end
-		if !IsValid(ent) then timer.Remove(timerName) end
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2073,27 +2073,29 @@ function ENT:ExecuteRangeAttack()
 			local projectileClass = PICK(selfData.RangeAttackProjectiles) or PICK(selfData.RangeAttackEntityToSpawn)
 			if projectileClass then
 				local projectile = ents.Create(projectileClass)
-				local spawnPos = self:RangeAttackProjPos(projectile)
-				projectile:SetPos(spawnPos)
-				projectile:SetAngles((ene:GetPos() - spawnPos):Angle())
-				self:OnRangeAttackExecute("PreSpawn", ene, projectile)
-				projectile:SetOwner(self)
-				projectile:SetPhysicsAttacker(self)
-				projectile:Spawn()
-				projectile:Activate()
-				//constraint.NoCollide(self, projectile, 0, 0)
-				local phys = projectile:GetPhysicsObject()
-				if IsValid(phys) then
-					phys:Wake()
-					local vel = self:RangeAttackProjVel(projectile)
-					phys:SetVelocity(vel)
-					projectile:SetAngles(vel:GetNormal():Angle())
-				else
-					local vel = self:RangeAttackProjVel(projectile)
-					projectile:SetVelocity(vel)
-					projectile:SetAngles(vel:GetNormal():Angle())
+				if IsValid(projectile) then
+					local spawnPos = self:RangeAttackProjPos(projectile)
+					projectile:SetPos(spawnPos)
+					projectile:SetAngles((ene:GetPos() - spawnPos):Angle())
+					self:OnRangeAttackExecute("PreSpawn", ene, projectile)
+					projectile:SetOwner(self)
+					projectile:SetPhysicsAttacker(self)
+					projectile:Spawn()
+					projectile:Activate()
+					//constraint.NoCollide(self, projectile, 0, 0)
+					local phys = projectile:GetPhysicsObject()
+					if IsValid(phys) then
+						phys:Wake()
+						local vel = self:RangeAttackProjVel(projectile)
+						phys:SetVelocity(vel)
+						projectile:SetAngles(vel:GetNormal():Angle())
+					else
+						local vel = self:RangeAttackProjVel(projectile)
+						projectile:SetVelocity(vel)
+						projectile:SetAngles(vel:GetNormal():Angle())
+					end
+					self:OnRangeAttackExecute("PostSpawn", ene, projectile)
 				end
-				self:OnRangeAttackExecute("PostSpawn", ene, projectile)
 			end
 		end
 	end
@@ -2800,7 +2802,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		corpse:Spawn()
 		corpse:Activate()
 		corpse:SetSkin(self:GetSkin())
-		for i = 0, self:GetNumBodyGroups() do
+		for i = 0, self:GetNumBodyGroups() -1 do
 			corpse:SetBodygroup(i, self:GetBodygroup(i))
 		end
 		corpse:SetColor(self:GetColor())
