@@ -1805,9 +1805,6 @@ function ENT:Think()
 							x.CanShootWhenMoving = true
 							x.TurnData = {Type = VJ.FACE_ENEMY}
 							x.RunCode_OnFinish = function()
-									if IsValid(self) && !self:IsMoving() && !self:IsBusy("Activities") && selfData.IsGuard && guardData.Position then
-										self:SetLastPosition(guardData.Direction)
-								end)
 								if !self:IsMoving() && !self:IsBusy("Activities") && selfData.IsGuard && guardData.Position then
 									self:SetLastPosition(guardData.Direction)
 									self:SCHEDULE_FACE("TASK_FACE_LASTPOSITION")
