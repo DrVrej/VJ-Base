@@ -30,9 +30,9 @@ ENT.DamageAllyResponse = false
 ENT.CombatDamageResponse = false
 ENT.DeathAllyResponse = "OnlyAlert"
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SCHEDULE_FACE(faceType, customFunc) return end -- Tanks do NOT turn like normal NPCs!
+function ENT:SCHEDULE_FACE() end -- Tanks do NOT turn like normal NPCs!
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MaintainAlertBehavior(alwaysChase) return end -- Tanks do NOT chase like normal NPCs!
+function ENT:MaintainAlertBehavior() end -- Tanks do NOT chase like normal NPCs!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnDamaged(dmginfo, hitgroup, status)
 	-- Skip gravity gun damage and crossbow bolts
@@ -49,11 +49,4 @@ function ENT:OnDamaged(dmginfo, hitgroup, status)
 			dmginfo:SetDamage(0)
 		end
 	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_AngleDiffuse(ang1, ang2)
-	local outcome = ang1 - ang2
-	if outcome < -180 then outcome = outcome + 360 end
-	if outcome > 180 then outcome = outcome - 360 end
-	return outcome
 end

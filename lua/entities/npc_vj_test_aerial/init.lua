@@ -20,7 +20,6 @@ ENT.AnimTbl_MeleeAttack = ACT_RANGE_ATTACK1
 ENT.MeleeAttackDistance = 60
 ENT.MeleeAttackDamageDistance = 80
 ENT.TimeUntilMeleeAttackDamage = 0.7
-ENT.NextAnyAttackTime_Melee = false
 ENT.MeleeAttackDamage = 30
 ENT.HasExtraMeleeAttackSounds = true
 

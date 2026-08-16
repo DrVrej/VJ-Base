@@ -28,16 +28,14 @@ local funcGetTable = metaEntity.GetTable
 	Stops the current NPC, similar to ground NPCs calling self:StopMoving()
 -----------------------------------------------------------]]
 function ENT:AA_StopMoving()
-	if self:GetVelocity():Length() > 0 then
-		local selfData = funcGetTable(self)
-		selfData.AA_CurrentMoveMaxSpeed = 0
-		selfData.AA_CurrentMoveTime = 0
-		selfData.AA_CurrentMoveType = 0
-		selfData.AA_CurrentMovePos = nil
-		selfData.AA_CurrentMovePosDir = nil
-		selfData.AA_CurrentMoveDist = -1
-		self:SetLocalVelocity(defPos)
-	end
+	local selfData = funcGetTable(self)
+	selfData.AA_CurrentMoveMaxSpeed = 0
+	selfData.AA_CurrentMoveTime = 0
+	selfData.AA_CurrentMoveType = 0
+	selfData.AA_CurrentMovePos = nil
+	selfData.AA_CurrentMovePosDir = nil
+	selfData.AA_CurrentMoveDist = -1
+	self:SetLocalVelocity(defPos)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -93,9 +91,10 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 			if dest:WaterLevel() <= 1 then
 				-- Destination not in water, so forget the destination, instead wander OR go deeper into the war
 				if dest:WaterLevel() == 0 then self:MaintainIdleBehavior(1) return end
+				local destCenter = dest:GetPos() + dest:OBBCenter()
 				local trene = util.TraceLine({
-					start = dest:GetPos() + self:OBBCenter(),
-					endpos = (dest:GetPos() + self:OBBCenter()) + dest:GetUp()*-20,
+					start = destCenter,
+					endpos = destCenter + dest:GetUp() * -20,
 					filter = trFilter
 				})
 				//PrintTable(trene)
@@ -161,7 +160,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 					return
 				end
 			-- If we have a last destination then move there!
-			elseif selfData.AA_LastChasePos != nil then
+			elseif selfData.AA_LastChasePos then
 				if debug then debugoverlay.Box(selfData.AA_LastChasePos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(0, 68, 255)) end
 				selfData.AA_DoingLastChasePos = true
 				tr = util.TraceHull({
@@ -197,9 +196,9 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 		finalPos = finalPos + addPos
 	-- If the enemy is a bit above water, try to go for its GetPos, which is usually at its feet
 	elseif selfData.MovementType == VJ_MOVETYPE_AQUATIC && dest:WaterLevel() < 3 then
-		finalPos = dest:GetPos() + dest:GetForward()*addPos.x + dest:GetRight()*addPos.y + dest:GetUp()*addPos.z
+		finalPos = dest:GetPos() + dest:GetForward() * addPos.x + dest:GetRight() * addPos.y + dest:GetUp() * addPos.z
 	else
-		finalPos = finalPos + dest:GetForward()*addPos.x + dest:GetRight()*addPos.y + dest:GetUp()*addPos.z
+		finalPos = finalPos + dest:GetForward() * addPos.x + dest:GetRight() * addPos.y + dest:GetUp() * addPos.z
 	end
 	if debug then ParticleEffect("vj_impact_dirty", finalPos, defAng, self) end
 	
@@ -218,7 +217,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 	end*/
 	
 	selfData.AA_CurrentMoveMaxSpeed = moveSpeed
-	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime() * 2, self:GetVelocity():Length(), moveSpeed) end
+	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime() * selfData.AA_MoveAccelerate, self:GetVelocity():Length(), moveSpeed) end
 	
 	-- Set the velocity
 	local velPos = (finalPos - startPos):GetNormal() * moveSpeed //+ self:GetUp()*velUp + self:GetForward()
@@ -231,9 +230,9 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 		selfData.AA_CurrentMoveTime = velTimeCur
 		//selfData.NextIdleTime = velTimeCur
 	end
-	if extra.FaceDest != false then
+	if extra.FaceDest != false && selfData.CanTurnWhileMoving then
 		if extra.FaceDestTarget == true then
-			self:SetTurnTarget((chaseEnemy && selfData.CanTurnWhileMoving) and "Enemy" or dest, velTime)
+			self:SetTurnTarget(chaseEnemy and "Enemy" or dest, velTime)
 		else
 			-- Offset the arrival position so it does NOT turn 180 degrees back from where it traveled from
 			local offsetFacing = finalPos + (finalPos - self:GetPos()):GetNormalized() * (selfData.AA_CurrentMoveMaxSpeed / 50)
@@ -323,7 +322,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extra)
 	end
 	
 	selfData.AA_CurrentMoveMaxSpeed = moveSpeed
-	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime() * 2, self:GetVelocity():Length(), moveSpeed) end
+	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime() * selfData.AA_MoveAccelerate, self:GetVelocity():Length(), moveSpeed) end
 	
 	-- Set the velocity
 	local velPos = (finalPos - myPos):GetNormal() * moveSpeed
@@ -336,7 +335,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extra)
 		selfData.AA_CurrentMoveTime = velTimeCur
 		//selfData.NextIdleTime = velTimeCur
 	end
-	if extra.FaceDest != false then
+	if extra.FaceDest != false && selfData.CanTurnWhileMoving then
 		self:SetTurnTarget(finalPos, velTime)
 		//selfData.AA_CurrentTurnAng = self:GetTurnAngle((finalPos - tr.StartPos):Angle())
 		//self:SetLocalAngularVelocity(self:GetTurnAngle((finalPos-tr.StartPos):Angle()))
