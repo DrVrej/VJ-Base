@@ -271,7 +271,7 @@ function ENT:OnThinkActive()
 				local plyControlled = selfData.VJ_IsBeingControlled
 				local enePos = ene:GetPos()
 				local angEne = (enePos - myPos + vec80z):Angle()
-				local angDiffuse = ((angEne.y) - (self:GetAngles().y + selfData.Tank_AngleOffset) + 180) % 360 - 180
+				local angDiffuse = (angEne.y - (self:GetAngles().y + selfData.Tank_AngleOffset) + 180) % 360 - 180
 				local heightRatio = plyControlled and 1 or ((enePos.z - myPos.z) / myPos:Distance(Vector(enePos.x, enePos.y, myPos.z)))
 				local enemyIsHighUp = heightRatio > 0.15
 				-- If the enemy is very high up, then move away from it to help the gunner fire!

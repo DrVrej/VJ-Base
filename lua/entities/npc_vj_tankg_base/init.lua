@@ -174,7 +174,7 @@ function ENT:OnThinkActive()
 			local myPos = self:GetPos()
 			local enePos = ene:GetPos()
 			local angEne = (enePos - myPos):Angle()
-			local angDiffuse = ((angEne.y) - (self:GetAngles().y + selfData.Tank_AngleOffset) + 180) % 360 - 180 -- Cannon looking direction
+			local angDiffuse = (angEne.y - (self:GetAngles().y + selfData.Tank_AngleOffset) + 180) % 360 - 180 -- Cannon looking direction
 			local heightRatio = (enePos.z - myPos.z) / myPos:Distance(Vector(enePos.x, enePos.y, myPos.z))
 			selfData.Tank_ReachableHeight = math.abs(heightRatio) < 0.15 and true or false -- How high it can fire
 			-- If the enemy is within the barrel firing limit AND not already firing a shell AND its height is is reachable AND the enemy is not extremely close, then FIRE!
@@ -370,7 +370,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove()
 	VJ.STOPSOUND(self.CurrentTankMovingSound)
-	timer.Destroy("timer_shell_attack" .. self:EntIndex())
+	timer.Remove("timer_shell_attack" .. self:EntIndex())
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_PlaySoundSystem(sdSet)
