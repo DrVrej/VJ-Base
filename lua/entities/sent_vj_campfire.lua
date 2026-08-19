@@ -96,7 +96,7 @@ function ENT:CampfireToggle(activate)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Use(activator, caller, useType, value)
+function ENT:Use(activator)
 	if !self.IsOn then
 		self:CampfireToggle(true)
 		if IsValid(activator) then

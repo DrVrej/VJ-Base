@@ -54,8 +54,9 @@ local function addKillIcon(class, name, texture, data)
 	language.Add(class, name)
 	if texture == VJ.KILLICON_TYPE_ALIAS then
 		killicon.AddAlias(class, data or "prop_physics")
-	elseif data && texture == VJ.KILLICON_TYPE_FONT then
-		killicon.Add(class, data.font, data.symbol, data.color or killIconDefColor, data.heightScale or 1)
+	elseif  texture == VJ.KILLICON_TYPE_FONT then
+		if !data then return end
+		killicon.AddFont(class, data.font, data.symbol, data.color or killIconDefColor, data.heightScale or 1)
 	else
 		killicon.Add(class, texture or VJ.KILLICON_DEFAULT, data or killIconDefColor)
 	end
@@ -96,9 +97,7 @@ end
 		- extra = Extra options to set to the entity | EX: AdminOnly, OnCeiling, Offset, etc.
 -----------------------------------------------------------]]
 VJ.AddNPC_HUMAN = function(name, class, weapons, category, extra, old1)
-	extra = extra or {}
-	extra.Weapons = weapons
-	VJ.AddNPC(name, class, category, extra, old1)
+	VJ.AddNPC(name, class, category, table.Merge({Weapons = weapons}, extra or {}), old1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

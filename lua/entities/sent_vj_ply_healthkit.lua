@@ -10,7 +10,7 @@ ENT.Type 			= "anim"
 ENT.PrintName 		= "Admin Health Kit"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Information 	= "Gives players 1000000 health when picked up."
+ENT.Information 	= "Gives players an additional 1000000 health when picked up."
 ENT.Category		= "VJ Base"
 ENT.Spawnable		= true
 ENT.AdminOnly		= true
@@ -46,7 +46,7 @@ function ENT:Initialize()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Use(activator, caller)
+function ENT:Use(activator)
 	if activator:IsPlayer() then
 		self:EmitSound("HealthKit.Touch")
 		activator:SetHealth(activator:Health() + 1000000)

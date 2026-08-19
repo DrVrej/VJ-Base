@@ -72,7 +72,7 @@ function ENT:SetActive(active)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AcceptInput(key, activator, caller, data)
+function ENT:Use(activator)
 	if !activator:IsPlayer() or self.ForceEntAsEnemy or !self.CanToggle then return end
 	if !self.Active then
 		self:SetActive(true)

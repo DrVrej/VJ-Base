@@ -6,7 +6,7 @@ include("shared.lua")
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
 --
--- INFO: Used to make simple objects that can be also be animated, works similar to "prop_dynamic"
+-- INFO: Used to make simple objects that can be animated, works similar to "prop_dynamic"
 --
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()

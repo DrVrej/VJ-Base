@@ -457,31 +457,31 @@ function ENT:Think()
 	self:NextThink(curTime)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:StartMovement(Dir, Rot)
+function ENT:StartMovement(direction, rotation)
 	local npc = self.VJCE_NPC
 	local ply = self.VJCE_Player
 	if npc:GetState() != VJ_STATE_NONE then return end
 
 	local DEBUG = ply:GetInfoNum("vj_npc_cont_debug", 0) == 1
-	local plyAimVec = Dir
+	local plyAimVec = direction
 	plyAimVec.z = 0
-	plyAimVec:Rotate(Rot)
-	local selfPos = npc:GetPos()
+	plyAimVec:Rotate(rotation)
+	local npcPosOrg = npc:GetPos()
 	local centerToPos = npc:OBBCenter():Distance(npc:OBBMins()) + 20 // npc:OBBMaxs().z
-	local NPCPos = selfPos + npc:GetUp()*centerToPos
+	local npcPos = npcPosOrg + npc:GetUp() * centerToPos
 	local groundSpeed = math_min(math_max(npc:GetSequenceGroundSpeed(npc:GetSequence()), 300), 9999)
 	local defaultFilter = {self, npc, ply}
-	local forwardTr = util.TraceLine({start = NPCPos, endpos = NPCPos + plyAimVec * groundSpeed, filter = defaultFilter})
-	local forwardDist = NPCPos:Distance(forwardTr.HitPos)
+	local forwardTr = util.TraceLine({start = npcPos, endpos = npcPos + plyAimVec * groundSpeed, filter = defaultFilter})
+	local forwardDist = npcPos:Distance(forwardTr.HitPos)
 	local wallToSelf = forwardDist - (npc:OBBMaxs().y) -- Use Y instead of X because X is left/right whereas Y is forward/backward
 	if DEBUG then
-		debugoverlay.Box(NPCPos, Vector(-2, -2, -2), Vector(2, 2, 2), 3, VJ.COLOR_BLUE_SKY) -- NPC's calculated position
-		debugoverlay.Text(NPCPos, "NPCPos", 3, false)
+		debugoverlay.Box(npcPos, Vector(-2, -2, -2), Vector(2, 2, 2), 3, VJ.COLOR_BLUE_SKY) -- NPC's calculated position
+		debugoverlay.Text(npcPos, "npcPos", 3, false)
 		debugoverlay.Box(forwardTr.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 3, VJ.COLOR_YELLOW) -- forward trace position
 		debugoverlay.Text(forwardTr.HitPos, "forwardTr.HitPos", 3, false)
 	end
 	if forwardDist >= 25 then
-		local finalPos = Vector((selfPos + plyAimVec * wallToSelf).x, (selfPos + plyAimVec * wallToSelf).y, forwardTr.HitPos.z)
+		local finalPos = Vector((npcPosOrg + plyAimVec * wallToSelf).x, (npcPosOrg + plyAimVec * wallToSelf).y, forwardTr.HitPos.z)
 		-- Check if ground is valid!
 		local downTr = util.TraceLine({start = finalPos, endpos = finalPos + self:GetUp()*-(200 + centerToPos), filter = defaultFilter})
 		local downDist = (finalPos.z - centerToPos) - downTr.HitPos.z

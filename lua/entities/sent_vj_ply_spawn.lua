@@ -36,7 +36,7 @@ function ENT:Initialize()
 	self:SetColor(VJ.COLOR_GREEN)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Use(activator, caller)
+function ENT:Use(activator)
 	if activator:IsPlayer() && activator:IsAdmin() then
 		if self.Active then
 			self.Active = false

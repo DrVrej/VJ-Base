@@ -110,11 +110,16 @@ local PROJ_COLLISION_PERSIST = VJ.PROJ_COLLISION_PERSIST
 function ENT:Initialize()
 	self:PreInit()
 	if self.CustomOnPreInitialize then self:CustomOnPreInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
-	if self:GetModel() == "models/error.mdl" && PICK(self.Model) then self:SetModel(PICK(self.Model)) end
+	if self:GetModel() == "models/error.mdl" then
+		local mdl = PICK(self.Model)
+		if mdl then
+			self:SetModel(mdl)
+		end
+	end
 	
 	local projType = self.ProjectileType
 	-- Some models do NOT have a physics mesh, so let's initialize a basic sphere physics
-	if !self:PhysicsInit(MOVETYPE_VPHYSICS) then
+	if !self:PhysicsInit(SOLID_VPHYSICS) then
 		local boundsMin, boundsMax = self:GetModelRenderBounds()
 		local radius = (boundsMax - boundsMin):Length() * 0.5
 		self:PhysicsInitSphere(radius, "metal_bouncy")
@@ -408,7 +413,7 @@ function ENT:PlaySound(sdSet)
 				VJ.STOPSOUND(selfData.CurrentIdleSound)
 				selfData.CurrentIdleSound = VJ.CreateSound(self, selfData.SoundTbl_Idle, selfData.IdleSoundLevel, math.random(selfData.IdleSoundPitch.a, selfData.IdleSoundPitch.b))
 			end
-			selfData.NextIdleSoundT = CurTime() + math.Rand(selfData.NextSoundTime_Idle.a , selfData.NextSoundTime_Idle.b)
+			selfData.NextIdleSoundT = CurTime() + math.Rand(selfData.NextSoundTime_Idle.a, selfData.NextSoundTime_Idle.b)
 		end
 	elseif sdSet == "OnCollide" then
 		if selfData.HasOnCollideSounds && math.random(1, selfData.OnCollideSoundChance) == 1 then

@@ -40,9 +40,9 @@ local metaEntity = FindMetaTable("Entity")
 local funcGetTable = metaEntity.GetTable
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
-	self:PhysicsInit(MOVETYPE_VPHYSICS)
+	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS) -- Use MOVETYPE_NONE for testing, makes the entity freeze!
-	self:SetSolid(MOVETYPE_VPHYSICS)
+	self:SetSolid(SOLID_VPHYSICS)
 	if vj_npc_gib_collision:GetInt() == 0 then self:SetCollisionGroup(COLLISION_GROUP_DEBRIS) end
 
 	-- Physics Functions
@@ -88,20 +88,19 @@ function ENT:Think()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, phys)
+	if data.OurOldVelocity:Length() < 18 then return end
 	local selfData = funcGetTable(self)
 	
 	-- Collision Sound
-	local velSpeed = phys:GetVelocity():Length()
 	local collideSD = VJ.PICK(selfData.CollisionSound)
-	if collideSD && velSpeed > 18 then
+	if collideSD then
 		self:EmitSound(collideSD, selfData.CollisionSoundLevel, math.random(selfData.CollisionSoundPitch.a, selfData.CollisionSoundPitch.b))
 	end
 
 	-- Collision Decal
 	local collideDecal = VJ.PICK(selfData.CollisionDecal)
-	if collideDecal && velSpeed > 18 && !data.Entity && math.random(1, selfData.CollisionDecalChance) == 1 then
-		local myPos = self:GetPos()
-		self:SetLocalPos(myPos + self:GetUp() * 4) -- Because the entity is too close to the ground
+	if collideDecal && math.random(1, selfData.CollisionDecalChance) == 1 then
+		local myPos = self:GetPos() + self:GetUp() * 4 -- Move it up to prevent it from being too close to the ground
 		local tr = util.TraceLine({
 			start = myPos,
 			endpos = myPos - (data.HitNormal * -30),

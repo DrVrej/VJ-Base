@@ -46,7 +46,7 @@ function ENT:Initialize()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Use(activator, caller)
+function ENT:Use(activator)
 	if IsValid(activator) && activator:IsPlayer() then
 		activator:PickupObject(self)
 	end
