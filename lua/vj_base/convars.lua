@@ -52,7 +52,7 @@ CreateConVar("vj_npc_fri_combine", 0, defFlags, "Makes all VJ NPCs friendly to C
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 CreateConVar("vj_npc_difficulty", 0, defFlags, "Difficulty of all NPCs")
 CreateConVar("vj_npc_anim_death", 1, defFlags, "Can NPCs play death animation?")
-CreateConVar("vj_npc_god", 0, defFlags, "Can NPCs take damage?")
+CreateConVar("vj_npc_god", 0, defFlags, "Should NPCs be invincible?")
 CreateConVar("vj_npc_health", 0, defFlags, "Overrides the health of all NPCs | 0 = Don't override")
 CreateConVar("vj_npc_blood", 1, defFlags, "Can NPCs bleed?")
 CreateConVar("vj_npc_blood_pool", 1, defFlags, "Can corpses create blood pools?")
@@ -69,7 +69,7 @@ CreateConVar("vj_npc_gib_collision", 0, defFlags, "Should gibs be collidable?")
 CreateConVar("vj_npc_gib_fade", 1, defFlags, "Should Gibs Fade?")
 CreateConVar("vj_npc_gib_fadetime", 90, defFlags, "Time until gibs fade out")
 CreateConVar("vj_npc_loot", 1, defFlags, "Can NPCs drop loot on death?")
-CreateConVar("vj_npc_ply_frag", 1, defFlags, "Disable frags (points) being added to player's scoreboard when a player kills an NPC")
+CreateConVar("vj_npc_ply_frag", 1, defFlags, "Should players receive frags (points) when killing NPCs?")
 CreateConVar("vj_npc_ply_chat", 1, defFlags, "Can NPC post in a player's chat? | EX: \"Scientist is now following you\"")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC Performance Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -116,8 +116,8 @@ CreateConVar("vj_npc_debug_attack", 0, defFlags, "Enables attack debugging")
 CreateConVar("vj_npc_debug_damage", 0, defFlags, "Enables damage & death debugging")
 CreateConVar("vj_npc_debug_touch", 0, defFlags, "Prints when something collides with an NPC")
 CreateConVar("vj_npc_debug_enemy", 0, defFlags, "Enables enemy debugging")
-CreateConVar("vj_npc_debug_resetenemy", 0, defFlags, "Prints whenever an NPC has rest its enemy")
-CreateConVar("vj_npc_debug_lastseenenemytime", 0, defFlags, "Prints the value of \"LastSeenEnemy\"")
+CreateConVar("vj_npc_debug_resetenemy", 0, defFlags, "Prints whenever an NPC has reset its enemy")
+CreateConVar("vj_npc_debug_lastseenenemytime", 0, defFlags, "Prints the last visible time of the NPC's current enemy")
 CreateConVar("vj_npc_debug_takingcover", 0, defFlags, "Prints whether an NPC is taking cover or not")
 CreateConVar("vj_npc_debug_weapon", 0, defFlags, "Enables weapon debugging")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -179,8 +179,9 @@ if SERVER then
 		if IsValid(ply) && !ply:IsAdmin() then return end
 		local cType = args[1]
 		local count = 0
-		if !cType then -- Not type given, so it means its a clean up all!
+		if !cType or !cTypes[cType] then -- Not type or invalid type given, so clean up all
 			game.CleanUpMap()
+			cType = false
 		elseif cType == "decals" then
 			for _, v in ipairs(player.GetAll()) do
 				v:ConCommand("r_cleardecals")

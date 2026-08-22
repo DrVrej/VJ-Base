@@ -106,8 +106,8 @@ SWEP.Reload_TimeUntilAmmoIsSet = 1
 SWEP.Secondary.Automatic = false -- Should the weapon continue firing as long as the attack button is held down?
 SWEP.Secondary.Ammo = "none" -- Ammo type
 SWEP.Secondary.TakeAmmo = 1 -- How much ammo should it take on each shot?
-SWEP.Secondary.ClipSize = 0 -- Max amount of rounds per clip
-SWEP.Secondary.DefaultClip = 5 -- Default number of bullets in a clip | It will give this amount on initial pickup
+SWEP.Secondary.ClipSize = 0 -- Max amount of rounds per clip | 0 = Not clip-based (applies to most secondary fire types)
+SWEP.Secondary.PickUpAmmoAmount = "Default" -- How much ammo should the gun supply when picked up? | "Default" = 3 Clips / 5 Rounds
 SWEP.Secondary.Delay = false -- Time until it can shoot again | false = Base auto calculates the duration
 SWEP.AnimTbl_SecondaryFire = ACT_VM_SECONDARYATTACK -- Firing animation | false = Don't play an animation
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -225,20 +225,22 @@ function SWEP:NPC_SecondaryFire()
 	local owner = self:GetOwner()
 	local spawnPos = self:GetBulletPos()
 	local projectile = ents.Create(self.NPC_SecondaryFireEnt)
-	projectile:SetPos(spawnPos)
-	projectile:SetAngles(owner:GetAngles())
-	projectile:SetOwner(owner)
-	projectile:Spawn()
-	projectile:Activate()
-	local phys = projectile:GetPhysicsObject()
-	if IsValid(phys) then
-		phys:Wake()
-		if phys:IsGravityEnabled() then
-			phys:SetVelocity(VJ.CalculateTrajectory(owner, owner:GetEnemy(), "Curve", projectile:GetPos(), 1, 1))
-		else
-			phys:SetVelocity(VJ.CalculateTrajectory(owner, owner:GetEnemy(), "Line", projectile:GetPos(), 1, 2000))
+	if IsValid(projectile) then
+		projectile:SetPos(spawnPos)
+		projectile:SetAngles(owner:GetAngles())
+		projectile:SetOwner(owner)
+		projectile:Spawn()
+		projectile:Activate()
+		local phys = projectile:GetPhysicsObject()
+		if IsValid(phys) then
+			phys:Wake()
+			if phys:IsGravityEnabled() then
+				phys:SetVelocity(VJ.CalculateTrajectory(owner, owner:GetEnemy(), "Curve", projectile:GetPos(), 1, 1))
+			else
+				phys:SetVelocity(VJ.CalculateTrajectory(owner, owner:GetEnemy(), "Line", projectile:GetPos(), 1, 2000))
+			end
+			projectile:SetAngles(projectile:GetVelocity():GetNormal():Angle())
 		end
-		projectile:SetAngles(projectile:GetVelocity():GetNormal():Angle())
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -276,6 +278,7 @@ function SWEP:DecideAnimationLength(anim, override, decrease) return VJ.AnimDura
 SWEP.RenderGroup = RENDERGROUP_OPAQUE
 
 SWEP.Primary.DefaultClip = 0
+SWEP.Secondary.DefaultClip = 0
 SWEP.Reloading = false
 SWEP.PLY_NextReloadT = 0
 SWEP.PLY_NextIdleAnimT = 0
@@ -316,7 +319,9 @@ local comAttachments = {
 function SWEP:Initialize()
 	self:SetHoldType(self.HoldType)
 	self:SetClip1(self.Primary.ClipSize)
+	self:SetClip2(self.Secondary.ClipSize)
 	self.Primary.DefaultClip = self.Primary.ClipSize
+	self.Secondary.DefaultClip = self.Secondary.ClipSize
 	self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
 	self.PrimaryEffects_ShellType = oldShells[self.PrimaryEffects_ShellType] or self.PrimaryEffects_ShellType -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
 	self:Init()
@@ -439,6 +444,15 @@ function SWEP:Equip(newOwner)
 				newOwner:GiveAmmo(self.Primary.ClipSize * 2, self.Primary.Ammo)
 			elseif isnumber(self.Primary.PickUpAmmoAmount) then
 				newOwner:GiveAmmo(self.Primary.PickUpAmmoAmount, self.Primary.Ammo)
+			end
+			if self.Secondary.PickUpAmmoAmount == "Default" then
+				if self.Secondary.ClipSize > 0 then
+					newOwner:GiveAmmo(self.Secondary.ClipSize * 2, self.Secondary.Ammo)
+				else
+					newOwner:GiveAmmo(5, self.Secondary.Ammo)
+				end
+			elseif isnumber(self.Secondary.PickUpAmmoAmount) then
+				newOwner:GiveAmmo(self.Secondary.PickUpAmmoAmount, self.Secondary.Ammo)
 			end
 		end
 		//newOwner:RemoveAmmo(self.Primary.DefaultClip, self.Primary.Ammo)
@@ -693,7 +707,7 @@ function SWEP:PrimaryAttack()
 	if selfData.Reloading or self:GetNextSecondaryFire() > curTime then return end // owner:KeyDown(IN_RELOAD)
 	if isNPC && !ownerData.VJ_IsBeingControlled && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return
 	if !selfData.IsMeleeWeapon && ((isPly && !selfData.Primary.AllowInWater && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then
-		if SERVER then
+		if SERVER && selfData.HasDryFireSound then
 			local dryFireSound = VJ.PICK(selfData.DryFireSound)
 			if dryFireSound then
 				owner:EmitSound(dryFireSound, selfData.DryFireSoundLevel, math.random(selfData.DryFireSoundPitch.a, selfData.DryFireSoundPitch.b))
@@ -863,7 +877,7 @@ function SWEP:PrimaryAttackEffects(owner)
 			-- NPCs
 			else
 				local particles = selfData.PrimaryEffects_MuzzleParticles
-				if selfData.PrimaryEffects_MuzzleParticlesAsOne then -- Combine all of the particles in the table!
+				if selfData.PrimaryEffects_MuzzleParticlesAsOne && istable(particles) then -- Combine all of the particles in the table!
 					for _, v in ipairs(particles) do
 						ParticleEffectAttach(v, PATTACH_POINT_FOLLOW, self, muzzleAttach)
 					end
@@ -913,13 +927,12 @@ function SWEP:PrimaryAttackEffects(owner)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CanSecondaryAttack()
-	return self:Clip2() > 0 && self:GetNextSecondaryFire() < CurTime() && self.Secondary.Ammo != "none"
+	return ((self:GetMaxClip2() <= 0 && self:Ammo2() > 0) or self:Clip2() > 0) && self:GetNextSecondaryFire() < CurTime() && self.Secondary.Ammo != "none" && !self.Reloading
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:SecondaryAttack()
-	if self:Ammo2() <= 0 or self.Reloading then return end // !self:CanSecondaryAttack()
+	if !self:CanSecondaryAttack() then return end
 	if self:OnSecondaryAttack() == true then return end
-	
 	local curTime = CurTime()
 	local owner = funcGetOwner(self)
 	self:TakeSecondaryAmmo(self.Secondary.TakeAmmo)
@@ -982,7 +995,7 @@ function SWEP:Reload()
 		end
 		-- Handle clip
 		timer.Simple(self.Reload_TimeUntilAmmoIsSet, function()
-			if IsValid(self) && self:OnReload("Finish") != true then
+			if IsValid(self) && IsValid(owner) && funcGetOwner(self) == owner && self:OnReload("Finish") != true then
 				local ammoUsed = math.Clamp(self.Primary.ClipSize - self:Clip1(), 0, owner:GetAmmoCount(self:GetPrimaryAmmoType())) -- Amount of ammo that it will use (Take from the reserve)
 				owner:RemoveAmmo(ammoUsed, self.Primary.Ammo)
 				self:SetClip1(self:Clip1() + ammoUsed)
