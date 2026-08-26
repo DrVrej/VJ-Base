@@ -323,10 +323,10 @@ function SWEP:Initialize()
 	self.Primary.DefaultClip = self.Primary.ClipSize
 	self.Secondary.DefaultClip = self.Secondary.ClipSize
 	self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
-	self.PrimaryEffects_ShellType = oldShells[self.PrimaryEffects_ShellType] or self.PrimaryEffects_ShellType -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
 	self:Init()
 	
 	-- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	self.PrimaryEffects_ShellType = oldShells[self.PrimaryEffects_ShellType] or self.PrimaryEffects_ShellType
 	if self.CustomOnInitialize then self:CustomOnInitialize() end
 	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end
 	if self.CustomOnEquip then self.OnEquip = function(_, newOwner) self:CustomOnEquip(newOwner) end end
@@ -386,8 +386,12 @@ function SWEP:Initialize()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:GetCapabilities()
-	return bit.bor(CAP_WEAPON_RANGE_ATTACK1, CAP_INNATE_RANGE_ATTACK1)
+if SERVER then
+	local capBitsDefault = bit.bor(CAP_WEAPON_RANGE_ATTACK1, CAP_INNATE_RANGE_ATTACK1)
+	--
+	function SWEP:GetCapabilities()
+		return capBitsDefault
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:SetDefaultValues(holdType)
@@ -896,13 +900,11 @@ function SWEP:PrimaryAttackEffects(owner)
 			muzzleLight:SetKeyValue("brightness", selfData.PrimaryEffects_DynamicLightBrightness)
 			muzzleLight:SetKeyValue("distance", selfData.PrimaryEffects_DynamicLightDistance)
 			if owner:IsPlayer() then
-				muzzleLight:SetLocalPos(owner:GetShootPos() + metaEntity.GetForward(self)*40 + metaEntity.GetUp(self)*-10)
+				muzzleLight:SetPos(owner:GetShootPos() + metaEntity.GetForward(self) * 40 + metaEntity.GetUp(self) * -10)
 			else
-				muzzleLight:SetLocalPos(selfData.GetBulletPos(self))
+				muzzleLight:SetPos(selfData.GetBulletPos(self))
 			end
-			muzzleLight:SetLocalAngles(metaEntity.GetAngles(self))
 			muzzleLight:SetColor(selfData.PrimaryEffects_DynamicLightColor)
-			//muzzleLight:SetParent(self)
 			muzzleLight:Spawn()
 			muzzleLight:Activate()
 			muzzleLight:Fire("TurnOn")
@@ -1264,8 +1266,7 @@ function SWEP:SetupWeaponHoldTypeForAI(holdType)
 		self.ActivityTranslateAI[ACT_RUN_AIM_RELAXED] 				= ACT_RUN_RPG_RELAXED
 		self.ActivityTranslateAI[ACT_RUN_AIM_STIMULATED] 			= ACT_RUN_AIM_RIFLE_STIMULATED
 		self.ActivityTranslateAI[ACT_RUN_AIM_AGITATED] 				= ACT_RUN_AIM_RIFLE
-	else
-		-- revolver or pistol
+	else -- revolver or pistol
 		self.ActivityTranslateAI[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_PISTOL
 		self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_PISTOL
 		self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] 				= ACT_RANGE_AIM_PISTOL_LOW

@@ -5,14 +5,14 @@
 -----------------------------------------------*/
 AddCSLuaFile()
 
-ENT.Base 			= "base_anim"
-ENT.Type 			= "anim"
-ENT.PrintName 		= "Wooden Board"
-ENT.Author 			= "DrVrej"
-ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Information 	= "Physics entity that VJ NPCs can attack.\nUseful for barricading an area."
-ENT.Category		= "VJ Base"
-ENT.Spawnable		= true
+ENT.Base = "base_anim"
+ENT.Type = "anim"
+ENT.PrintName = "Wooden Board"
+ENT.Author = "DrVrej"
+ENT.Contact = "http://steamcommunity.com/groups/vrejgaming"
+ENT.Information = "Physics entity that VJ NPCs can attack.\nUseful for barricading an area."
+ENT.Category = "VJ Base"
+ENT.Spawnable = true
 
 ENT.PhysicsSounds = true
 ENT.VJ_ID_Attackable = true

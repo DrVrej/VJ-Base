@@ -133,7 +133,7 @@ function ENT:SpawnEntity(spawnKey, spawnTbl, initSpawn)
 		ent:SetCreator(spawnCreator)
 	end
 	ent:SetPos(self:GetPos() + spawnPos)
-	ent:SetAngles(spawnAng + self:GetAngles())
+	ent:SetAngles(self:GetAngles() + spawnAng)
 	ent:Spawn()
 	ent:Activate()
 	if spawnNPCClass then

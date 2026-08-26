@@ -1,9 +1,9 @@
-ENT.Base 			= "base_entity"
-ENT.Type 			= "anim"
-ENT.PrintName 		= "VJ Base NPC Controller"
-ENT.Author 			= "DrVrej"
-ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Category		= "VJ Base"
+ENT.Base = "base_entity"
+ENT.Type = "anim"
+ENT.PrintName = "VJ Base NPC Controller"
+ENT.Author = "DrVrej"
+ENT.Contact = "http://steamcommunity.com/groups/vrejgaming"
+ENT.Category = "VJ Base"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetupDataTables()
 	-- Entities

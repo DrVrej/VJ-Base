@@ -5,15 +5,15 @@
 -----------------------------------------------*/
 AddCSLuaFile()
 
-ENT.Base 			= "base_anim"
-ENT.Type 			= "anim"
-ENT.PrintName 		= "Admin Health Kit"
-ENT.Author 			= "DrVrej"
-ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Information 	= "Gives players an additional 1000000 health when picked up."
-ENT.Category		= "VJ Base"
-ENT.Spawnable		= true
-ENT.AdminOnly		= true
+ENT.Base = "base_anim"
+ENT.Type = "anim"
+ENT.PrintName = "Admin Health Kit"
+ENT.Author = "DrVrej"
+ENT.Contact = "http://steamcommunity.com/groups/vrejgaming"
+ENT.Information = "Gives players an additional 1000000 health when picked up."
+ENT.Category = "VJ Base"
+ENT.Spawnable = true
+ENT.AdminOnly = true
 
 ENT.PhysicsSounds = true
 ---------------------------------------------------------------------------------------------------------------------------------------------

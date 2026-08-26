@@ -5,15 +5,15 @@
 -----------------------------------------------*/
 AddCSLuaFile()
 
-ENT.Base 			= "base_anim"
-ENT.Type 			= "anim"
-ENT.PrintName 		= "Player Spawn Point"
-ENT.Author 			= "DrVrej"
-ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Information 	= "Sets an spawn point for all the players.\nPress USE to toggle it."
-ENT.Category		= "VJ Base"
-ENT.Spawnable		= true
-ENT.AdminOnly		= true
+ENT.Base = "base_anim"
+ENT.Type = "anim"
+ENT.PrintName = "Player Spawn Point"
+ENT.Author = "DrVrej"
+ENT.Contact = "http://steamcommunity.com/groups/vrejgaming"
+ENT.Information = "Sets an spawn point for all the players.\nPress USE to toggle it."
+ENT.Category = "VJ Base"
+ENT.Spawnable = true
+ENT.AdminOnly = true
 
 scripted_ents.Alias("sent_vj_ply_spawnpoint", "sent_vj_ply_spawn") -- !! Backwards Compatibility !!
 ---------------------------------------------------------------------------------------------------------------------------------------------

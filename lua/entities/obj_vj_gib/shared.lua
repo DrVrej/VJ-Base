@@ -1,9 +1,9 @@
-ENT.Base 			= "base_anim"
-ENT.Type 			= "anim"
-ENT.PrintName		= "VJ Base Gib"
-ENT.Author 			= "DrVrej"
-ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Category		= "VJ Base"
+ENT.Base = "base_anim"
+ENT.Type = "anim"
+ENT.PrintName = "VJ Base Gib"
+ENT.Author = "DrVrej"
+ENT.Contact = "http://steamcommunity.com/groups/vrejgaming"
+ENT.Category = "VJ Base"
 
 ENT.IsVJBaseCorpse = true
 ENT.IsVJBaseCorpse_Gib = true

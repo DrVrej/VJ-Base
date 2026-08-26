@@ -293,33 +293,32 @@ function ENT:Tank_FireShell()
 		if self:Tank_OnFireShell("Effects") != true then
 			local myAng = self:GetAngles()
 			local myAngForward = myAng + Angle(0, selfData.Tank_AngleOffset, 0)
+			local muzzleFlashPos = self:LocalToWorld(selfData.Tank_Shell_MuzzleFlashPos)
 			util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
 			
 			-- Muzzle flash
-			local muzzleFlashPos = self:LocalToWorld(selfData.Tank_Shell_MuzzleFlashPos)
 			local muzzleFlash = ents.Create("env_muzzleflash")
 			muzzleFlash:SetPos(muzzleFlashPos)
 			muzzleFlash:SetAngles(myAngForward)
 			muzzleFlash:SetKeyValue("scale", "10")
 			muzzleFlash:Fire("Fire")
+			muzzleFlash:Fire("Kill", nil, 0.2)
+			
+			-- Muzzle flash light
 			local lightFire = ents.Create("light_dynamic")
 			lightFire:SetKeyValue("brightness", "4")
 			lightFire:SetKeyValue("distance", "400")
 			lightFire:SetPos(muzzleFlashPos)
-			lightFire:SetLocalAngles(myAng)
 			lightFire:Fire("Color", "255 150 60")
-			lightFire:SetParent(self)
 			lightFire:Spawn()
 			lightFire:Activate()
 			lightFire:Fire("TurnOn")
 			lightFire:Fire("Kill", nil, 0.1)
-			self:DeleteOnRemove(lightFire)
 			
 			-- Smoke effect
-			local smokePos = self:LocalToWorld(selfData.Tank_Shell_ParticlePos)
 			local smokeWhite = ents.Create("info_particle_system")
 			smokeWhite:SetKeyValue("effect_name", "vj_smoke_white_medium")
-			smokeWhite:SetPos(smokePos)
+			smokeWhite:SetPos(self:LocalToWorld(selfData.Tank_Shell_ParticlePos))
 			smokeWhite:SetAngles(myAngForward)
 			smokeWhite:SetParent(self)
 			smokeWhite:Spawn()

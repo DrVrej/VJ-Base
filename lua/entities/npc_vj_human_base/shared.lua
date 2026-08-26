@@ -1,9 +1,9 @@
-ENT.Base 			= "base_entity"
-ENT.Type 			= "ai"
-ENT.PrintName 		= "VJ Base Human"
-ENT.Author 			= "DrVrej"
-ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Category		= "VJ Base"
+ENT.Base = "base_entity"
+ENT.Type = "ai"
+ENT.PrintName = "VJ Base Human"
+ENT.Author = "DrVrej"
+ENT.Contact = "http://steamcommunity.com/groups/vrejgaming"
+ENT.Category = "VJ Base"
 ENT.AutomaticFrameAdvance = false
 
 ENT.IsVJBaseSNPC = true

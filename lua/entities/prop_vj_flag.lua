@@ -5,14 +5,14 @@
 -----------------------------------------------*/
 AddCSLuaFile()
 
-ENT.Base 			= "prop_vj_animatable"
-ENT.Type 			= "anim"
-ENT.PrintName 		= "Flag"
-ENT.Author 			= "DrVrej"
-ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Information 	= "Extremely based Armenian flag!"
-ENT.Category		= "VJ Base"
-ENT.Spawnable		= true
+ENT.Base = "prop_vj_animatable"
+ENT.Type = "anim"
+ENT.PrintName = "Flag"
+ENT.Author = "DrVrej"
+ENT.Contact = "http://steamcommunity.com/groups/vrejgaming"
+ENT.Information = "Extremely based Armenian flag!"
+ENT.Category = "VJ Base"
+ENT.Spawnable = true
 
 ENT.PhysicsSounds = true
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

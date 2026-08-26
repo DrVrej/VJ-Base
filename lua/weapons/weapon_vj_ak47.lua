@@ -36,5 +36,5 @@ SWEP.PrimaryEffects_ShellType = "RifleShellEject"
 SWEP.Reload_TimeUntilAmmoIsSet	= 1.8
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnAnimEvent(pos, ang, event, options)
-	if event == 5001 then return true end -- Asiga hose vor shtke gedervadz flash-e
+	if event == 5001 then return true end -- Asiga hos e vor shtke gedervadz flash-e
 end

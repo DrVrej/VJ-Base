@@ -1,10 +1,10 @@
-ENT.Base 			= "npc_vj_human_base"
-ENT.Type 			= "ai"
-ENT.PrintName 		= "Interactive NPC"
-ENT.Author 			= "DrVrej"
-ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Information 	= "Interactive human NPC demo for developers.\nPress USE on it to open the menu!"
-ENT.Category		= "VJ Base"
+ENT.Base = "npc_vj_human_base"
+ENT.Type = "ai"
+ENT.PrintName = "Interactive NPC"
+ENT.Author = "DrVrej"
+ENT.Contact = "http://steamcommunity.com/groups/vrejgaming"
+ENT.Information = "Interactive human NPC demo for developers.\nPress USE on it to open the menu!"
+ENT.Category = "VJ Base"
 
 ENT.VJ_ID_Civilian = true
 ---------------------------------------------------------------------------------------------------------------------------------------------

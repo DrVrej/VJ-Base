@@ -5,14 +5,14 @@
 -----------------------------------------------*/
 AddCSLuaFile()
 
-ENT.Type 			= "anim"
-ENT.Base 			= "base_anim"
-ENT.PrintName		= "Flare Round"
-ENT.Author 			= "DrVrej"
-ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Information 	= "Flare that will burn for 1 minute.\nIgnites anything it touches."
-ENT.Category		= "VJ Base"
-ENT.Spawnable		= true
+ENT.Type = "anim"
+ENT.Base = "base_anim"
+ENT.PrintName = "Flare Round"
+ENT.Author = "DrVrej"
+ENT.Contact = "http://steamcommunity.com/groups/vrejgaming"
+ENT.Information = "Flare that will burn for 1 minute.\nIgnites anything it touches."
+ENT.Category = "VJ Base"
+ENT.Spawnable = true
 
 ENT.PhysicsSounds = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -55,12 +55,11 @@ function ENT:Initialize()
 
 	local envFlare = ents.Create("env_flare")
 	envFlare:SetPos(self:GetPos())
-	envFlare:SetAngles(self:GetAngles())
 	envFlare:SetParent(self)
 	envFlare:SetKeyValue("Scale", "5")
 	envFlare:SetKeyValue("spawnflags", "4")
 	envFlare:Spawn()
-	envFlare:Fire("Start", tostring(self.FuseTime))
+	envFlare:Fire("Start", self.FuseTime)
 	envFlare:SetOwner(self)
 	envFlare:SetColor(VJ.COLOR_RED)
 

@@ -5,13 +5,13 @@
 -----------------------------------------------*/
 AddCSLuaFile()
 
-ENT.Base 			= "base_entity"
-ENT.Type 			= "ai"
-ENT.PrintName 		= "VJ Base Bullseye"
-ENT.Author 			= "DrVrej"
-ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Information 	= "Target for VJ Base NPCs."
-ENT.Category		= "VJ Base"
+ENT.Base = "base_entity"
+ENT.Type = "ai"
+ENT.PrintName = "VJ Base Bullseye"
+ENT.Author = "DrVrej"
+ENT.Contact = "http://steamcommunity.com/groups/vrejgaming"
+ENT.Information = "Target for VJ Base NPCs."
+ENT.Category = "VJ Base"
 
 ENT.IsVJBaseBullseye = true
 ---------------------------------------------------------------------------------------------------------------------------------------------

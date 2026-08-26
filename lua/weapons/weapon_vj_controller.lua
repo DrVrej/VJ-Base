@@ -20,13 +20,13 @@ SWEP.Slot = 5
 SWEP.SlotPos = 7
 SWEP.UseHands = true
 
-local sdMain = {"physics/flesh/flesh_squishy_impact_hard1.wav", "physics/flesh/flesh_squishy_impact_hard2.wav", "physics/flesh/flesh_squishy_impact_hard3.wav", "physics/flesh/flesh_squishy_impact_hard4.wav"}
 SWEP.Primary.ClipSize = -1
 SWEP.Primary.DefaultClip = -1
 SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = "none"
 
-SWEP.DeploySound = sdMain
+local sdFire = {"physics/flesh/flesh_squishy_impact_hard1.wav", "physics/flesh/flesh_squishy_impact_hard2.wav", "physics/flesh/flesh_squishy_impact_hard3.wav", "physics/flesh/flesh_squishy_impact_hard4.wav"}
+SWEP.DeploySound = sdFire
 
 local msg_player = {"You know NPC stands for Non-Player-Character, right?", "Looks like a player is already controlling this entity.", "You're about to become an NPC if you do that again."}
 local msg_ragdoll = {"You're being as productive as that corpse.", "Maybe try controlling it before it died?"}
@@ -42,7 +42,7 @@ function SWEP:PrimaryAttack()
 	self.PLY_NextIdleAnimT = delayTime
 	self.PLY_NextReloadT = delayTime
 	self:SetNextPrimaryFire(delayTime)
-	self:EmitSound(VJ.PICK(sdMain), 80, 140, 1, CHAN_WEAPON, 0, 0, VJ_RecipientFilter)
+	VJ.EmitSound(self, sdFire, 80, 140, 1, CHAN_WEAPON)
 	
 	local ent = owner:GetEyeTrace().Entity
 	if !IsValid(ent) then return end

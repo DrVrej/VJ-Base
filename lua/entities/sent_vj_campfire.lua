@@ -5,14 +5,14 @@
 -----------------------------------------------*/
 AddCSLuaFile()
 
-ENT.Base 			= "base_anim"
-ENT.Type 			= "anim"
-ENT.PrintName 		= "Campfire"
-ENT.Author 			= "DrVrej"
-ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Information 	= "Gives a warm feeling, especially in cold maps."
-ENT.Category		= "VJ Base"
-ENT.Spawnable		= true
+ENT.Base = "base_anim"
+ENT.Type = "anim"
+ENT.PrintName = "Campfire"
+ENT.Author = "DrVrej"
+ENT.Contact = "http://steamcommunity.com/groups/vrejgaming"
+ENT.Information = "Gives a warm feeling, especially in cold maps."
+ENT.Category = "VJ Base"
+ENT.Spawnable = true
 
 scripted_ents.Alias("sent_vj_fireplace", "sent_vj_campfire") -- !! Backwards Compatibility !!
 ---------------------------------------------------------------------------------------------------------------------------------------------
