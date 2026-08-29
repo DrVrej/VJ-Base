@@ -1676,7 +1676,7 @@ local ai_serverragdolls = GetConVar("ai_serverragdolls")
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defShootVec = Vector(0, 0, 55)
-local capBitsDefault = bit.bor(CAP_SKIP_NAV_GROUND_CHECK, CAP_TURN_HEAD, CAP_DUCK)
+local capBitsDefault = bit.bor(CAP_SKIP_NAV_GROUND_CHECK, CAP_TURN_HEAD, CAP_INNATE_RANGE_ATTACK1, CAP_DUCK) -- CAP_INNATE_RANGE_ATTACK1 bedke vor LOS tasker gerna enel
 local capBitsDoors = bit.bor(CAP_OPEN_DOORS, CAP_AUTO_DOORS, CAP_USE)
 local capBitsWeapons = bit.bor(CAP_USE_WEAPONS, CAP_WEAPON_RANGE_ATTACK1)
 local idleFunc = ENT.MaintainIdleAnimation
@@ -1851,7 +1851,7 @@ function ENT:Initialize()
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local schedule_alert_chaseLOS = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE_LOS")
+local schedule_alert_chaseLOS = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE")
 	schedule_alert_chaseLOS:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
 	//schedule_alert_chaseLOS:EngTask("TASK_RUN_PATH", 0)
 	schedule_alert_chaseLOS:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
@@ -1879,7 +1879,7 @@ function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 			local ene = funcGetEnemy(self)
 			if IsValid(ene) then
 				self:RememberUnreachable(ene, 0)
-				self:SCHEDULE_ALERT_CHASE(false)
+				//self:SCHEDULE_ALERT_CHASE(false)
 			end
 		end
 		self:StartSchedule(schedule_alert_chaseLOS)
@@ -3173,7 +3173,7 @@ function ENT:SelectSchedule()
 								goto goto_checkwep
 							else
 								-- Everything failed, go after the enemy!
-								if selfData.WeaponAttackState && selfData.WeaponAttackState >= VJ.WEP_ATTACK_STATE_FIRE && selfData.CurrentScheduleName != "SCHEDULE_ALERT_CHASE" && selfData.CurrentScheduleName != "SCHEDULE_ALERT_CHASE_LOS" then
+								if selfData.WeaponAttackState && selfData.WeaponAttackState >= VJ.WEP_ATTACK_STATE_FIRE && selfData.CurrentScheduleName != "SCHEDULE_ALERT_CHASE" then
 									selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 								end
 								self:MaintainAlertBehavior()

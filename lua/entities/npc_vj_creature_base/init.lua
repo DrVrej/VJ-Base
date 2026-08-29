@@ -993,7 +993,7 @@ local ai_serverragdolls = GetConVar("ai_serverragdolls")
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defShootVec = Vector(0, 0, 55)
-local capBitsDefault = bit.bor(CAP_SKIP_NAV_GROUND_CHECK, CAP_TURN_HEAD)
+local capBitsDefault = bit.bor(CAP_SKIP_NAV_GROUND_CHECK, CAP_TURN_HEAD, CAP_INNATE_RANGE_ATTACK1) -- CAP_INNATE_RANGE_ATTACK1 bedke vor LOS tasker gerna enel
 local capBitsDoors = bit.bor(CAP_OPEN_DOORS, CAP_AUTO_DOORS, CAP_USE)
 local idleFunc = ENT.MaintainIdleAnimation
 --
@@ -1131,7 +1131,7 @@ function ENT:Initialize()
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local schedule_alert_chaseLOS = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE_LOS")
+local schedule_alert_chaseLOS = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE")
 	schedule_alert_chaseLOS:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
 	//schedule_alert_chaseLOS:EngTask("TASK_RUN_PATH", 0)
 	schedule_alert_chaseLOS:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
@@ -1158,8 +1158,8 @@ function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 		schedule_alert_chaseLOS.RunCode_OnFinish = function()
 			local ene = funcGetEnemy(self)
 			if IsValid(ene) then
-				//self:RememberUnreachable(ene, 0)
-				self:SCHEDULE_ALERT_CHASE(false)
+				self:RememberUnreachable(ene, 0)
+				//self:SCHEDULE_ALERT_CHASE(false)
 			end
 		end
 		self:StartSchedule(schedule_alert_chaseLOS)
@@ -1203,11 +1203,44 @@ function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to alw
 	
 	if !alwaysChase && (selfData.DisableChasingEnemy or selfData.IsGuard) then self:SCHEDULE_IDLE_STAND() return end
 	
-	-- If the enemy is not reachable then wander around
-	if self:IsUnreachable(ene) then
-		if selfData.HasRangeAttack then -- Ranged NPCs
+	--[[
+	Check if the enemy is still unreachable and prevent the following:
+		1. After unreachable time expires, "SCHEDULE_ALERT_CHASE" is called which breaks the idle animation or wander schedule even if the enemy isn't reachable
+		2. COND_ENEMY_UNREACHABLE stays forever, this can reset it
+		--
+		-- Calculation:
+		1. Unreachable timer must be expired while COND_ENEMY_UNREACHABLE is still active
+		2. "SCHEDULE_IDLE_WANDER" must be active OR it must not have an active goal
+		3. Test if enemy's location is reachable, if it's then reset unreachability
+		4. if enemy is still NOT reachable, reset to the wander (if it had one)
+		--
+		-- Disabled as it's not a reliable / good solution, better to redo when the following are added:
+		- https://github.com/Facepunch/garrysmod-requests/issues/3342
+		- https://github.com/Facepunch/garrysmod-requests/issues/3341
+	--]]
+	local eneReachable = self:IsUnreachable(ene)
+	//if !self:IsUnreachable(ene) && funcHasCondition(self, COND_ENEMY_UNREACHABLE) && ((self.CurrentScheduleName == "SCHEDULE_IDLE_WANDER") or (!self:IsMoving() && !self:IsGoalActive())) then
+	//	local wanderPos = self:GetGoalPos()
+	//	local wanderActive = wanderPos != defPos
+	//	if self:NavSetGoalPos(ene:GetPos()) then
+	//		//self:RememberUnreachable(ene, 0.01)
+	//		eneReachable = true
+	//	else
+	//		self:RememberUnreachable(ene, 2)
+	//		eneReachable = false
+	//		if wanderActive then
+	//			self:NavSetGoalPos(wanderPos)
+	//		end
+	//	end
+	//	if !wanderActive then
+	//		self:ClearGoal() -- Otherwise "NavSetGoalPos" will trick the NPC to think it's moving
+	//	end
+	//end
+	if eneReachable then -- Skip checking "COND_ENEMY_UNREACHABLE" as it will never be cleared engine-side!
+		if selfData.HasRangeAttack then -- Ranged: attempt to form an LOS
 			self:SCHEDULE_ALERT_CHASE(true)
-		elseif math.random(1, 30) == 1 && !self:IsMoving() then
+			self:RememberUnreachable(ene, 2)
+		elseif math.random(1, 30) == 1 && !self:IsMoving() then -- Melee: idle / wander around
 			selfData.NextWanderTime = 0
 			self:MaintainIdleBehavior(1)
 			self:RememberUnreachable(ene, 4)
