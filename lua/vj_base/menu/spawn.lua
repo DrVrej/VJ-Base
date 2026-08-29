@@ -18,6 +18,85 @@ if CLIENT then
 		["Fun + Games"] = "#spawnmenu.category.fun_games",
 	}
 	--
+	-- Fallback used when the active gamemode replaces "SpawnmenuContentPanel" without implementing "PopulateFromList"
+	-- Based on: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/gamemodes/sandbox/gamemode/spawnmenu/creationmenu/content/content.lua
+	local function buildCategorizedList(listName, nameOverrides)
+		local categorised = {}
+		for spawnName, itemData in pairs(list.Get(listName)) do
+			if !istable(itemData) then continue end
+			if !itemData.Category then itemData.Category = itemData.category end
+			local categoryName = itemData.Category
+			if nameOverrides then categoryName = nameOverrides[categoryName] or categoryName end
+			local category = language.GetPhrase(categoryName or "#spawnmenu.category.other")
+			if !isstring(category) then category = tostring(category) end
+			categorised[category] = categorised[category] or {}
+			itemData.SpawnName = spawnName
+			if !itemData.PrintName then itemData.PrintName = itemData.Name end
+			table.insert(categorised[category], itemData)
+		end
+		return categorised
+	end
+	--
+	local function addCategoryNode(pnlContent, tree, catName, options)
+		local catNode = tree:AddNode(catName, list.GetEntry("ContentCategoryIcons", catName) or options.CategoryIcon)
+		tree.Categories[catName] = catNode
+		
+		function catNode:DoPopulate()
+			if self.PropPanel then return end
+			self.PropPanel = vgui.Create("ContentContainer", pnlContent)
+			self.PropPanel:SetVisible(false)
+			self.PropPanel:SetTriggerSpawnlistChange(false) -- Make it read-only so it can't be edited
+			self.PropPanel.SubCategories = {}
+			
+			-- Rebuild the list in case it changed since the category node was created
+			local items = buildCategorizedList(tree.ContentListName, options.TranslateNames)[catName]
+			if !items then return end
+			
+			local subCats = {}
+			for _, itemData in pairs(items) do
+				local subCatName = language.GetPhrase(itemData.SubCategory or "")
+				subCats[subCatName] = subCats[subCatName] or {}
+				table.insert(subCats[subCatName], {item = itemData, sortName = (itemData[options.SortName] and language.GetPhrase(itemData[options.SortName])) or itemData.SpawnName})
+			end
+			
+			for subCatName, itemList in SortedPairs(subCats) do
+				local subCatItems = {}
+				if subCatName != "" then
+					local header = vgui.Create("ContentHeader")
+					header:SetText(subCatName)
+					self.PropPanel:Add(header)
+					table.insert(subCatItems, header)
+				end
+				for _, entry in SortedPairsByMemberValue(itemList, "sortName") do
+					local icon = tree.CreateIconFunc(entry.item, self.PropPanel)
+					if icon then table.insert(subCatItems, icon) end -- Some content types make their own icons and return nothing
+				end
+				self.PropPanel.SubCategories[subCatName] = subCatItems
+			end
+		end
+		
+		function catNode:DoClick()
+			self:DoPopulate()
+			pnlContent:SwitchPanel(self.PropPanel)
+		end
+	end
+	--
+	local function populateFromList(pnlContent, listName, tree, options)
+		if isfunction(pnlContent.PopulateFromList) then
+			pnlContent:PopulateFromList(listName, tree, options)
+			return
+		end
+		
+		tree.Categories = {}
+		tree.ContentPanel = pnlContent
+		tree.ContentListName = listName
+		tree.CreateIconFunc = options.CreateIconFunc
+		
+		for catName, _ in SortedPairs(buildCategorizedList(listName, options.TranslateNames)) do
+			addCategoryNode(pnlContent, tree, catName, options)
+		end
+	end
+	--
 	local function populateTree(pnlContent, tree, browseNode, rootName, rootIcon, spawnList)
 		local rootTree = tree:AddNode(rootName, rootIcon)
 		timer.Simple(0.4, function() rootTree:SetExpanded(true, true) end) -- Timer is needed otherwise top folder will be minimized
@@ -34,7 +113,7 @@ if CLIENT then
 		
 		-- Build each category and its content icons
 		if rootName == "NPCs" then
-			pnlContent:PopulateFromList(spawnList, rootTree, {
+			populateFromList(pnlContent, spawnList, rootTree, {
 				SortName = "Name",
 				CategoryIcon = rootIcon,
 				TranslateNames = translatedCategories,
@@ -49,7 +128,7 @@ if CLIENT then
 				end
 			})
 		elseif rootName == "Weapons" then
-			pnlContent:PopulateFromList(spawnList, rootTree, {
+			populateFromList(pnlContent, spawnList, rootTree, {
 				SortName = "PrintName",
 				CategoryIcon = rootIcon,
 				TranslateNames = translatedCategories,
@@ -63,7 +142,7 @@ if CLIENT then
 				end
 			})
 		elseif rootName == "Entities" then
-			pnlContent:PopulateFromList(spawnList, rootTree, {
+			populateFromList(pnlContent, spawnList, rootTree, {
 				SortName = "PrintName",
 				CategoryIcon = rootIcon,
 				TranslateNames = translatedCategories,
@@ -81,12 +160,12 @@ if CLIENT then
 		-- Build root folders
 			-- catName [string]   |   catNode [DTree_Node]
 			-- catNode.PropPanel [ContentContainer]   |   catNode.PropPanel.IconList [DTileLayout]   |   catNode.PropPanel.IconList child [ContentIcon]
-		for catName, catNode in pairs(rootTree.Categories) do
+		for catName, catNode in pairs(rootTree.Categories or {}) do
 			catNode:DoPopulate() -- Force it to generate now otherwise "catNode.PropPanel" will be nil!
 			if catName == "Default" then
 				catNode:SetIcon("vj_base/icons/vrejgaming.png")
 			end
-			if !catNode.PropPanel then return end
+			if !catNode.PropPanel then continue end
 			local catHeader = vgui.Create("ContentHeader", rootPropPanel) -- Add each category as a header
 				catHeader:SetText(catName)
 			rootPropPanel:Add(catHeader)
