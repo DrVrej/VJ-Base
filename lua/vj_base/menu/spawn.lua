@@ -40,25 +40,25 @@ if CLIENT then
 	local function addCategoryNode(pnlContent, tree, catName, options)
 		local catNode = tree:AddNode(catName, list.GetEntry("ContentCategoryIcons", catName) or options.CategoryIcon)
 		tree.Categories[catName] = catNode
-		
+
 		function catNode:DoPopulate()
 			if self.PropPanel then return end
 			self.PropPanel = vgui.Create("ContentContainer", pnlContent)
 			self.PropPanel:SetVisible(false)
 			self.PropPanel:SetTriggerSpawnlistChange(false) -- Make it read-only so it can't be edited
 			self.PropPanel.SubCategories = {}
-			
+
 			-- Rebuild the list in case it changed since the category node was created
 			local items = buildCategorizedList(tree.ContentListName, options.TranslateNames)[catName]
 			if !items then return end
-			
+
 			local subCats = {}
 			for _, itemData in pairs(items) do
 				local subCatName = language.GetPhrase(itemData.SubCategory or "")
 				subCats[subCatName] = subCats[subCatName] or {}
 				table.insert(subCats[subCatName], {item = itemData, sortName = (itemData[options.SortName] and language.GetPhrase(itemData[options.SortName])) or itemData.SpawnName})
 			end
-			
+
 			for subCatName, itemList in SortedPairs(subCats) do
 				local subCatItems = {}
 				if subCatName != "" then
@@ -74,7 +74,7 @@ if CLIENT then
 				self.PropPanel.SubCategories[subCatName] = subCatItems
 			end
 		end
-		
+
 		function catNode:DoClick()
 			self:DoPopulate()
 			pnlContent:SwitchPanel(self.PropPanel)
@@ -86,12 +86,12 @@ if CLIENT then
 			pnlContent:PopulateFromList(listName, tree, options)
 			return
 		end
-		
+
 		tree.Categories = {}
 		tree.ContentPanel = pnlContent
 		tree.ContentListName = listName
 		tree.CreateIconFunc = options.CreateIconFunc
-		
+
 		for catName, _ in SortedPairs(buildCategorizedList(listName, options.TranslateNames)) do
 			addCategoryNode(pnlContent, tree, catName, options)
 		end
@@ -110,7 +110,7 @@ if CLIENT then
 		function rootTree:DoClick()
 			pnlContent:SwitchPanel(self.PropPanel)
 		end
-		
+
 		-- Build each category and its content icons
 		if rootName == "NPCs" then
 			populateFromList(pnlContent, spawnList, rootTree, {
@@ -156,7 +156,7 @@ if CLIENT then
 				end
 			})
 		end
-		
+
 		-- Build root folders
 			-- catName [string]   |   catNode [DTree_Node]
 			-- catNode.PropPanel [ContentContainer]   |   catNode.PropPanel.IconList [DTileLayout]   |   catNode.PropPanel.IconList child [ContentIcon]
@@ -179,7 +179,7 @@ if CLIENT then
 		populateTree(pnlContent, tree, browseNode, "NPCs", "icon16/monkey.png", "VJBASE_SPAWNABLE_NPC")
 		populateTree(pnlContent, tree, browseNode, "Weapons", "icon16/gun.png", "VJBASE_SPAWNABLE_WEAPON")
 		populateTree(pnlContent, tree, browseNode, "Entities", "icon16/bricks.png", "VJBASE_SPAWNABLE_ENTITIES")
-		
+
 		-- START: Tools category
 		local toolTree = tree:AddNode("Tools", "icon16/bullet_wrench.png")
 		local toolList = spawnmenu.GetTools()
@@ -209,14 +209,14 @@ if CLIENT then
 		end
 		-- END: Tools category
 	end)
-	
+
 	--[-------------------------------------------------------]--
 	-- Adds the searching functionality for the VJ Base spawn menu.
 	-- Based on: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/gamemodes/sandbox/gamemode/cl_search_models.lua
 	search.AddProvider( function( str )
 
 		local results = {}
-		
+
 		local function AddSearchProvider( listname, ctype )
 			for name_c, v in pairs( list.Get( listname ) ) do
 				if ( !istable( v ) ) then continue end -- Some mod doing something wrong
@@ -268,15 +268,15 @@ if CLIENT then
 			local ctrl = vgui.Create("SpawnmenuContentPanel")
 			ctrl:EnableSearch("vjbase", "VJBASE_MENU_SPAWN")
 			ctrl:CallPopulateHook("VJBASE_MENU_SPAWN")
-			
+
 			local sidebar = ctrl.ContentNavBar
 			sidebar.Options = vgui.Create("VJ_SpawnmenuNPCSidebarToolbox", sidebar)
 			sidebar.Options:Dock(BOTTOM)
-		
+
 			return ctrl
 		end, "vj_base/icons/vrejgaming.png", 60, "All VJ Base entities are located here!") // icon16/plugin.png
 	end
-	
+
 	--[-------------------------------------------------------]--
 	-- Based on: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/gamemodes/sandbox/gamemode/spawnmenu/creationmenu/content/contenttypes/npcs.lua
 	local PANEL = {}
@@ -301,7 +301,7 @@ if CLIENT then
 		self:AddCheckbox("#vjbase.menu.spawn.npc.ignoreplayers", "ai_ignoreplayers")
 		self:AddCheckbox("#vjbase.menu.spawn.npc.keepcorpses", "ai_serverragdolls")
 		self:AddCheckbox("#vjbase.menu.spawn.npc.guard", "vj_npc_spawn_guard")
-		
+
 		local label = vgui.Create( "DLabel", self )
 		label:Dock( TOP )
 		label:DockMargin( 0, 5, 0, 0 )
@@ -580,7 +580,7 @@ VJ.CreateDupe_NPC = function( ply, mdl, class, equipment, spawnflags, data )
 		if onCopy then
 			onCopy(ent, data)
 		end
-		
+
 		table.Merge( ent:GetTable(), data )
 
 	end
