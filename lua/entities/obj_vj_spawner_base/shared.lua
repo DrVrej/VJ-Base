@@ -10,6 +10,6 @@ ENT.IsVJBaseSpawner = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	local metaEntity = FindMetaTable("Entity")
-	local funcDrawModel = metaEntity.DrawModel
-	function ENT:Draw() funcDrawModel(self) end
+	local fDrawModel = metaEntity.DrawModel
+	function ENT:Draw() fDrawModel(self) end
 end

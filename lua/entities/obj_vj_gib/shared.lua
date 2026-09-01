@@ -12,6 +12,6 @@ if CLIENT then
 	VJ.AddKillIcon("obj_vj_gib", ENT.PrintName, VJ.KILLICON_TYPE_ALIAS, "prop_physics")
 	
 	local metaEntity = FindMetaTable("Entity")
-	local funcDrawModel = metaEntity.DrawModel
-	function ENT:Draw() funcDrawModel(self) end
+	local fDrawModel = metaEntity.DrawModel
+	function ENT:Draw() fDrawModel(self) end
 end

@@ -143,7 +143,9 @@ end
 			- Vector, ent2's nearest position to the ent1's nearest position
 -----------------------------------------------------------]]
 function VJ.GetNearestPositions(ent1, ent2, centerEnt1)
-	local ent1NearPos = ent1:NearestPoint(ent2:GetPos() + ent2:OBBCenter())
+	local ent2Pos = ent2:GetPos()
+	ent2Pos:Add(ent2:OBBCenter())
+	local ent1NearPos = ent1:NearestPoint(ent2Pos)
 	if centerEnt1 then
 		local ent1Pos = ent1:GetPos()
 		ent1NearPos.x = ent1Pos.x
@@ -169,7 +171,9 @@ end
 		number, The distance from the NPC nearest position to the given NPC's nearest position
 -----------------------------------------------------------]]
 function VJ.GetNearestDistance(ent1, ent2, centerEnt1)
-	local ent1NearPos = ent1:NearestPoint(ent2:GetPos() + ent2:OBBCenter())
+	local ent2Pos = ent2:GetPos()
+	ent2Pos:Add(ent2:OBBCenter())
+	local ent1NearPos = ent1:NearestPoint(ent2Pos)
 	if centerEnt1 then
 		local ent1Pos = ent1:GetPos()
 		ent1NearPos.x = ent1Pos.x
@@ -540,7 +544,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 	local result; -- Final result that will be used as the velocity
 
 	if algorithmType == "Line" then -- Suggested to disable gravity!
-		result = ((targetPos - startPos):GetNormal()) * strength
+		result = ((targetPos - startPos):GetNormalized()) * strength
 		predictProjSpeed = result:Length() * 0.8
 	elseif algorithmType == "Curve" then
 		if startPos == targetPos then return Vector() end -- Zero-distance trajectory return empty vector to avoid invalid values
@@ -628,7 +632,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 			pitch = angpos
 		end
 		result.z = math.tan(pitch) * pos_x
-		result = result:GetNormal() * strength
+		result = result:GetNormalized() * strength
 		predictProjSpeed = strength
 	elseif algorithmType == "CurveAntlion" then
 		if startPos == targetPos then return Vector() end -- Zero-distance trajectory return empty vector to avoid invalid values
@@ -730,7 +734,7 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 		if disableVisibilityCheck or (!disableVisibilityCheck && (ent:VisibleVec(startPos) or ent:Visible(attacker))) then
 			local entClass = ent:GetClass()
 			local function DealDamage()
-				if (customFunc) then customFunc(ent) end
+				if customFunc then customFunc(ent) end
 				local dmgFinal = dmgMax
 				local nearestPos = ent:NearestPoint(startPos)
 				if realisticRadius != false then -- Decrease damage from the nearest point all the way to the enemy point then clamp it!

@@ -9,7 +9,8 @@ local VJ_MOVETYPE_AQUATIC = VJ_MOVETYPE_AQUATIC
 local VJ_MOVETYPE_STATIONARY = VJ_MOVETYPE_STATIONARY
 
 local metaEntity = FindMetaTable("Entity")
-local funcGetTable = metaEntity.GetTable
+local fGetTable = metaEntity.GetTable
+local fGetPos = metaEntity.GetPos
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SCHEDULE_FACE(faceTask, customFunc)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
@@ -105,7 +106,7 @@ function ENT:SCHEDULE_IDLE_WANDER()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SCHEDULE_IDLE_STAND()
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if self:IsMoving() or selfData.NextIdleTime > CurTime() then return end
 	local navType = self:GetNavType(); if navType == NAV_JUMP or navType == NAV_CLIMB then return end
 	local moveType = selfData.MovementType; if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) && (selfData.AA_CurrentMovePos or self:IsBusy("Activities")) then return end // self:GetVelocity():Length() > 0
@@ -164,7 +165,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RunAI() -- Called from the engine every 0.1 seconds
 	if self:GetState() == VJ_STATE_FREEZE or self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then self:MaintainActivity() return end
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if self:IsRunningBehavior() or selfData.bDoingEngineSchedule then return true end -- true = Run "MaintainSchedule" in engine
 	//self:SetArrivalActivity(ACT_COWER)
 	//self:SetArrivalSpeed(1000)
@@ -236,7 +237,7 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 			turnData.LastYaw = 0 -- To make sure the turning maintain works correctly
 			local turnTarget = turnData.Target
 			if turnData.Type == VJ.FACE_POSITION or (turnData.Type == VJ.FACE_POSITION_VISIBLE && self:VisibleVec(turnTarget)) then
-				local resultAng = self:GetTurnAngle((turnTarget - self:GetPos()):Angle())
+				local resultAng = self:GetTurnAngle((turnTarget - fGetPos(self)):Angle())
 				if selfData.TurningUseAllAxis then
 					local myAng = self:GetAngles()
 					self:SetAngles(LerpAngle(FrameTime() * self:GetMaxYawSpeed(), myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
@@ -247,10 +248,15 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 				local resultAng;
 				if selfData.TurningUseAllAxis then
 					local myAng = self:GetAngles()
-					resultAng = self:GetTurnAngle(((turnTarget:GetPos() + turnTarget:OBBCenter()) - self:GetPos()):Angle())
+					local dir = fGetPos(turnTarget)
+					dir:Add(turnTarget:OBBCenter())
+					dir:Sub(fGetPos(self))
+					resultAng = self:GetTurnAngle(dir:Angle())
 					self:SetAngles(LerpAngle(FrameTime() * self:GetMaxYawSpeed(), myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
 				else
-					resultAng = self:GetTurnAngle((turnTarget:GetPos() - self:GetPos()):Angle())
+					local dir = fGetPos(turnTarget)
+					dir:Sub(fGetPos(self))
+					resultAng = self:GetTurnAngle(dir:Angle())
 				end
 				self:SetIdealYawAndUpdate(resultAng.y)
 				turnData.LastYaw = resultAng.y
@@ -258,10 +264,15 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 				local resultAng;
 				if selfData.TurningUseAllAxis then
 					local myAng = self:GetAngles()
-					resultAng = self:GetTurnAngle(((ene:GetPos() + ene:OBBCenter()) - self:GetPos()):Angle())
+					local dir = fGetPos(ene)
+					dir:Add(ene:OBBCenter())
+					dir:Sub(fGetPos(self))
+					resultAng = self:GetTurnAngle(dir:Angle())
 					self:SetAngles(LerpAngle(FrameTime() * self:GetMaxYawSpeed(), myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
 				else
-					resultAng = self:GetTurnAngle((ene:GetPos() - self:GetPos()):Angle())
+					local dir = fGetPos(ene)
+					dir:Sub(fGetPos(self))
+					resultAng = self:GetTurnAngle(dir:Angle())
 				end
 				self:SetIdealYawAndUpdate(resultAng.y)
 				turnData.LastYaw = resultAng.y
@@ -340,17 +351,17 @@ function ENT:TranslateNavGoal(ent, goal)
 			-- Disabled for now as it causes movement stuttering when near the enemy
 				-- Makes "GetGoalRepathTolerance" return 0 as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L5756
 				-- Otherwise it will go to the enemy only if certain tolerance is passed!
-			//self:SetArrivalDistance((self:GetPos() - goal):Length())
-			//return ent:GetPos() + ent:GetVelocity() -- Causes NPCs to move backwards when the enemy is moving towards them head on
+			//self:SetArrivalDistance((fGetPos(self) - goal):Length())
+			//return fGetPos(ent) + ent:GetVelocity() -- Causes NPCs to move backwards when the enemy is moving towards them head on
 		//end
-		return ent:GetPos()
+		return fGetPos(ent)
 	end
 	//return goal + ent:GetForward()*math.random(-100, 100)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSchedule(schedule)
 	//VJ.DEBUG_Print(self, "StartSchedule", schedule.Name)
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if selfData.MovementType == VJ_MOVETYPE_STATIONARY && schedule.HasMovement then return end -- It's stationary therefore it should not move!
 	if !schedule.IsPlayAnim && self:GetState() >= VJ_STATE_ONLY_ANIMATION then return end -- Certain states should ONLY do animation schedules!
 	local curSchedule = selfData.CurrentSchedule
@@ -419,7 +430,7 @@ function ENT:DoSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopCurrentSchedule()
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	local schedule = selfData.CurrentSchedule
 	//VJ.DEBUG_Print(self, "StopCurrentSchedule", schedule)
 	if schedule then
@@ -436,7 +447,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ScheduleFinished(schedule)
 	//VJ.DEBUG_Print(self, "ScheduleFinished", schedule)
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	local runFinish = false
 	if schedule then
 		-- Handle "RunCode_OnFinish"
@@ -466,7 +477,7 @@ function ENT:ScheduleFinished(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetTask(task)
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	selfData.CurrentTask = task
 	selfData.CurrentTaskComplete = false
 	selfData.TaskStartTime = CurTime()
@@ -509,7 +520,7 @@ end
 		- boolean, true = Schedule is finished
 -----------------------------------------------------------]]
 function ENT:IsScheduleFinished(schedule)
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	return selfData.CurrentTaskComplete && (!selfData.CurrentTaskID or selfData.CurrentTaskID >= schedule:NumTasks())
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

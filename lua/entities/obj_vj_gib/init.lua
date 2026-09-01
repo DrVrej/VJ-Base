@@ -37,7 +37,7 @@ local vj_npc_snd_gib = GetConVar("vj_npc_snd_gib")
 local vj_npc_gib_vfx = GetConVar("vj_npc_gib_vfx")
 
 local metaEntity = FindMetaTable("Entity")
-local funcGetTable = metaEntity.GetTable
+local fGetTable = metaEntity.GetTable
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:PhysicsInit(SOLID_VPHYSICS)
@@ -76,7 +76,7 @@ function ENT:Initialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	local curTime = CurTime()
 	
 	-- Stinky gib! yuck!
@@ -89,7 +89,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, phys)
 	if data.OurOldVelocity:Length() < 18 then return end
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	
 	-- Collision Sound
 	local collideSD = VJ.PICK(selfData.CollisionSound)

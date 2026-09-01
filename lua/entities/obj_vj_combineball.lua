@@ -96,7 +96,7 @@ function ENT:OnBounce(data, phys)
 	if target then
 		local norm = ((target:GetPos() + target:OBBCenter()) - myPos):GetNormalized()
 		if self:GetForward():Dot(norm) < 0.75 then -- Lowered the visual range from 0.95, too accurate
-			phys:SetVelocity(norm * math.max(phys:GetVelocity():GetNormal():Length(), math.max(data.OurOldVelocity:Length(), data.Speed)))
+			phys:SetVelocity(norm * math.max(phys:GetVelocity():GetNormalized():Length(), math.max(data.OurOldVelocity:Length(), data.Speed)))
 		end
 	end
 end

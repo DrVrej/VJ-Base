@@ -135,7 +135,7 @@ local vj_npc_range = GetConVar("vj_npc_range")
 local vj_npc_reduce_vfx = GetConVar("vj_npc_reduce_vfx")
 
 local metaEntity = FindMetaTable("Entity")
-local funcGetTable = metaEntity.GetTable
+local fGetTable = metaEntity.GetTable
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
 	self:SetSolid(SOLID_NONE)
@@ -155,7 +155,7 @@ function ENT:OnThink()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThinkActive()
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if selfData.Dead then return end
 	local parent = self:GetParent()
 	if !IsValid(parent) then return end
@@ -208,7 +208,7 @@ function ENT:OnThinkActive()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule()
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if selfData.Dead then return end
 	
 	local eneValid = IsValid(self:GetEnemy())
@@ -255,7 +255,7 @@ function ENT:Tank_PrepareShell()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_FireShell()
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	local ene = self:GetEnemy()
 	if !VJ_CVAR_AI_ENABLED or selfData.Dead or !selfData.Tank_ReachableHeight or !selfData.Tank_FacingTarget or !IsValid(ene) then return end
 	if self:Visible(ene) then
@@ -272,7 +272,7 @@ function ENT:Tank_FireShell()
 			end
 			local calculatedVel;
 			if selfData.Tank_FacingTarget then
-				calculatedVel = (ene:GetPos() + ene:OBBCenter() - spawnPos):GetNormal() * selfData.Tank_Shell_VelocitySpeed
+				calculatedVel = (ene:GetPos() + ene:OBBCenter() - spawnPos):GetNormalized() * selfData.Tank_Shell_VelocitySpeed
 			else -- Not facing just shoot straight ahead
 				calculatedVel = self:GetForward()
 				calculatedVel:Rotate(Angle(0, selfData.Tank_AngleOffset, 0))
@@ -373,7 +373,7 @@ function ENT:CustomOnRemove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_PlaySoundSystem(sdSet)
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if !selfData.HasSounds or !sdSet then return end
 	if sdSet == "Movement" then
 		if selfData.HasMoveSound then

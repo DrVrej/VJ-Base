@@ -239,7 +239,7 @@ function SWEP:NPC_SecondaryFire()
 			else
 				phys:SetVelocity(VJ.CalculateTrajectory(owner, owner:GetEnemy(), "Line", projectile:GetPos(), 1, 2000))
 			end
-			projectile:SetAngles(projectile:GetVelocity():GetNormal():Angle())
+			projectile:SetAngles(projectile:GetVelocity():GetNormalized():Angle())
 		end
 	end
 end
@@ -290,16 +290,16 @@ SWEP.OwnerIsNPC = false
 SWEP.ComAttachmentID = false -- Cached common attachment ID, this is used as backup if the specified attachment isn't found/set
 
 local metaEntity = FindMetaTable("Entity")
-local funcDrawModel = metaEntity.DrawModel
-local funcGetTable = metaEntity.GetTable
-local funcGetPos = metaEntity.GetPos
-local funcGetOwner = metaEntity.GetOwner
-local funcGetAttachment = metaEntity.GetAttachment
-local funcGetBonePosition = metaEntity.GetBonePosition
-local funcLookupBone = metaEntity.LookupBone
+local fDrawModel = metaEntity.DrawModel
+local fGetTable = metaEntity.GetTable
+local fGetPos = metaEntity.GetPos
+local fGetOwner = metaEntity.GetOwner
+local fGetAttachment = metaEntity.GetAttachment
+local fGetBonePosition = metaEntity.GetBonePosition
+local fLookupBone = metaEntity.LookupBone
 --
 local metaNPC = FindMetaTable("NPC")
-local funcGetActiveWeapon = metaNPC.GetActiveWeapon
+local fGetActiveWeapon = metaNPC.GetActiveWeapon
 --
 local vj_wep_muzzleflash = GetConVar("vj_wep_muzzleflash")
 local vj_wep_muzzleflash_light = GetConVar("vj_wep_muzzleflash_light")
@@ -497,7 +497,7 @@ function SWEP:EquipAmmo(ply)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Deploy()
-	local owner = funcGetOwner(self)
+	local owner = fGetOwner(self)
 	self:OnDeploy()
 	if owner:IsNPC() then
 		hook.Add("Think", self, self.NPC_Think)
@@ -522,8 +522,8 @@ function SWEP:Deploy()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:GetBulletPos()
-	local owner = funcGetOwner(self)
-	if !IsValid(owner) then return funcGetPos(self) end -- Fail safe
+	local owner = fGetOwner(self)
+	if !IsValid(owner) then return fGetPos(self) end -- Fail safe
 	if owner:IsPlayer() then return owner:GetShootPos() end -- Players always use "GetShootPos"!
 	
 	-- Custom Position
@@ -537,20 +537,20 @@ function SWEP:GetBulletPos()
 	if bulletAttach then
 		local attachID = self:LookupAttachment(bulletAttach)
 		if attachID != 0 && attachID != -1 then
-			return funcGetAttachment(self, attachID).Pos
+			return fGetAttachment(self, attachID).Pos
 		end
 	end
 	
 	-- Check if we have a common attachment
 	local comAttach = self.ComAttachmentID
 	if comAttach then
-		return funcGetAttachment(self, comAttach).Pos
+		return fGetAttachment(self, comAttach).Pos
 	end
 	
 	-- Try to find a common bone
-	local bone = funcLookupBone(owner, "ValveBiped.Bip01_R_Hand")
+	local bone = fLookupBone(owner, "ValveBiped.Bip01_R_Hand")
 	if bone then
-		return funcGetBonePosition(owner, bone)
+		return fGetBonePosition(owner, bone)
 	end
 	
 	-- Everything else has failed, post a warning and use eye position!
@@ -561,9 +561,9 @@ end
 function SWEP:Think() -- NOTE: This only runs for players not NPCs!
 	self:OnThink()
 	if !SERVER then return end
-	local owner = funcGetOwner(self)
+	local owner = fGetOwner(self)
 	if !IsValid(owner) then return end
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	local curTime = CurTime()
 	self:MaintainWorldModel(selfData, owner)
 	-- Idle Animation
@@ -579,10 +579,10 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_Think()
 	if !IsValid(self) then return end
-	local owner = funcGetOwner(self)
-	if !IsValid(owner) or !owner:IsNPC() or funcGetActiveWeapon(owner) != self then return end
+	local owner = fGetOwner(self)
+	if !IsValid(owner) or !owner:IsNPC() or fGetActiveWeapon(owner) != self then return end
 	
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	selfData.MaintainWorldModel(self, selfData, owner)
 	selfData.OnThink(self)
 	
@@ -592,15 +592,15 @@ function SWEP:NPC_Think()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_CanFire(selfData, owner)
-	selfData = selfData or funcGetTable(self)
-	owner = owner or funcGetOwner(self)
-	local ownerData = funcGetTable(owner)
+	selfData = selfData or fGetTable(self)
+	owner = owner or fGetOwner(self)
+	local ownerData = fGetTable(owner)
 	local ene = owner:GetEnemy()
 	local isVJHuman = ownerData.IsVJBaseSNPC_Human
 	if (isVJHuman && IsValid(ene) && !ownerData.CanFireWeapon(owner, true, true)) or (selfData.NPC_StandingOnly && owner:IsMoving()) then
 		return false
 	end
-	if (isVJHuman && (ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE or (ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND && VJ.IsCurrentAnim(owner, ownerData.WeaponAttackAnim)))) or (!isVJHuman) then
+	if !isVJHuman or ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE or (ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND && VJ.IsCurrentAnim(owner, ownerData.WeaponAttackAnim)) then
 		if selfData.IsMeleeWeapon then return true end
 		local isControlled = ownerData.VJ_IsBeingControlled
 		-- For VJ Humans only, ammo check
@@ -618,8 +618,8 @@ function SWEP:NPC_CanFire(selfData, owner)
 			return false
 		end
 		-- Check to make sure the enemy is within the firing cone!
-		if IsValid(ene) && ((!isControlled) or (isControlled && owner.VJ_TheController:KeyDown(IN_ATTACK2))) then
-			local spawnPos = funcGetPos(self) //self:GetBulletPos() -- Because "GetBulletPos" is VERY costly sadly =(
+		if IsValid(ene) && (!isControlled or owner.VJ_TheController:KeyDown(IN_ATTACK2)) then
+			local spawnPos = fGetPos(self) //self:GetBulletPos() -- Because "GetBulletPos" is VERY costly sadly =(
 			local aimPos = ownerData.IsVJBaseSNPC and ownerData.GetAimPosition(owner, ene, spawnPos, 0) or ene:BodyTarget(spawnPos)
 			local aimDir = aimPos - spawnPos
 			local sightDir = owner:GetHeadDirection() // owner:GetForward() -- Owner's sight direction
@@ -637,26 +637,26 @@ function SWEP:NPC_CanFire(selfData, owner)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPCShoot_Primary()
-	local owner = funcGetOwner(self)
+	local owner = fGetOwner(self)
 	if !IsValid(owner) then return end
 	local ene = owner:GetEnemy()
-	if !owner.VJ_IsBeingControlled && (!IsValid(ene) or (!owner:Visible(ene))) then return end
+	if !owner.VJ_IsBeingControlled && (!IsValid(ene) or !owner:Visible(ene)) then return end
 	if owner.IsVJBaseSNPC then
 		owner:UpdatePoseParamTracking()
 	end
 	
 	-- Secondary Fire
-	if self.NPC_HasSecondaryFire && owner.Weapon_CanSecondaryFire && CurTime() > self.NPC_SecondaryFireNextT && funcGetPos(ene):Distance(funcGetPos(owner)) <= self.NPC_SecondaryFireDistance then
+	if self.NPC_HasSecondaryFire && owner.Weapon_CanSecondaryFire && CurTime() > self.NPC_SecondaryFireNextT && fGetPos(ene):Distance(fGetPos(owner)) <= self.NPC_SecondaryFireDistance then
 		if math.random(1, self.NPC_SecondaryFireChance) == 1 then
 			local anim, animDur, animType = owner:PlayAnim(owner.AnimTbl_WeaponAttackSecondary, true, false, true)
 			if animType != VJ.ANIM_TYPE_GESTURE then
 				animDur = animDur - 0.5
 			end
-			local fireTime = (anim == ACT_INVALID and 0) or owner.Weapon_SecondaryFireTime or animDur
+			local fireTime = anim == ACT_INVALID and 0 or owner.Weapon_SecondaryFireTime or animDur
 			self.NPC_SecondaryFireNextT = CurTime() + fireTime + 0.5 -- Prevent attempting to fire again
 			self:NPC_SecondaryFire_BeforeTimer(ene, fireTime)
 			timer.Simple(fireTime, function()
-				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && (anim == ACT_INVALID or animType == VJ.ANIM_TYPE_GESTURE or (anim && VJ.IsCurrentAnim(owner, anim))) then -- ONLY check for cur anim IF it even had one!
+				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && (anim == ACT_INVALID or animType == VJ.ANIM_TYPE_GESTURE or VJ.IsCurrentAnim(owner, anim)) then -- ONLY check for cur anim IF it even had one!
 					self:NPC_SecondaryFire()
 					local fireSd = VJ.PICK(self.NPC_SecondaryFireSound)
 					if fireSd then
@@ -675,7 +675,7 @@ function SWEP:NPCShoot_Primary()
 	timer.Simple(self.NPC_TimeUntilFire, function()
 		if !IsValid(self) then return end
 		local curTime = CurTime()
-		owner = funcGetOwner(self)
+		owner = fGetOwner(self)
 		if IsValid(owner) && owner:IsNPC() && self:NPC_CanFire() && curTime > self.NPC_NextPrimaryFireT then
 			self:PrimaryAttack()
 			owner.WeaponLastShotTime = curTime
@@ -684,7 +684,7 @@ function SWEP:NPCShoot_Primary()
 				for _, tv in ipairs(self.NPC_TimeUntilFireExtraTimers) do
 					timer.Simple(tv, function()
 						if !IsValid(self) then return end
-						owner = funcGetOwner(self)
+						owner = fGetOwner(self)
 						if IsValid(owner) && owner:IsNPC() && self:NPC_CanFire() then
 							self:PrimaryAttack()
 						end
@@ -698,9 +698,9 @@ end
 function SWEP:PrimaryAttack()
 	//if !IsFirstTimePredicted() then return end
 
-	local selfData = funcGetTable(self)
-	local owner = funcGetOwner(self)
-	local ownerData = funcGetTable(owner)
+	local selfData = fGetTable(self)
+	local owner = fGetOwner(self)
+	local ownerData = fGetTable(owner)
 
 	local curTime = CurTime()
 	self:SetNextPrimaryFire(curTime + selfData.Primary.Delay)
@@ -753,11 +753,11 @@ function SWEP:PrimaryAttack()
 	-- MELEE WEAPON
 	if selfData.IsMeleeWeapon then
 		local meleeHit = false
-		local ownersPos = funcGetPos(owner)
+		local ownersPos = fGetPos(owner)
 		for _, ent in ipairs(ents.FindInSphere(ownersPos, selfData.MeleeWeaponDistance + 20)) do
-			local entData = funcGetTable(ent)
+			local entData = fGetTable(ent)
 			if (entData.IsVJBaseBullseye && entData.VJ_IsBeingControlled) or (ent:IsPlayer() && entData.VJ_IsControllingNPC) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
-			if ent != owner && (isPly or (isNPC && (ent:IsNPC() or (ent:IsPlayer() && ent:Alive() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot() or entData.VJ_ID_Attackable or entData.VJ_ID_Destructible) && owner:Disposition(ent) != D_LI && ent:GetClass() != owner:GetClass() && (owner:GetForward():Dot((funcGetPos(ent) - ownersPos):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius))))) then
+			if ent != owner && (isPly or (isNPC && (ent:IsNPC() or (ent:IsPlayer() && ent:Alive() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot() or entData.VJ_ID_Attackable or entData.VJ_ID_Destructible) && owner:Disposition(ent) != D_LI && ent:GetClass() != owner:GetClass() && (owner:GetForward():Dot((fGetPos(ent) - ownersPos):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius))))) then
 				local dmginfo = DamageInfo()
 				local dmgAmount = isNPC and ownerData.ScaleByDifficulty(owner, selfData.Primary.Damage) or selfData.Primary.Damage
 				dmginfo:SetDamage(dmgAmount)
@@ -802,7 +802,8 @@ function SWEP:PrimaryAttack()
 
 			-- Bullet spawn position & spread & damage
 			if isPly then
-				bullet.Spread = Vector((selfData.Primary.Cone / 60) / 4, (selfData.Primary.Cone / 60) / 4, 0)
+				local spread = (selfData.Primary.Cone / 60) / 4
+				bullet.Spread = Vector(spread, spread, 0)
 				bullet.Src = owner:GetShootPos()
 				bullet.Dir = owner:GetAimVector()
 				local plyDmg = selfData.Primary.PlayerDamage
@@ -819,13 +820,13 @@ function SWEP:PrimaryAttack()
 				local aimPos = ownerData.GetAimPosition(owner, ene, spawnPos, 0)
 				local spread = ownerData.GetAimSpread(owner, ene, aimPos, selfData.NPC_CustomSpread or 1) // owner:GetPos():Distance(owner.VJ_TheController:GetEyeTrace().HitPos) -- Was used when NPC was being controlled
 				bullet.Spread = Vector(spread, spread, 0)
-				bullet.Dir = (aimPos - spawnPos):GetNormal()
+				bullet.Dir = (aimPos - spawnPos):GetNormalized()
 				bullet.Src = spawnPos
 				bullet.Damage = ownerData.ScaleByDifficulty(owner, selfData.Primary.Damage)
 			else
 				local spawnPos = selfData.GetBulletPos(self)
 				bullet.Spread = Vector(0.05, 0.05, 0)
-				bullet.Dir = (owner:GetEnemy():BodyTarget(spawnPos) - spawnPos):GetNormal()
+				bullet.Dir = (owner:GetEnemy():BodyTarget(spawnPos) - spawnPos):GetNormalized()
 				bullet.Src = spawnPos
 				bullet.Damage = selfData.Primary.Damage
 			end
@@ -856,9 +857,9 @@ function SWEP:PrimaryAttack()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttackEffects(owner)
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if selfData.IsMeleeWeapon then return end
-	owner = owner or funcGetOwner(self)
+	owner = owner or fGetOwner(self)
 	if selfData.CustomOnPrimaryAttackEffects && selfData.CustomOnPrimaryAttackEffects(self, owner) == false then return end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	
 	if vj_wep_muzzleflash:GetInt() == 1 then
@@ -916,7 +917,7 @@ function SWEP:PrimaryAttackEffects(owner)
 	-- SHELL CASING
 	if !owner:IsPlayer() && selfData.PrimaryEffects_SpawnShells && vj_wep_shells:GetInt() == 1 then
 		local shellAttach = selfData.PrimaryEffects_ShellAttachment
-		shellAttach = funcGetAttachment(self, isnumber(shellAttach) and shellAttach or self:LookupAttachment(shellAttach))
+		shellAttach = fGetAttachment(self, isnumber(shellAttach) and shellAttach or self:LookupAttachment(shellAttach))
 		if !shellAttach then -- No attachment found, use fallback data
 			shellAttach = {Pos = owner:GetShootPos(), Ang = metaEntity.GetAngles(self)}
 		end
@@ -936,7 +937,7 @@ function SWEP:SecondaryAttack()
 	if !self:CanSecondaryAttack() then return end
 	if self:OnSecondaryAttack() == true then return end
 	local curTime = CurTime()
-	local owner = funcGetOwner(self)
+	local owner = fGetOwner(self)
 	self:TakeSecondaryAmmo(self.Secondary.TakeAmmo)
 	local delay = self.Secondary.Delay
 	local anim = VJ.PICK(self.AnimTbl_SecondaryFire)
@@ -953,8 +954,8 @@ function SWEP:SecondaryAttack()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:TranslateActivity(act)
-	local owner = funcGetOwner(self)
-	local ownerData = funcGetTable(owner)
+	local owner = fGetOwner(self)
+	local ownerData = fGetTable(owner)
 	if ownerData.IsVJBaseSNPC then
 		local translation = ownerData.AnimationTranslations[act]
 		if translation then
@@ -964,7 +965,7 @@ function SWEP:TranslateActivity(act)
 			return translation
 		end
 	else
-		local selfData = funcGetTable(self)
+		local selfData = fGetTable(self)
 		-- Non-VJ NPCs
 		if owner:IsNPC() && selfData.ActivityTranslateAI[act] then
 			return selfData.ActivityTranslateAI[act]
@@ -984,7 +985,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Reload()
 	if !IsValid(self) then return end
-	local owner = funcGetOwner(self)
+	local owner = fGetOwner(self)
 	if !IsValid(owner) or !owner:IsPlayer() or !owner:Alive() or owner:GetAmmoCount(self.Primary.Ammo) == 0 or self.Reloading or CurTime() < self.PLY_NextReloadT then return end
 	if self:Clip1() < self.Primary.ClipSize then
 		self.Reloading = true
@@ -997,7 +998,7 @@ function SWEP:Reload()
 		end
 		-- Handle clip
 		timer.Simple(self.Reload_TimeUntilAmmoIsSet, function()
-			if IsValid(self) && IsValid(owner) && funcGetOwner(self) == owner && self:OnReload("Finish") != true then
+			if IsValid(self) && IsValid(owner) && fGetOwner(self) == owner && self:OnReload("Finish") != true then
 				local ammoUsed = math.Clamp(self.Primary.ClipSize - self:Clip1(), 0, owner:GetAmmoCount(self:GetPrimaryAmmoType())) -- Amount of ammo that it will use (Take from the reserve)
 				owner:RemoveAmmo(ammoUsed, self.Primary.Ammo)
 				self:SetClip1(self:Clip1() + ammoUsed)
@@ -1023,7 +1024,7 @@ function SWEP:Reload()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_Reload()
-	local owner = funcGetOwner(self)
+	local owner = fGetOwner(self)
 	if !IsValid(owner) then return end
 	owner.NextThrowGrenadeT = owner.NextThrowGrenadeT + 2
 	self:OnReload("Start")
@@ -1043,7 +1044,7 @@ function SWEP:OnDrop()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OwnerChanged()
-	local owner = funcGetOwner(self)
+	local owner = fGetOwner(self)
 	if IsValid(owner) then
 		self.OwnerIsNPC = owner:IsNPC()
 	end
@@ -1059,12 +1060,12 @@ function SWEP:GetWorldModelOffset(data, owner)
 	local boneName = data.Bone
 	local boneID = data.Cache_BoneID
 	if boneName != data.Cache_Bone then
-		boneID = funcLookupBone(owner, data.Bone)
+		boneID = fLookupBone(owner, data.Bone)
 		data.Cache_Bone = boneName
 		data.Cache_BoneID = boneID
 	end
 	if !boneID then return false end
-	return LocalToWorld(data.Pos, data.Ang, funcGetBonePosition(owner, boneID))
+	return LocalToWorld(data.Pos, data.Ang, fGetBonePosition(owner, boneID))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:MaintainWorldModel(selfData, owner)
@@ -1086,12 +1087,11 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	function SWEP:DrawWorldModel()
-		local drawMdl = true
-		local selfData = funcGetTable(self)
-		if !self:OnDrawWorldModel() or !self:GetDrawWorldModel() then drawMdl = false end
+		local drawMdl = self:OnDrawWorldModel() && self:GetDrawWorldModel()
+		local selfData = fGetTable(self)
 		local offsetData = selfData.WorldModelOffsetParams
 		if offsetData.Enabled then
-			local owner = funcGetOwner(self)
+			local owner = fGetOwner(self)
 			if IsValid(owner) then
 				if owner:IsPlayer() && owner:InVehicle() then return end
 				local wepPos, wepAng = selfData.GetWorldModelOffset(self, offsetData, owner)
@@ -1106,7 +1106,7 @@ if CLIENT then
 				self:SetRenderAngles(nil)
 			end
 		end
-		if drawMdl then funcDrawModel(self) end
+		if drawMdl then fDrawModel(self) end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1117,7 +1117,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- !!! USED ONLY FOR DEFAULT HL2 NPCS, NOT VJ NPCS !!!
 function SWEP:SetupWeaponHoldTypeForAI(holdType)
-	local owner = funcGetOwner(self)
+	local owner = fGetOwner(self)
 	if owner.IsVJBaseSNPC then return end
 	
 	-- Yete NPC-en Rebel-e, ere vor medz zenki animation-ere kordzadze yerp vor ge kalegor
@@ -1150,137 +1150,136 @@ function SWEP:SetupWeaponHoldTypeForAI(holdType)
 	self.ActivityTranslateAI = {}
 	if rifleOverride or holdType == "ar2" or holdType == "smg" then
 		if holdType == "ar2" or rifleOverride then
-			self.ActivityTranslateAI[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_AR2
-			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_AR2
-			self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] 				= ACT_RANGE_AIM_AR2_LOW
-			self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_AR2_LOW
-		elseif holdType == "smg" then
-			self.ActivityTranslateAI[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SMG1
-			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SMG1
-			self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] 				= ACT_RANGE_AIM_SMG1_LOW
-			self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW
+			self.ActivityTranslateAI[ACT_RANGE_ATTACK1] = ACT_RANGE_ATTACK_AR2
+			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] = ACT_GESTURE_RANGE_ATTACK_AR2
+			self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] = ACT_RANGE_AIM_AR2_LOW
+			self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW] = ACT_RANGE_ATTACK_AR2_LOW
+		else
+			self.ActivityTranslateAI[ACT_RANGE_ATTACK1] = ACT_RANGE_ATTACK_SMG1
+			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] = ACT_GESTURE_RANGE_ATTACK_SMG1
+			self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] = ACT_RANGE_AIM_SMG1_LOW
+			self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW] = ACT_RANGE_ATTACK_SMG1_LOW
 		end
-		self.ActivityTranslateAI[ACT_COVER_LOW] 					= ACT_COVER_SMG1_LOW
-		self.ActivityTranslateAI[ACT_RELOAD] 						= ACT_RELOAD_SMG1
-		self.ActivityTranslateAI[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
-		self.ActivityTranslateAI[ACT_GESTURE_RELOAD] 				= ACT_GESTURE_RELOAD_SMG1
-		self.ActivityTranslateAI[ACT_IDLE] 							= medzZenk_Genal
-		self.ActivityTranslateAI[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SMG1
-		self.ActivityTranslateAI[ACT_IDLE_RELAXED] 					= ACT_IDLE_SMG1_RELAXED
-		self.ActivityTranslateAI[ACT_IDLE_STIMULATED] 				= ACT_IDLE_SMG1_STIMULATED
-		self.ActivityTranslateAI[ACT_IDLE_AGITATED] 				= ACT_IDLE_ANGRY_SMG1
-		self.ActivityTranslateAI[ACT_IDLE_AIM_RELAXED] 				= ACT_IDLE_SMG1_RELAXED
-		self.ActivityTranslateAI[ACT_IDLE_AIM_STIMULATED] 			= ACT_IDLE_AIM_RIFLE_STIMULATED
-		self.ActivityTranslateAI[ACT_IDLE_AIM_AGITATED] 			= ACT_IDLE_ANGRY_SMG1
-		self.ActivityTranslateAI[ACT_WALK] 							= medzZenk_Kalel
-		self.ActivityTranslateAI[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE
-		self.ActivityTranslateAI[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_WALK_RELAXED] 					= ACT_WALK_RIFLE_RELAXED
-		self.ActivityTranslateAI[ACT_WALK_STIMULATED] 				= ACT_WALK_RIFLE_STIMULATED
-		self.ActivityTranslateAI[ACT_WALK_AGITATED] 				= ACT_WALK_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_WALK_AIM_RELAXED] 				= ACT_WALK_RIFLE_RELAXED
-		self.ActivityTranslateAI[ACT_WALK_AIM_STIMULATED] 			= ACT_WALK_AIM_RIFLE_STIMULATED
-		self.ActivityTranslateAI[ACT_WALK_AIM_AGITATED] 			= ACT_WALK_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_RUN] 							= ACT_RUN_RIFLE
-		self.ActivityTranslateAI[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
-		self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_RUN_RELAXED] 					= ACT_RUN_RIFLE_RELAXED
-		self.ActivityTranslateAI[ACT_RUN_STIMULATED] 				= ACT_RUN_RIFLE_STIMULATED
-		self.ActivityTranslateAI[ACT_RUN_AGITATED] 					= ACT_RUN_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_RUN_AIM_RELAXED] 				= ACT_RUN_RIFLE_RELAXED
-		self.ActivityTranslateAI[ACT_RUN_AIM_STIMULATED] 			= ACT_RUN_AIM_RIFLE_STIMULATED
-		self.ActivityTranslateAI[ACT_RUN_AIM_AGITATED] 				= ACT_RUN_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_COVER_LOW] = ACT_COVER_SMG1_LOW
+		self.ActivityTranslateAI[ACT_RELOAD] = ACT_RELOAD_SMG1
+		self.ActivityTranslateAI[ACT_RELOAD_LOW] = ACT_RELOAD_SMG1_LOW
+		self.ActivityTranslateAI[ACT_GESTURE_RELOAD] = ACT_GESTURE_RELOAD_SMG1
+		self.ActivityTranslateAI[ACT_IDLE] = medzZenk_Genal
+		self.ActivityTranslateAI[ACT_IDLE_ANGRY] = ACT_IDLE_ANGRY_SMG1
+		self.ActivityTranslateAI[ACT_IDLE_RELAXED] = ACT_IDLE_SMG1_RELAXED
+		self.ActivityTranslateAI[ACT_IDLE_STIMULATED] = ACT_IDLE_SMG1_STIMULATED
+		self.ActivityTranslateAI[ACT_IDLE_AGITATED] = ACT_IDLE_ANGRY_SMG1
+		self.ActivityTranslateAI[ACT_IDLE_AIM_RELAXED] = ACT_IDLE_SMG1_RELAXED
+		self.ActivityTranslateAI[ACT_IDLE_AIM_STIMULATED] = ACT_IDLE_AIM_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_IDLE_AIM_AGITATED] = ACT_IDLE_ANGRY_SMG1
+		self.ActivityTranslateAI[ACT_WALK] = medzZenk_Kalel
+		self.ActivityTranslateAI[ACT_WALK_AIM] = ACT_WALK_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_WALK_CROUCH] = ACT_WALK_CROUCH_RIFLE
+		self.ActivityTranslateAI[ACT_WALK_CROUCH_AIM] = ACT_WALK_CROUCH_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_WALK_RELAXED] = ACT_WALK_RIFLE_RELAXED
+		self.ActivityTranslateAI[ACT_WALK_STIMULATED] = ACT_WALK_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_WALK_AGITATED] = ACT_WALK_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_WALK_AIM_RELAXED] = ACT_WALK_RIFLE_RELAXED
+		self.ActivityTranslateAI[ACT_WALK_AIM_STIMULATED] = ACT_WALK_AIM_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_WALK_AIM_AGITATED] = ACT_WALK_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RUN] = ACT_RUN_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_AIM] = ACT_RUN_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_CROUCH] = ACT_RUN_CROUCH_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM] = ACT_RUN_CROUCH_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_RELAXED] = ACT_RUN_RIFLE_RELAXED
+		self.ActivityTranslateAI[ACT_RUN_STIMULATED] = ACT_RUN_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_RUN_AGITATED] = ACT_RUN_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_AIM_RELAXED] = ACT_RUN_RIFLE_RELAXED
+		self.ActivityTranslateAI[ACT_RUN_AIM_STIMULATED] = ACT_RUN_AIM_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_RUN_AIM_AGITATED] = ACT_RUN_AIM_RIFLE
 	elseif holdType == "crossbow" or holdType == "shotgun" then
-		self.ActivityTranslateAI[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SHOTGUN
-		self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SHOTGUN
-		self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] 				= ACT_RANGE_AIM_AR2_LOW
-		self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW] 			= bonbakshen_varichadz
-		self.ActivityTranslateAI[ACT_COVER_LOW] 					= ACT_COVER_SMG1_LOW
-		self.ActivityTranslateAI[ACT_RELOAD] 						= ACT_RELOAD_SHOTGUN
-		self.ActivityTranslateAI[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW //ACT_RELOAD_SHOTGUN_LOW
-		self.ActivityTranslateAI[ACT_GESTURE_RELOAD] 				= ACT_GESTURE_RELOAD_SHOTGUN
-		self.ActivityTranslateAI[ACT_IDLE] 							= ACT_IDLE_SMG1
-		self.ActivityTranslateAI[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SHOTGUN
-		self.ActivityTranslateAI[ACT_IDLE_RELAXED] 					= ACT_IDLE_SHOTGUN_RELAXED
-		self.ActivityTranslateAI[ACT_IDLE_STIMULATED] 				= ACT_IDLE_SHOTGUN_STIMULATED
-		self.ActivityTranslateAI[ACT_IDLE_AGITATED] 				= ACT_IDLE_SHOTGUN_AGITATED
-		self.ActivityTranslateAI[ACT_IDLE_AIM_RELAXED] 				= ACT_SHOTGUN_IDLE_DEEP
-		self.ActivityTranslateAI[ACT_IDLE_AIM_STIMULATED] 			= ACT_SHOTGUN_IDLE_DEEP
-		self.ActivityTranslateAI[ACT_IDLE_AIM_AGITATED] 			= ACT_SHOTGUN_IDLE_DEEP
-		self.ActivityTranslateAI[ACT_WALK] 							= ACT_WALK_AIM_SHOTGUN
-		self.ActivityTranslateAI[ACT_WALK_AIM] 						= ACT_WALK_AIM_SHOTGUN
-		self.ActivityTranslateAI[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE
-		self.ActivityTranslateAI[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_WALK_RELAXED] 					= ACT_WALK_AIM_SHOTGUN
-		self.ActivityTranslateAI[ACT_WALK_STIMULATED] 				= ACT_WALK_AIM_SHOTGUN
-		self.ActivityTranslateAI[ACT_WALK_AGITATED] 				= ACT_WALK_AIM_SHOTGUN
-		self.ActivityTranslateAI[ACT_WALK_AIM_RELAXED] 				= ACT_WALK_AIM_SHOTGUN
-		self.ActivityTranslateAI[ACT_WALK_AIM_STIMULATED] 			= ACT_WALK_AIM_SHOTGUN
-		self.ActivityTranslateAI[ACT_WALK_AIM_AGITATED] 			= ACT_WALK_AIM_SHOTGUN
-		self.ActivityTranslateAI[ACT_RUN] 							= ACT_RUN_RIFLE
-		self.ActivityTranslateAI[ACT_RUN_AIM] 						= bonbakshen_Vazel
-		self.ActivityTranslateAI[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
-		self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_RUN_RELAXED] 					= ACT_RUN_RIFLE
-		self.ActivityTranslateAI[ACT_RUN_STIMULATED] 				= ACT_RUN_RIFLE
-		self.ActivityTranslateAI[ACT_RUN_AGITATED] 					= ACT_RUN_RIFLE
-		self.ActivityTranslateAI[ACT_RUN_AIM_RELAXED] 				= ACT_RUN_AIM_SHOTGUN
-		self.ActivityTranslateAI[ACT_RUN_AIM_STIMULATED] 			= ACT_RUN_AIM_SHOTGUN
-		self.ActivityTranslateAI[ACT_RUN_AIM_AGITATED] 				= ACT_RUN_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_RANGE_ATTACK1] = ACT_RANGE_ATTACK_SHOTGUN
+		self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] = ACT_GESTURE_RANGE_ATTACK_SHOTGUN
+		self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] = ACT_RANGE_AIM_AR2_LOW
+		self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW] = bonbakshen_varichadz
+		self.ActivityTranslateAI[ACT_COVER_LOW] = ACT_COVER_SMG1_LOW
+		self.ActivityTranslateAI[ACT_RELOAD] = ACT_RELOAD_SHOTGUN
+		self.ActivityTranslateAI[ACT_RELOAD_LOW] = ACT_RELOAD_SMG1_LOW //ACT_RELOAD_SHOTGUN_LOW
+		self.ActivityTranslateAI[ACT_GESTURE_RELOAD] = ACT_GESTURE_RELOAD_SHOTGUN
+		self.ActivityTranslateAI[ACT_IDLE] = ACT_IDLE_SMG1
+		self.ActivityTranslateAI[ACT_IDLE_ANGRY] = ACT_IDLE_ANGRY_SHOTGUN
+		self.ActivityTranslateAI[ACT_IDLE_RELAXED] = ACT_IDLE_SHOTGUN_RELAXED
+		self.ActivityTranslateAI[ACT_IDLE_STIMULATED] = ACT_IDLE_SHOTGUN_STIMULATED
+		self.ActivityTranslateAI[ACT_IDLE_AGITATED] = ACT_IDLE_SHOTGUN_AGITATED
+		self.ActivityTranslateAI[ACT_IDLE_AIM_RELAXED] = ACT_SHOTGUN_IDLE_DEEP
+		self.ActivityTranslateAI[ACT_IDLE_AIM_STIMULATED] = ACT_SHOTGUN_IDLE_DEEP
+		self.ActivityTranslateAI[ACT_IDLE_AIM_AGITATED] = ACT_SHOTGUN_IDLE_DEEP
+		self.ActivityTranslateAI[ACT_WALK] = ACT_WALK_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_WALK_AIM] = ACT_WALK_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_WALK_CROUCH] = ACT_WALK_CROUCH_RIFLE
+		self.ActivityTranslateAI[ACT_WALK_CROUCH_AIM] = ACT_WALK_CROUCH_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_WALK_RELAXED] = ACT_WALK_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_WALK_STIMULATED] = ACT_WALK_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_WALK_AGITATED] = ACT_WALK_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_WALK_AIM_RELAXED] = ACT_WALK_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_WALK_AIM_STIMULATED] = ACT_WALK_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_WALK_AIM_AGITATED] = ACT_WALK_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_RUN] = ACT_RUN_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_AIM] = bonbakshen_Vazel
+		self.ActivityTranslateAI[ACT_RUN_CROUCH] = ACT_RUN_CROUCH_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM] = ACT_RUN_CROUCH_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_RELAXED] = ACT_RUN_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_STIMULATED] = ACT_RUN_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_AGITATED] = ACT_RUN_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_AIM_RELAXED] = ACT_RUN_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_RUN_AIM_STIMULATED] = ACT_RUN_AIM_SHOTGUN
+		self.ActivityTranslateAI[ACT_RUN_AIM_AGITATED] = ACT_RUN_AIM_SHOTGUN
 	elseif holdType == "rpg" then
-		self.ActivityTranslateAI[ACT_RANGE_ATTACK1] 				= ACT_CROUCHIDLE
-		self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SMG1
-		self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] 				= ACT_RANGE_AIM_SMG1_LOW
-		self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW
-		self.ActivityTranslateAI[ACT_COVER_LOW] 					= ACT_COVER_LOW_RPG
-		self.ActivityTranslateAI[ACT_RELOAD] 						= ACT_RELOAD_SMG1
-		self.ActivityTranslateAI[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
-		self.ActivityTranslateAI[ACT_GESTURE_RELOAD] 				= ACT_GESTURE_RELOAD_SMG1
-		self.ActivityTranslateAI[ACT_IDLE] 							= ACT_IDLE_RPG
-		self.ActivityTranslateAI[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_RPG
-		self.ActivityTranslateAI[ACT_IDLE_RELAXED] 					= ACT_IDLE_RPG_RELAXED
-		self.ActivityTranslateAI[ACT_IDLE_STIMULATED] 				= ACT_IDLE_SMG1_STIMULATED
-		self.ActivityTranslateAI[ACT_IDLE_AGITATED] 				= ACT_IDLE_ANGRY_RPG
-		self.ActivityTranslateAI[ACT_IDLE_AIM_RELAXED] 				= ACT_IDLE_RPG_RELAXED
-		self.ActivityTranslateAI[ACT_IDLE_AIM_STIMULATED] 			= ACT_IDLE_AIM_RIFLE_STIMULATED
-		self.ActivityTranslateAI[ACT_IDLE_AIM_AGITATED] 			= ACT_IDLE_ANGRY_RPG
-		self.ActivityTranslateAI[ACT_WALK] 							= ACT_WALK_RPG
-		self.ActivityTranslateAI[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RPG
-		self.ActivityTranslateAI[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_RPG
-		self.ActivityTranslateAI[ACT_WALK_RELAXED] 					= ACT_WALK_RPG_RELAXED
-		self.ActivityTranslateAI[ACT_WALK_STIMULATED] 				= ACT_WALK_RIFLE_STIMULATED
-		self.ActivityTranslateAI[ACT_WALK_AGITATED] 				= ACT_WALK_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_WALK_AIM_RELAXED] 				= ACT_WALK_RPG_RELAXED
-		self.ActivityTranslateAI[ACT_WALK_AIM_STIMULATED] 			= ACT_WALK_AIM_RIFLE_STIMULATED
-		self.ActivityTranslateAI[ACT_WALK_AIM_AGITATED] 			= ACT_WALK_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_RUN] 							= ACT_RUN_RPG
-		self.ActivityTranslateAI[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
-		self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_RPG
-		self.ActivityTranslateAI[ACT_RUN_RELAXED] 					= ACT_RUN_RPG_RELAXED
-		self.ActivityTranslateAI[ACT_RUN_STIMULATED] 				= ACT_RUN_RIFLE_STIMULATED
-		self.ActivityTranslateAI[ACT_RUN_AGITATED] 					= ACT_RUN_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_RUN_AIM_RELAXED] 				= ACT_RUN_RPG_RELAXED
-		self.ActivityTranslateAI[ACT_RUN_AIM_STIMULATED] 			= ACT_RUN_AIM_RIFLE_STIMULATED
-		self.ActivityTranslateAI[ACT_RUN_AIM_AGITATED] 				= ACT_RUN_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RANGE_ATTACK1] = ACT_CROUCHIDLE
+		self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] = ACT_GESTURE_RANGE_ATTACK_SMG1
+		self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] = ACT_RANGE_AIM_SMG1_LOW
+		self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW] = ACT_RANGE_ATTACK_SMG1_LOW
+		self.ActivityTranslateAI[ACT_COVER_LOW] = ACT_COVER_LOW_RPG
+		self.ActivityTranslateAI[ACT_RELOAD] = ACT_RELOAD_SMG1
+		self.ActivityTranslateAI[ACT_RELOAD_LOW] = ACT_RELOAD_SMG1_LOW
+		self.ActivityTranslateAI[ACT_GESTURE_RELOAD] = ACT_GESTURE_RELOAD_SMG1
+		self.ActivityTranslateAI[ACT_IDLE] = ACT_IDLE_RPG
+		self.ActivityTranslateAI[ACT_IDLE_ANGRY] = ACT_IDLE_ANGRY_RPG
+		self.ActivityTranslateAI[ACT_IDLE_RELAXED] = ACT_IDLE_RPG_RELAXED
+		self.ActivityTranslateAI[ACT_IDLE_STIMULATED] = ACT_IDLE_SMG1_STIMULATED
+		self.ActivityTranslateAI[ACT_IDLE_AGITATED] = ACT_IDLE_ANGRY_RPG
+		self.ActivityTranslateAI[ACT_IDLE_AIM_RELAXED] = ACT_IDLE_RPG_RELAXED
+		self.ActivityTranslateAI[ACT_IDLE_AIM_STIMULATED] = ACT_IDLE_AIM_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_IDLE_AIM_AGITATED] = ACT_IDLE_ANGRY_RPG
+		self.ActivityTranslateAI[ACT_WALK] = ACT_WALK_RPG
+		self.ActivityTranslateAI[ACT_WALK_AIM] = ACT_WALK_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_WALK_CROUCH] = ACT_WALK_CROUCH_RPG
+		self.ActivityTranslateAI[ACT_WALK_CROUCH_AIM] = ACT_WALK_CROUCH_RPG
+		self.ActivityTranslateAI[ACT_WALK_RELAXED] = ACT_WALK_RPG_RELAXED
+		self.ActivityTranslateAI[ACT_WALK_STIMULATED] = ACT_WALK_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_WALK_AGITATED] = ACT_WALK_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_WALK_AIM_RELAXED] = ACT_WALK_RPG_RELAXED
+		self.ActivityTranslateAI[ACT_WALK_AIM_STIMULATED] = ACT_WALK_AIM_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_WALK_AIM_AGITATED] = ACT_WALK_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RUN] = ACT_RUN_RPG
+		self.ActivityTranslateAI[ACT_RUN_AIM] = ACT_RUN_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_CROUCH] = ACT_RUN_CROUCH_RPG
+		self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM] = ACT_RUN_CROUCH_RPG
+		self.ActivityTranslateAI[ACT_RUN_RELAXED] = ACT_RUN_RPG_RELAXED
+		self.ActivityTranslateAI[ACT_RUN_STIMULATED] = ACT_RUN_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_RUN_AGITATED] = ACT_RUN_AIM_RIFLE
+		self.ActivityTranslateAI[ACT_RUN_AIM_RELAXED] = ACT_RUN_RPG_RELAXED
+		self.ActivityTranslateAI[ACT_RUN_AIM_STIMULATED] = ACT_RUN_AIM_RIFLE_STIMULATED
+		self.ActivityTranslateAI[ACT_RUN_AIM_AGITATED] = ACT_RUN_AIM_RIFLE
 	else -- revolver or pistol
-		self.ActivityTranslateAI[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_PISTOL
-		self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_PISTOL
-		self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] 				= ACT_RANGE_AIM_PISTOL_LOW
-		self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_PISTOL_LOW
-		self.ActivityTranslateAI[ACT_COVER_LOW] 					= ACT_COVER_PISTOL_LOW
-		self.ActivityTranslateAI[ACT_RELOAD] 						= ACT_RELOAD_PISTOL
-		self.ActivityTranslateAI[ACT_RELOAD_LOW] 					= ACT_RELOAD_PISTOL_LOW
-		self.ActivityTranslateAI[ACT_GESTURE_RELOAD] 				= ACT_GESTURE_RELOAD_PISTOL
-		self.ActivityTranslateAI[ACT_IDLE] 							= ACT_IDLE_PISTOL
-		self.ActivityTranslateAI[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_PISTOL
-		self.ActivityTranslateAI[ACT_WALK] 							= ACT_WALK_PISTOL
-		self.ActivityTranslateAI[ACT_WALK_AIM] 						= bezdigZenk_Kalel
-		self.ActivityTranslateAI[ACT_RUN] 							= ACT_RUN_PISTOL
-		self.ActivityTranslateAI[ACT_RUN_AIM] 						= bezdigZenk_Vazel
+		self.ActivityTranslateAI[ACT_RANGE_ATTACK1] = ACT_RANGE_ATTACK_PISTOL
+		self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] = ACT_GESTURE_RANGE_ATTACK_PISTOL
+		self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] = ACT_RANGE_AIM_PISTOL_LOW
+		self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW] = ACT_RANGE_ATTACK_PISTOL_LOW
+		self.ActivityTranslateAI[ACT_COVER_LOW] = ACT_COVER_PISTOL_LOW
+		self.ActivityTranslateAI[ACT_RELOAD] = ACT_RELOAD_PISTOL
+		self.ActivityTranslateAI[ACT_RELOAD_LOW] = ACT_RELOAD_PISTOL_LOW
+		self.ActivityTranslateAI[ACT_GESTURE_RELOAD] = ACT_GESTURE_RELOAD_PISTOL
+		self.ActivityTranslateAI[ACT_IDLE] = ACT_IDLE_PISTOL
+		self.ActivityTranslateAI[ACT_IDLE_ANGRY] = ACT_IDLE_ANGRY_PISTOL
+		self.ActivityTranslateAI[ACT_WALK] = ACT_WALK_PISTOL
+		self.ActivityTranslateAI[ACT_WALK_AIM] = bezdigZenk_Kalel
+		self.ActivityTranslateAI[ACT_RUN] = ACT_RUN_PISTOL
+		self.ActivityTranslateAI[ACT_RUN_AIM] = bezdigZenk_Vazel
 	end
-	return
 end

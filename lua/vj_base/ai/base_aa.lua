@@ -22,13 +22,13 @@ local defPos = Vector()
 local defAng = Angle()
 
 local metaEntity = FindMetaTable("Entity")
-local funcGetTable = metaEntity.GetTable
+local fGetTable = metaEntity.GetTable
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Stops the current NPC, similar to ground NPCs calling self:StopMoving()
 -----------------------------------------------------------]]
 function ENT:AA_StopMoving()
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	selfData.AA_CurrentMoveMaxSpeed = 0
 	selfData.AA_CurrentMoveTime = 0
 	selfData.AA_CurrentMoveType = 0
@@ -54,7 +54,7 @@ local vecEnd = Vector(0, 0, 40)
 --
 function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 	local destVec = isvector(dest) and dest
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if selfData.Dead or (!destVec && !IsValid(dest)) then return end
 	moveType = moveType or "Calm" -- "Calm" | "Alert"
 	extra = extra or {}
@@ -220,7 +220,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime() * selfData.AA_MoveAccelerate, self:GetVelocity():Length(), moveSpeed) end
 	
 	-- Set the velocity
-	local velPos = (finalPos - startPos):GetNormal() * moveSpeed //+ self:GetUp()*velUp + self:GetForward()
+	local velPos = (finalPos - startPos):GetNormalized() * moveSpeed //+ self:GetUp()*velUp + self:GetForward()
 	local velTime = math.sqrt((finalPos.x - startPos.x)^2 + (finalPos.y - startPos.y)^2) / math.max((self:GetVelocity():Length() + selfData.AA_CurrentMoveMaxSpeed) * 0.5, 1) -- Use 2D distance for timing
 	if selfData.AA_MoveDecelerate > 1 then
 		velTime = velTime + (1 / selfData.AA_MoveDecelerate)
@@ -267,7 +267,7 @@ end
 			- IgnoreGround = If true, it will not do any ground checks | DEFAULT: false
 -----------------------------------------------------------]]
 function ENT:AA_IdleWander(playAnim, moveType, extra)
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	moveType = moveType or "Calm" -- "Calm" | "Alert"
 	local moveSpeed = (moveType == "Calm" and selfData.Aerial_FlyingSpeed_Calm) or selfData.Aerial_FlyingSpeed_Alerted
 	local moveDown = false -- Used by aquatic NPCs only, forces them to move down
@@ -325,7 +325,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extra)
 	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime() * selfData.AA_MoveAccelerate, self:GetVelocity():Length(), moveSpeed) end
 	
 	-- Set the velocity
-	local velPos = (finalPos - myPos):GetNormal() * moveSpeed
+	local velPos = (finalPos - myPos):GetNormalized() * moveSpeed
 	local velTime = math.sqrt((finalPos.x - myPos.x)^2 + (finalPos.y - myPos.y)^2) / math.max((self:GetVelocity():Length() + selfData.AA_CurrentMoveMaxSpeed) * 0.5, 1)
 	if selfData.AA_MoveDecelerate > 1 then
 		velTime = velTime + (1 / selfData.AA_MoveDecelerate)
@@ -378,7 +378,7 @@ local badACTs = {[ACT_WALK] = true, [ACT_WALK_AIM] = true, [ACT_RUN] = true, [AC
 function ENT:AA_MoveAnimation()
 	-- NOTE: Unique condition used for directional flying animations in TranslateActivity:
 		--  if "AA_CurrentMoveAnim" is current sequence AND current activity is not a sequence AND translated activity does not equal current sequence's activity
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	local curSeq = self:GetSequence()
 	local curACT = self:GetActivity()
 	if ((CurTime() > selfData.AA_NextMoveAnimTime) or (curSeq != selfData.AA_CurrentMoveAnim or (curACT != ACT_DO_NOT_DISTURB && self:GetSequenceActivity(curSeq) != self:TranslateActivity(curACT)))) && !self:IsBusy("Activities") then

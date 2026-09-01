@@ -160,7 +160,8 @@ if SERVER then
 				numNextBot = numNextBot + 1
 			end
 		end
-		ply:ChatPrint("Total NPCs: " .. numNPC .. " | VJ NPCs: " .. numVJ .. " | NextBots: " .. numNextBot)
+		local msg = "Total NPCs: " .. numNPC .. " | VJ NPCs: " .. numVJ .. " | NextBots: " .. numNextBot
+		if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
 	end, nil, "Prints the number of NPCs in the map. Admin only!", FCVAR_DONTRECORD)
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	local cTypes = {
@@ -179,7 +180,7 @@ if SERVER then
 		if IsValid(ply) && !ply:IsAdmin() then return end
 		local cType = args[1]
 		local count = 0
-		if !cType or !cTypes[cType] then -- Not type or invalid type given, so clean up all
+		if !cTypes[cType] then -- No type or invalid type given, so clean up all
 			game.CleanUpMap()
 			cType = false
 		elseif cType == "decals" then
@@ -192,7 +193,7 @@ if SERVER then
 			ply:RemoveAllAmmo()
 		else
 			for _, ent in ipairs(ents.GetAll()) do
-				if (ent:IsNPC() && (cType == "npcs" or (cType == "vjnpcs" && ent.IsVJBaseSNPC))) or (cType == "spawners" && ent.IsVJBaseSpawner) or (cType == "corpses" && (ent.IsVJBaseCorpse or ent.IsVJBaseCorpse_Gib)) or (cType == "gibs" && ent.IsVJBaseCorpse_Gib) or (cType == "groundweapons" && ent:IsWeapon() && ent:GetOwner() == NULL) or (cType == "props" && ent:GetClass() == "prop_physics" && (ent:GetParent() == NULL or (IsValid(ent:GetParent()) && ent:GetParent():Health() <= 0 && (ent:GetParent():IsNPC() or ent:GetParent():IsPlayer())))) then
+				if ((cType == "npcs" or (cType == "vjnpcs" && ent.IsVJBaseSNPC)) && ent:IsNPC()) or (cType == "spawners" && ent.IsVJBaseSpawner) or (cType == "corpses" && (ent.IsVJBaseCorpse or ent.IsVJBaseCorpse_Gib)) or (cType == "gibs" && ent.IsVJBaseCorpse_Gib) or (cType == "groundweapons" && ent:IsWeapon() && ent:GetOwner() == NULL) or (cType == "props" && ent:GetClass() == "prop_physics" && (ent:GetParent() == NULL or (IsValid(ent:GetParent()) && ent:GetParent():Health() <= 0 && (ent:GetParent():IsNPC() or ent:GetParent():IsPlayer())))) then
 					ent:Remove()
 					count = count + 1
 				end

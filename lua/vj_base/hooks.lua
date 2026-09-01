@@ -12,8 +12,8 @@ local table_remove = table.remove
 local vj_npc_wep_ply_pickup = GetConVar("vj_npc_wep_ply_pickup")
 
 local metaEntity = FindMetaTable("Entity")
-local funcGetClass = metaEntity.GetClass
-local funcGetTable = metaEntity.GetTable
+local fGetTable = metaEntity.GetTable
+local fGetClass = metaEntity.GetClass
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local entInfos = {
 	-- Resistance
@@ -21,10 +21,8 @@ local entInfos = {
 		if ent:HasSpawnFlags(SF_CITIZEN_MEDIC) then -- Medic rebels
 			ent.IsMedic = true
 		end
-		for key, val in pairs(ent:GetKeyValues()) do
-			if key == "hostile" && val == 1 then -- Enemy / Combine Rebels
-				return "CLASS_COMBINE"
-			end
+		if ent:GetKeyValues().hostile == 1 then -- Enemy / Combine Rebels
+			return "CLASS_COMBINE"
 		end
 	end},
 	npc_vortigaunt = {classNPC = "CLASS_PLAYER_ALLY"},
@@ -139,7 +137,7 @@ local entInfos = {
 			if otherEnt.IsVJBaseSNPC_Human then
 				return distance <= 800
 			else
-				return (otherEnt.HasRangeAttack && distance <= 800) or (distance <= math.max(otherEnt.MeleeAttackDamageDistance or 120))
+				return (otherEnt.HasRangeAttack && distance <= 800) or (distance <= (otherEnt.MeleeAttackDamageDistance or 120))
 			end
 		end
 	end},
@@ -148,7 +146,7 @@ local entInfos = {
 			if otherEnt.IsVJBaseSNPC_Human then
 				return distance <= 800
 			else
-				return (otherEnt.HasRangeAttack && distance <= 800) or (distance <= math.max(otherEnt.MeleeAttackDamageDistance or 120))
+				return (otherEnt.HasRangeAttack && distance <= 800) or (distance <= (otherEnt.MeleeAttackDamageDistance or 120))
 			end
 		end
 	end},
@@ -169,8 +167,8 @@ local destructibleEnts = {func_breakable_surf = true, sent_sakariashelicopter = 
 local propEnts = {prop_physics = true, prop_physics_multiplayer = true, prop_physics_respawnable = true, prop_physics_override = true, prop_sphere = true}
 --
 hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
-	local entClass = funcGetClass(ent)
-	local entData = funcGetTable(ent)
+	local entClass = fGetClass(ent)
+	local entData = fGetTable(ent)
 	
 	if ent:IsNPC() or ent:IsNextBot() then
 		entData.VJ_ID_Living = true
@@ -210,18 +208,15 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 
 				local cvSeePlys = !VJ_CVAR_IGNOREPLAYERS
 				local entEneCount = 1
-				local entIsNature = false
-				if entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
-					entIsNature = true
-				end
+				local entIsNature = entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE
 				for _, other in ents.Iterator() do
-					local otherClass = funcGetClass(other)
-					local otherData = funcGetTable(other)
+					local otherClass = fGetClass(other)
+					local otherData = fGetTable(other)
 					if otherData.VJ_ID_Living && !ignoredNPCs[otherClass] then
 						-- Add enemies to the created entity if it's a VJ Base NPC
 						if entIsVJ then
 							entData.ValidateNoCollide(ent, other)
-							if (other:IsNPC() && entClass != otherClass && otherData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) or (other:IsPlayer() && cvSeePlys) or (other:IsNextBot()) then
+							if (other:IsNPC() && entClass != otherClass && otherData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) or (other:IsPlayer() && cvSeePlys) or other:IsNextBot() then
 								entData.RelationshipEnts[entEneCount] = other
 								if !entData.RelationshipMemory[other] then entData.RelationshipMemory[other] = {} end
 								entEneCount = entEneCount + 1
@@ -246,7 +241,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 				entData.VJ_NPC_Class = {"CLASS_PLAYER_ALLY"}
 			end
 			if !VJ_CVAR_IGNOREPLAYERS then
-				for _, npc in ipairs(ents.GetAll()) do
+				for _, npc in ents.Iterator() do
 					if npc:IsNPC() && npc.IsVJBaseSNPC then
 						npc.RelationshipEnts[#npc.RelationshipEnts + 1] = ent
 						npc.RelationshipMemory[ent] = {}
@@ -291,13 +286,13 @@ hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 	local ent = data.Entity
 	if !IsValid(ent) then return end
 	if SERVER then
-		local entData = funcGetTable(ent)
+		local entData = fGetTable(ent)
 		if data.SoundLevel < 75 or !entData.VJ_ID_Living or entData.Dead then return end
 		if ent:IsPlayer() && string_sub(data.OriginalSoundName, 1, 16) == "player/footsteps" && (ent:Crouching() or (ent:KeyDown(IN_WALK) && !ent:IsSprinting())) then -- Quiet player movement
 			return
 		end
 		entData.VJ_SD_InvestTime = CurTime()
-		entData.VJ_SD_InvestLevel = (data.SoundLevel * data.Volume) + (((data.Volume <= 0.4) and 15) or 0)
+		entData.VJ_SD_InvestLevel = (data.SoundLevel * data.Volume) + (data.Volume <= 0.4 and 15 or 0)
 	-- Disable model footstep sounds for VJ NPCs unless specified otherwise
 	elseif ent:IsNPC() && ent.IsVJBaseSNPC && (string_sub(data.OriginalSoundName, -8) == "stepleft" or string_sub(data.OriginalSoundName, -9) == "stepright") then
 		return ent:MatFootStepQCEvent(data)
@@ -313,10 +308,10 @@ if SERVER then
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	local function VJ_NPCPLY_DEATH(ent, attacker, inflictor)
 		if ent != attacker && IsValid(attacker) && attacker.IsVJBaseSNPC then
-			local wasLast = (!IsValid(attacker:GetEnemy()) or (attacker.EnemyData.VisibleCount <= 1))
+			local wasLast = !IsValid(attacker:GetEnemy()) or (attacker.EnemyData.VisibleCount <= 1)
 			attacker:OnKilledEnemy(ent, inflictor, wasLast)
 			-- If its the last enemy then --> (If there no valid enemy) OR (The number of enemies is 1 or less)
-			if (!attacker.KilledEnemySoundLast) or (wasLast && attacker.KilledEnemySoundLast) then
+			if !attacker.KilledEnemySoundLast or wasLast then
 				attacker:PlaySoundSystem("KilledEnemy")
 			end
 			attacker:MaintainRelationships()
@@ -385,7 +380,7 @@ cvars.AddChangeCallback("ai_ignoreplayers", function(name, oldValue, newValue)
 	else -- Turn on ignore players
 		VJ_CVAR_IGNOREPLAYERS = true
 		if SERVER then
-			for _, ent in ipairs(ents.GetAll()) do
+			for _, ent in ents.Iterator() do
 				if ent.IsVJBaseSNPC then
 					if ent.IsFollowing && ent.FollowData.Target:IsPlayer() then ent:ResetFollowBehavior() end -- Reset the NPC's follow system if it's following a player
 					local relationEnts = ent.RelationshipEnts

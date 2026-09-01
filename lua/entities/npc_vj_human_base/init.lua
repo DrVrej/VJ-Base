@@ -1631,14 +1631,16 @@ local VJ_MOVETYPE_STATIONARY = VJ_MOVETYPE_STATIONARY
 local ANIM_TYPE_GESTURE = VJ.ANIM_TYPE_GESTURE
 
 local metaEntity = FindMetaTable("Entity")
-local funcGetTable = metaEntity.GetTable
-local funcGetPoseParameter = metaEntity.GetPoseParameter
-local funcSetPoseParameter = metaEntity.SetPoseParameter
+local fGetTable = metaEntity.GetTable
+local fGetPoseParameter = metaEntity.GetPoseParameter
+local fSetPoseParameter = metaEntity.SetPoseParameter
+local fGetClass = metaEntity.GetClass
+local fGetPos = metaEntity.GetPos
 --
 local metaNPC = FindMetaTable("NPC")
-local funcGetEnemy = metaNPC.GetEnemy
-local funcHasCondition = metaNPC.HasCondition
-local funcGetActiveWeapon = metaNPC.GetActiveWeapon
+local fGetEnemy = metaNPC.GetEnemy
+local fHasCondition = metaNPC.HasCondition
+local fGetActiveWeapon = metaNPC.GetActiveWeapon
 
 ENT.UpdatedPoseParam = false
 ENT.Weapon_UnarmedBehavior_Active = false
@@ -1673,7 +1675,6 @@ local vj_npc_corpse_undo = GetConVar("vj_npc_corpse_undo")
 local vj_npc_corpse_fade = GetConVar("vj_npc_corpse_fade")
 local vj_npc_corpse_fadetime = GetConVar("vj_npc_corpse_fadetime")
 local ai_serverragdolls = GetConVar("ai_serverragdolls")
-
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defShootVec = Vector(0, 0, 55)
 local capBitsDefault = bit.bor(CAP_SKIP_NAV_GROUND_CHECK, CAP_TURN_HEAD, CAP_INNATE_RANGE_ATTACK1, CAP_DUCK) -- CAP_INNATE_RANGE_ATTACK1 bedke vor LOS tasker gerna enel
@@ -1716,7 +1717,7 @@ function ENT:Initialize()
 	
 	-- Name
 	if self:GetName() == "" then
-		local findListing = list.Get("NPC")[self:GetClass()]
+		local findListing = list.Get("NPC")[fGetClass(self)]
 		if findListing then
 			self:SetName((self.PrintName == "" and findListing.Name) or self.PrintName)
 		end
@@ -1807,7 +1808,7 @@ function ENT:Initialize()
 		if self.Weapon_Disabled then
 			self:UpdateAnimationTranslations()
 		else
-			local wep = funcGetActiveWeapon(self)
+			local wep = fGetActiveWeapon(self)
 			if IsValid(wep) then
 				self.WeaponEntity = self:DoChangeWeapon() -- Setup the weapon
 				self.WeaponInventory.Primary = wep
@@ -1815,13 +1816,13 @@ function ENT:Initialize()
 					creator:PrintMessage(HUD_PRINTTALK, "WARNING: " .. VJ.GetName(self) .. " requires a VJ Base weapon to work properly!")
 				end
 				local antiArmor = PICK(self.WeaponInventory_AntiArmorList)
-				if antiArmor && wep:GetClass() != antiArmor then -- If the list isn't empty and it's not the current active weapon
+				if antiArmor && fGetClass(wep) != antiArmor then -- If the list isn't empty and it's not the current active weapon
 					self.WeaponInventory.AntiArmor = self:Give(antiArmor)
 					self:SelectWeapon(wep) -- Change the weapon back to the primary weapon
 					wep:Equip(self)
 				end
 				local melee = PICK(self.WeaponInventory_MeleeList)
-				if melee && wep:GetClass() != melee then -- If the list isn't empty and it's not the current active weapon
+				if melee && fGetClass(wep) != melee then -- If the list isn't empty and it's not the current active weapon
 					self.WeaponInventory.Melee = self:Give(melee)
 					self:SelectWeapon(wep) -- Change the weapon back to the primary weapon
 					wep:Equip(self)
@@ -1838,7 +1839,7 @@ function ENT:Initialize()
 		end
 		-- This is needed as setting "NextThink" to CurTime will cause performance drops, so we set the idle maintain in a separate hook that runs every tick
 		local thinkHook = hook.GetTable()["Think"]
-		if (thinkHook && !thinkHook[self]) or (!thinkHook) then
+		if !thinkHook or !thinkHook[self] then
 			if #self:GetBoneFollowers() > 0 then
 				hook.Add("Think", self, animThinkExtra)
 			else
@@ -1872,11 +1873,11 @@ local schedule_alert_chase = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE")
 function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 	self:ClearCondition(COND_ENEMY_UNREACHABLE)
 	local moveType = self.MovementType; if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then self:AA_ChaseEnemy() return end
-	if self.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" then return end // && (self:GetEnemyLastKnownPos():Distance(funcGetEnemy(self):GetPos()) <= 12)
+	if self.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" then return end // && (self:GetEnemyLastKnownPos():Distance(fGetPos(fGetEnemy(self))) <= 12)
 	local navType = self:GetNavType(); if navType == NAV_JUMP or navType == NAV_CLIMB then return end
 	if doLOSChase then
 		schedule_alert_chaseLOS.RunCode_OnFinish = function()
-			local ene = funcGetEnemy(self)
+			local ene = fGetEnemy(self)
 			if IsValid(ene) then
 				self:RememberUnreachable(ene, 0)
 				//self:SCHEDULE_ALERT_CHASE(false)
@@ -1890,7 +1891,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to always make the NPC chase
 	local curTime = CurTime()
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if selfData.NextChaseTime > curTime or selfData.Dead or selfData.VJ_IsBeingControlled or selfData.Flinching or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
 	local eneData = selfData.EnemyData
 	local ene = eneData.Target
@@ -1898,7 +1899,7 @@ function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to alw
 	if !IsValid(ene) or selfData.TakingCoverT > curTime or (selfData.AttackAnimTime > curTime && moveType != VJ_MOVETYPE_AERIAL && moveType != VJ_MOVETYPE_AQUATIC) then return end
 	
 	-- Not melee attacking yet but it is in range, so don't chase the enemy!
-	if selfData.HasMeleeAttack && eneData.DistanceNearest < selfData.MeleeAttackDistance && eneData.Visible && (self:GetHeadDirection():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackAngleRadius))) then
+	if selfData.HasMeleeAttack && eneData.DistanceNearest < selfData.MeleeAttackDistance && eneData.Visible && (self:GetHeadDirection():Dot((fGetPos(ene) - fGetPos(self)):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackAngleRadius))) then
 		if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then
 			self:AA_StopMoving()
 		end
@@ -1923,7 +1924,7 @@ function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to alw
 	if !alwaysChase && (selfData.DisableChasingEnemy or selfData.IsGuard) then self:SCHEDULE_IDLE_STAND() return end
 	
 	-- If the enemy is not reachable
-	if (funcHasCondition(self, COND_ENEMY_UNREACHABLE) or self:IsUnreachable(ene)) && (IsValid(funcGetActiveWeapon(self)) && (!funcGetActiveWeapon(self).IsMeleeWeapon)) then
+	if (fHasCondition(self, COND_ENEMY_UNREACHABLE) or self:IsUnreachable(ene)) && (IsValid(fGetActiveWeapon(self)) && (!fGetActiveWeapon(self).IsMeleeWeapon)) then
 		self:SCHEDULE_ALERT_CHASE(true)
 		self:RememberUnreachable(ene, 2)
 	else -- Is reachable, so chase the enemy!
@@ -1948,13 +1949,13 @@ end
 -----------------------------------------------------------]]
 function ENT:TranslateActivity(act)
 	//VJ.DEBUG_Print(self, "TranslateActivity", act)
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	
 	-- Handle idle scared and angry animations
 	if act == ACT_IDLE then
 		if selfData.Weapon_UnarmedBehavior_Active then
 			return ACT_COWER // PICK(selfData.AnimTbl_ScaredBehaviorStand)
-		elseif selfData.Alerted && self:GetWeaponState() != VJ.WEP_STATE_HOLSTERED && IsValid(funcGetActiveWeapon(self)) then
+		elseif selfData.Alerted && self:GetWeaponState() != VJ.WEP_STATE_HOLSTERED && IsValid(fGetActiveWeapon(self)) then
 			return ACT_IDLE_ANGRY // PICK(selfData.AnimTbl_WeaponAim)
 		end
 	-- Handle running while scared animation
@@ -2006,7 +2007,7 @@ end
 local sdWepSwitch = {"physics/metal/weapon_impact_soft1.wav", "physics/metal/weapon_impact_soft2.wav", "physics/metal/weapon_impact_soft3.wav"}
 --
 function ENT:DoChangeWeapon(wep, invSwitch)
-	local curWep = funcGetActiveWeapon(self)
+	local curWep = fGetActiveWeapon(self)
 	
 	-- If not supposed to have a weapon, then return!
 	if self.Weapon_Disabled && IsValid(curWep) then
@@ -2132,7 +2133,7 @@ function ENT:Think()
 	//if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& curSchedule.IsMovingTask*/ then self:DropToFloor() end -- No need, now handled by the engine
 	
 	local curTime = CurTime()
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	
 	-- This is here to make sure the initialized process time stays in place...
 	-- otherwise if AI is disabled then reenabled, all the NPCs will now start processing at the same exact CurTime!
@@ -2143,7 +2144,7 @@ function ENT:Think()
 	
 	if !selfData.Dead then
 		-- Detect any weapon change, unless the NPC is dead because the variable is used by self:DeathWeaponDrop()
-		if selfData.WeaponEntity != funcGetActiveWeapon(self) then
+		if selfData.WeaponEntity != fGetActiveWeapon(self) then
 			selfData.WeaponEntity = self:DoChangeWeapon()
 		end
 		
@@ -2165,7 +2166,7 @@ function ENT:Think()
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	if VJ_CVAR_AI_ENABLED && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
 		if selfData.VJ_DEBUG then
-			if GetConVar("vj_npc_debug_enemy"):GetInt() == 1 then VJ.DEBUG_Print(self, false, "Enemy -> " .. tostring(funcGetEnemy(self) or "NULL") .. " | Alerted? " .. tostring(selfData.Alerted))  end
+			if GetConVar("vj_npc_debug_enemy"):GetInt() == 1 then VJ.DEBUG_Print(self, false, "Enemy -> " .. tostring(fGetEnemy(self) or "NULL") .. " | Alerted? " .. tostring(selfData.Alerted))  end
 			if GetConVar("vj_npc_debug_takingcover"):GetInt() == 1 then if curTime > selfData.TakingCoverT then VJ.DEBUG_Print(self, false, "NOT taking cover") else VJ.DEBUG_Print(self, false, "Taking cover (" .. selfData.TakingCoverT - curTime .. ")") end end
 			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - selfData.EnemyData.VisibleTime) .. " (" .. VJ.GetName(self) .. ")") end
 			if IsValid(selfData.WeaponEntity) && GetConVar("vj_npc_debug_weapon"):GetInt() == 1 then VJ.DEBUG_Print(self, false, " : Weapon -> " .. tostring(selfData.WeaponEntity) .. " | Ammo: " .. selfData.WeaponEntity:Clip1() .. " / " .. selfData.WeaponEntity:GetMaxClip1() .. " | Accuracy: " .. selfData.Weapon_Accuracy) end
@@ -2182,16 +2183,16 @@ function ENT:Think()
 			local followEnt = followData.Target
 			local followIsLiving = followEnt.VJ_ID_Living
 			//print(self:GetTarget())
-			if IsValid(followEnt) && (!followIsLiving or (followIsLiving && (self:Disposition(followEnt) == D_LI or self:GetClass() == followEnt:GetClass()) && followEnt:Alive())) then
+			if IsValid(followEnt) && (!followIsLiving or ((self:Disposition(followEnt) == D_LI or fGetClass(self) == fGetClass(followEnt)) && followEnt:Alive())) then
 				if curTime > followData.NextUpdateT && !selfData.VJ_ST_Healing then
-					local distToPly = self:GetPos():Distance(followEnt:GetPos())
+					local distToPly = fGetPos(self):Distance(fGetPos(followEnt))
 					local busy = self:IsBusy("Activities")
 					self:SetTarget(followEnt)
 					followData.StopAct = false
 					if distToPly > followData.MinDist then -- Entity is far away, move towards it!
 						local isFar = distToPly > (followData.MinDist * 4)
 						-- IF (we are busy but far) OR (not busy) THEN move
-						if (busy && isFar) or (!busy) then
+						if !busy or isFar then
 							followData.Moving = true
 							-- If we are far then stop all activities (ex: attacks) and just go there already!
 							if isFar then
@@ -2209,7 +2210,7 @@ function ENT:Think()
 								schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 								schedule:EngTask("TASK_FACE_TARGET", 1)
 								schedule.CanShootWhenMoving = true
-								if IsValid(funcGetActiveWeapon(self)) then
+								if IsValid(fGetActiveWeapon(self)) then
 									schedule.TurnData = {Type = VJ.FACE_ENEMY_VISIBLE}
 								end
 								self:StartSchedule(schedule)
@@ -2218,13 +2219,13 @@ function ENT:Think()
 								//end
 								/*self:SCHEDULE_GOTO_TARGET((distToPly < (followData.MinDist * 1.5) and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(schedule)
 									schedule.CanShootWhenMoving = true
-									if IsValid(funcGetActiveWeapon(self)) then
+									if IsValid(fGetActiveWeapon(self)) then
 										schedule.TurnData = {Type = VJ.FACE_ENEMY_VISIBLE}
 									end
 								end)*/
 							end
 						end
-					elseif followData.Moving == true then -- Entity is very close, stop moving!
+					elseif followData.Moving then -- Entity is very close, stop moving!
 						if !busy then -- If not busy then make it stop moving and do something
 							self:TaskComplete()
 							self:StopMoving(false)
@@ -2260,21 +2261,21 @@ function ENT:Think()
 			end
 			
 			local plyControlled = selfData.VJ_IsBeingControlled
-			local myPos = self:GetPos()
-			local ene = funcGetEnemy(self)
+			local myPos = fGetPos(self)
+			local ene = fGetEnemy(self)
 			local eneValid = IsValid(ene)
 			local eneData = selfData.EnemyData
 			if !eneData.Reset then
 				-- Reset enemy if it doesn't exist or it's dead
 				if !eneValid then
 					self:ResetEnemy(true, true)
-					ene = funcGetEnemy(self)
+					ene = fGetEnemy(self)
 					eneValid = IsValid(ene)
 				-- Reset enemy if it has been unseen for a while
 				elseif (curTime - eneData.VisibleTime) > ((eneData.Distance < 4000 and selfData.EnemyTimeout) or (selfData.EnemyTimeout / 2)) && !selfData.IsVJBaseSNPC_Tank then
 					self:PlaySoundSystem("LostEnemy")
 					self:ResetEnemy(true, true)
-					ene = funcGetEnemy(self)
+					ene = fGetEnemy(self)
 					eneValid = IsValid(ene)
 				end
 			end
@@ -2353,7 +2354,7 @@ function ENT:Think()
 									schedule.RunCode_OnFinish = function()
 										if self:GetWeaponState() == VJ.WEP_STATE_RELOADING then
 											-- If the current situation isn't favorable, then abandon the current reload, and try again!
-											if self.AttackType or (IsValid(funcGetEnemy(self)) && eneData.Distance <= self.Weapon_RetreatDistance) then
+											if self.AttackType or (IsValid(fGetEnemy(self)) && eneData.Distance <= self.Weapon_RetreatDistance) then
 												self:SetWeaponState()
 												//timer.Remove("wep_reload_reset" .. self:EntIndex()) -- Remove the timer to make sure it doesn't set reloading to false at a random time (later on)
 											else -- Our hiding spot is good, so reload!
@@ -2370,7 +2371,7 @@ function ENT:Think()
 			end
 		
 			if eneValid then
-				local enePos = ene:GetPos()
+				local enePos = fGetPos(ene)
 				local eneDist = myPos:Distance(enePos)
 				local eneDistNear = VJ.GetNearestDistance(self, ene, true)
 				local eneIsVisible = plyControlled and true or self:Visible(ene)
@@ -2502,11 +2503,11 @@ function ENT:Think()
 		if selfData.UsePoseParameterMovement && selfData.MovementType == VJ_MOVETYPE_GROUND then
 			local moveDir = VJ.GetMoveDirection(self, true)
 			if moveDir then
-				funcSetPoseParameter(self, "move_x", moveDir.x)
-				funcSetPoseParameter(self, "move_y", moveDir.y)
+				fSetPoseParameter(self, "move_x", moveDir.x)
+				fSetPoseParameter(self, "move_y", moveDir.y)
 			else -- I am not moving, reset the pose parameters, otherwise I will run in place!
-				funcSetPoseParameter(self, "move_x", 0)
-				funcSetPoseParameter(self, "move_y", 0)
+				fSetPoseParameter(self, "move_x", 0)
+				fSetPoseParameter(self, "move_y", 0)
 			end
 		end
 	else -- AI Not enabled
@@ -2532,17 +2533,17 @@ function ENT:Think()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ExecuteMeleeAttack()
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if selfData.Dead or selfData.PauseAttacks or selfData.Flinching or selfData.AttackType == VJ.ATTACK_TYPE_GRENADE or (selfData.MeleeAttackStopOnHit && selfData.AttackState == VJ.ATTACK_STATE_EXECUTED_HIT) then return end
 	local skip = self:OnMeleeAttackExecute("Init")
 	local hitRegistered = false
 	if !skip then
-	local myPos = self:GetPos()
-	local myClass = self:GetClass()
+	local myPos = fGetPos(self)
+	local myClass = fGetClass(self)
 		for _, ent in ipairs(ents.FindInSphere(self:MeleeAttackTraceOrigin(), selfData.MeleeAttackDamageDistance)) do
-			if ent == self or ent:GetClass() == myClass or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then continue end
+			if ent == self or fGetClass(ent) == myClass or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then continue end
 			if ent:IsPlayer() && (ent.VJ_IsControllingNPC or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
-			if ((ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible) && self:MeleeAttackTraceDirection():Dot((Vector(ent:GetPos().x, ent:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackDamageAngleRadius)) then
+			if ((ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible) && self:MeleeAttackTraceDirection():Dot((Vector(fGetPos(ent).x, fGetPos(ent).y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackDamageAngleRadius)) then
 				local isProp = ent.VJ_ID_Attackable
 				if self:OnMeleeAttackExecute("PreDamage", ent, isProp) == true then continue end
 				local dmgAmount = self:ScaleByDifficulty(selfData.MeleeAttackDamage)
@@ -2627,7 +2628,7 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 			landDir = "Enemy" -- Do NOT face random pos, even if "self.GrenadeAttackAnimationFaceEnemy" is disabled!
 		else -- We have a hidden enemy...
 			-- Attempt to flush the enemy out of hiding
-			if self:VisibleVec(eneData.VisiblePos) && ene:GetPos():Distance(eneData.VisiblePos) <= self.GrenadeAttackMaxDistance then // self.GrenadeAttackMaxDistance
+			if self:VisibleVec(eneData.VisiblePos) && fGetPos(ene):Distance(eneData.VisiblePos) <= self.GrenadeAttackMaxDistance then // self.GrenadeAttackMaxDistance
 				landDir = "EnemyLastVis" -- We are going to face flush position, do NOT face random pos!
 			-- If can't flush the enemy, then face random open position ONLY if we are given a live entity, otherwise...
 			-- If live entity is NOT given and it's allowed to continue, it will cause the NPC to throw a grenade when both the enemy and its flush position are hidden!
@@ -2777,7 +2778,7 @@ function ENT:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
 	
 	-- Handle NPC turning and grenade landing position
 	-- Do NOT set it to actually turn & face because it's pointless at this point since the grenade is already being released!
-	local landingPos = self:GetPos() + self:GetForward()*200
+	local landingPos = fGetPos(self) + self:GetForward() * 200
 	if landDir == "Enemy" then -- Use enemy's position
 		landingPos = self:GetEnemyLastKnownPos()
 		//if self.GrenadeAttackAnimationFaceEnemy then self:SetTurnTarget("Enemy") end
@@ -2821,12 +2822,12 @@ function ENT:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
 	
 	if isLiveEnt then
 		-- Inactive HL2 grenade, activate it!
-		if grenade:GetClass() == "npc_grenade_frag" && grenade:GetInternalVariable("m_flDetonateTime") < 0 then
+		if fGetClass(grenade) == "npc_grenade_frag" && grenade:GetInternalVariable("m_flDetonateTime") < 0 then
 			grenade:Input("SetTimer", grenade:GetOwner(), grenade:GetOwner(), fuseTime)
 		end
 	else
 		-- Set the fuse timers for all the different grenade entities
-		local gerClass = grenade:GetClass()
+		local gerClass = fGetClass(grenade)
 		if gerClass == "obj_vj_grenade" then
 			grenade.FuseTime = fuseTime
 		elseif gerClass == "npc_grenade_frag" then
@@ -2852,7 +2853,7 @@ function ENT:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
 	-- Handle throw velocity
 	local postSpawnResult = self:OnGrenadeAttackExecute("PostSpawn", grenade, customEnt, landDir, landingPos)
 	if postSpawnResult != true then
-		local vel = postSpawnResult or ((landingPos - grenade:GetPos()) + (self:GetUp() * 200 + self:GetForward() * 500 + self:GetRight() * math.random(-20, 20)))
+		local vel = postSpawnResult or ((landingPos - fGetPos(grenade)) + (self:GetUp() * 200 + self:GetForward() * 500 + self:GetRight() * math.random(-20, 20)))
 		local phys = grenade:GetPhysicsObject()
 		if IsValid(phys) then
 			phys:Wake()
@@ -2896,13 +2897,13 @@ local sdBitMortar = bit.bor(SOUND_DANGER, SOUND_CONTEXT_MORTAR) ---> Combine mor
 	- BEST USE: Sounds that should scare the owner's allies
 -----------------------------------------------------------]]
 function ENT:CheckForDangers()
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if !selfData.CanDetectDangers or selfData.AttackType == VJ.ATTACK_TYPE_GRENADE or selfData.NextDangerDetectionT > CurTime() then return end
 	local regDangerDetected = false -- A regular non-grenade danger has been found (This is done to make sure grenades take priority over other dangers!)
-	for _, ent in ipairs(ents.FindInSphere(self:GetPos(), selfData.DangerDetectionDistance)) do
+	for _, ent in ipairs(ents.FindInSphere(fGetPos(self), selfData.DangerDetectionDistance)) do
 		if (ent.VJ_ID_Danger or ent.VJ_ID_Grenade) && self:Visible(ent) then
 			local owner = ent:GetOwner()
-			if !(IsValid(owner) && owner.IsVJBaseSNPC && ((self:GetClass() == owner:GetClass()) or (self:Disposition(owner) == D_LI))) then
+			if !(IsValid(owner) && owner.IsVJBaseSNPC && ((fGetClass(self) == fGetClass(owner)) or (self:Disposition(owner) == D_LI))) then
 				if ent.VJ_ID_Danger then regDangerDetected = ent continue end -- If it's a regular danger then just skip it for now
 				local funcCustom = self.OnDangerDetected; if funcCustom && funcCustom(self, VJ.DANGER_TYPE_GRENADE, ent) then continue end
 				local curTime = CurTime()
@@ -2923,7 +2924,7 @@ function ENT:CheckForDangers()
 			end
 		end
 	end
-	if regDangerDetected or funcHasCondition(self, COND_HEAR_DANGER) or funcHasCondition(self, COND_HEAR_PHYSICS_DANGER) or funcHasCondition(self, COND_HEAR_MOVE_AWAY) then
+	if regDangerDetected or fHasCondition(self, COND_HEAR_DANGER) or fHasCondition(self, COND_HEAR_PHYSICS_DANGER) or fHasCondition(self, COND_HEAR_MOVE_AWAY) then
 		local funcCustom = self.OnDangerDetected
 		if funcCustom then
 			if regDangerDetected then
@@ -2946,7 +2947,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAttacks(checkTimers)
 	if !self:Alive() then return end
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if selfData.VJ_DEBUG && GetConVar("vj_npc_debug_attack"):GetInt() == 1 then VJ.DEBUG_Print(self, "StopAttacks", "Attack type = " .. selfData.AttackType) end
 	
 	if checkTimers && selfData.AttackType == VJ.ATTACK_TYPE_MELEE && selfData.AttackState < VJ.ATTACK_STATE_EXECUTED then
@@ -2966,17 +2967,19 @@ local function math_angDif(diff)
 end
 --
 function ENT:UpdatePoseParamTracking(resetPoses)
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if !selfData.HasPoseParameterLooking or (!selfData.VJ_IsBeingControlled && (!selfData.WeaponAttackState or (!selfData.EnemyData.Visible && selfData.WeaponAttackState < VJ.WEP_ATTACK_STATE_FIRE))) then return end
 	//VJ.GetPoseParameters(self)
-	local ene = funcGetEnemy(self)
+	local ene = fGetEnemy(self)
 	local newPitch = 0
 	local newYaw = 0
 	local newRoll = 0
 	if !resetPoses && IsValid(ene) then
 		local myEyePos = self:EyePos()
 		local myAng = self:GetAngles()
-		local eneAng = (self:GetAimPosition(ene, myEyePos) - myEyePos):Angle()
+		local eneAng = self:GetAimPosition(ene, myEyePos)
+		eneAng:Sub(myEyePos)
+		eneAng = eneAng:Angle()
 		newPitch = math_angDif(eneAng.p - myAng.p)
 		if selfData.PoseParameterLooking_InvertPitch then newPitch = -newPitch end
 		newYaw = math_angDif(eneAng.y - myAng.y)
@@ -2995,15 +2998,15 @@ function ENT:UpdatePoseParamTracking(resetPoses)
 	local speed = selfData.PoseParameterLooking_TurningSpeed
 	for x = 1, #namesPitch do
 		local pose = namesPitch[x]
-		funcSetPoseParameter(self, pose, math_angApproach(funcGetPoseParameter(self, pose), newPitch, speed))
+		fSetPoseParameter(self, pose, math_angApproach(fGetPoseParameter(self, pose), newPitch, speed))
 	end
 	for x = 1, #namesYaw do
 		local pose = namesYaw[x]
-		funcSetPoseParameter(self, pose, math_angApproach(funcGetPoseParameter(self, pose), newYaw, speed))
+		fSetPoseParameter(self, pose, math_angApproach(fGetPoseParameter(self, pose), newYaw, speed))
 	end
 	for x = 1, #namesRoll do
 		local pose = namesRoll[x]
-		funcSetPoseParameter(self, pose, math_angApproach(funcGetPoseParameter(self, pose), newRoll, speed))
+		fSetPoseParameter(self, pose, math_angApproach(fGetPoseParameter(self, pose), newRoll, speed))
 	end
 	selfData.UpdatedPoseParam = true
 end
@@ -3017,7 +3020,7 @@ end
 -----------------------------------------------------------]]
 function ENT:CanFireWeapon(checkDist, checkDistOnly)
 	if self:OnWeaponCanFire() == false then return false end
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	local curWep = selfData.WeaponEntity
 	if selfData.PauseAttacks or !IsValid(curWep) or self:GetWeaponState() != VJ.WEP_STATE_READY then return false end
 	
@@ -3049,11 +3052,11 @@ local schedule_yield_player = vj_ai_schedule.New("SCHEDULE_YIELD_PLAYER")
 local bitsDanger = bit.bor(SOUND_BULLET_IMPACT, SOUND_COMBAT, SOUND_WORLD, SOUND_DANGER) // SOUND_PLAYER, SOUND_PLAYER_VEHICLE
 --
 function ENT:SelectSchedule()
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if selfData.VJ_IsBeingControlled or selfData.Dead then return end
 	
 	local curTime = CurTime()
-	local ene = funcGetEnemy(self)
+	local ene = fGetEnemy(self)
 	local eneValid = IsValid(ene)
 	self:PlayIdleSound(eneValid)
 	
@@ -3067,8 +3070,8 @@ function ENT:SelectSchedule()
 		end
 		selfData.Weapon_UnarmedBehavior_Active = false
 		
-		-- Investigation: Conditions // funcHasCondition(self, COND_HEAR_PLAYER)
-		if selfData.CanInvestigate && (funcHasCondition(self, COND_HEAR_BULLET_IMPACT) or funcHasCondition(self, COND_HEAR_COMBAT) or funcHasCondition(self, COND_HEAR_WORLD) or funcHasCondition(self, COND_HEAR_DANGER)) && selfData.NextInvestigationMove < curTime && selfData.TakingCoverT < curTime && !self:IsBusy() then
+		-- Investigation: Conditions // fHasCondition(self, COND_HEAR_PLAYER)
+		if selfData.CanInvestigate && (fHasCondition(self, COND_HEAR_BULLET_IMPACT) or fHasCondition(self, COND_HEAR_COMBAT) or fHasCondition(self, COND_HEAR_WORLD) or fHasCondition(self, COND_HEAR_DANGER)) && selfData.NextInvestigationMove < curTime && selfData.TakingCoverT < curTime && !self:IsBusy() then
 			local sdSrc = self:GetBestSoundHint(bitsDanger)
 			if sdSrc then
 				//PrintTable(sdSrc)
@@ -3109,7 +3112,7 @@ function ENT:SelectSchedule()
 		
 	-- Combat Behavior --
 	else
-		local wep = funcGetActiveWeapon(self)
+		local wep = fGetActiveWeapon(self)
 		local eneData = selfData.EnemyData
 		
 		-- Check for weapon validity
@@ -3136,7 +3139,7 @@ function ENT:SelectSchedule()
 			selfData.Weapon_UnarmedBehavior_Active = false -- In case it was scared, return it back to normal
 			
 			local enePos_Eye = ene:EyePos()
-			local myPos = self:GetPos()
+			local myPos = fGetPos(self)
 			local myPosCentered = myPos + self:OBBCenter()
 			
 			-- Retreat from enemy if it's to close
@@ -3189,7 +3192,7 @@ function ENT:SelectSchedule()
 							self:SetTurnTarget("Enemy")
 						else
 							local wepDif = selfData.Weapon_AimTurnDiff or selfData.Weapon_AimTurnDiff_Def
-							local los = ene:GetPos() - myPos
+							local los = fGetPos(ene) - myPos
 							los.z = 0
 							local facingDir = self:GetAngles():Forward() -- Do NOT use sight dir bec some NPCs use their eyes as the dir, it will trick the system to think the NPC is facing the enemy
 							facingDir.z = 0
@@ -3351,7 +3354,7 @@ function ENT:SelectSchedule()
 	
 	::goto_conditions::
 	-- Handle move away behavior
-	if funcHasCondition(self, COND_PLAYER_PUSHING) && curTime > selfData.TakingCoverT && !self:IsBusy("Activities") then
+	if fHasCondition(self, COND_PLAYER_PUSHING) && curTime > selfData.TakingCoverT && !self:IsBusy("Activities") then
 		self:PlaySoundSystem("YieldToPlayer")
 		if eneValid then -- Face current enemy
 			schedule_yield_player.TurnData.Type = VJ.FACE_ENEMY_VISIBLE
@@ -3369,18 +3372,18 @@ function ENT:SelectSchedule()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(checkAllies, checkVis)
-	local selfData = funcGetTable(self)
-	if selfData.Dead or (selfData.VJ_IsBeingControlled && selfData.VJ_TheControllerBullseye == funcGetEnemy(self)) then selfData.EnemyData.Reset = false return false end
-	local ene = funcGetEnemy(self)
+	local selfData = fGetTable(self)
+	if selfData.Dead or (selfData.VJ_IsBeingControlled && selfData.VJ_TheControllerBullseye == fGetEnemy(self)) then selfData.EnemyData.Reset = false return false end
+	local ene = fGetEnemy(self)
 	local eneValid = IsValid(ene)
 	local eneData = selfData.EnemyData
 	local curTime = CurTime()
 	if checkAllies then
-		local getAllies = self:Allies_Check(1000)
-		if getAllies then
-			for _, ally in ipairs(getAllies) do
-				local allyEne = funcGetEnemy(ally)
-				if IsValid(allyEne) && (curTime - ally.EnemyData.VisibleTime) < selfData.EnemyTimeout && allyEne:Alive() && self:GetPos():Distance(allyEne:GetPos()) <= self:GetMaxLookDistance() && self:CheckRelationship(allyEne) == D_HT then
+		local allies = self:Allies_Check(1000)
+		if allies then
+			for _, ally in ipairs(allies) do
+				local allyEne = fGetEnemy(ally)
+				if IsValid(allyEne) && (curTime - ally.EnemyData.VisibleTime) < selfData.EnemyTimeout && allyEne:Alive() && fGetPos(self):Distance(fGetPos(allyEne)) <= self:GetMaxLookDistance() && self:CheckRelationship(allyEne) == D_HT then
 					selfData.AllowWeaponOcclusionDelay = false
 					self:ForceSetEnemy(allyEne, false)
 					eneData.VisibleTime = curTime -- Reset the time otherwise it will run "ResetEnemy" none-stop!
@@ -3407,11 +3410,11 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 	if selfData.VJ_DEBUG && GetConVar("vj_npc_debug_resetenemy"):GetInt() == 1 then VJ.DEBUG_Print(self, "ResetEnemy", tostring(ene)) end
 	eneData.Reset = true
 	self:SetNPCState(NPC_STATE_ALERT)
-	timer.Create("alert_reset" .. self:EntIndex(), math.Rand(selfData.AlertTimeout.a, selfData.AlertTimeout.b), 1, function() if !IsValid(funcGetEnemy(self)) then selfData.Alerted = false self:SetNPCState(NPC_STATE_IDLE) end end)
+	timer.Create("alert_reset" .. self:EntIndex(), math.Rand(selfData.AlertTimeout.a, selfData.AlertTimeout.b), 1, function() if !IsValid(fGetEnemy(self)) then selfData.Alerted = false self:SetNPCState(NPC_STATE_IDLE) end end)
 	self:OnResetEnemy()
 	local moveToEnemy = false
 	if eneValid then
-		if !selfData.IsFollowing && !selfData.IsGuard && !selfData.IsVJBaseSNPC_Tank && !selfData.VJ_IsBeingControlled && selfData.LastHiddenZone_CanWander == true && !selfData.Weapon_UnarmedBehavior_Active && selfData.Behavior != VJ_BEHAVIOR_PASSIVE && selfData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !self:IsBusy() && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
+		if !selfData.IsFollowing && !selfData.IsGuard && !selfData.IsVJBaseSNPC_Tank && !selfData.VJ_IsBeingControlled && selfData.LastHiddenZone_CanWander && !selfData.Weapon_UnarmedBehavior_Active && selfData.Behavior != VJ_BEHAVIOR_PASSIVE && selfData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !self:IsBusy() && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
 			moveToEnemy = self:GetEnemyLastKnownPos()
 		end
 		self:MarkEnemyAsEluded(ene)
@@ -3419,7 +3422,7 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 		self:AddEntityRelationship(ene, D_NU, 10)
 	end
 	
-	selfData.LastHiddenZone_CanWander = curTime > selfData.LastHiddenZoneT and true or false
+	selfData.LastHiddenZone_CanWander = curTime > selfData.LastHiddenZoneT
 	selfData.LastHiddenZoneT = 0
 	
 	-- Clear memory of the enemy if it's not a player AND it's dead
@@ -3451,15 +3454,15 @@ function ENT:OnTakeDamage(dmginfo)
 	if !IsValid(dmgAttacker) then dmgAttacker = false end
 	
 	-- Don't take bullet damage from friendly NPCs
-	if dmgAttacker && dmginfo:IsBulletDamage() && dmgAttacker:IsNPC() && dmgAttacker:Disposition(self) != D_HT && (dmgAttacker:GetClass() == self:GetClass() or self:Disposition(dmgAttacker) == D_LI) then return 0 end
+	if dmgAttacker && dmginfo:IsBulletDamage() && dmgAttacker:IsNPC() && dmgAttacker:Disposition(self) != D_HT && (fGetClass(dmgAttacker) == fGetClass(self) or self:Disposition(dmgAttacker) == D_LI) then return 0 end
 	
 	local dmgInflictor = dmginfo:GetInflictor()
 	if !IsValid(dmgInflictor) then dmgInflictor = false end
 	
 	-- Attempt to avoid taking damage when walking on ragdolls
-	if dmgInflictor && dmgInflictor:GetClass() == "prop_ragdoll" && dmgInflictor:GetVelocity():Length() <= 100 then return 0 end
+	if dmgInflictor && fGetClass(dmgInflictor) == "prop_ragdoll" && dmgInflictor:GetVelocity():Length() <= 100 then return 0 end
 	
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	local hitgroup = self:GetLastDamageHitGroup()
 	self:OnDamaged(dmginfo, hitgroup, "Init")
 	if selfData.GodMode or dmginfo:GetDamage() <= 0 then return 0 end
@@ -3468,7 +3471,7 @@ function ENT:OnTakeDamage(dmginfo)
 	local curTime = CurTime()
 	local isFireEnt = false
 	if self:IsOnFire() then
-		isFireEnt = dmgInflictor && dmgAttacker && dmgInflictor:GetClass() == "entityflame" && dmgAttacker:GetClass() == "entityflame"
+		isFireEnt = dmgInflictor && dmgAttacker && fGetClass(dmgInflictor) == "entityflame" && fGetClass(dmgAttacker) == "entityflame"
 		if self:WaterLevel() > 1 then self:Extinguish() end -- If we are in water, then extinguish the fire
 	end
 	
@@ -3482,7 +3485,7 @@ function ENT:OnTakeDamage(dmginfo)
 	if (selfData.Immune_Fire && (dmgType == DMG_BURN or dmgType == DMG_SLOWBURN or isFireEnt)) or (selfData.Immune_Toxic && (dmgType == DMG_ACID or dmgType == DMG_RADIATION or dmgType == DMG_POISON or dmgType == DMG_NERVEGAS or dmgType == DMG_PARALYZE)) or (selfData.Immune_Bullet && (dmginfo:IsBulletDamage() or dmgType == DMG_BULLET or dmgType == DMG_AIRBOAT or dmgType == DMG_BUCKSHOT or dmgType == DMG_SNIPER)) or (selfData.Immune_Explosive && (dmgType == DMG_BLAST or dmgType == DMG_BLAST_SURFACE or dmgType == DMG_MISSILEDEFENSE)) or (selfData.Immune_Dissolve && dmginfo:IsDamageType(DMG_DISSOLVE)) or (selfData.Immune_Electricity && (dmgType == DMG_SHOCK or dmgType == DMG_ENERGYBEAM or dmgType == DMG_PHYSGUN)) or (selfData.Immune_Melee && (dmgType == DMG_CLUB or dmgType == DMG_SLASH)) or (selfData.Immune_Sonic && dmgType == DMG_SONIC) then return 0 end
 	
 	-- Make sure combine ball does reasonable damage and doesn't spam!
-	if (dmgInflictor && dmgInflictor:GetClass() == "prop_combine_ball") or (dmgAttacker && dmgAttacker:GetClass() == "prop_combine_ball") then
+	if (dmgInflictor && fGetClass(dmgInflictor) == "prop_combine_ball") or (dmgAttacker && fGetClass(dmgAttacker) == "prop_combine_ball") then
 		if selfData.Immune_Dissolve then return 0 end
 		if curTime > selfData.NextCombineBallDmgT then
 			dmginfo:SetDamage(math.random(400, 500))
@@ -3561,7 +3564,7 @@ function ENT:OnTakeDamage(dmginfo)
 						self:AddEntityRelationship(dmgAttacker, D_HT, 2)
 						selfData.TakingCoverT = curTime + 2
 						self:PlaySoundSystem("BecomeEnemyToPlayer")
-						if !IsValid(funcGetEnemy(self)) then
+						if !IsValid(fGetEnemy(self)) then
 							self:StopMoving()
 							self:SetTarget(dmgAttacker)
 							self:SCHEDULE_FACE("TASK_FACE_TARGET")
@@ -3585,9 +3588,9 @@ function ENT:OnTakeDamage(dmginfo)
 			-- Move away or hide behind object when damaged while enemy is valid | RESULT: May play a hiding animation OR move to take cover from enemy
 			local eneData = selfData.EnemyData
 			if !isPassive && selfData.CombatDamageResponse && IsValid(eneData.Target) && curTime > selfData.NextCombatDamageResponseT && !selfData.IsFollowing && !selfData.AttackType && !self:IsBusy() && curTime > selfData.TakingCoverT && eneData.Visible && self:GetWeaponState() != VJ.WEP_STATE_RELOADING && eneData.Distance < selfData.Weapon_MaxDistance then
-				local wep = funcGetActiveWeapon(self)
+				local wep = fGetActiveWeapon(self)
 				local canMove = true
-				if self:DoCoverTrace(self:GetPos() + self:OBBCenter(), eneData.Target:EyePos()) then
+				if self:DoCoverTrace(fGetPos(self) + self:OBBCenter(), eneData.Target:EyePos()) then
 					local hideTime = math.Rand(selfData.CombatDamageResponse_CoverTime.a, selfData.CombatDamageResponse_CoverTime.b)
 					local anim = self:PlayAnim(selfData.AnimTbl_TakingCover, false, hideTime, false) -- Don't set lockAnim because we want it to shoot if an enemy is suddenly visible!
 					if anim != ACT_INVALID then
@@ -3604,14 +3607,14 @@ function ENT:OnTakeDamage(dmginfo)
 				end
 			end
 			
-			if !isPassive && !IsValid(funcGetEnemy(self)) then
+			if !isPassive && !IsValid(fGetEnemy(self)) then
 				local canMove = true
 				
 				-- How allies respond when it's damaged | RESULT: May become alerted and may play an animation
 				if selfData.DamageAllyResponse && curTime > selfData.NextDamageAllyResponseT && !selfData.IsFollowing then
 					local responseDist = math_max(800, self:OBBMaxs():Distance(self:OBBMins()) * 12)
 					local allies = self:Allies_Check(responseDist)
-					if allies != false then
+					if allies then
 						if !isFireEnt then
 							self:Allies_Bring("Diamond", responseDist, allies, 4)
 						end
@@ -3637,7 +3640,7 @@ function ENT:OnTakeDamage(dmginfo)
 						local sightDist = self:GetMaxLookDistance()
 						sightDist = math_min(math_max(sightDist / 2, sightDist <= 1000 and sightDist or 1000), sightDist)
 						-- IF normal sight dist is less than 1000 then change nothing, OR ELSE use half the distance with 1000 as minimum
-						if self:GetPos():Distance(dmgAttacker:GetPos()) <= sightDist && self:Visible(dmgAttacker) then
+						if fGetPos(self):Distance(fGetPos(dmgAttacker)) <= sightDist && self:Visible(dmgAttacker) then
 							local dispLvl = self:CheckRelationship(dmgAttacker)
 							if dispLvl == D_HT or dispLvl == D_NU then
 								//self:AddEntityRelationship(dmgAttacker, D_HT, 10)
@@ -3668,7 +3671,7 @@ function ENT:OnTakeDamage(dmginfo)
 		if isPassive && curTime > selfData.TakingCoverT then
 			if selfData.Passive_AlliesRunOnDamage then -- Make passive allies run too!
 				local allies = self:Allies_Check(math_max(800, self:OBBMaxs():Distance(self:OBBMins()) * 20))
-				if allies != false then
+				if allies then
 					for _, ally in ipairs(allies) do
 						ally.TakingCoverT = curTime + math.Rand(6, 7)
 						ally:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH")
@@ -3688,7 +3691,7 @@ function ENT:OnTakeDamage(dmginfo)
 	
 	if self:Health() <= 0 && !selfData.Dead then
 		self:RemoveEFlags(EFL_NO_DISSOLVE)
-		if (dmginfo:IsDamageType(DMG_DISSOLVE)) or (dmgInflictor && dmgInflictor:GetClass() == "prop_combine_ball") then
+		if (dmginfo:IsDamageType(DMG_DISSOLVE)) or (dmgInflictor && fGetClass(dmgInflictor) == "prop_combine_ball") then
 			local dissolve = DamageInfo()
 			dissolve:SetDamage(self:Health())
 			dissolve:SetAttacker(dmginfo:GetAttacker())
@@ -3712,20 +3715,20 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 	if self.IsFollowing then self:ResetFollowBehavior() end
 	local dmgInflictor = dmginfo:GetInflictor()
 	local dmgAttacker = dmginfo:GetAttacker()
-	local myPos = self:GetPos()
+	local myPos = fGetPos(self)
 	
 	if VJ_CVAR_AI_ENABLED then
 		local responseDist = math_max(800, self:OBBMaxs():Distance(self:OBBMins()) * 12)
 		local allies = self:Allies_Check(responseDist)
 		if allies then
-			local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer && dmgAttacker:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or false
+			local doBecomeEnemyToPlayer = self.BecomeEnemyToPlayer && dmgAttacker:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS
 			local responseType = self.DeathAllyResponse
 			local movedAllyNum = 0 -- Number of allies that have moved
 			for _, ally in ipairs(allies) do
 				ally:OnAllyKilled(self)
 				ally:PlaySoundSystem("AllyDeath")
 				
-				if responseType && myPos:Distance(ally:GetPos()) < responseDist then
+				if responseType && myPos:Distance(fGetPos(ally)) < responseDist then
 					local moved = false
 					-- Bring ally
 					if responseType == true && movedAllyNum < self.DeathAllyResponse_MoveLimit then
@@ -3735,7 +3738,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 						end
 					end
 					-- Alert ally
-					if (responseType == true or responseType == "OnlyAlert") && !IsValid(funcGetEnemy(ally)) then
+					if (responseType == true or responseType == "OnlyAlert") && !IsValid(fGetEnemy(ally)) then
 						ally:DoReadyAlert()
 						if !moved then
 							local faceTime = math.Rand(5, 8)
@@ -3783,7 +3786,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 	self.AttackType = VJ.ATTACK_TYPE_NONE
 	self.HasMeleeAttack = false
 	if IsValid(dmgAttacker) then
-		if dmgAttacker:GetClass() == "npc_barnacle" then self.HasDeathCorpse = false end -- Don't make a corpse if it's killed by a barnacle!
+		if fGetClass(dmgAttacker) == "npc_barnacle" then self.HasDeathCorpse = false end -- Don't make a corpse if it's killed by a barnacle!
 		if vj_npc_ply_frag:GetInt() == 1 && dmgAttacker:IsPlayer() then dmgAttacker:AddFrags(1) end
 	end
 	gamemode.Call("OnNPCKilled", self, dmgAttacker, dmgInflictor)
@@ -3802,7 +3805,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 	
 	-- Handle death animation, death delay, and the final death phase
 	local deathTime = self.DeathDelayTime
-	if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball" then self.HasDeathAnimation = false end
+	if IsValid(dmgInflictor) && fGetClass(dmgInflictor) == "prop_combine_ball" then self.HasDeathAnimation = false end
 	if self.HasDeathAnimation && VJ_CVAR_AI_ENABLED && !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) && !dmginfo:IsDamageType(DMG_DISSOLVE) && self:GetNavType() != NAV_CLIMB && math.random(1, self.DeathAnimationChance) == 1 then
 		self:RemoveAllGestures()
 		self:OnDeath(dmginfo, hitgroup, "DeathAnim")
@@ -3878,7 +3881,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		self.Corpse = ents.Create(corpseClass)
 		local corpse = self.Corpse
 		corpse:SetModel(corpseMdl)
-		corpse:SetPos(self:GetPos())
+		corpse:SetPos(fGetPos(self))
 		corpse:SetAngles(self:GetAngles())
 		corpse:Spawn()
 		corpse:Activate()
@@ -3896,7 +3899,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			end
 		end
 		corpse.IsVJBaseCorpse = true
-		corpse.FadeCorpseType = (corpse:GetClass() == "prop_ragdoll" and "FadeAndRemove") or "kill"
+		corpse.FadeCorpseType = (fGetClass(corpse) == "prop_ragdoll" and "FadeAndRemove") or "kill"
 		corpse.DamageInfo = dmginfo
 		corpse.ChildEnts = self.DeathCorpse_ChildEnts or {}
 		corpse.BloodData = {Color = self.BloodColor, Particle = self.BloodParticle, Decal = self.BloodDecal}
@@ -3925,13 +3928,13 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		end
 		
 		-- Dissolve
-		if (bit.band(self.SavedDmgInfo.type, DMG_DISSOLVE) != 0) or (IsValid(self.SavedDmgInfo.inflictor) && self.SavedDmgInfo.inflictor:GetClass() == "prop_combine_ball") then
+		if (bit.band(self.SavedDmgInfo.type, DMG_DISSOLVE) != 0) or (IsValid(self.SavedDmgInfo.inflictor) && fGetClass(self.SavedDmgInfo.inflictor) == "prop_combine_ball") then
 			corpse:Dissolve(0, 1)
 		end
 		
 		-- Bone & Angle
 		-- If it's a bullet, it will use localized velocity on each bone depending on how far away the bone is from the dmg position
-		local useLocalVel = (bit.band(self.SavedDmgInfo.type, DMG_BULLET) != 0 and self.SavedDmgInfo.pos != defPos) or false
+		local useLocalVel = bit.band(self.SavedDmgInfo.type, DMG_BULLET) != 0 and self.SavedDmgInfo.pos != defPos
 		local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
 		if self.DeathAnimationCodeRan then
 			useLocalVel = false
@@ -3953,7 +3956,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 				-- If it's 1, then it's likely a regular physics model with no bones
 				elseif physCount == 1 then
 					if self.DeathCorpseApplyForce then
-						childPhysObj:SetVelocity(dmgForce / math_max(1, (useLocalVel and corpse:GetPos():Distance(self.SavedDmgInfo.pos) / 12) or 1))
+						childPhysObj:SetVelocity(dmgForce / math_max(1, (useLocalVel and fGetPos(corpse):Distance(self.SavedDmgInfo.pos) / 12) or 1))
 					end
 				end
 			end
@@ -3984,7 +3987,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		corpse:CallOnRemove("vj_" .. corpse:EntIndex(), function(ent, childPieces)
 			for _, child in ipairs(childPieces) do
 				if IsValid(child) then
-					if child:GetClass() == "prop_ragdoll" then -- Make ragdolls fade
+					if fGetClass(child) == "prop_ragdoll" then -- Make ragdolls fade
 						child:Fire("FadeAndRemove")
 					else
 						child:Fire("kill")
@@ -4006,12 +4009,12 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DeathWeaponDrop(dmginfo, hitgroup)
-	local activeWep = funcGetActiveWeapon(self)
+	local activeWep = fGetActiveWeapon(self)
 	if !self.DropWeaponOnDeath or !IsValid(activeWep) then return end
 	
 	-- Save its original pos & ang in case the weapon uses custom world model pos & ang
 	-- because doing DropWeapon will mess up its spawn pos and ang, example: K-3 will spawn floating above the NPC
-	local orgPos, orgAng = activeWep:GetPos(), activeWep:GetAngles()
+	local orgPos, orgAng = fGetPos(activeWep), activeWep:GetAngles()
 	self:DropWeapon(activeWep, nil, self:GetForward()) -- Override the velocity so it doesn't throw the weapon (default source behavior)
 	if activeWep.IsVJBaseWeapon && activeWep.WorldModelOffsetParams.Enabled then
 		activeWep:SetPos(orgPos)
@@ -4019,7 +4022,7 @@ function ENT:DeathWeaponDrop(dmginfo, hitgroup)
 	end
 	local phys = activeWep:GetPhysicsObject()
 	if IsValid(phys) then
-		if (bit.band(self.SavedDmgInfo.type, DMG_DISSOLVE) != 0) or (IsValid(self.SavedDmgInfo.inflictor) && self.SavedDmgInfo.inflictor:GetClass() == "prop_combine_ball") then
+		if (bit.band(self.SavedDmgInfo.type, DMG_DISSOLVE) != 0) or (IsValid(self.SavedDmgInfo.inflictor) && fGetClass(self.SavedDmgInfo.inflictor) == "prop_combine_ball") then
 			phys:EnableGravity(false)
 			phys:SetVelocity(self:GetForward() * -150 + self:GetRight() * math.Rand(100, -100) + self:GetUp() * 50)
 		else

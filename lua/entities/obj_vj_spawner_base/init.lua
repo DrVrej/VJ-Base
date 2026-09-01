@@ -83,7 +83,7 @@ local defPos = Vector()
 local defAng = Angle()
 
 local metaEntity = FindMetaTable("Entity")
-local funcGetTable = metaEntity.GetTable
+local fGetTable = metaEntity.GetTable
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Spawns an entity from the given information, recommended to not manually call this function!
@@ -215,7 +215,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	local curTime = CurTime()
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	self:OnThink()
 	
 	-- Idle sound

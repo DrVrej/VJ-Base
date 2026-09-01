@@ -189,7 +189,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	if self.Dead then VJ.STOPSOUND(self.CurrentIdleSound) return end
-	//self:SetAngles(self:GetVelocity():GetNormal():Angle())
+	//self:SetAngles(self:GetVelocity():GetNormalized():Angle())
 	self:NextThink(CurTime())
 	self:OnThink()
 	self:PlaySound("Idle")

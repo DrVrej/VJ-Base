@@ -159,7 +159,7 @@ local vj_npc_melee = GetConVar("vj_npc_melee")
 local vj_npc_reduce_vfx = GetConVar("vj_npc_reduce_vfx")
 
 local metaEntity = FindMetaTable("Entity")
-local funcGetTable = metaEntity.GetTable
+local fGetTable = metaEntity.GetTable
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
 	self:SetPhysicsDamageScale(0) -- Take no physics damage
@@ -219,7 +219,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThink()
 	if self:Tank_OnThink() != true && vj_npc_reduce_vfx:GetInt() == 0 then
-		local selfData = funcGetTable(self)
+		local selfData = fGetTable(self)
 		local curTime = CurTime()
 		if curTime > selfData.Tank_NextIdleParticles then
 			self:Tank_UpdateIdleParticles()
@@ -245,7 +245,7 @@ local vec80z = Vector(0, 0, 80)
 local FACE_NONE = VJ.FACE_NONE
 --
 function ENT:OnThinkActive()
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if selfData.Dead then return end
 	selfData.TurnData.Type = FACE_NONE -- This effectively makes it never face anything through Lua
 	self:Tank_OnThinkActive()
@@ -326,7 +326,7 @@ function ENT:OnThinkActive()
 						end
 						
 						if selfData.VJ_DEBUG then VJ.DEBUG_Print(self, false, "Driving Speed = ", driveSpeed) end
-						phys:SetVelocity(moveVel:GetNormal() * driveSpeed)
+						phys:SetVelocity(moveVel:GetNormalized() * driveSpeed)
 						hasMoved = true
 					end
 				end
@@ -357,7 +357,7 @@ function ENT:OnThinkActive()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule()
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if selfData.Dead then return end
 
 	local eneValid = IsValid(self:GetEnemy())
@@ -468,7 +468,7 @@ function ENT:CustomOnRemove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_PlaySoundSystem(sdSet)
-	local selfData = funcGetTable(self)
+	local selfData = fGetTable(self)
 	if !selfData.HasSounds or !sdSet then return end
 	if sdSet == "Movement" then
 		if selfData.HasMoveSound then
