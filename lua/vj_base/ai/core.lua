@@ -1563,7 +1563,6 @@ function ENT:OnEntityCopyTableFinish(data)
 	data.IsInitialized = nil
 	
 	-- Creature
-	data.PropInteraction_Found = nil
 	data.PropInteraction_NextCheckT = nil
 	data.IsAbleToRangeAttack = nil
 	data.IsAbleToLeapAttack = nil
@@ -3179,7 +3178,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			local pickedSD = PICK(selfData.SoundTbl_Impact)
 			if (pickedSD && math.random(1, selfData.ImpactSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
-				selfData.CurrentImpactSound = (sdType or VJ.EmitSound)(self, pickedSD, selfData.ImpactSoundLevel, self:GetSoundPitch(selfData.ImpactSoundPitch))
+				(sdType or VJ.EmitSound)(self, pickedSD, selfData.ImpactSoundLevel, self:GetSoundPitch(selfData.ImpactSoundPitch))
 			end
 		end
 	elseif sdSet == "DamageByPlayer" then
@@ -3284,7 +3283,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				if customSD then pickedSD = customSD end
 				if selfData.IdleSoundsWhileAttacking == false then StopSD(selfData.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				selfData.IdleSoundBlockTime = CurTime() + 1
-				selfData.CurrentLeapAttackDamageMissSound = (sdType or VJ.EmitSound)(self, pickedSD, selfData.LeapAttackDamageMissSoundLevel, self:GetSoundPitch(selfData.LeapAttackDamageMissSoundPitch))
+				(sdType or VJ.EmitSound)(self, pickedSD, selfData.LeapAttackDamageMissSoundLevel, self:GetSoundPitch(selfData.LeapAttackDamageMissSoundPitch))
 			end
 		end
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-- Human Base Sound Systems --=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--

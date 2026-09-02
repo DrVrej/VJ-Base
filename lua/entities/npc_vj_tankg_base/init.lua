@@ -176,7 +176,7 @@ function ENT:OnThinkActive()
 			local angEne = (enePos - myPos):Angle()
 			local angDiffuse = (angEne.y - (self:GetAngles().y + selfData.Tank_AngleOffset) + 180) % 360 - 180 -- Cannon looking direction
 			local heightRatio = (enePos.z - myPos.z) / myPos:Distance(Vector(enePos.x, enePos.y, myPos.z))
-			selfData.Tank_ReachableHeight = math.abs(heightRatio) < 0.15 and true or false -- How high it can fire
+			selfData.Tank_ReachableHeight = math.abs(heightRatio) < 0.15 -- How high it can fire
 			-- If the enemy is within the barrel firing limit AND not already firing a shell AND its height is is reachable AND the enemy is not extremely close, then FIRE!
 			if math.abs(angDiffuse) < selfData.Tank_AngleDiffuseFiringLimit && selfData.Tank_ReachableHeight && selfData.EnemyData.Distance > selfData.Tank_Shell_FireMin then
 				selfData.Tank_FacingTarget = true

@@ -54,8 +54,7 @@ function SWEP:OnPrimaryAttack(status, statusData)
 					self:EmitSound("Weapon_Shotgun.Special1")
 					local animTime = VJ.AnimDuration(owner:GetViewModel(), ACT_SHOTGUN_PUMP)
 					self:SendWeaponAnim(ACT_SHOTGUN_PUMP)
-					self.PLY_NextIdleAnimT = CurTime() + animTime
-					self.PLY_NextReloadT = CurTime() + animTime
+					self.PLY_AnimLockTime = CurTime() + animTime
 				end
 			end)
 		end

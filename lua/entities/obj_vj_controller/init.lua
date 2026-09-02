@@ -43,8 +43,6 @@ ENT.VJC_SavedVars_PLY = nil -- A hash table to hold all the values that need to 
 ENT.VJC_SavedVars_NPC = nil -- A hash table to hold all the values that need to be reset after the NPC is uncontrolled
 ENT.VJC_Camera_Mode = 1 -- Current camera mode | 1 = Third, 2 = First
 ENT.VJC_Camera_CurZoom = Vector()
-ENT.VJC_Key_Last = BUTTON_CODE_NONE -- The last button the user pressed
-ENT.VJC_Key_LastTime = 0 -- Time since the user last pressed a key
 ENT.VJC_NPC_LastPos = Vector()
 ENT.VJC_Removed = false
 
@@ -269,8 +267,6 @@ function ENT:StartControlling()
 
 	hook.Add("PlayerButtonDown", self, function(ent, ply2, button)
 		if IsValid(ent) && ply2.VJ_IsControllingNPC && ent.VJCE_Player == ply2 then
-			ent.VJC_Key_Last = button
-			ent.VJC_Key_LastTime = CurTime()
 			ent:OnKeyPressed(button)
 			
 			-- Stop Controlling

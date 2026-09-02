@@ -975,7 +975,6 @@ local fGetEnemy = metaNPC.GetEnemy
 local fHasCondition = metaNPC.HasCondition
 local fGetActiveWeapon = metaNPC.GetActiveWeapon
 
-ENT.PropInteraction_Found = false
 ENT.PropInteraction_NextCheckT = 0
 ENT.IsAbleToRangeAttack = true
 ENT.IsAbleToLeapAttack = true
@@ -1687,13 +1686,13 @@ function ENT:Think()
 							-- Regular non-prop attack
 							if eneIsVisible && eneDistNear < selfData.MeleeAttackDistance && self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackAngleRadius)) then
 								atkType = 1
-							-- Check for possible props that we can attack/push
+							-- Check for possible props that we can target
 							elseif curTime > selfData.PropInteraction_NextCheckT then
 								local propCheck = self:MaintainPropInteraction()
 								if propCheck then
 									atkType = 2
 								end
-								selfData.PropInteraction_Found = propCheck
+								selfData.MeleeAttack_IsPropAttack = propCheck
 								selfData.PropInteraction_NextCheckT = curTime + 0.5
 							end
 						end
@@ -1706,9 +1705,7 @@ function ENT:Think()
 							selfData.AttackAnimDuration = 0
 							selfData.AttackAnimTime = 0
 							selfData.NextAlertSoundT = curTime + 0.4
-							if atkType == 2 then
-								selfData.MeleeAttack_IsPropAttack = true
-							else
+							if atkType != 2 then
 								self:SetTurnTarget("Enemy") -- Always turn towards the enemy at the start
 								selfData.MeleeAttack_IsPropAttack = false
 							end

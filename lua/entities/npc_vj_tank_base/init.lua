@@ -191,6 +191,7 @@ function ENT:Init()
 			gunner:SetParent(self)
 			gunner.DoNotDuplicate = true -- Otherwise you will have double gunners
 			gunner.VJ_NPC_Class = self.VJ_NPC_Class
+			gunner.AlliedWithPlayerAllies = self.AlliedWithPlayerAllies
 			gunner:Spawn()
 			gunner:Activate()
 			self.Gunner = gunner

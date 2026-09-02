@@ -58,8 +58,7 @@ function SWEP:OnSecondaryAttack()
 	local fidgetTime = VJ.AnimDuration(vm, ACT_VM_FIDGET)
 	local delay = CurTime() + fidgetTime + VJ.AnimDuration(vm, ACT_VM_SECONDARYATTACK)
 	self:SetNextSecondaryFire(delay)
-	self.PLY_NextIdleAnimT = delay
-	self.PLY_NextReloadT = delay
+	self.PLY_AnimLockTime = delay
 	self:SendWeaponAnim(ACT_VM_FIDGET)
 	VJ.CreateSound(self, "weapons/cguard/charging.wav", 85)
 	

@@ -280,8 +280,7 @@ SWEP.RenderGroup = RENDERGROUP_OPAQUE
 SWEP.Primary.DefaultClip = 0
 SWEP.Secondary.DefaultClip = 0
 SWEP.Reloading = false
-SWEP.PLY_NextReloadT = 0
-SWEP.PLY_NextIdleAnimT = 0
+SWEP.PLY_AnimLockTime = 0
 SWEP.NPC_NextDrySoundT = 0
 SWEP.NPC_NextPrimaryFireT = 0
 SWEP.NPC_AnimationSet = VJ.ANIM_SET_CUSTOM
@@ -514,8 +513,7 @@ function SWEP:Deploy()
 			local delay = CurTime() + VJ.AnimDuration(owner:GetViewModel(), anim)
 			self:SetNextPrimaryFire(delay)
 			self:SetNextSecondaryFire(delay)
-			self.PLY_NextIdleAnimT = delay
-			self.PLY_NextReloadT = delay
+			self.PLY_AnimLockTime = delay
 		end
 	end
 	return true -- Or else the player won't be able to get the weapon!
@@ -567,13 +565,17 @@ function SWEP:Think() -- NOTE: This only runs for players not NPCs!
 	local curTime = CurTime()
 	self:MaintainWorldModel(selfData, owner)
 	-- Idle Animation
-	if curTime > selfData.PLY_NextIdleAnimT then
-		local anim = VJ.PICK(selfData.AnimTbl_Idle)
-		if anim then
-			owner:SetAnimation(PLAYER_IDLE)
-			self:SendWeaponAnim(anim)
-			selfData.PLY_NextIdleAnimT = curTime + VJ.AnimDuration(owner:GetViewModel(), anim)
+	if curTime > selfData.PLY_AnimLockTime then
+		if curTime > selfData.PLY_NextIdleAnimT then
+			local anim = VJ.PICK(selfData.AnimTbl_Idle)
+			if anim then
+				owner:SetAnimation(PLAYER_IDLE)
+				self:SendWeaponAnim(anim)
+				selfData.PLY_NextIdleAnimT = curTime + VJ.AnimDuration(owner:GetViewModel(), anim)
+			end
 		end
+	else
+		selfData.PLY_NextIdleAnimT = 0
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -849,8 +851,7 @@ function SWEP:PrimaryAttack()
 			owner:SetAnimation(PLAYER_ATTACK1)
 			self:SendWeaponAnim(anim)
 			local delay = curTime + VJ.AnimDuration(owner:GetViewModel(), anim)
-			selfData.PLY_NextIdleAnimT = delay
-			selfData.PLY_NextReloadT = delay
+			selfData.PLY_AnimLockTime = delay
 		end
 	end
 	selfData.OnPrimaryAttack(self, "PostFire")
@@ -945,8 +946,7 @@ function SWEP:SecondaryAttack()
 		owner:SetAnimation(PLAYER_ATTACK1)
 		self:SendWeaponAnim(anim)
 		delay = VJ.AnimDuration(owner:GetViewModel(), anim)
-		self.PLY_NextIdleAnimT = curTime + delay
-		self.PLY_NextReloadT = curTime + delay
+		self.PLY_AnimLockTime = curTime + delay
 	end
 	if delay then
 		self:SetNextSecondaryFire(curTime + delay)
@@ -986,7 +986,7 @@ end
 function SWEP:Reload()
 	if !IsValid(self) then return end
 	local owner = fGetOwner(self)
-	if !IsValid(owner) or !owner:IsPlayer() or !owner:Alive() or owner:GetAmmoCount(self.Primary.Ammo) == 0 or self.Reloading or CurTime() < self.PLY_NextReloadT then return end
+	if !IsValid(owner) or !owner:IsPlayer() or !owner:Alive() or owner:GetAmmoCount(self.Primary.Ammo) == 0 or self.Reloading or CurTime() < self.PLY_AnimLockTime then return end
 	if self:Clip1() < self.Primary.ClipSize then
 		self.Reloading = true
 		self:OnReload("Start")
@@ -1010,7 +1010,7 @@ function SWEP:Reload()
 			owner:SetAnimation(PLAYER_RELOAD)
 			self:SendWeaponAnim(anim)
 			local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
-			self.PLY_NextIdleAnimT = CurTime() + animTime
+			self.PLY_AnimLockTime = CurTime() + animTime
 			timer.Simple(animTime, function()
 				if IsValid(self) then
 					self.Reloading = false
@@ -1034,7 +1034,7 @@ end
 function SWEP:Holster(newWep)
 	if self == newWep or self.Reloading then return end
 	hook.Remove("Think", self) -- Otherwise "NPC_Think" will just keep running!
-	self.PLY_NextIdleAnimT = CurTime() + 2
+	self.PLY_AnimLockTime = CurTime() + 2
 	//self:SendWeaponAnim(ACT_VM_HOLSTER)
 	return self:OnHolster(newWep) != true
 end

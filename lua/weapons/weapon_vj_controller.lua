@@ -39,8 +39,7 @@ function SWEP:PrimaryAttack()
 	local delayTime = CurTime() + VJ.AnimDuration(owner:GetViewModel(), ACT_VM_SECONDARYATTACK)
 	owner:SetAnimation(PLAYER_ATTACK1)
 	self:SendWeaponAnim(ACT_VM_SECONDARYATTACK)
-	self.PLY_NextIdleAnimT = delayTime
-	self.PLY_NextReloadT = delayTime
+	self.PLY_AnimLockTime = delayTime
 	self:SetNextPrimaryFire(delayTime)
 	VJ.EmitSound(self, sdFire, 80, 140, 1, CHAN_WEAPON)
 	

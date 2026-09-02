@@ -48,6 +48,7 @@ end
 			- FaceDest = Should it face the destination? | DEFAULT: true
 			- FaceDestTarget = If the destination is an entity, it will face the entity instead of the move position | DEFAULT: false
 			- IgnoreGround = If true, it will not do any ground checks | DEFAULT: false
+			- ChaseEnemy = Used internally by ChaseEnemy, enables code that's used only for that | DEFAULT: false
 -----------------------------------------------------------]]
 local vecStart = Vector(0, 0, 30)
 local vecEnd = Vector(0, 0, 40)
@@ -59,7 +60,6 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 	moveType = moveType or "Calm" -- "Calm" | "Alert"
 	extra = extra or {}
 		local addPos = extra.AddPos or defPos -- This will be added to the given entity's position
-		local chaseEnemy = extra.ChaseEnemy or false -- Used internally by ChaseEnemy, enables code that's used only for that
 	local moveSpeed = (moveType == "Calm" and selfData.Aerial_FlyingSpeed_Calm) or selfData.Aerial_FlyingSpeed_Alerted
 	local debug = selfData.VJ_DEBUG
 	local myPos = self:GetPos()
@@ -99,7 +99,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 				})
 				//PrintTable(trene)
 				//debugoverlay.Box(trene.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, VJ.COLOR_GREEN)
-				if trene.Hit == true then return end
+				if trene.Hit then return end
 				//if IsValid(trene.Entity) && trene.Entity == dest then return end
 			end
 		end
@@ -121,7 +121,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 	-- Preform ground check if:
 		-- It's an aerial NPC AND it is not ignoring ground AND-
 		-- It's NOT a chase enemy OR it is but the NPC doesn't have a melee attack
-	if selfData.MovementType == VJ_MOVETYPE_AERIAL && extra.IgnoreGround != true && ((!chaseEnemy) or (chaseEnemy && !selfData.HasMeleeAttack)) then
+	if selfData.MovementType == VJ_MOVETYPE_AERIAL && extra.IgnoreGround != true && (!extra.ChaseEnemy or !selfData.HasMeleeAttack) then
 		local tr_check1 = util.TraceLine({start = startPos, endpos = startPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
 		local tr_check2 = util.TraceLine({start = trHitPos, endpos = trHitPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
 		if debug then
@@ -130,7 +130,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 			debugoverlay.Box(tr_check1.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(0, 183, 255))
 		end
 		-- If it hit the world, then we are too close to the ground, replace "tr" with a new position!
-		if tr_check1.Hit == true or (tr_check2.Hit == true && !tr_check2.Entity:IsNPC()) then
+		if tr_check1.Hit or (tr_check2.Hit && !tr_check2.Entity:IsNPC()) then
 			if debug then print("[MoveTo] Ground Hit!", tr_check1.HitPos:Distance(startPos)) end
 			//groundLimited = true
 			endPos.z = (tr_check1.Hit and myPos.z or endPos.z) + selfData.AA_GroundLimit
@@ -184,7 +184,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 	end
 	
 	local finalPos = trHitPos
-	if trDistStart <= 16 && tr.HitWorld == true then
+	if trDistStart <= 16 && tr.HitWorld then
 		if debug then print("[MoveTo] Forward Blocked!") end
 		finalPos = endPos
 		-- Make sure the trace actually went somewhere...
@@ -231,17 +231,17 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 		//selfData.NextIdleTime = velTimeCur
 	end
 	if extra.FaceDest != false && selfData.CanTurnWhileMoving then
-		if extra.FaceDestTarget == true then
-			self:SetTurnTarget(chaseEnemy and "Enemy" or dest, velTime)
+		if extra.FaceDestTarget then
+			self:SetTurnTarget(extra.ChaseEnemy and "Enemy" or dest, velTime)
 		else
 			-- Offset the arrival position so it does NOT turn 180 degrees back from where it traveled from
 			local offsetFacing = finalPos + (finalPos - self:GetPos()):GetNormalized() * (selfData.AA_CurrentMoveMaxSpeed / 50)
 			offsetFacing.z = finalPos.z
 			self:SetTurnTarget(offsetFacing, velTime)
 		end
-		//selfData.AA_CurrentTurnAng = chaseEnemy and false or self:GetTurnAngle(self:GetTurnAngle((velPos):Angle()))
+		//selfData.AA_CurrentTurnAng = extra.ChaseEnemy and false or self:GetTurnAngle(self:GetTurnAngle((velPos):Angle()))
 	end
-	selfData.AA_CurrentMoveType = chaseEnemy and 3 or 2
+	selfData.AA_CurrentMoveType = extra.ChaseEnemy and 3 or 2
 	selfData.AA_CurrentMovePos = finalPos
 	selfData.AA_CurrentMovePosDir = finalPos - startPos
 	selfData.AA_CurrentMoveDist = -1
@@ -291,7 +291,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extra)
 	local myMaxs = self:OBBMaxs():Length()
 	local minDist = math.random(selfData.AA_MinWanderDist, selfData.AA_MinWanderDist + 150)
 	local tr_endpos = myPos + self:GetForward()*((myMaxs + minDist)*(math.random(1, 2) == 1 and -1 or 1)) + self:GetRight()*((myMaxs + minDist)*(math.random(1, 2) == 1 and -1 or 1)) + self:GetUp()*((myMaxs + minDist)*(math.random(1, 2) == 1 and -1 or 1))
-	if moveDown == true then
+	if moveDown then
 		tr_endpos = myPos + self:GetUp()*((myMaxs + math.random(100, 150))*-1)
 	end
 	local trFilter = {self, "phys_bone_follower"}
@@ -307,7 +307,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extra)
 			debugoverlay.Box(tr_check.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(255, 0, 255))
 		end
 		-- If it hit the world, then we are too close to the ground, replace "tr" with a new position!
-		if tr_check.HitWorld == true then
+		if tr_check.HitWorld then
 			if debug then print("[IdleWander] Ground Hit!", tr_check.HitPos:Distance(finalPos)) end
 			tr_endpos.z = myPos.z + selfData.AA_GroundLimit
 			tr = util.TraceLine({start = myPos, endpos = tr_endpos, filter = trFilter})
