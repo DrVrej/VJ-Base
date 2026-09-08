@@ -81,12 +81,12 @@ if CLIENT then
 		-- Build root folders
 			-- catName [string]   |   catNode [DTree_Node]
 			-- catNode.PropPanel [ContentContainer]   |   catNode.PropPanel.IconList [DTileLayout]   |   catNode.PropPanel.IconList child [ContentIcon]
-		for catName, catNode in pairs(rootTree.Categories) do
+		for catName, catNode in pairs(rootTree.Categories or {}) do
 			catNode:DoPopulate() -- Force it to generate now otherwise "catNode.PropPanel" will be nil!
 			if catName == "Default" then
 				catNode:SetIcon("vj_base/icons/vrejgaming.png")
 			end
-			if !catNode.PropPanel then return end
+			if !catNode.PropPanel then continue end
 			local catHeader = vgui.Create("ContentHeader", rootPropPanel) -- Add each category as a header
 				catHeader:SetText(catName)
 			rootPropPanel:Add(catHeader)
