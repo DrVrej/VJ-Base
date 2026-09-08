@@ -2313,7 +2313,7 @@ function ENT:MaintainRelationships()
 						calculatedDisp = D_VJ_INTEREST
 					else
 						-- SetEnemy: In order - Can find enemy + Not neutral or Is alerted + Is visible + In sight cone
-						if selfData.EnemyDetection && (notIsNeutral or selfData.Alerted == ALERT_STATE_ENEMY) && (selfData.EnemyXRayDetection or fVisible(self, ent)) && fIsInViewCone(self, entPos) then
+						if selfData.EnemyDetection && (notIsNeutral or selfData.Alerted == ALERT_STATE_ENEMY) && fIsInViewCone(self, entPos) && (selfData.EnemyXRayDetection or fVisible(self, ent)) then
 							//print("MaintainRelationships 2 - set enemy")
 							fAddEntityRelationship(self, ent, D_HT, 0)
 							calculatedDisp = D_HT
@@ -2377,7 +2377,7 @@ function ENT:MaintainRelationships()
 			end
 			
 			-- HasOnPlayerSight system, used to do certain actions when it sees the player
-			if entType == ENT_TYPE_PLAYER && selfData.HasOnPlayerSight && CurTime() > selfData.NextOnPlayerSightT && distanceToEnt < selfData.OnPlayerSightDistance && fVisible(self, ent) && fIsInViewCone(self, entPos) then
+			if entType == ENT_TYPE_PLAYER && selfData.HasOnPlayerSight && CurTime() > selfData.NextOnPlayerSightT && distanceToEnt < selfData.OnPlayerSightDistance && fIsInViewCone(self, entPos) && fVisible(self, ent) then
 				-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 				local disp = selfData.OnPlayerSightDispositionLevel
 				if (disp == 0) or (disp == 1 && (self:Disposition(ent) == D_LI or self:Disposition(ent) == D_NU)) or (disp == 2 && self:Disposition(ent) != D_LI) then
@@ -2544,8 +2544,14 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function flinchDamageTypeCheck(checkTbl, dmgType)
-	for k = 1, #checkTbl do
-		if bAND(dmgType, checkTbl[k]) != 0 then
+	if istable(checkTbl) then
+		for k = 1, #checkTbl do
+			if bAND(dmgType, checkTbl[k]) != 0 then
+				return true
+			end
+		end
+	else
+		if bAND(dmgType, checkTbl) != 0 then
 			return true
 		end
 	end

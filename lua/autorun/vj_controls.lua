@@ -85,7 +85,7 @@ VJ.AddNPC = function(name, class, category, extra, old1)
 	if CLIENT && !killicon.Exists(class) then
 		addKillIcon(class, name, VJ.KILLICON_DEFAULT)
 	end
-	duplicator.RegisterEntityClass(class, VJ.CreateDupe_NPC, "Model", "Class", "Equipment", "SpawnFlags", "Data")
+	duplicator.RegisterEntityClass(class, VJ.CreateDupe_NPC, "Class", "Equipment", "SpawnFlags", "Data")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

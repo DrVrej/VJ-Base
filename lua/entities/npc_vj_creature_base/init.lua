@@ -194,7 +194,7 @@ ENT.Immune_Electricity = false -- Immune to electrical damages (Ex: Shocks, lase
 ENT.Immune_Sonic = false -- Immune to sonic damages (Ex: Sound blasts)
 	-- ====== Flinching ====== --
 ENT.CanFlinch = false -- Can it flinch? | false = Don't flinch | true = Always flinch | "DamageTypes" = Flinch only from certain damages types
-ENT.FlinchDamageTypes = {DMG_BLAST} -- Which types of damage types should it flinch from when "DamageTypes" is used?
+ENT.FlinchDamageTypes = DMG_BLAST -- Which types of damage types should it flinch from when "DamageTypes" is used? | Can be an enum or a table of enums
 ENT.FlinchChance = 14 -- Chance of flinching from 1 to x | 1 = Always flinch
 ENT.FlinchCooldown = 5 -- How much time until it can flinch again? | false = Base auto calculates the duration
 ENT.AnimTbl_Flinch = ACT_FLINCH_PHYSICS
@@ -1471,8 +1471,11 @@ function ENT:Think()
 			-- Health Regeneration System
 			local healthRegen = selfData.HealthRegenParams
 			if healthRegen.Enabled && curTime > selfData.HealthRegenDelayT then
-				local myHP = self:Health()
-				self:SetHealth(math_min(math_max(myHP + healthRegen.Amount, myHP), self:GetMaxHealth()))
+				local curHP = self:Health()
+				local maxHP = self:GetMaxHealth()
+				if curHP < maxHP then
+					self:SetHealth(math_min(curHP + healthRegen.Amount, maxHP))
+				end
 				selfData.HealthRegenDelayT = curTime + math.Rand(healthRegen.Delay.a, healthRegen.Delay.b)
 			end
 			

@@ -13,7 +13,6 @@ ENT.Contact = "http://steamcommunity.com/groups/vrejgaming"
 ENT.Category = "VJ Base"
 
 ENT.VJ_ID_Danger = true
-
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	VJ.AddKillIcon("obj_vj_rocket", ENT.PrintName, VJ.KILLICON_PROJECTILE)

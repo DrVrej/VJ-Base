@@ -84,13 +84,13 @@ end
 function ENT:CampfireToggle(activate)
 	if activate then
 		self:SetActivated(true)
-		self:EmitSound("ambient/fire/ignite.wav", 60, 100)
+		self:EmitSound("ambient/fire/ignite.wav", 60)
 		self.FireSound = CreateSound(self, "ambient/fire/fire_small_loop1.wav")
 		self.FireSound:SetSoundLevel(60)
 		self.FireSound:Play()
 	else
 		self:SetActivated(false)
-		self:EmitSound("ambient/fire/mtov_flame2.wav", 60, 100)
+		self:EmitSound("ambient/fire/mtov_flame2.wav", 60)
 		self:StopParticles()
 		VJ.STOPSOUND(self.FireSound)
 	end

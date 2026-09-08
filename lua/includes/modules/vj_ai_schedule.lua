@@ -46,14 +46,7 @@ function Schedule:EngTask(taskName, taskData) -- Set an engine defined task
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Schedule:AddTask(taskName, taskData) -- Set a custom task where the task name, start function, and run function are all named the same
-	local newTask = vj_ai_task.New()
-	newTask:InitCustom(taskName, taskName, taskName, taskData)
-	local count = #self.Tasks + 1
-	self.Tasks[count] = newTask
-	self.TaskCount = count
-	if tasksMove[taskName] then -- Handle movement tasks
-		self.HasMovement = true
-	end
+	self:AddTaskEx(taskName, taskName, taskName, taskData)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Schedule:AddTaskEx(taskName, startFunc, runFunc, taskData) -- Set a custom task with custom start and run function names

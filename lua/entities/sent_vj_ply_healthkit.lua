@@ -18,14 +18,13 @@ ENT.AdminOnly = true
 ENT.PhysicsSounds = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local textColor = Color(0, 255, 0, 255)
 	local vecOffset = Vector(7, -2, 6)
 	local angOffset = Angle(0, 90, 0)
 	
 	function ENT:Draw()
 		self:DrawModel()
 		cam.Start3D2D(self:LocalToWorld(vecOffset), self:LocalToWorldAngles(angOffset), 0.07)
-			draw.SimpleText("Admin Health Kit", "DermaLarge", 31, -22, textColor, 1, 1)
+			draw.SimpleText("Admin Health Kit", "DermaLarge", 31, -22, VJ.COLOR_GREEN, 1, 1)
 		cam.End3D2D()
 	end
 end

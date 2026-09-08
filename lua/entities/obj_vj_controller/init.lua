@@ -436,7 +436,7 @@ function ENT:Think()
 				local turnData = npc.TurnData
 				if turnData.Target != bullseye then
 					npc:SetTurnTarget(bullseye, 1)
-				elseif npc:GetActivity() == ACT_IDLE && npc:GetIdealActivity() == ACT_IDLE && npc:DeltaIdealYaw() <= -45 or npc:DeltaIdealYaw() >= 45 then -- Check both current act AND ideal act because certain activities only change the current act (Ex: UpdateTurnActivity function)
+				elseif npc:GetActivity() == ACT_IDLE && npc:GetIdealActivity() == ACT_IDLE && (npc:DeltaIdealYaw() <= -45 or npc:DeltaIdealYaw() >= 45) then -- Check both current act AND ideal act because certain activities only change the current act (Ex: UpdateTurnActivity function)
 					npc:UpdateTurnActivity()
 					if npc:GetIdealActivity() != ACT_IDLE then -- If ideal act is no longer idle, then we have selected a turn activity!
 						npc.NextIdleTime = curTime + VJ.AnimDurationEx(npc, npc:GetIdealActivity())
