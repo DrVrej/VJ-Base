@@ -114,7 +114,7 @@ function ENT:CalcView(ply, origin, angles, fov)
 		end
 	-- MODE: First person
 	elseif cameraMode == 2 then
-		local setPos = npc:EyePos() + npc:GetForward() * 20
+		local setPos;
 		local offset = self:GetCameraFP_Offset()
 		//camera:SetLocalPos(camera:GetLocalPos() + self:GetCameraTP_Offset()) -- Help keep the camera stable
 		if self:GetCameraFP_Bone() != -1 then -- If the bone does exist, then use the bone position
@@ -126,6 +126,8 @@ function ENT:CalcView(ply, origin, angles, fov)
 			if self:GetCameraFP_ShrinkBone() then
 				npc:ManipulateBoneScale(self:GetCameraFP_Bone(), vec0) -- Bone manipulate to make it easier to see
 			end
+		else
+			setPos = npc:EyePos() + npc:GetForward() * 20
 		end
 		pos = setPos + (npc:GetForward() * offset.x + npc:GetRight() * offset.y + npc:GetUp() * offset.z)
 	-- MODE: Third person

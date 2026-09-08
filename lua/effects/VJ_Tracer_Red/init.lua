@@ -9,7 +9,7 @@ local beamLength = 0.1
 local beamColor = Color(255, 0, 0, 255)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function EFFECT:Init(data)
-	self.StartPos = data:GetStart()
+	local startPos = data:GetStart()
 	self.EndPos = data:GetOrigin()
 	local ent = data:GetEntity()
 	local att = data:GetAttachment()
@@ -18,13 +18,13 @@ function EFFECT:Init(data)
 		if ent:GetOwner() == LocalPlayer() && LocalPlayer():GetViewModel() != LocalPlayer() then ent = ent:GetOwner():GetViewModel() end
 		att = ent:GetAttachment(att)
 		if att then
-			self.StartPos = att.Pos
+			startPos = att.Pos
 		end
 	end
 
-	self:SetRenderBoundsWS(self.StartPos, self.EndPos)
-	self.Dir = self.EndPos - self.StartPos
-	self.TracerTime = math.min(1, self.StartPos:Distance(self.EndPos) / 10000) -- Calculate death time
+	self:SetRenderBoundsWS(startPos, self.EndPos)
+	self.Dir = self.EndPos - startPos
+	self.TracerTime = math.min(1, startPos:Distance(self.EndPos) / 10000) -- Calculate death time
 	self.DieTime = CurTime() + self.TracerTime -- Time until it dies (when it reaches its target)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -170,8 +170,8 @@ end
 	Initialize the Nodegraph object | WARNING: This is an internal function, avoid using!
 -----------------------------------------------------------]]
 function Nodegraph:Init()
-	MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base [AI Nodegraph module]: ", VJ.COLOR_SERVER, "Object created.\n")
 	self.Data = self:ReadNodegraph()
+	MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base [AI Nodegraph module]: ", VJ.COLOR_SERVER, "Object created.\n")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

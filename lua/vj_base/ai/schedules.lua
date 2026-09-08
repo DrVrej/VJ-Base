@@ -291,26 +291,21 @@ function ENT:OnTaskFailed(failCode, failString)
 	//VJ.DEBUG_Print(self, "OnTaskFailed", "warn", "Run fail")
 	-- Give it a very small delay to let the engine set its values before we continue
 	timer.Simple(0.05, function()
-		if IsValid(self) then
-			local curScheduleNew = self.CurrentSchedule
-			if curScheduleNew && curSchedule == curScheduleNew then -- Make sure the schedule hasn't changed!
-				curSchedule = curScheduleNew
-				if curSchedule.ResetOnFail then
-					curSchedule.FailureHandled = true
-					self:StopMoving()
-					//self:SelectSchedule()
-					//self:ClearCondition(COND_TASK_FAILED) -- Won't do anything, engine will set COND_TASK_FAILED right after
-				end
-				if failCode != 14 or (failCode == 14 && !self.UsePoseParameterMovement) then -- Skip this part for "FAIL_NO_ROUTE_ILLEGAL" to allow things like player model movement to work
-					self:ClearGoal() -- Otherwise we may get stuck in movement (if schedule had a movement!)
-					self:NextTask(curSchedule) -- Attempt to move on to the next task!
-				end
-				-- Handle "RunCode_OnFail"
-				if !curSchedule.OnFailExecuted && curSchedule.RunCode_OnFail then
-					curSchedule.OnFailExecuted = true
-					curSchedule.RunCode_OnFail(failCode, failString)
-				end
-			end
+		if !IsValid(self) or self.CurrentSchedule != curSchedule then return end -- Make sure the schedule hasn't changed!
+		if curSchedule.ResetOnFail then
+			curSchedule.FailureHandled = true
+			self:StopMoving()
+			//self:SelectSchedule()
+			//self:ClearCondition(COND_TASK_FAILED) -- Won't do anything, engine will set COND_TASK_FAILED right after
+		end
+		if failCode != 14 or !self.UsePoseParameterMovement then -- Skip this part for "FAIL_NO_ROUTE_ILLEGAL" to allow things like player model movement to work
+			self:ClearGoal() -- Otherwise we may get stuck in movement (if schedule had a movement!)
+			self:NextTask(curSchedule) -- Attempt to move on to the next task!
+		end
+		-- Handle "RunCode_OnFail"
+		if !curSchedule.OnFailExecuted && curSchedule.RunCode_OnFail then
+			curSchedule.OnFailExecuted = true
+			curSchedule.RunCode_OnFail(failCode, failString)
 		end
 	end)
 end

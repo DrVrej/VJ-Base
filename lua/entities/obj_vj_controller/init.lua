@@ -346,7 +346,7 @@ function ENT:SendDataToClient(reset)
 		local npcWeapon = npc:GetActiveWeapon()
 		if IsValid(npcWeapon) then
 			self:SetNPCWeapon(npcWeapon)
-			self:SetNPCWeaponAmmo(IsValid(npcWeapon) && npcWeapon:Clip1() or 0)
+			self:SetNPCWeaponAmmo(npcWeapon:Clip1())
 		else
 			self:SetNPCWeapon(NULL)
 			self:SetNPCWeaponAmmo(0)
@@ -477,7 +477,8 @@ function ENT:StartMovement(direction, rotation)
 		debugoverlay.Text(forwardTr.HitPos, "forwardTr.HitPos", 3, false)
 	end
 	if forwardDist >= 25 then
-		local finalPos = Vector((npcPosOrg + plyAimVec * wallToSelf).x, (npcPosOrg + plyAimVec * wallToSelf).y, forwardTr.HitPos.z)
+		local finalPos = npcPosOrg + plyAimVec * wallToSelf
+		finalPos.z = forwardTr.HitPos.z
 		-- Check if ground is valid!
 		local downTr = util.TraceLine({start = finalPos, endpos = finalPos + self:GetUp()*-(200 + centerToPos), filter = defaultFilter})
 		local downDist = (finalPos.z - centerToPos) - downTr.HitPos.z

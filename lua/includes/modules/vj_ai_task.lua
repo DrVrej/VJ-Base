@@ -70,10 +70,7 @@ function Task:IsCustomType()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function New()
-	local newTask = {}
-	setmetatable(newTask, Task)
-	newTask:Init()
-	return newTask
+	return setmetatable({}, Task)
 end
 
 MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base [AI Task module]: ", VJ.COLOR_SERVER, "Successfully initialized!\n")

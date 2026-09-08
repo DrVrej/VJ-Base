@@ -43,7 +43,10 @@ if CLIENT then
 				end
 				local dynLight = DynamicLight(self:EntIndex())
 				if dynLight then
-					dynLight.pos = self:GetPos() + self:GetUp() * 15
+					local pos = self:GetUp()
+						pos:Mul(15)
+						pos:Add(self:GetPos())
+					dynLight.pos = pos
 					dynLight.r = 255
 					dynLight.g = 100
 					dynLight.b = 0
@@ -63,7 +66,6 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.IsOn = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetModel("models/vj_base/fireplace.mdl")
@@ -82,14 +84,12 @@ end
 function ENT:CampfireToggle(activate)
 	if activate then
 		self:SetActivated(true)
-		self.IsOn = true
 		self:EmitSound("ambient/fire/ignite.wav", 60, 100)
 		self.FireSound = CreateSound(self, "ambient/fire/fire_small_loop1.wav")
 		self.FireSound:SetSoundLevel(60)
 		self.FireSound:Play()
 	else
 		self:SetActivated(false)
-		self.IsOn = false
 		self:EmitSound("ambient/fire/mtov_flame2.wav", 60, 100)
 		self:StopParticles()
 		VJ.STOPSOUND(self.FireSound)
@@ -97,21 +97,15 @@ function ENT:CampfireToggle(activate)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Use(activator)
-	if !self.IsOn then
-		self:CampfireToggle(true)
-		if IsValid(activator) then
-			activator:PrintMessage(HUD_PRINTTALK, "#vjbase.campfire.print.activated")
-		end
-	else
-		self:CampfireToggle(false)
-		if IsValid(activator) then
-			activator:PrintMessage(HUD_PRINTTALK, "#vjbase.campfire.print.deactivated")
-		end
+	local activate = !self:GetActivated()
+	self:CampfireToggle(activate)
+	if IsValid(activator) then
+		activator:PrintMessage(HUD_PRINTTALK, activate and "#vjbase.campfire.print.activated" or "#vjbase.campfire.print.deactivated")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
-	if IsValid(entity) && self.IsOn && entity.VJ_ID_Living && entity:GetPos():Distance(self:GetPos()) <= 38 then
+	if IsValid(entity) && self:GetActivated() && entity.VJ_ID_Living && entity:GetPos():Distance(self:GetPos()) <= 38 then
 		entity:Ignite(math.Rand(3, 5))
 	end
 end

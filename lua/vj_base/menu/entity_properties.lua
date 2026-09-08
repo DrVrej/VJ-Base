@@ -3,11 +3,20 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+local function npcPropertyFilter(self, ent, ply) -- CLIENT: Can this property should be shown for the selected entity?
+	return IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)
+end
+--
+local function sendPropertyEntity(self, ent) -- CLIENT: Called when the property is clicked
+	self:MsgStart()
+		net.WriteEntity(ent)
+	self:MsgEnd()
+end
+--
 local vj_npc_admin_properties = GetConVar("vj_npc_admin_properties")
 --
 hook.Add("CanProperty", "VJ_CanProperty", function(ply, property, ent)
-	if vj_npc_admin_properties:GetInt() == 1 && !ply:IsAdmin() && property == "vj_npc_properties" then ply:ChatPrint("#vjbase.menu.context.chat.admin") return false end
+	if property == "vj_npc_properties" && vj_npc_admin_properties:GetInt() == 1 && !ply:IsAdmin() then ply:ChatPrint("#vjbase.menu.context.chat.admin") return false end
 end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC Controlling ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -17,17 +26,8 @@ properties.Add("vj_pr_npc_control", {
 	MenuIcon = "icon16/controller.png",
 	Order = 50000,
 	PrependSpacer = true, -- Adds a spacer before this property
-
-	Filter = function(self, ent, ply) -- CLIENT: Can this property should be shown for the selected entity?
-		return IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)
-	end,
-	
-	Action = function(self, ent) -- CLIENT: Called when the property is clicked
-		self:MsgStart()
-			net.WriteEntity(ent)
-		self:MsgEnd()
-	end,
-	
+	Filter = npcPropertyFilter,
+	Action = sendPropertyEntity,
 	Receive = function(self, length, ply) -- SERVER: Called when the property is clicked
 		local ent = net.ReadEntity()
 		if !properties.CanBeTargeted(ent, ply) or !self:Filter(ent, ply) then return end
@@ -56,17 +56,8 @@ properties.Add("vj_pr_npc_guard", {
 	MenuIcon = "icon16/shield.png",
 	Order = 50001,
 	PrependSpacer = true, -- Adds a spacer before this property
-
-	Filter = function(self, ent, ply) -- CLIENT: Can this property should be shown for the selected entity?
-		return IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)
-	end,
-	
-	Action = function(self, ent) -- CLIENT: Called when the property is clicked
-		self:MsgStart()
-			net.WriteEntity(ent)
-		self:MsgEnd()
-	end,
-	
+	Filter = npcPropertyFilter,
+	Action = sendPropertyEntity,
 	Receive = function(self, length, ply) -- SERVER: Called when the property is clicked
 		local ent = net.ReadEntity()
 		if !properties.CanBeTargeted(ent, ply) or !self:Filter(ent, ply) then return end
@@ -95,17 +86,8 @@ properties.Add("vj_pr_npc_wander", {
 	MenuLabel = "#vjbase.menu.context.wander",
 	MenuIcon = "icon16/arrow_inout.png",
 	Order = 50002,
-
-	Filter = function(self, ent, ply) -- CLIENT: Can this property should be shown for the selected entity?
-		return IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)
-	end,
-	
-	Action = function(self, ent) -- CLIENT: Called when the property is clicked
-		self:MsgStart()
-			net.WriteEntity(ent)
-		self:MsgEnd()
-	end,
-	
+	Filter = npcPropertyFilter,
+	Action = sendPropertyEntity,
 	Receive = function(self, length, ply) -- SERVER: Called when the property is clicked
 		local ent = net.ReadEntity()
 		if !properties.CanBeTargeted(ent, ply) or !self:Filter(ent, ply) then return end
@@ -130,17 +112,8 @@ properties.Add("vj_pr_npc_medic", {
 	MenuLabel = "#vjbase.menu.context.medic",
 	MenuIcon = "icon16/asterisk_yellow.png",
 	Order = 50003,
-
-	Filter = function(self, ent, ply) -- CLIENT: Can this property should be shown for the selected entity?
-		return IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)
-	end,
-	
-	Action = function(self, ent) -- CLIENT: Called when the property is clicked
-		self:MsgStart()
-			net.WriteEntity(ent)
-		self:MsgEnd()
-	end,
-	
+	Filter = npcPropertyFilter,
+	Action = sendPropertyEntity,
 	Receive = function(self, length, ply) -- SERVER: Called when the property is clicked
 		local ent = net.ReadEntity()
 		if !properties.CanBeTargeted(ent, ply) or !self:Filter(ent, ply) then return end
@@ -160,17 +133,8 @@ properties.Add("vj_pr_npc_sounds", {
 	MenuLabel = "#vjbase.menu.context.sounds",
 	MenuIcon = "icon16/sound_mute.png",
 	Order = 50004,
-
-	Filter = function(self, ent, ply) -- CLIENT: Can this property should be shown for the selected entity?
-		return IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)
-	end,
-	
-	Action = function(self, ent) -- CLIENT: Called when the property is clicked
-		self:MsgStart()
-			net.WriteEntity(ent)
-		self:MsgEnd()
-	end,
-	
+	Filter = npcPropertyFilter,
+	Action = sendPropertyEntity,
 	Receive = function(self, length, ply) -- SERVER: Called when the property is clicked
 		local ent = net.ReadEntity()
 		if !properties.CanBeTargeted(ent, ply) or !self:Filter(ent, ply) then return end
@@ -191,17 +155,8 @@ properties.Add("vj_pr_npc_ally", {
 	MenuLabel = "#vjbase.menu.context.ally",
 	MenuIcon = "icon16/heart_add.png",
 	Order = 50005,
-
-	Filter = function(self, ent, ply) -- CLIENT: Can this property should be shown for the selected entity?
-		return IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)
-	end,
-	
-	Action = function(self, ent) -- CLIENT: Called when the property is clicked
-		self:MsgStart()
-			net.WriteEntity(ent)
-		self:MsgEnd()
-	end,
-	
+	Filter = npcPropertyFilter,
+	Action = sendPropertyEntity,
 	Receive = function(self, length, ply) -- SERVER: Called when the property is clicked
 		local ent = net.ReadEntity()
 		if !properties.CanBeTargeted(ent, ply) or !self:Filter(ent, ply) then return end
@@ -216,17 +171,8 @@ properties.Add("vj_pr_npc_hostile", {
 	MenuLabel = "#vjbase.menu.context.hostile",
 	MenuIcon = "icon16/heart_delete.png",
 	Order = 50006,
-
-	Filter = function(self, ent, ply) -- CLIENT: Can this property should be shown for the selected entity?
-		return IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)
-	end,
-	
-	Action = function(self, ent) -- CLIENT: Called when the property is clicked
-		self:MsgStart()
-			net.WriteEntity(ent)
-		self:MsgEnd()
-	end,
-	
+	Filter = npcPropertyFilter,
+	Action = sendPropertyEntity,
 	Receive = function(self, length, ply) -- SERVER: Called when the property is clicked
 		local ent = net.ReadEntity()
 		if !properties.CanBeTargeted(ent, ply) or !self:Filter(ent, ply) then return end
@@ -241,17 +187,8 @@ properties.Add("vj_pr_npc_slay", {
 	MenuLabel = "#vjbase.menu.context.slay",
 	MenuIcon = "icon16/cancel.png",
 	Order = 50007,
-
-	Filter = function(self, ent, ply) -- CLIENT: Can this property should be shown for the selected entity?
-		return IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)
-	end,
-	
-	Action = function(self, ent) -- CLIENT: Called when the property is clicked
-		self:MsgStart()
-			net.WriteEntity(ent)
-		self:MsgEnd()
-	end,
-	
+	Filter = npcPropertyFilter,
+	Action = sendPropertyEntity,
 	Receive = function(self, length, ply) -- SERVER: Called when the property is clicked
 		local ent = net.ReadEntity()
 		if !properties.CanBeTargeted(ent, ply) or !self:Filter(ent, ply) then return end
@@ -267,17 +204,8 @@ properties.Add("vj_pr_npc_gib", {
 	MenuLabel = "#vjbase.menu.context.gib",
 	MenuIcon = "icon16/bomb.png",
 	Order = 50008,
-
-	Filter = function(self, ent, ply) -- CLIENT: Can this property should be shown for the selected entity?
-		return IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)
-	end,
-	
-	Action = function(self, ent) -- CLIENT: Called when the property is clicked
-		self:MsgStart()
-			net.WriteEntity(ent)
-		self:MsgEnd()
-	end,
-	
+	Filter = npcPropertyFilter,
+	Action = sendPropertyEntity,
 	Receive = function(self, length, ply) -- SERVER: Called when the property is clicked
 		local ent = net.ReadEntity()
 		if !properties.CanBeTargeted(ent, ply) or !self:Filter(ent, ply) then return end
@@ -298,17 +226,8 @@ properties.Add("vj_pr_npc_devmode", {
 	MenuLabel = "#vjbase.menu.context.developer",
 	MenuIcon = "icon16/tag.png",
 	Order = 50009,
-
-	Filter = function(self, ent, ply) -- CLIENT: Can this property should be shown for the selected entity?
-		return IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)
-	end,
-	
-	Action = function(self, ent) -- CLIENT: Called when the property is clicked
-		self:MsgStart()
-			net.WriteEntity(ent)
-		self:MsgEnd()
-	end,
-	
+	Filter = npcPropertyFilter,
+	Action = sendPropertyEntity,
 	Receive = function(self, length, ply) -- SERVER: Called when the property is clicked
 		local ent = net.ReadEntity()
 		if !properties.CanBeTargeted(ent, ply) or !self:Filter(ent, ply) then return end

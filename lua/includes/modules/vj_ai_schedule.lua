@@ -8,7 +8,6 @@ if CLIENT then return end
 require("vj_ai_task")
 local setmetatable = setmetatable
 local tostring = tostring
-local table = table
 local MsgC = MsgC
 local vj_ai_task = vj_ai_task
 local VJ = VJ
@@ -38,7 +37,9 @@ end
 function Schedule:EngTask(taskName, taskData) -- Set an engine defined task
 	local newTask = vj_ai_task.New()
 	newTask:InitEngine(taskName, taskData)
-	self.TaskCount = table.insert(self.Tasks, newTask)
+	local count = #self.Tasks + 1
+	self.Tasks[count] = newTask
+	self.TaskCount = count
 	if tasksMove[taskName] then -- Handle movement tasks
 		self.HasMovement = true
 	end
@@ -47,7 +48,9 @@ end
 function Schedule:AddTask(taskName, taskData) -- Set a custom task where the task name, start function, and run function are all named the same
 	local newTask = vj_ai_task.New()
 	newTask:InitCustom(taskName, taskName, taskName, taskData)
-	self.TaskCount = table.insert(self.Tasks, newTask)
+	local count = #self.Tasks + 1
+	self.Tasks[count] = newTask
+	self.TaskCount = count
 	if tasksMove[taskName] then -- Handle movement tasks
 		self.HasMovement = true
 	end
@@ -56,7 +59,9 @@ end
 function Schedule:AddTaskEx(taskName, startFunc, runFunc, taskData) -- Set a custom task with custom start and run function names
 	local newTask = vj_ai_task.New()
 	newTask:InitCustom(taskName, startFunc, runFunc, taskData)
-	self.TaskCount = table.insert(self.Tasks, newTask)
+	local count = #self.Tasks + 1
+	self.Tasks[count] = newTask
+	self.TaskCount = count
 	if tasksMove[taskName] then -- Handle movement tasks
 		self.HasMovement = true
 	end

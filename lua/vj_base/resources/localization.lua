@@ -2264,9 +2264,7 @@ local strings_turkish = {
 VJ.AddClientConVar("vj_language", "english", "Current language VJ Base is set to")
 VJ.AddClientConVar("vj_language_auto", 1, "Automatically set the language of VJ Base to the one selected by Garry's Mod")
 --
-local function add(name, str)
-	language.Add(name, str)
-end
+local add = language.Add
 --
 local defToVJ = {
 	["en"] = "english",

@@ -123,7 +123,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 		-- It's NOT a chase enemy OR it is but the NPC doesn't have a melee attack
 	if selfData.MovementType == VJ_MOVETYPE_AERIAL && extra.IgnoreGround != true && (!extra.ChaseEnemy or !selfData.HasMeleeAttack) then
 		local tr_check1 = util.TraceLine({start = startPos, endpos = startPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
-		local tr_check2 = util.TraceLine({start = trHitPos, endpos = trHitPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
+		local tr_check2 = !tr_check1.Hit and util.TraceLine({start = trHitPos, endpos = trHitPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
 		if debug then
 			print("[MoveTo] checking...")
 			debugoverlay.Box(startPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(145, 255, 0))

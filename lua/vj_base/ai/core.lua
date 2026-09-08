@@ -83,9 +83,16 @@ local MEM_OVERRIDE_DISPOSITION = VJ.MEM_OVERRIDE_DISPOSITION
 local MEM_CACHE_CLASSES = VJ.MEM_CACHE_CLASSES
 local MEM_CACHE_DISPOSITION = VJ.MEM_CACHE_DISPOSITION
 local MEM_CACHE_ENT_TYPE = VJ.MEM_CACHE_ENT_TYPE
+local colorGrey = Color(90, 90, 90)
 
 -- Convars
 local vj_npc_blood_gmod = GetConVar("vj_npc_blood_gmod")
+local vj_npc_ply_frag = GetConVar("vj_npc_ply_frag")
+local vj_npc_blood_pool = GetConVar("vj_npc_blood_pool")
+local vj_npc_corpse_undo = GetConVar("vj_npc_corpse_undo")
+local vj_npc_corpse_fade = GetConVar("vj_npc_corpse_fade")
+local vj_npc_corpse_fadetime = GetConVar("vj_npc_corpse_fadetime")
+local ai_serverragdolls = GetConVar("ai_serverragdolls")
 local vj_npc_gib_collision = GetConVar("vj_npc_gib_collision")
 local vj_npc_gib_fade = GetConVar("vj_npc_gib_fade")
 local vj_npc_gib_fadetime = GetConVar("vj_npc_gib_fadetime")
@@ -224,14 +231,10 @@ ENT.TimersToRemove = {
 			- RemoveOnCorpseDelete = Should the entity get removed if the corpse is removed? | DEFAULT = true
 		- customFunc(ent) = Use this to edit the entity which is given as parameter "ent"
 -----------------------------------------------------------]]
-local colorGrey = Color(90, 90, 90)
---
 function ENT:CreateExtraDeathCorpse(class, models, extra, customFunc)
 	-- Should only be ran after self.Corpse has been created!
 	local corpse = self.Corpse
-	if !IsValid(corpse) then return end
-	local dmginfo = corpse.DamageInfo
-	if !dmginfo then return end
+	if !IsValid(corpse) or !corpse.DamageInfo then return end
 	extra = extra or {}
 	local ent = ents.Create(class or "prop_ragdoll")
 	if models != "None" then ent:SetModel(PICK(models)) end
@@ -247,11 +250,8 @@ function ENT:CreateExtraDeathCorpse(class, models, extra, customFunc)
 		ent:SetColor(colorGrey)
 	end
 	if extra.HasVel != false then
-		local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
-		if self.DeathAnimationCodeRan then
-			dmgForce = self:GetGroundSpeedVelocity()
-		end
-		ent:GetPhysicsObject():AddVelocity(extra.Vel or dmgForce)
+		local vel = extra.Vel or (self.DeathAnimationCodeRan and self:GetGroundSpeedVelocity()) or ((self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity())
+		ent:GetPhysicsObject():AddVelocity(vel)
 	end
 	if extra.ShouldFade == true then
 		local fadeTime = extra.ShouldFadeTime or 0
@@ -1077,16 +1077,10 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 		local ene = fGetEnemy(self)
 		-- If enemy is valid do normal facing otherwise return my angles because we didn't actually face an enemy
 		if IsValid(ene) then
-			if selfData.TurningUseAllAxis then
-				local dir = fGetPos(ene)
-				dir:Add(ene:OBBCenter())
-				dir:Sub(fGetPos(self))
-				resultAng = self:GetTurnAngle(dir:Angle())
-			else
-				local dir = fGetPos(ene)
-				dir:Sub(fGetPos(self))
-				resultAng = self:GetTurnAngle(dir:Angle())
-			end
+			local dir = fGetPos(ene)
+			if selfData.TurningUseAllAxis then dir:Add(ene:OBBCenter()) end
+			dir:Sub(fGetPos(self))
+			resultAng = self:GetTurnAngle(dir:Angle())
 		else
 			resultAng = self:GetTurnAngle(self:GetAngles())
 			updateTurn = false
@@ -1107,16 +1101,10 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 	elseif IsValid(target) then
 		//VJ.DEBUG_Print(self, "SetTurnTarget", "ENTITY")
 		self:ResetTurnTarget()
-		if selfData.TurningUseAllAxis then
-			local dir = fGetPos(target)
-			dir:Add(target:OBBCenter())
-			dir:Sub(fGetPos(self))
-			resultAng = self:GetTurnAngle(dir:Angle())
-		else
-			local dir = fGetPos(target)
-			dir:Sub(fGetPos(self))
-			resultAng = self:GetTurnAngle(dir:Angle())
-		end
+		local dir = fGetPos(target)
+		if selfData.TurningUseAllAxis then dir:Add(target:OBBCenter()) end
+		dir:Sub(fGetPos(self))
+		resultAng = self:GetTurnAngle(dir:Angle())
 		if faceTime then -- 0 = Face only this frame, so don't actually set turning data!
 			turnData.Type = visibleOnly and VJ.FACE_ENTITY_VISIBLE or VJ.FACE_ENTITY
 			turnData.Target = target
@@ -1226,8 +1214,7 @@ function ENT:GetAimPosition(target, aimOrigin, predictionRate, projectileSpeed)
 			result = target:HeadTarget(aimOrigin) or target:EyePos() -- Certain non player/NPC targets will return nil, so just use "EyePos"
 		end
 	else -- If not visible, use the last known position! -- !!! BUG !!! What if target is NOT the current enemy?
-		result = self.EnemyData.VisiblePos
-		predictionRate = 0 -- Enemy is not visible, do NOT predict!
+		return Vector(self.EnemyData.VisiblePos) -- Enemy is not visible, do NOT predict!
 	end
 	if (predictionRate or 0) > 0 then -- If prediction is enabled
 		-- 1. Calculate the distance between the origin and target position
@@ -1359,16 +1346,15 @@ function ENT:DoCoverTrace(startPos, endPos, acceptWorld, extra)
 	end
 	
 	-- Sometimes tracing isn't 100%, a tiny find in sphere check fixes this issue...
-	local sphereInvalidate = false
 	for _, v in ipairs(ents.FindInSphere(hitPos, 5)) do
 		if v == ene or v.VJ_ID_Living then
-			sphereInvalidate = true
-			break
+			if setLastHiddenTime then self.LastHiddenZoneT = 0 end
+			return false, tr
 		end
 	end
 	
 	-- Not a hiding zone: (Sphere found current enemy or a living entity) OR (World is NOT accepted as a hiding zone) OR (Trace ent is current enemy or a living entity or is moving fast) OR (Trace hit very close to the end position)
-	if sphereInvalidate or (!acceptWorld && tr.HitWorld) or (IsValid(hitEnt) && (hitEnt == ene or hitEnt.VJ_ID_Living or hitEnt:GetVelocity():LengthSqr() > 1000)) or endPos:Distance(hitPos) <= 10 then
+	if (!acceptWorld && tr.HitWorld) or (IsValid(hitEnt) && (hitEnt == ene or hitEnt.VJ_ID_Living or hitEnt:GetVelocity():LengthSqr() > 1000)) or endPos:Distance(hitPos) <= 10 then
 		if setLastHiddenTime then self.LastHiddenZoneT = 0 end
 		return false, tr
 	else -- Hidden!
@@ -2188,17 +2174,14 @@ function ENT:MaintainRelationships()
 			if !entType then
 				if ent:IsNPC() then
 					entType = ENT_TYPE_NPC
-					self:SetRelationshipMemory(ent, MEM_CACHE_ENT_TYPE, ENT_TYPE_NPC)
 				elseif ent:IsPlayer() then
 					entType = ENT_TYPE_PLAYER
-					self:SetRelationshipMemory(ent, MEM_CACHE_ENT_TYPE, ENT_TYPE_PLAYER)
 				elseif ent:IsNextBot() then
 					entType = ENT_TYPE_NEXTBOT
-					self:SetRelationshipMemory(ent, MEM_CACHE_ENT_TYPE, ENT_TYPE_NEXTBOT)
 				else
 					entType = ENT_TYPE_OTHER
-					self:SetRelationshipMemory(ent, MEM_CACHE_ENT_TYPE, ENT_TYPE_OTHER)
 				end
+				self:SetRelationshipMemory(ent, MEM_CACHE_ENT_TYPE, entType)
 			end
 			
 			//if entType != ENT_TYPE_PLAYER then
@@ -2212,22 +2195,15 @@ function ENT:MaintainRelationships()
 				local entClasses = ent.VJ_NPC_Class
 				-- No cache found or the classes have changed, then recalculate the class disposition!
 				if myClassesChanged or entCachedClasses != entClasses then
-					-- Handle "self.VJ_NPC_Class"
+					-- Handle "self.VJ_NPC_Class":
+						-- IF we both share a class and ent is a player then we are friendly
+						-- ELSE-IF we both share a class and do NOT have "CLASS_PLAYER_ALLY" then we are friendly
+						-- ELSE-IF we both have "CLASS_PLAYER_ALLY" then check if we both have "self.AlliedWithPlayerAllies"
+							-- ELSE-IF we both do NOT have "self.AlliedWithPlayerAllies", then we both like players but not each other!
 					for _, friClass in ipairs(myClasses) do
-						if entClasses && VJ.HasValue(entClasses, friClass) then
-							if entType == ENT_TYPE_PLAYER then
-								calculatedDisp = D_LI
-							else
-								-- If we both have "CLASS_PLAYER_ALLY" then do a special check if we both have "self.AlliedWithPlayerAllies"
-								-- If we both do NOT have that, then we both like players but not each other!
-								if friClass == "CLASS_PLAYER_ALLY" then
-									if myFriPlyAllies && ent.AlliedWithPlayerAllies then
-										calculatedDisp = D_LI
-									end
-								else
-									calculatedDisp = D_LI
-								end
-							end
+						if entClasses && VJ.HasValue(entClasses, friClass) && (entType == ENT_TYPE_PLAYER or friClass != "CLASS_PLAYER_ALLY" or (myFriPlyAllies && ent.AlliedWithPlayerAllies)) then
+							calculatedDisp = D_LI
+							break
 						end
 					end
 					
@@ -2586,42 +2562,36 @@ function ENT:Flinch(dmginfo, hitgroup)
 	if customDmgType == VJ.DMG_FORCE_FLINCH or (customDmgType != VJ.DMG_BLEED && selfData.TakingCoverT < curTime && math.random(1, selfData.FlinchChance) == 1 && (flinchType == true or flinchType == 1 or ((flinchType == "DamageTypes" or flinchType == 2) && flinchDamageTypeCheck(selfData.FlinchDamageTypes, dmginfo:GetDamageType())))) then
 		if self:OnFlinch(dmginfo, hitgroup, "Init") then return end
 		
-		local function executeFlinch(hitgroupAnim)
-			selfData.Flinching = true
-			self:StopAttacks(true)
-			selfData.AttackAnimTime = 0
-			local _, animDur = self:PlayAnim(hitgroupAnim or selfData.AnimTbl_Flinch, true, false, false)
-			timer.Create("flinch_reset" .. self:EntIndex(), animDur, 1, function() self.Flinching = false end)
-			self:OnFlinch(dmginfo, hitgroup, "Execute")
-			selfData.NextFlinchT = curTime + (!selfData.FlinchCooldown and animDur or selfData.FlinchCooldown)
-		end
-		
-		local hitgroupTbl = selfData.FlinchHitGroupMap
-		-- Hitgroup flinching
-		if hitgroupTbl then
-			for _, v in ipairs(hitgroupTbl) do
+		-- Handle HitGroup flinching
+		local hitGroupAnim;
+		local hitGroupMap = selfData.FlinchHitGroupMap
+		if hitGroupMap then
+			for _, v in ipairs(hitGroupMap) do
 				local hitGroups = v.HitGroup
 				if istable(hitGroups) then -- Sub-table hitgroup
 					for hitgroupX = 1, #hitGroups do
 						if hitGroups[hitgroupX] == hitgroup then
-							executeFlinch(v.Animation)
-							return
+							hitGroupAnim = v.Animation
+							break
 						end
 					end
 				else -- non-table hitgroup
 					if hitGroups == hitgroup then
-						executeFlinch(v.Animation)
-						return
+						hitGroupAnim = v.Animation
+						break
 					end
 				end
 			end
-			if selfData.FlinchHitGroupPlayDefault then
-				executeFlinch()
-			end
-		-- Non-hitgroup flinching
-		else
-			executeFlinch()
+			if !hitGroupAnim && !selfData.FlinchHitGroupPlayDefault then return end
 		end
+		
+		selfData.Flinching = true
+		self:StopAttacks(true)
+		selfData.AttackAnimTime = 0
+		local _, animDur = self:PlayAnim(hitGroupAnim or selfData.AnimTbl_Flinch, true, false, false)
+		timer.Create("flinch_reset" .. self:EntIndex(), animDur, 1, function() self.Flinching = false end)
+		self:OnFlinch(dmginfo, hitgroup, "Execute")
+		selfData.NextFlinchT = curTime + (!selfData.FlinchCooldown and animDur or selfData.FlinchCooldown)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2708,8 +2678,6 @@ local bloodNames = {
 --
 function ENT:SetupBloodColor(blColor)
 	if !isstring(blColor) then return end -- Only strings allowed!
-	local npcSize = self:OBBMaxs():Distance(self:OBBMins())
-	npcSize = ((npcSize < 25 and 0) or npcSize < 50 and 1) or 2 -- 0 = tiny | 1 = small | 2 = normal
 	local blood = bloodNames[blColor]
 	if blood then
 		local selfData = fGetTable(self)
@@ -2720,7 +2688,8 @@ function ENT:SetupBloodColor(blColor)
 			selfData.BloodDecal = vj_npc_blood_gmod:GetInt() == 1 and blood.decal_gmod or blood.decal
 		end
 		if !PICK(selfData.BloodPool) then
-			selfData.BloodPool = blood.pool[npcSize]
+			local size = self:OBBMaxs():Distance(self:OBBMins())
+			selfData.BloodPool = blood.pool[((size < 25 and 0) or size < 50 and 1) or 2]  -- 0 = tiny | 1 = small | 2 = normal
 		end
 	end
 end
@@ -2931,20 +2900,9 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			return 0
 		end
 		return 0
-	elseif sdSet == "FollowPlayer" then
+	elseif sdSet == "FollowPlayer" or sdSet == "UnFollowPlayer" then
 		if selfData.HasFollowPlayerSounds then
-			local pickedSD = PICK(selfData.SoundTbl_FollowPlayer)
-			if (pickedSD && math.random(1, selfData.FollowPlayerSoundChance) == 1) or customSD then
-				if customSD then pickedSD = customSD end
-				StopSD(selfData.CurrentSpeechSound)
-				StopSD(selfData.CurrentIdleSound)
-				selfData.IdleSoundBlockTime = CurTime() + math.random(3, 4)
-				selfData.CurrentSpeechSound = (sdType or VJ.CreateSound)(self, pickedSD, selfData.FollowPlayerSoundLevel, self:GetSoundPitch(selfData.FollowPlayerSoundPitch))
-			end
-		end
-	elseif sdSet == "UnFollowPlayer" then
-		if selfData.HasFollowPlayerSounds then
-			local pickedSD = PICK(selfData.SoundTbl_UnFollowPlayer)
+			local pickedSD = PICK(sdSet == "FollowPlayer" and selfData.SoundTbl_FollowPlayer or selfData.SoundTbl_UnFollowPlayer)
 			if (pickedSD && math.random(1, selfData.FollowPlayerSoundChance) == 1) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSD(selfData.CurrentSpeechSound)
@@ -3327,9 +3285,9 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 		if selfData.HasDangerSightSounds && CurTime() > selfData.NextDangerSightSoundT then
 			local pickedSD = PICK(selfData.SoundTbl_DangerSight)
 			if sdSet == "GrenadeSight" then
-				local grenSDs = PICK(selfData.SoundTbl_GrenadeSight)
-				if grenSDs then
-					pickedSD = grenSDs
+				local grenSD = PICK(selfData.SoundTbl_GrenadeSight)
+				if grenSD then
+					pickedSD = grenSD
 				end
 			end
 			local sdDur = 3
@@ -3390,6 +3348,409 @@ function ENT:ValidateNoCollide(ent)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnTakeDamage(dmginfo)
+	local dmgAttacker = dmginfo:GetAttacker()
+	if !IsValid(dmgAttacker) then dmgAttacker = false end
+	
+	-- Don't take bullet damage from friendly NPCs
+	if dmgAttacker && dmginfo:IsBulletDamage() && dmgAttacker:IsNPC() && dmgAttacker:Disposition(self) != D_HT && (fGetClass(dmgAttacker) == fGetClass(self) or self:Disposition(dmgAttacker) == D_LI) then return 0 end
+	
+	local dmgInflictor = dmginfo:GetInflictor()
+	if !IsValid(dmgInflictor) then dmgInflictor = false end
+	
+	-- Attempt to avoid taking damage when walking on ragdolls
+	if dmgInflictor && fGetClass(dmgInflictor) == "prop_ragdoll" && dmgInflictor:GetVelocity():Length() <= 100 then return 0 end
+	
+	local selfData = fGetTable(self)
+	local hitgroup = self:GetLastDamageHitGroup()
+	self:OnDamaged(dmginfo, hitgroup, "Init")
+	if selfData.GodMode or dmginfo:GetDamage() <= 0 then return 0 end
+	
+	local dmgType = dmginfo:GetDamageType()
+	local curTime = CurTime()
+	local isFireEnt = false
+	if self:IsOnFire() then
+		isFireEnt = dmgInflictor && dmgAttacker && fGetClass(dmgInflictor) == "entityflame" && fGetClass(dmgAttacker) == "entityflame"
+		if self:WaterLevel() > 1 then self:Extinguish() end -- If we are in water, then extinguish the fire
+	end
+	
+	-- If it should always take damage from huge monsters, then skip immunity checks!
+	if dmgAttacker && selfData.ForceDamageFromBosses && dmgAttacker.VJ_ID_Boss then
+		goto skip_immunity
+	end
+	
+	-- Immunity checks
+	if isFireEnt && !selfData.AllowIgnition then self:Extinguish() return 0 end
+	if (selfData.Immune_Fire && (dmgType == DMG_BURN or dmgType == DMG_SLOWBURN or isFireEnt)) or (selfData.Immune_Toxic && (dmgType == DMG_ACID or dmgType == DMG_RADIATION or dmgType == DMG_POISON or dmgType == DMG_NERVEGAS or dmgType == DMG_PARALYZE)) or (selfData.Immune_Bullet && (dmginfo:IsBulletDamage() or dmgType == DMG_BULLET or dmgType == DMG_AIRBOAT or dmgType == DMG_BUCKSHOT or dmgType == DMG_SNIPER)) or (selfData.Immune_Explosive && (dmgType == DMG_BLAST or dmgType == DMG_BLAST_SURFACE or dmgType == DMG_MISSILEDEFENSE)) or (selfData.Immune_Dissolve && dmginfo:IsDamageType(DMG_DISSOLVE)) or (selfData.Immune_Electricity && (dmgType == DMG_SHOCK or dmgType == DMG_ENERGYBEAM or dmgType == DMG_PHYSGUN)) or (selfData.Immune_Melee && (dmgType == DMG_CLUB or dmgType == DMG_SLASH)) or (selfData.Immune_Sonic && dmgType == DMG_SONIC) then return 0 end
+	
+	-- Make sure combine ball does reasonable damage and doesn't spam!
+	if (dmgInflictor && fGetClass(dmgInflictor) == "prop_combine_ball") or (dmgAttacker && fGetClass(dmgAttacker) == "prop_combine_ball") then
+		if selfData.Immune_Dissolve then return 0 end
+		if curTime > selfData.NextCombineBallDmgT then
+			dmginfo:SetDamage(math.random(400, 500))
+			dmginfo:SetDamageType(DMG_DISSOLVE)
+			selfData.NextCombineBallDmgT = curTime + 0.2
+		else
+			return 0
+		end
+	end
+	::skip_immunity::
+	
+	local function DoBleed()
+		if selfData.Bleeds then
+			self:OnBleed(dmginfo, hitgroup)
+			-- Spawn the blood particle only if it's not caused by the default fire entity [Causes the damage position to be at Vector()]
+			if selfData.HasBloodParticle && !isFireEnt then self:SpawnBloodParticles(dmginfo, hitgroup) end
+			if selfData.HasBloodDecal then self:SpawnBloodDecals(dmginfo, hitgroup) end
+			self:PlaySoundSystem("Impact")
+		end
+	end
+	if selfData.Dead then DoBleed() return 0 end -- If dead then just bleed but take no damage
+	
+	self:OnDamaged(dmginfo, hitgroup, "PreDamage")
+	if dmginfo:GetDamage() <= 0 then return 0 end -- Only take damage if it's above 0!
+	-- Why? Because GMod resets/randomizes dmginfo after a tick...
+	selfData.SavedDmgInfo = {
+		dmginfo = dmginfo, -- The actual CTakeDamageInfo object | WARNING: Can be corrupted after a tick, recommended not to use this!
+		attacker = dmginfo:GetAttacker(),
+		inflictor = dmginfo:GetInflictor(),
+		amount = dmginfo:GetDamage(),
+		pos = dmginfo:GetDamagePosition(),
+		type = dmginfo:GetDamageType(),
+		force = dmginfo:GetDamageForce(),
+		ammoType = dmginfo:GetAmmoType(),
+		hitgroup = hitgroup,
+	}
+	self:SetHealth(self:Health() - dmginfo:GetDamage())
+	if selfData.VJ_DEBUG && GetConVar("vj_npc_debug_damage"):GetInt() == 1 then VJ.DEBUG_Print(self, "OnTakeDamage", "Amount = ", dmginfo:GetDamage(), " | Attacker = ", dmgAttacker, " | Inflictor = ", dmgInflictor) end
+	local healthRegen = selfData.HealthRegenParams
+	if healthRegen.Enabled && healthRegen.ResetOnDmg then
+		selfData.HealthRegenDelayT = curTime + (math.Rand(healthRegen.Delay.a, healthRegen.Delay.b) * 1.5)
+	end
+	self:SetSaveValue("m_iDamageCount", self:GetTotalDamageCount() + 1)
+	self:SetSaveValue("m_flLastDamageTime", curTime)
+	self:OnDamaged(dmginfo, hitgroup, "PostDamage")
+	DoBleed()
+	
+	-- I/O events, from: https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/sp/src/game/server/ai_basenpc.cpp#L764
+	if dmgAttacker then
+		self:TriggerOutput("OnDamaged", dmgAttacker)
+		self:MarkTookDamageFromEnemy(dmgAttacker)
+	else
+		self:TriggerOutput("OnDamaged", self)
+	end
+	
+	local stillAlive = self:Health() > 0
+	if stillAlive then self:PlaySoundSystem("Pain") end
+
+	if VJ_CVAR_AI_ENABLED && self:GetState() != VJ_STATE_FREEZE then
+		local isPassive = selfData.Behavior == VJ_BEHAVIOR_PASSIVE or selfData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE
+		if stillAlive then
+			if !isFireEnt then
+				self:Flinch(dmginfo, hitgroup)
+			end
+			
+			-- Player attackers
+			if dmgAttacker && dmgAttacker:IsPlayer() then
+				-- Become enemy to a friendly player | RESULT: May become hostile to an allied player
+				if selfData.BecomeEnemyToPlayer && self:CheckRelationship(dmgAttacker) == D_LI then
+					local relationMemory = selfData.RelationshipMemory[dmgAttacker]
+					self:SetRelationshipMemory(dmgAttacker, VJ.MEM_HOSTILITY_LEVEL, relationMemory[VJ.MEM_HOSTILITY_LEVEL] and relationMemory[VJ.MEM_HOSTILITY_LEVEL] + 1 or 1)
+					if relationMemory[VJ.MEM_HOSTILITY_LEVEL] > selfData.BecomeEnemyToPlayer && self:Disposition(dmgAttacker) != D_HT then
+						self:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
+						if selfData.IsFollowing && selfData.FollowData.Target == dmgAttacker then self:ResetFollowBehavior() end
+						self:SetRelationshipMemory(dmgAttacker, VJ.MEM_OVERRIDE_DISPOSITION, D_HT)
+						self:AddEntityRelationship(dmgAttacker, D_HT, 2)
+						selfData.TakingCoverT = curTime + 2
+						self:PlaySoundSystem("BecomeEnemyToPlayer")
+						if !IsValid(fGetEnemy(self)) then
+							self:StopMoving()
+							self:SetTarget(dmgAttacker)
+							self:SCHEDULE_FACE("TASK_FACE_TARGET")
+						end
+						if selfData.CanChatMessage then
+							dmgAttacker:PrintMessage(HUD_PRINTTALK, VJ.GetName(self) .. " no longer likes you.")
+						end
+					end
+				end
+			
+				-- React to damage by a player
+					-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
+				if selfData.HasDamageByPlayerSounds && curTime > selfData.NextDamageByPlayerSoundT && self:Visible(dmgAttacker) then
+					local dispLvl = selfData.DamageByPlayerDispositionLevel
+					if (dispLvl == 0 or (dispLvl == 1 && self:CheckRelationship(dmgAttacker) == D_LI) or (dispLvl == 2 && self:CheckRelationship(dmgAttacker) == D_HT)) then
+						self:PlaySoundSystem("DamageByPlayer")
+					end
+				end
+			end
+			
+			if self.IsVJBaseSNPC_Human then
+				-- Move away or hide behind object when damaged while enemy is valid | RESULT: May play a hiding animation OR move to take cover from enemy
+				local eneData = selfData.EnemyData
+				if !isPassive && selfData.CombatDamageResponse && IsValid(eneData.Target) && curTime > selfData.NextCombatDamageResponseT && !selfData.IsFollowing && !selfData.AttackType && !self:IsBusy() && curTime > selfData.TakingCoverT && eneData.Visible && self:GetWeaponState() != VJ.WEP_STATE_RELOADING && eneData.Distance < selfData.Weapon_MaxDistance then
+					local wep = self:GetActiveWeapon()
+					local canMove = true
+					if self:DoCoverTrace(fGetPos(self) + self:OBBCenter(), eneData.Target:EyePos()) then
+						local hideTime = math.Rand(selfData.CombatDamageResponse_CoverTime.a, selfData.CombatDamageResponse_CoverTime.b)
+						local anim = self:PlayAnim(selfData.AnimTbl_TakingCover, false, hideTime, false) -- Don't set lockAnim because we want it to shoot if an enemy is suddenly visible!
+						if anim != ACT_INVALID then
+							selfData.NextChaseTime = curTime + hideTime
+							selfData.TakingCoverT = curTime + hideTime
+							selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
+							selfData.NextCombatDamageResponseT = curTime + math.Rand(selfData.CombatDamageResponse_Cooldown.a, selfData.CombatDamageResponse_Cooldown.b)
+							canMove = false
+						end
+					end
+					if canMove && !self:IsMoving() && (!IsValid(wep) or (IsValid(wep) && !wep.IsMeleeWeapon)) then -- Run away if not moving AND has a non-melee weapon
+						self:SCHEDULE_COVER_ENEMY("TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.TurnData = {Type = VJ.FACE_ENEMY} end)
+						selfData.NextCombatDamageResponseT = curTime + math.Rand(selfData.CombatDamageResponse_Cooldown.a, selfData.CombatDamageResponse_Cooldown.b)
+					end
+				end
+			end
+			
+			if !isPassive && !IsValid(fGetEnemy(self)) then
+				local canMove = true
+				
+				-- How allies respond when it's damaged | RESULT: May become alerted and may play an animation
+				if selfData.DamageAllyResponse && curTime > selfData.NextDamageAllyResponseT && !selfData.IsFollowing then
+					local responseDist = math_max(800, self:OBBMaxs():Distance(self:OBBMins()) * 12)
+					local allies = self:Allies_Check(responseDist)
+					if allies then
+						if !isFireEnt then
+							self:Allies_Bring("Diamond", responseDist, allies, 4)
+						end
+						for _, ally in ipairs(allies) do
+							ally:DoReadyAlert()
+						end
+						if !isFireEnt && !self:IsBusy("Activities") then
+							self:DoReadyAlert()
+							local anim = self:PlayAnim(selfData.AnimTbl_DamageAllyResponse, true, false, true)
+							if anim != ACT_INVALID then
+								canMove = false
+								selfData.NextFlinchT = curTime + 1
+							end
+						end
+						selfData.NextDamageAllyResponseT = curTime + math.Rand(selfData.DamageAllyResponse_Cooldown.a, selfData.DamageAllyResponse_Cooldown.b)
+					end
+				end
+				
+				local dmgResponse = selfData.DamageResponse
+				if dmgResponse && curTime > selfData.TakingCoverT && !self:IsBusy("Activities") then
+					-- Attempt to find who damaged me | RESULT: May become alerted and set its enemy if attacker is visible
+					if dmgAttacker && dmgAttacker.VJ_ID_Living && (dmgResponse == true or dmgResponse == "OnlySearch") then
+						local sightDist = self:GetMaxLookDistance()
+						sightDist = math_min(math_max(sightDist / 2, sightDist <= 1000 and sightDist or 1000), sightDist)
+						-- IF normal sight dist is less than 1000 then change nothing, OR ELSE use half the distance with 1000 as minimum
+						if fGetPos(self):Distance(fGetPos(dmgAttacker)) <= sightDist && self:Visible(dmgAttacker) then
+							local dispLvl = self:CheckRelationship(dmgAttacker)
+							if dispLvl == D_HT or dispLvl == D_NU then
+								//self:AddEntityRelationship(dmgAttacker, D_HT, 10)
+								self:OnSetEnemyFromDamage(dmginfo, hitgroup)
+								selfData.NextCallForHelpT = curTime + 1
+								self:ForceSetEnemy(dmgAttacker, true)
+								self:MaintainAlertBehavior()
+								canMove = false
+							end
+						end
+					end
+					
+					-- If all else failed then take cover! | RESULT: May move away from its current position
+					if canMove && (dmgResponse == true or dmgResponse == "OnlyMove") && !selfData.IsFollowing && selfData.MovementType != VJ_MOVETYPE_STATIONARY && dmginfo:GetDamageCustom() != VJ.DMG_BLEED then
+						self:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.TurnData = {Type = VJ.FACE_ENEMY} end)
+						selfData.TakingCoverT = curTime + 5
+					end
+				end
+			-- Make passive NPCs run away | RESULT: May move away from its current position
+			elseif isPassive && curTime > selfData.TakingCoverT then
+				if selfData.DamageResponse && !self:IsBusy() then
+					self:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH")
+				end
+			end
+		end
+		
+		-- Signal other passive NPCs of possible danager | RESULT: May cause other passive NPCs to move away from their current positions
+		if isPassive && curTime > selfData.TakingCoverT then
+			if selfData.Passive_AlliesRunOnDamage then -- Make passive allies run too!
+				local allies = self:Allies_Check(math_max(800, self:OBBMaxs():Distance(self:OBBMins()) * 20))
+				if allies then
+					for _, ally in ipairs(allies) do
+						ally.TakingCoverT = curTime + math.Rand(6, 7)
+						ally:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH")
+						ally:PlaySoundSystem("Alert")
+					end
+				end
+			end
+			selfData.TakingCoverT = curTime + math.Rand(6, 7)
+		end
+	end
+	
+	-- If eating, stop!
+	if selfData.CanEat && selfData.VJ_ST_Eating then
+		selfData.EatingData.NextCheck = curTime + 15
+		self:ResetEatingBehavior("Injured")
+	end
+	
+	if self:Health() <= 0 && !selfData.Dead then
+		self:RemoveEFlags(EFL_NO_DISSOLVE)
+		if (dmginfo:IsDamageType(DMG_DISSOLVE)) or (dmgInflictor && fGetClass(dmgInflictor) == "prop_combine_ball") then
+			local dissolve = DamageInfo()
+			dissolve:SetDamage(self:Health())
+			dissolve:SetAttacker(dmginfo:GetAttacker())
+			dissolve:SetDamageType(DMG_DISSOLVE)
+			self:TakeDamageInfo(dissolve)
+		end
+		self:BeginDeath(dmginfo, hitgroup)
+	end
+	return 1
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+local vecZ500 = Vector(0, 0, 500)
+local vecZ4 = Vector(0, 0, 4)
+--
+function ENT:BeginDeath(dmginfo, hitgroup)
+	self.Dead = true
+	self.DoNotDuplicate = true -- Prevent duplicating or saving dead NPCs!
+	self:SetSaveValue("m_lifeState", 1) -- LIFE_DYING
+	self:OnDeath(dmginfo, hitgroup, "Init")
+	if self.MedicData.Status then self:ResetMedicBehavior() end
+	if self.IsFollowing then self:ResetFollowBehavior() end
+	local dmgInflictor = dmginfo:GetInflictor()
+	local dmgAttacker = dmginfo:GetAttacker()
+	local myPos = fGetPos(self)
+	
+	if VJ_CVAR_AI_ENABLED then
+		local responseDist = math_max(800, self:OBBMaxs():Distance(self:OBBMins()) * 12)
+		local allies = self:Allies_Check(responseDist)
+		if allies then
+			local doBecomeEnemyToPlayer = self.BecomeEnemyToPlayer && dmgAttacker:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS
+			local responseType = self.DeathAllyResponse
+			local movedAllyNum = 0 -- Number of allies that have moved
+			for _, ally in ipairs(allies) do
+				ally:OnAllyKilled(self)
+				ally:PlaySoundSystem("AllyDeath")
+				
+				if responseType && myPos:Distance(fGetPos(ally)) < responseDist then
+					local moved = false
+					-- Bring ally
+					if responseType == true && movedAllyNum < self.DeathAllyResponse_MoveLimit then
+						moved = self:Allies_Bring("Random", responseDist, {ally}, 0, true)
+						if moved then
+							movedAllyNum = movedAllyNum + 1
+						end
+					end
+					-- Alert ally
+					if (responseType == true or responseType == "OnlyAlert") && !IsValid(fGetEnemy(ally)) then
+						ally:DoReadyAlert()
+						if !moved then
+							local faceTime = math.Rand(5, 8)
+							ally:SetTurnTarget(myPos, faceTime, true)
+							ally.NextIdleTime = CurTime() + faceTime
+						end
+					end
+				end
+				
+				-- BecomeEnemyToPlayer
+				if doBecomeEnemyToPlayer && ally.BecomeEnemyToPlayer && ally:Disposition(dmgAttacker) == D_LI then
+					local relationMemory = ally.RelationshipMemory[dmgAttacker]
+					ally:SetRelationshipMemory(dmgAttacker, VJ.MEM_HOSTILITY_LEVEL, relationMemory[VJ.MEM_HOSTILITY_LEVEL] and relationMemory[VJ.MEM_HOSTILITY_LEVEL] + 1 or 1)
+					if relationMemory[VJ.MEM_HOSTILITY_LEVEL] > ally.BecomeEnemyToPlayer then
+						if ally:Disposition(dmgAttacker) != D_HT then
+							ally:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
+							if ally.IsFollowing && ally.FollowData.Target == dmgAttacker then ally:ResetFollowBehavior() end
+							ally:SetRelationshipMemory(dmgAttacker, VJ.MEM_OVERRIDE_DISPOSITION, D_HT)
+							ally:AddEntityRelationship(dmgAttacker, D_HT, 2)
+							if ally.CanChatMessage then
+								dmgAttacker:PrintMessage(HUD_PRINTTALK, VJ.GetName(ally) .. " no longer likes you.")
+							end
+							ally:PlaySoundSystem("BecomeEnemyToPlayer")
+						end
+						ally.Alerted = true
+					end
+				end
+			end
+		end
+	end
+	
+	-- Blood decal on the ground
+	if self.Bleeds && self.HasBloodDecal then
+		local bloodDecal = PICK(self.BloodDecal)
+		if bloodDecal then
+			local decalPos = myPos + vecZ4
+			self:SetLocalPos(decalPos) -- NPC is too close to the ground, we need to move it up a bit
+			local tr = util.TraceLine({start = decalPos, endpos = decalPos - vecZ500, filter = self})
+			util.Decal(bloodDecal, tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
+		end
+	end
+	
+	self:RemoveTimers()
+	self:StopAllSounds()
+	self.AttackType = VJ.ATTACK_TYPE_NONE
+	self.HasMeleeAttack = false
+	if self.IsVJBaseSNPC_Creature then
+		self.HasRangeAttack = false
+		self.HasLeapAttack = false
+	end
+	if IsValid(dmgAttacker) then
+		if fGetClass(dmgAttacker) == "npc_barnacle" then self.HasDeathCorpse = false end -- Don't make a corpse if it's killed by a barnacle!
+		if vj_npc_ply_frag:GetInt() == 1 && dmgAttacker:IsPlayer() then dmgAttacker:AddFrags(1) end
+	end
+	gamemode.Call("OnNPCKilled", self, dmgAttacker, dmgInflictor)
+	self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+	self:GibOnDeath(dmginfo, hitgroup)
+	self:PlaySoundSystem("Death")
+	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end
+	
+	-- I/O events, from: https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/mp/src/game/server/basecombatcharacter.cpp#L1582
+	if IsValid(dmgAttacker) then -- Someone else killed me
+		self:TriggerOutput("OnDeath", dmgAttacker)
+		dmgAttacker:Fire("KilledNPC", nil, 0, self, self) -- Allows player companions (npc_citizen) to respond to kill
+	else
+		self:TriggerOutput("OnDeath", self)
+	end
+	
+	-- Handle death animation, death delay, and the final death phase
+	local deathTime = self.DeathDelayTime
+	if IsValid(dmgInflictor) && fGetClass(dmgInflictor) == "prop_combine_ball" then self.HasDeathAnimation = false end
+	if self.HasDeathAnimation && VJ_CVAR_AI_ENABLED && !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) && !dmginfo:IsDamageType(DMG_DISSOLVE) && self:GetNavType() != NAV_CLIMB && math.random(1, self.DeathAnimationChance) == 1 then
+		self:RemoveAllGestures()
+		self:OnDeath(dmginfo, hitgroup, "DeathAnim")
+		local chosenAnim = PICK(self.AnimTbl_Death)
+		local animTime = VJ.AnimDurationEx(self, chosenAnim, self.DeathAnimationTime) - self.DeathAnimationDecreaseLengthAmount
+		self:PlayAnim(chosenAnim, true, animTime, false, 0, {PlayBackRateCalculated = true})
+		deathTime = deathTime + animTime
+		self.DeathAnimationCodeRan = true
+	else
+		-- If no death anim then just set the NPC to dead even if it has a delayed remove
+		self:SetSaveValue("m_lifeState", 2) -- LIFE_DEAD
+	end
+	if deathTime > 0 then
+		timer.Simple(deathTime, function()
+			if IsValid(self) then
+				self:FinishDeath(dmginfo, hitgroup)
+			end
+		end)
+	else
+		self:FinishDeath(dmginfo, hitgroup)
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:FinishDeath(dmginfo, hitgroup)
+	if self.VJ_DEBUG && GetConVar("vj_npc_debug_damage"):GetInt() == 1 then VJ.DEBUG_Print(self, "FinishDeath", "Attacker = ", self.SavedDmgInfo.attacker, " | Inflictor = ", self.SavedDmgInfo.inflictor) end
+	self:SetSaveValue("m_lifeState", 2) -- LIFE_DEAD
+	//self:SetNPCState(NPC_STATE_DEAD)
+	self:OnDeath(dmginfo, hitgroup, "Finish")
+	if self.DropDeathLoot then
+		self:CreateDeathLoot(dmginfo, hitgroup)
+	end
+	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then
+		if self.IsVJBaseSNPC_Human then
+			self:DeathWeaponDrop(dmginfo, hitgroup)
+		end
+		self:CreateDeathCorpse(dmginfo, hitgroup)
+	end
+	self:Remove()
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Checks if the given damage type(s) contains 1 or more of the default gibbing damage types
 		- dmgType = Damage type(s) to check | EX: dmginfo:GetDamageType()
@@ -3413,15 +3774,9 @@ function ENT:GibOnDeath(dmginfo, hitgroup)
 		local gibbed, overrides = self:HandleGibOnDeath(dmginfo, hitgroup)
 		if gibbed then
 			selfData.GibbedOnDeath = true
-			if overrides then
-				if !overrides.AllowCorpse then selfData.HasDeathCorpse = false end
-				if !overrides.AllowAnim then selfData.HasDeathAnimation = false end
-				if overrides.AllowSound != false then self:PlaySoundSystem("Gib") end -- nil/true = Play gib sound
-			else -- Default
-				selfData.HasDeathCorpse = false
-				selfData.HasDeathAnimation = false
-				self:PlaySoundSystem("Gib")
-			end
+			if !overrides or !overrides.AllowCorpse then selfData.HasDeathCorpse = false end
+			if !overrides or !overrides.AllowAnim then selfData.HasDeathAnimation = false end
+			if !overrides or overrides.AllowSound != false then self:PlaySoundSystem("Gib") end -- nil/true = Play gib sound
 			return true
 		end
 	end
@@ -3446,6 +3801,164 @@ function ENT:CreateDeathLoot(dmginfo, hitgroup)
 		end
 		phys:SetMass(1)
 		phys:ApplyForceCenter(dmgForce)
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CreateDeathCorpse(dmginfo, hitgroup)
+	-- In case it was not set
+		-- NOTE: dmginfo at this point can be incorrect/corrupted, but its better than leaving the self.SavedDmgInfo empty!
+	if !self.SavedDmgInfo then
+		self.SavedDmgInfo = {
+			dmginfo = dmginfo, -- The actual CTakeDamageInfo object | WARNING: Can be corrupted after a tick, recommended not to use this!
+			attacker = dmginfo:GetAttacker(),
+			inflictor = dmginfo:GetInflictor(),
+			amount = dmginfo:GetDamage(),
+			pos = dmginfo:GetDamagePosition(),
+			type = dmginfo:GetDamageType(),
+			force = dmginfo:GetDamageForce(),
+			ammoType = dmginfo:GetAmmoType(),
+			hitgroup = hitgroup,
+		}
+	end
+	
+	if self.HasDeathCorpse && self.HasDeathRagdoll != false then
+		local corpseMdl = self:GetModel()
+		local corpseMdlCustom = PICK(self.DeathCorpseModel)
+		if corpseMdlCustom then corpseMdl = corpseMdlCustom end
+		local corpseClass = "prop_physics"
+		if self.DeathCorpseEntityClass then
+			corpseClass = self.DeathCorpseEntityClass
+		else
+			if util.IsValidRagdoll(corpseMdl) then
+				corpseClass = "prop_ragdoll"
+			elseif !util.IsValidProp(corpseMdl) or !util.IsValidModel(corpseMdl) then
+				if self.IsVJBaseSNPC_Human && IsValid(self.WeaponEntity) then self.WeaponEntity:Remove() end
+				return false
+			end
+		end
+		self.Corpse = ents.Create(corpseClass)
+		local corpse = self.Corpse
+		corpse:SetModel(corpseMdl)
+		corpse:SetPos(fGetPos(self))
+		corpse:SetAngles(self:GetAngles())
+		corpse:Spawn()
+		corpse:Activate()
+		corpse:SetSkin(self:GetSkin())
+		for i = 0, self:GetNumBodyGroups() - 1 do
+			corpse:SetBodygroup(i, self:GetBodygroup(i))
+		end
+		corpse:SetColor(self:GetColor())
+		corpse:SetMaterial(self:GetMaterial())
+		if !corpseMdlCustom && self.DeathCorpseSubMaterials then -- Take care of sub materials
+			for _, x in ipairs(self.DeathCorpseSubMaterials) do
+				if self:GetSubMaterial(x) != "" then
+					corpse:SetSubMaterial(x, self:GetSubMaterial(x))
+				end
+			end
+		end
+		corpse.IsVJBaseCorpse = true
+		corpse.FadeCorpseType = (fGetClass(corpse) == "prop_ragdoll" and "FadeAndRemove") or "kill"
+		corpse.DamageInfo = dmginfo
+		corpse.ChildEnts = self.DeathCorpse_ChildEnts or {}
+		corpse.BloodData = {Color = self.BloodColor, Particle = self.BloodParticle, Decal = self.BloodDecal}
+
+		if self.Bleeds && self.HasBloodPool && vj_npc_blood_pool:GetInt() == 1 then
+			self:SpawnBloodPool(dmginfo, hitgroup, corpse)
+		end
+		
+		-- Collision
+		corpse:SetCollisionGroup(self.DeathCorpseCollisionType)
+		if ai_serverragdolls:GetInt() == 1 then
+			undo.ReplaceEntity(self, corpse)
+		else -- Keep corpses is not enabled...
+			VJ.Corpse_Add(corpse)
+			if vj_npc_corpse_undo:GetInt() == 1 then undo.ReplaceEntity(self, corpse) end
+		end
+		cleanup.ReplaceEntity(self, corpse) -- Delete on cleanup
+		
+		-- On fire
+		if self:IsOnFire() then
+			corpse:Ignite(math.Rand(8, 10), 0)
+			if !self.Immune_Fire then -- Don't darken the corpse if we are immune to fire!
+				corpse:SetColor(colorGrey)
+				//corpse:SetMaterial("models/props_foliage/tree_deciduous_01a_trunk")
+			end
+		end
+		
+		-- Dissolve
+		if (bit.band(self.SavedDmgInfo.type, DMG_DISSOLVE) != 0) or (IsValid(self.SavedDmgInfo.inflictor) && fGetClass(self.SavedDmgInfo.inflictor) == "prop_combine_ball") then
+			corpse:Dissolve(0, 1)
+		end
+		
+		-- Bone & Angle
+		-- If it's a bullet, it will use localized velocity on each bone depending on how far away the bone is from the dmg position
+		local useLocalVel = bit.band(self.SavedDmgInfo.type, DMG_BULLET) != 0 and self.SavedDmgInfo.pos != defPos
+		local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
+		if self.DeathAnimationCodeRan then
+			useLocalVel = false
+			dmgForce = self:GetGroundSpeedVelocity()
+		end
+		local totalSurface = 0
+		local physCount = corpse:GetPhysicsObjectCount()
+		for childNum = 0, physCount - 1 do -- 128 = Bone Limit
+			local childPhysObj = corpse:GetPhysicsObjectNum(childNum)
+			if IsValid(childPhysObj) then
+				totalSurface = totalSurface + childPhysObj:GetSurfaceArea()
+				local childPhysObj_BonePos, childPhysObj_BoneAng = self:GetBonePosition(corpse:TranslatePhysBoneToBone(childNum))
+				if childPhysObj_BonePos then
+					if self.DeathCorpseSetBoneAngles then childPhysObj:SetAngles(childPhysObj_BoneAng) end
+					childPhysObj:SetPos(childPhysObj_BonePos)
+					if self.DeathCorpseApplyForce then
+						childPhysObj:SetVelocity(dmgForce / math_max(1, (useLocalVel and childPhysObj_BonePos:Distance(self.SavedDmgInfo.pos) / 12) or 1))
+					end
+				-- If it's 1, then it's likely a regular physics model with no bones
+				elseif physCount == 1 then
+					if self.DeathCorpseApplyForce then
+						childPhysObj:SetVelocity(dmgForce / math_max(1, (useLocalVel and fGetPos(corpse):Distance(self.SavedDmgInfo.pos) / 12) or 1))
+					end
+				end
+			end
+		end
+		
+		-- Health & stink system
+		if corpse:Health() <= 0 then
+			local hpCalc = totalSurface / 60
+			corpse:SetMaxHealth(hpCalc)
+			corpse:SetHealth(hpCalc)
+		end
+		VJ.Corpse_AddStinky(corpse, true)
+		
+		if self.IsVJBaseSNPC_Human && IsValid(self.WeaponEntity) then corpse.ChildEnts[#corpse.ChildEnts + 1] = self.WeaponEntity end
+		if self.DeathCorpseFade then corpse:Fire(corpse.FadeCorpseType, nil, self.DeathCorpseFade) end
+		if vj_npc_corpse_fade:GetInt() == 1 then corpse:Fire(corpse.FadeCorpseType, nil, vj_npc_corpse_fadetime:GetInt()) end
+		self:OnCreateDeathCorpse(dmginfo, hitgroup, corpse)
+		if corpse:IsFlagSet(FL_DISSOLVING) then
+			if self.IsVJBaseSNPC_Human && IsValid(self.WeaponEntity) then
+				self.WeaponEntity:Dissolve(0, 1)
+			end
+			if corpse.ChildEnts then
+				for _, child in ipairs(corpse.ChildEnts) do
+					child:Dissolve(0, 1)
+				end
+			end
+		end
+		corpse:CallOnRemove("vj_" .. corpse:EntIndex(), function(ent, childPieces)
+			for _, child in ipairs(childPieces) do
+				if IsValid(child) then
+					child:Fire(fGetClass(child) == "prop_ragdoll" and "FadeAndRemove" or "kill")
+				end
+			end
+		end, corpse.ChildEnts)
+		hook.Call("CreateEntityRagdoll", nil, self, corpse)
+		return corpse
+	else
+		if self.IsVJBaseSNPC_Human && IsValid(self.WeaponEntity) then self.WeaponEntity:Remove() end -- Remove dropped weapon
+		-- Remove child entities | No fade effects as it will look weird, remove it instantly!
+		if self.DeathCorpse_ChildEnts then
+			for _, child in ipairs(self.DeathCorpse_ChildEnts) do
+				child:Remove()
+			end
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -112,17 +112,8 @@ function ENT:SpawnEntity(spawnKey, spawnTbl, initSpawn)
 	for _, v in RandomPairs(spawnEnts) do
 		i = i + 1
 		local strExp = string_explode(":", v) -- Separates the entity class and the number after ":"
-		//PrintTable(strExp)
-		if strExp[2] then
-			if i == entsNum then -- If we are the last entity, then just spawn it anyway
-				entPicked = strExp[1]
-				break
-			elseif math.random(1, strExp[2]) == 1 then
-				entPicked = strExp[1]
-				break
-			end
-		else -- String does NOT contain ":", so just pick this
-			entPicked = v
+		if !strExp[2] or i == entsNum or math.random(1, strExp[2]) == 1 then
+			entPicked = strExp[1]
 			break
 		end
 	end
@@ -144,7 +135,7 @@ function ENT:SpawnEntity(spawnKey, spawnTbl, initSpawn)
 	end
 	if ent:IsNPC() && spawnWepPicked != false && string.lower(spawnWepPicked) != "none" then
 		if string.lower(spawnWepPicked) == "default" then -- Default weapon from the spawn menu
-			local getDefWep = VJ.PICK(list.Get("NPC")[ent:GetClass()].Weapons)
+			local getDefWep = VJ.PICK(list.GetEntry("NPC", ent:GetClass()).Weapons)
 			if getDefWep then
 				ent:Give(getDefWep)
 			end

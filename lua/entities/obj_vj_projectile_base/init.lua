@@ -189,7 +189,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	if self.Dead then VJ.STOPSOUND(self.CurrentIdleSound) return end
-	//self:SetAngles(self:GetVelocity():GetNormalized():Angle())
+	//self:SetAngles(self:GetVelocity():Angle())
 	self:NextThink(CurTime())
 	self:OnThink()
 	self:PlaySound("Idle")
@@ -221,42 +221,26 @@ function ENT:DealDamage(data, phys)
 		hitEnts = VJ.ApplyRadiusDamage(attackEnt, self, dmgPos, selfData.RadiusDamageRadius, selfData.RadiusDamage, selfData.RadiusDamageType, ownerValid && !owner:IsPlayer(), selfData.RadiusDamageUseRealisticRadius, {DisableVisibilityCheck=selfData.RadiusDamageDisableVisibilityCheck, Force=selfData.RadiusDamageForce, UpForce=selfData.RadiusDamageForce_Up, DamageAttacker=owner:IsPlayer()})
 	end
 	
-	if selfData.DoesDirectDamage then
-		if ownerValid then
-			-- Accepts one of the 3 cases:
-			-- Entity is not NPC/player
-			-- Entity is NPC and not same class and (owner is a player OR not an ally NPC -- Players can still damage NPCs while NPCs can't damage other friendly NPCs)
-			-- Entity is player and alive and (owner is player OR (ignore players is off and no target is off) -- Players can still damage each other while NPCs can't when ignore players is on)
-			if IsValid(dataEnt) && ((!dataEnt:IsNPC() && !dataEnt:IsPlayer()) or (dataEnt:IsNPC() && dataEnt:GetClass() != owner:GetClass() && (owner:IsPlayer() or (owner:IsNPC() && owner:Disposition(dataEnt) != D_LI))) or (dataEnt:IsPlayer() && dataEnt:Alive() && (owner:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !dataEnt:IsFlagSet(FL_NOTARGET))))) then
-				if hitEnts then
-					hitEnts[#hitEnts + 1] = dataEnt
-				else
-					hitEnts = {dataEnt}
-				end
-				local dmgInfo = DamageInfo()
-				dmgInfo:SetDamage(selfData.DirectDamage)
-				dmgInfo:SetDamageType(selfData.DirectDamageType)
-				dmgInfo:SetAttacker(owner)
-				dmgInfo:SetInflictor(self)
-				dmgInfo:SetDamagePosition(dmgPos)
-				VJ.DamageSpecialEnts(owner, dataEnt, dmgInfo)
-				dataEnt:TakeDamageInfo(dmgInfo, self)
-			end
+	-- Accepts one of the 4 cases:
+		-- Projectile has no owner
+		-- Entity is not NPC/player
+		-- Entity is NPC and not same class and (owner is a player OR not an ally NPC -- Players can still damage NPCs while NPCs can't damage other friendly NPCs)
+		-- Entity is player and alive and (owner is player OR (ignore players is off and no target is off) -- Players can still damage each other while NPCs can't when ignore players is on)
+	if selfData.DoesDirectDamage && (!ownerValid or (IsValid(dataEnt) && ((!dataEnt:IsNPC() && !dataEnt:IsPlayer()) or (dataEnt:IsNPC() && dataEnt:GetClass() != owner:GetClass() && (owner:IsPlayer() or (owner:IsNPC() && owner:Disposition(dataEnt) != D_LI))) or (dataEnt:IsPlayer() && dataEnt:Alive() && (owner:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !dataEnt:IsFlagSet(FL_NOTARGET))))))) then
+		local attacker = ownerValid and owner or self
+		if hitEnts then
+			hitEnts[#hitEnts + 1] = dataEnt
 		else
-			if hitEnts then
-				hitEnts[#hitEnts + 1] = dataEnt
-			else
-				hitEnts = {dataEnt}
-			end
-			local dmgInfo = DamageInfo()
-			dmgInfo:SetDamage(selfData.DirectDamage)
-			dmgInfo:SetDamageType(selfData.DirectDamageType)
-			dmgInfo:SetAttacker(self)
-			dmgInfo:SetInflictor(self)
-			dmgInfo:SetDamagePosition(dmgPos)
-			VJ.DamageSpecialEnts(self, dataEnt, dmgInfo)
-			dataEnt:TakeDamageInfo(dmgInfo, self)
+			hitEnts = {dataEnt}
 		end
+		local dmgInfo = DamageInfo()
+		dmgInfo:SetDamage(selfData.DirectDamage)
+		dmgInfo:SetDamageType(selfData.DirectDamageType)
+		dmgInfo:SetAttacker(attacker)
+		dmgInfo:SetInflictor(self)
+		dmgInfo:SetDamagePosition(dmgPos)
+		VJ.DamageSpecialEnts(attacker, dataEnt, dmgInfo)
+		dataEnt:TakeDamageInfo(dmgInfo, self)
 	end
 	
 	self:OnDealDamage(data, phys, hitEnts)

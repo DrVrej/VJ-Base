@@ -545,7 +545,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 
 	if algorithmType == "Line" then -- Suggested to disable gravity!
 		result = ((targetPos - startPos):GetNormalized()) * strength
-		predictProjSpeed = result:Length() * 0.8
+		if predict then predictProjSpeed = result:Length() * 0.8 end
 	elseif algorithmType == "Curve" then
 		if startPos == targetPos then return Vector() end -- Zero-distance trajectory return empty vector to avoid invalid values
 		local doDebug = self.VJ_DEBUG
@@ -594,7 +594,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 		
 		result = (targetPos - startPos) / (time1 + time2) -- How hard to throw sideways to get there in time
 		result.z = gravity * time1 -- How hard upwards to reach the apex at the right time
-		predictProjSpeed = result:Length() * 0.9
+		if predict then predictProjSpeed = result:Length() * 0.9 end
 		
 		if doDebug then
 			if time1 < 0.1 then VJ.DEBUG_Print(self, "CalculateTrajectory", "error", "Probably failed because the trajectory time is below 0.1!") end
@@ -733,49 +733,48 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 		if (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) or ent.VJ_IsControllingNPC then continue end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
 		if disableVisibilityCheck or (!disableVisibilityCheck && (ent:VisibleVec(startPos) or ent:Visible(attacker))) then
 			local entClass = ent:GetClass()
-			local function DealDamage()
-				if customFunc then customFunc(ent) end
-				local dmgFinal = dmgMax
-				local nearestPos = ent:NearestPoint(startPos)
-				if realisticRadius != false then -- Decrease damage from the nearest point all the way to the enemy point then clamp it!
-					dmgFinal = math_min(math_max(dmgFinal * ((dmgRadius - startPos:Distance(nearestPos)) + 150) / dmgRadius, dmgMax / 2), dmgFinal)
-				end
-				hitEnts[#hitEnts + 1] = ent
-				if specialDmgEnts[entClass] then
-					ent:TakeDamage(dmgFinal, attacker, inflictor)
-				else
-					local dmgInfo = DamageInfo()
-					dmgInfo:SetDamage(dmgFinal)
-					dmgInfo:SetAttacker(attacker)
-					dmgInfo:SetInflictor(inflictor)
-					dmgInfo:SetDamageType(dmgType or DMG_BLAST)
-					dmgInfo:SetDamagePosition(nearestPos)
-					if baseForce != false then
-						local force = baseForce
-						local forceUp = extra.UpForce or false
-						if ent.VJ_ID_Prop or entClass == "prop_ragdoll" then
-							local phys = ent:GetPhysicsObject()
-							if IsValid(phys) then
-								if forceUp == false then forceUp = force / 9.4 end
-								if entClass == "prop_ragdoll" then force = force * 1.5 end
-								phys:ApplyForceCenter(((ent:GetPos() + ent:OBBCenter() + ent:GetUp() * forceUp) - startPos) * force)
-							end
-						else
-							force = force * 1.2
-							if forceUp == false then forceUp = force end
-							dmgInfo:SetDamageForce(((ent:GetPos() + ent:OBBCenter() + ent:GetUp() * forceUp) - startPos) * force)
-						end
-					end
-					VJ.DamageSpecialEnts(attacker, ent, dmgInfo)
-					ent:TakeDamageInfo(dmgInfo)
-				end
-			end
 			-- Self
 			if ent == attacker then
-				if extra.DamageAttacker then DealDamage() end -- If it can't self hit, then skip
+				if !extra.DamageAttacker then continue end  -- Can't self hit, skip!
 			-- Other entities
-			elseif (ignoreInnocents == false) or (!ent:IsNPC() && !ent:IsPlayer()) or (ent:IsNPC() && entClass != attacker:GetClass() && ent:Alive() && (attacker:IsPlayer() or (attacker:IsNPC() && attacker:Disposition(ent) != D_LI))) or (ent:IsPlayer() && ent:Alive() && (attacker:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !ent:IsFlagSet(FL_NOTARGET)))) then
-				DealDamage()
+			elseif !((ignoreInnocents == false) or (!ent:IsNPC() && !ent:IsPlayer()) or (ent:IsNPC() && entClass != attacker:GetClass() && ent:Alive() && (attacker:IsPlayer() or (attacker:IsNPC() && attacker:Disposition(ent) != D_LI))) or (ent:IsPlayer() && ent:Alive() && (attacker:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !ent:IsFlagSet(FL_NOTARGET))))) then
+				continue
+			end
+			
+			if customFunc then customFunc(ent) end
+			local dmgFinal = dmgMax
+			local nearestPos = ent:NearestPoint(startPos)
+			if realisticRadius != false then -- Decrease damage from the nearest point all the way to the enemy point then clamp it!
+				dmgFinal = math_min(math_max(dmgFinal * ((dmgRadius - startPos:Distance(nearestPos)) + 150) / dmgRadius, dmgMax / 2), dmgFinal)
+			end
+			hitEnts[#hitEnts + 1] = ent
+			if specialDmgEnts[entClass] then
+				ent:TakeDamage(dmgFinal, attacker, inflictor)
+			else
+				local dmgInfo = DamageInfo()
+				dmgInfo:SetDamage(dmgFinal)
+				dmgInfo:SetAttacker(attacker)
+				dmgInfo:SetInflictor(inflictor)
+				dmgInfo:SetDamageType(dmgType or DMG_BLAST)
+				dmgInfo:SetDamagePosition(nearestPos)
+				if baseForce != false then
+					local force = baseForce
+					local forceUp = extra.UpForce or false
+					if ent.VJ_ID_Prop or entClass == "prop_ragdoll" then
+						local phys = ent:GetPhysicsObject()
+						if IsValid(phys) then
+							if forceUp == false then forceUp = force / 9.4 end
+							if entClass == "prop_ragdoll" then force = force * 1.5 end
+							phys:ApplyForceCenter(((ent:GetPos() + ent:OBBCenter() + ent:GetUp() * forceUp) - startPos) * force)
+						end
+					else
+						force = force * 1.2
+						if forceUp == false then forceUp = force end
+						dmgInfo:SetDamageForce(((ent:GetPos() + ent:OBBCenter() + ent:GetUp() * forceUp) - startPos) * force)
+					end
+				end
+				VJ.DamageSpecialEnts(attacker, ent, dmgInfo)
+				ent:TakeDamageInfo(dmgInfo)
 			end
 		end
 	end

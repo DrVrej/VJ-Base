@@ -239,7 +239,7 @@ function SWEP:NPC_SecondaryFire()
 			else
 				phys:SetVelocity(VJ.CalculateTrajectory(owner, owner:GetEnemy(), "Line", projectile:GetPos(), 1, 2000))
 			end
-			projectile:SetAngles(projectile:GetVelocity():GetNormalized():Angle())
+			projectile:SetAngles(projectile:GetVelocity():Angle())
 		end
 	end
 end
@@ -724,7 +724,7 @@ function SWEP:PrimaryAttack()
 	if !selfData.CanPrimaryAttack(self) then return end
 	if selfData.OnPrimaryAttack(self, "Init") == true then return end
 	
-	if isNPC && ownerData.IsVJBaseSNPC then
+	if isNPC && ownerData.IsVJBaseSNPC && selfData.NPC_ExtraFireSound then
 		timer.Simple(selfData.NPC_ExtraFireSoundTime, function()
 			if IsValid(self) && IsValid(owner) then
 				VJ.EmitSound(owner, selfData.NPC_ExtraFireSound, selfData.NPC_ExtraFireSoundLevel, math.Rand(selfData.NPC_ExtraFireSoundPitch.a, selfData.NPC_ExtraFireSoundPitch.b))
@@ -871,13 +871,10 @@ function SWEP:PrimaryAttackEffects(owner)
 			local muzzleAttach = selfData.PrimaryEffects_MuzzleAttachment
 			if !isnumber(muzzleAttach) then muzzleAttach = self:LookupAttachment(muzzleAttach) end
 			-- Players
-			if owner:IsPlayer() && owner:GetViewModel() != nil then
+			if owner:IsPlayer() && owner:GetViewModel() then
 				local muzzleFlashEffect = EffectData()
-				local shootPos = owner:GetShootPos()
-				muzzleFlashEffect:SetOrigin(shootPos)
+				muzzleFlashEffect:SetOrigin(owner:GetShootPos())
 				muzzleFlashEffect:SetEntity(self)
-				muzzleFlashEffect:SetStart(shootPos)
-				muzzleFlashEffect:SetNormal(owner:GetAimVector())
 				muzzleFlashEffect:SetAttachment(muzzleAttach)
 				util.Effect("VJ_MuzzleFlash_Player", muzzleFlashEffect)
 			-- NPCs
@@ -919,13 +916,10 @@ function SWEP:PrimaryAttackEffects(owner)
 	if !owner:IsPlayer() && selfData.PrimaryEffects_SpawnShells && vj_wep_shells:GetInt() == 1 then
 		local shellAttach = selfData.PrimaryEffects_ShellAttachment
 		shellAttach = fGetAttachment(self, isnumber(shellAttach) and shellAttach or self:LookupAttachment(shellAttach))
-		if !shellAttach then -- No attachment found, use fallback data
-			shellAttach = {Pos = owner:GetShootPos(), Ang = metaEntity.GetAngles(self)}
-		end
 		local effectData = EffectData()
 		effectData:SetEntity(self)
-		effectData:SetOrigin(shellAttach.Pos)
-		effectData:SetAngles(shellAttach.Ang)
+		effectData:SetOrigin(shellAttach and shellAttach.Pos or owner:GetShootPos())
+		effectData:SetAngles(shellAttach and shellAttach.Ang or metaEntity.GetAngles(self))
 		util.Effect(selfData.PrimaryEffects_ShellType, effectData, true, true)
 	end
 end
@@ -978,7 +972,7 @@ function SWEP:TranslateActivity(act)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:FireAnimationEvent(pos, ang, event, options)
-	if self:OnAnimEvent(pos, ang, event, options) == true or event == 22 or event == 6001 or (vj_wep_muzzleflash:GetInt() == 0 && (event == 21 or event == 5001 or event == 5003)) or (vj_wep_shells:GetInt() == 0 && event == 20) then
+	if self:OnAnimEvent(pos, ang, event, options) == true or event == 22 or event == 6001 or ((event == 21 or event == 5001 or event == 5003) && vj_wep_muzzleflash:GetInt() == 0) or (event == 20 && vj_wep_shells:GetInt() == 0) then
 		return true
 	end
 end
