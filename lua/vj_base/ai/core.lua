@@ -3982,15 +3982,16 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSoundTrack()
 	local selfData = fGetTable(self)
-	if selfData.HasSounds && selfData.HasSoundTrack && math.random(1, selfData.SoundTrackChance) == 1 then
-		selfData.VJ_SD_PlayingMusic = true
-		net.Start("vj_music_cl")
-			net.WriteEntity(self)
-			net.WriteString(PICK(selfData.SoundTbl_SoundTrack))
-			net.WriteFloat(selfData.SoundTrackVolume)
-			net.WriteFloat(selfData.SoundTrackPlaybackRate)
-		net.Broadcast()
-	end
+	if !selfData.HasSounds or !selfData.HasSoundTrack or math.random(1, selfData.SoundTrackChance) != 1 then return end
+	local pickedSD = PICK(selfData.SoundTbl_SoundTrack)
+	if !pickedSD then return end
+	selfData.VJ_SD_PlayingMusic = true
+	net.Start("vj_music_cl")
+		net.WriteEntity(self)
+		net.WriteString(pickedSD)
+		net.WriteFloat(selfData.SoundTrackVolume)
+		net.WriteFloat(selfData.SoundTrackPlaybackRate)
+	net.Broadcast()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local menuCVs = {

@@ -281,6 +281,7 @@ SWEP.Primary.DefaultClip = 0
 SWEP.Secondary.DefaultClip = 0
 SWEP.Reloading = false
 SWEP.PLY_AnimLockTime = 0
+SWEP.PLY_NextIdleAnimT = 0
 SWEP.NPC_NextDrySoundT = 0
 SWEP.NPC_NextPrimaryFireT = 0
 SWEP.NPC_AnimationSet = VJ.ANIM_SET_CUSTOM

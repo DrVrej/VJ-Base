@@ -161,6 +161,7 @@ function ENT:OnThinkActive()
 	if !IsValid(parent) then return end
 	if selfData.VJ_NPC_Class != parent.VJ_NPC_Class then
 		selfData.VJ_NPC_Class = parent.VJ_NPC_Class
+		selfData.AlliedWithPlayerAllies = parent.AlliedWithPlayerAllies
 	end
 	local turning = false
 	local ene = parent:GetEnemy()

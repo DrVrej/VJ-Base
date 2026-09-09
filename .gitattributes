@@ -6,11 +6,15 @@
 *.md    text
 *.cfg   text
 *.txt   text
-*.json   text
-*.vmt    text
+*.json  text
+*.vmt   text
 
 # Force assets as binary
 *.mdl  binary
+*.vtx  binary
+*.vvd  binary
+*.phy  binary
+*.pcf  binary
 *.vtf  binary
 *.wav  binary
 *.mp3  binary

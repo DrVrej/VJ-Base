@@ -1614,7 +1614,6 @@ local StopSD = VJ.STOPSOUND
 local CurTime = CurTime
 local IsValid = IsValid
 local math_min = math.min
-local math_max = math.max
 local math_rad = math.rad
 local math_cos = math.cos
 local math_angApproach = math.ApproachAngle
