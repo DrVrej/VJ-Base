@@ -5,6 +5,7 @@
 	"$translucent" 1
 	"$vertexcolor" 1
 	"$model" "1"
+	
 	"Proxies"
 	{
 		"AnimatedTexture" // AnimatedOffsetTexture

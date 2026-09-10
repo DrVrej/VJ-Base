@@ -195,25 +195,25 @@ ENT.NextDamageByPlayerSoundT = 0
 ENT.NextPainSoundT = 0
 ENT.MainSoundPitchValue = 0
 ENT.TimersToRemove = {
-    "state_reset",
-    "wep_state_reset",
-    "turn_reset",
-    "flinch_reset",
+	"state_reset",
+	"wep_state_reset",
+	"turn_reset",
+	"flinch_reset",
 	"alert_reset",
-    "attack_pause_reset",
-    "attack_melee_start",
-    "attack_melee_reset",
-    "attack_melee_reset_able",
-    "attack_range_start",
-    "attack_range_reset",
-    "attack_range_reset_able",
-    "attack_leap_jump",
-    "attack_leap_start",
-    "attack_leap_reset",
-    "attack_leap_reset_able",
+	"attack_pause_reset",
+	"attack_melee_start",
+	"attack_melee_reset",
+	"attack_melee_reset_able",
+	"attack_range_start",
+	"attack_range_reset",
+	"attack_range_reset_able",
+	"attack_leap_jump",
+	"attack_leap_start",
+	"attack_leap_reset",
+	"attack_leap_reset_able",
 	"attack_grenade_start",
-    "attack_grenade_reset",
-    "attack_grenade_reset_able"
+	"attack_grenade_reset",
+	"attack_grenade_reset_able"
 }
 //ENT.SavedDmgInfo = {} -- Set later
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1135,11 +1135,11 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DeltaIdealYaw() -- Based on: https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/game/server/ai_motor.cpp#L780
-    local flCurrentYaw = (360 / 65536) * (math.floor(self:GetLocalAngles().y * (65536 / 360)) % 65535)
-    if flCurrentYaw == self:GetIdealYaw() then
-        return 0
-    end
-    return math_angDif(self:GetIdealYaw(), flCurrentYaw)
+	local flCurrentYaw = (360 / 65536) * (math.floor(self:GetLocalAngles().y * (65536 / 360)) % 65535)
+	if flCurrentYaw == self:GetIdealYaw() then
+		return 0
+	end
+	return math_angDif(self:GetIdealYaw(), flCurrentYaw)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function UTIL_VecToYaw(vec) -- Based on: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/shared/util_shared.cpp#L44
@@ -1624,6 +1624,8 @@ function ENT:KeyValue(k, v)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local followBlockKeys = bit.bor(IN_ATTACK, IN_ATTACK2, IN_RELOAD, IN_SPEED)
+--
 function ENT:AcceptInput(key, activator, caller, data)
 	//VJ.DEBUG_Print(self, "AcceptInput", key, activator, caller, data)
 	local funcCustom = self.OnInput; if funcCustom then funcCustom(self, key, activator, caller, data) end
@@ -1631,7 +1633,7 @@ function ENT:AcceptInput(key, activator, caller, data)
 		-- 1. Add a delay so the game registers other key presses
 		-- 2. Check for mouse 1, mouse 2, and reload
 		timer.Simple(0.1, function()
-			if IsValid(self) && self.FollowPlayer && !activator:KeyDown(IN_ATTACK) && !activator:KeyDownLast(IN_ATTACK) && !activator:KeyPressed(IN_ATTACK) && !activator:KeyReleased(IN_ATTACK) && !activator:KeyDown(IN_ATTACK2) && !activator:KeyDownLast(IN_ATTACK2) && !activator:KeyPressed(IN_ATTACK2) && !activator:KeyReleased(IN_ATTACK2) && !activator:KeyDown(IN_RELOAD) && !activator:KeyDownLast(IN_RELOAD) && !activator:KeyPressed(IN_RELOAD) && !activator:KeyReleased(IN_RELOAD) then
+			if IsValid(self) && IsValid(activator) && self.FollowPlayer && !activator:KeyDown(followBlockKeys) && !activator:KeyDownLast(followBlockKeys) && !activator:KeyPressed(followBlockKeys) && !activator:KeyReleased(followBlockKeys) then
 				self:Follow(activator, true)
 			end
 		end)
@@ -2229,15 +2231,15 @@ function ENT:MaintainRelationships()
 			//print(CurTime() - self:GetEnemyFirstTimeSeen(ent))
 			
 			local entHandlePerceived = ent.HandlePerceivedRelationship
-            if entHandlePerceived then
-                -- Return false to let rest of the function run otherwise return a disposition to override
+			if entHandlePerceived then
+				-- Return false to let rest of the function run otherwise return a disposition to override
 				local result = entHandlePerceived(ent, self, distanceToEnt, calculatedDisp == D_LI)
-                if result then
-                    fAddEntityRelationship(self, ent, result, 0)
+				if result then
+					fAddEntityRelationship(self, ent, result, 0)
 					calculatedDisp = result
-                    //continue
-                end
-            end
+					//continue
+				end
+			end
 			
 			-- If the ent is a friend then set the relation as D_LI
 			if calculatedDisp == D_LI then

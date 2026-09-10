@@ -7,5 +7,5 @@ ENT.Information = "Playermodel human NPC demo for developers.\nPicks a random mo
 ENT.Category = "VJ Base"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetupDataTables()
-    self:NetworkVar("Vector", 0, "PlayerColor")
+	self:NetworkVar("Vector", 0, "PlayerColor")
 end

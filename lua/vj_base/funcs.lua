@@ -205,13 +205,13 @@ end
 		- Based on "returnAsDict"
 -----------------------------------------------------------]]
 function VJ.TraceDirections(ent, trType, maxDist, requireFullDist, returnAsDict, numDirections, excludeForward, excludeBack, excludeLeft, excludeRight)
-    maxDist = maxDist or 200
-    numDirections = numDirections or 4
-    local entPos = ent:GetPos()
-    local entPosZ = entPos.z
-    local entPosCentered = entPos + ent:OBBCenter()
+	maxDist = maxDist or 200
+	numDirections = numDirections or 4
+	local entPos = ent:GetPos()
+	local entPosZ = entPos.z
+	local entPosCentered = entPos + ent:OBBCenter()
 	local myForward = ent:GetForward()
-    local myRight = ent:GetRight()
+	local myRight = ent:GetRight()
 	local trData = {start = entPosCentered, endpos = entPosCentered, filter = ent} -- For optimization purposes
 	local resultIndex = 1 -- For optimization purposes
 	if trType == "Quick" then
@@ -265,7 +265,7 @@ function VJ.TraceDirections(ent, trType, maxDist, requireFullDist, returnAsDict,
 			local angle = i * angleIncrement
 			local dir = myForward * math_cos(angle) + myRight * math_sin(angle)
 			local forwardDot = dir:Dot(myForward)
-            local rightDot = dir:Dot(myRight)
+			local rightDot = dir:Dot(myRight)
 			
 			-- Check which sides we are allowed to calculate
 			if (excludeForward && forwardDot > 0.7) or (excludeBack && forwardDot < -0.7) or (excludeLeft && rightDot < -0.7) or (excludeRight && rightDot > 0.7) then
@@ -663,39 +663,39 @@ end
 		- setTime = How long should this be in effect? | DEFAULT = 1
 -----------------------------------------------------------]]
 function VJ.ApplySpeedEffect(ent, speed, setTime)
-    ent.VJ_SpeedEffectT = ent.VJ_SpeedEffectT or 0
-    if ent.VJ_SpeedEffectT < CurTime() then
-        ent.VJ_SpeedEffectT = CurTime() + (setTime or 1)
+	ent.VJ_SpeedEffectT = ent.VJ_SpeedEffectT or 0
+	if ent.VJ_SpeedEffectT < CurTime() then
+		ent.VJ_SpeedEffectT = CurTime() + (setTime or 1)
 		local orgPlayback = ent.IsVJBaseSNPC and ent.AnimPlaybackRate or ent:GetPlaybackRate()
 		local plyOrgWalk, plyOrgRun;
 		if ent:IsPlayer() then
 			plyOrgWalk = ent:GetWalkSpeed()
 			plyOrgRun = ent:GetRunSpeed()
 		end
-        local hookName = "VJ_SpeedEffect" .. ent:EntIndex()
-        hook.Add("Think", hookName, function()
-            if !IsValid(ent) then
-                hook.Remove("Think", hookName)
-                return
+		local hookName = "VJ_SpeedEffect" .. ent:EntIndex()
+		hook.Add("Think", hookName, function()
+			if !IsValid(ent) then
+				hook.Remove("Think", hookName)
+				return
 			elseif (ent.VJ_SpeedEffectT < CurTime()) or (ent:Health() <= 0) then
-                hook.Remove("Think", hookName)
+				hook.Remove("Think", hookName)
 				ent:SetPlaybackRate(orgPlayback)
 				if ent:IsPlayer() then
 					ent:SetWalkSpeed(plyOrgWalk)
 					ent:SetRunSpeed(plyOrgRun)
 				end
-                return
-            end
+				return
+			end
 			ent:SetPlaybackRate(speed)
-            if ent:IsPlayer() then
-                ent:SetWalkSpeed(plyOrgWalk * speed)
-                ent:SetRunSpeed(plyOrgRun * speed)
-            end
-        end)
+			if ent:IsPlayer() then
+				ent:SetWalkSpeed(plyOrgWalk * speed)
+				ent:SetRunSpeed(plyOrgRun * speed)
+			end
+		end)
 	-- We already have a speed effect, so edit the existing one instead
 	else
 		ent.VJ_SpeedEffectT = CurTime() + (setTime or 1)
-    end
+	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

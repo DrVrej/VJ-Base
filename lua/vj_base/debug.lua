@@ -19,30 +19,30 @@ function VJ.DEBUG_Print(ent, callName, type, ...)
 	-- Check if a type was given
 	local colorType = CLIENT and VJ.COLOR_CLIENT or VJ.COLOR_SERVER
 	local typeGiven = false -- Was a valid type given?
-    if type == "error" then
+	if type == "error" then
 		typeGiven = true
-        colorType = VJ.COLOR_RED
-    elseif type == "warn" then
+		colorType = VJ.COLOR_RED
+	elseif type == "warn" then
 		typeGiven = true
-        colorType = VJ.COLOR_ORANGE
-    end
+		colorType = VJ.COLOR_ORANGE
+	end
 	
 	-- Unpack the arguments
-    local args = {...}
+	local args = {...}
 	local printTbl = {}
 	if !typeGiven then
 		table.insert(args, 1, type)
 	end
-    for _, arg in ipairs(args) do
+	for _, arg in ipairs(args) do
 		if isstring(arg) then
-        	table.insert(printTbl, " " .. arg .. " ")
+			table.insert(printTbl, " " .. arg .. " ")
 		else
-        	table.insert(printTbl, arg)
+			table.insert(printTbl, arg)
 		end
-    end
+	end
 	
 	-- Output
-    MsgC(colorEnt, ent, callName and (" | " .. callName) or "", " : ", colorType, unpack(printTbl))
+	MsgC(colorEnt, ent, callName and (" | " .. callName) or "", " : ", colorType, unpack(printTbl))
 	MsgC(colorType, "\n")
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
@@ -85,7 +85,7 @@ end
 function VJ.DEBUG_Stress(count, func, skipMem)
 	local memStart = skipMem and 0 or collectgarbage("count")
 	local startTime = SysTime()
-    for _ = 1, count do func() end
+	for _ = 1, count do func() end
 	local totalTime = SysTime() - startTime
 	local memEnd = skipMem and 0 or collectgarbage("count")
 	if !skipMem then collectgarbage("collect") end

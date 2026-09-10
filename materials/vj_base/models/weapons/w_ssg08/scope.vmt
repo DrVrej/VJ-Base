@@ -1,5 +1,5 @@
 "UnlitGeneric"
 {
-    "$basetexture" "_rt_SmallFB1"
-    "$model" "1"
+	"$basetexture" "_rt_SmallFB1"
+	"$model" "1"
 }

@@ -307,12 +307,12 @@ local vj_wep_shells = GetConVar("vj_wep_shells")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local oldShells = {VJ_Weapon_PistolShell1 = "ShellEject", VJ_Weapon_RifleShell1 = "RifleShellEject", VJ_Weapon_ShotgunShell1 = "ShotgunShellEject"} -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
 local comAttachments = {
-    muzzle = true,
-    muzzleA = true,
-    muzzle_flash = true,
-    muzzle_flash1 = true,
-    muzzle_flash2 = true,
-    ["ValveBiped.muzzle"] = true,
+	muzzle = true,
+	muzzleA = true,
+	muzzle_flash = true,
+	muzzle_flash1 = true,
+	muzzle_flash2 = true,
+	["ValveBiped.muzzle"] = true,
 	["1"] = true
 }
 --

@@ -1,6 +1,6 @@
 "VertexLitGeneric"
 {
-	"$baseTexture" "vj_base/models/weapons/w_k3/Top_rec_D"
+	"$baseTexture" "vj_base/models/weapons/w_k3/top_rec_d"
 	"$surfaceprop" "metal"
 	"$model" "1"
 }

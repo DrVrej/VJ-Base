@@ -118,21 +118,21 @@ VJ.AddParticle("particles/vj_projectiles.pcf", {
 	"vj_rocket_idle2_glow",
 })
 VJ.AddParticle("particles/vj_weapons.pcf", {
-    "vj_rifle_smoke",
-    "vj_rifle_smoke_dark",
-    "vj_rifle_sparks1",
-    "vj_rifle_sparks2",
-    -- Regular
-    "vj_rifle_full",
-    "vj_rifle_glow_large",
-    "vj_rifle_smoke_flash",
-    -- Regular (Blue)
-    "vj_rifle_full_blue",
-    "vj_rifle_glow_large_blue",
-    "vj_rifle_smoke_flash_blue",
-    -- Blaster (Star Wars)
-    "vj_muzzle_blaster_red",
-    "vj_muzzle_blaster_blue",
+	"vj_rifle_smoke",
+	"vj_rifle_smoke_dark",
+	"vj_rifle_sparks1",
+	"vj_rifle_sparks2",
+	-- Regular
+	"vj_rifle_full",
+	"vj_rifle_glow_large",
+	"vj_rifle_smoke_flash",
+	-- Regular (Blue)
+	"vj_rifle_full_blue",
+	"vj_rifle_glow_large_blue",
+	"vj_rifle_smoke_flash_blue",
+	-- Blaster (Star Wars)
+	"vj_muzzle_blaster_red",
+	"vj_muzzle_blaster_blue",
 	-- Black Mesa Source Turret fire
 	"vj_bms_turret_full",
 	"vj_bms_turret_muzzle_smoke",

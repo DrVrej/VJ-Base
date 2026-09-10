@@ -56,9 +56,9 @@ ENT.SoundTbl_Death = {"player/pl_pain5.wav", "player/pl_pain6.wav", "player/pl_p
 function ENT:PreInit()
 	-- Set all the player models into the model variable
 	-- WARNING: Do NOT use "ipairs", this is NOT a sequential table!
-    for _, v in pairs(player_manager.AllValidModels()) do
+	for _, v in pairs(player_manager.AllValidModels()) do
 		self.Model[#self.Model + 1] = v
-    end
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
@@ -86,7 +86,7 @@ end
 	
 	corpse:DTVar("Vector", 0, "PlayerColor")
 	//corpse:SetDTVector(0, self:GetPlayerColor())
-    //corpse:SetPlayerColor(self:GetPlayerColor())
+	//corpse:SetPlayerColor(self:GetPlayerColor())
 end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnGrenadeAttackExecute(status, grenade, overrideEnt, landDir, landingPos)

@@ -1,10 +1,9 @@
 "LightmappedGeneric"
 {
 	"$basetexture" "vj_base/decals/splat_acid1"
+	"$modelmaterial" "decals/slime_splat_model"
 	"$decal" 1
 	"$decalscale" 0.32
 	"$additive" 1
 	"$selfillum" 1
-
-	"$modelmaterial" "decals/slime_splat_model"
 }

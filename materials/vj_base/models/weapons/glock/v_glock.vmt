@@ -4,7 +4,6 @@
 	"$bumpmap" "vj_base/models/weapons/glock/v_glock_normal"
 
 	"$envmap" "env_cubemap"
-//	"$normalmapalphaenvmapmask" "1"
 	"$envmaptint" "[.10 .10 .10]"
 	"$nocull" "1"
 	
@@ -13,9 +12,8 @@
 	"$phongboost" "0.05"
 	"$phongfresnelranges"	"[.5 1 1]"
 	"$phongalbedotint" "1"
-	"$BasemapAlphaPhongMask" "0.5"
+	"$basemapalphaphongmask" "0.5"
 
-	// Rim lighting parameters
 	"$rimlight" "1"
 	"$rimlightexponent" "25"
 	"$rimlightboost" "0.125"

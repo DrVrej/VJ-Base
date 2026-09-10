@@ -2211,8 +2211,8 @@ function ENT:StopAttacks(checkTimers)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function math_angDif(diff)
-    diff = diff % 360
-    return diff > 180 and (diff - 360) or diff
+	diff = diff % 360
+	return diff > 180 and (diff - 360) or diff
 end
 --
 function ENT:UpdatePoseParamTracking(resetPoses)
