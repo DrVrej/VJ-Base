@@ -1067,7 +1067,9 @@ function ENT:Initialize()
 	//self:SetSurroundingBoundsType(BOUNDS_HITBOXES) -- AVOID! Has to constantly recompute the bounds! | Issues: Entities get stuck inside the NPC, movements failing, unable to grab the NPC with physgun
 	local collisionMin, collisionMax = self:GetCollisionBounds()
 	-- Auto compute damage bounds if the damage bounds == collision bounds then the developer has NOT changed it | Call after "Init"
-	if self:GetSurroundingBounds() == self:WorldSpaceAABB() then
+	local boundsMin, boundsMax = self:GetSurroundingBounds()
+	local worldMin, worldMax = self:WorldSpaceAABB()
+	if boundsMin == worldMin && boundsMax == worldMax then
 		self:SetSurroundingBounds(Vector(collisionMin.x * 2, collisionMin.y * 2, collisionMin.z * 1.2), Vector(collisionMax.x * 2, collisionMax.y * 2, collisionMax.z * 1.2))
 	end
 	if !self.MeleeAttackDistance then self.MeleeAttackDistance = math.abs(collisionMax.x) + 30 end

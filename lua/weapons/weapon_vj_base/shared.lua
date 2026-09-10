@@ -1028,10 +1028,11 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Holster(newWep)
 	if self == newWep or self.Reloading then return end
+	if self:OnHolster(newWep) == true then return false end
 	hook.Remove("Think", self) -- Otherwise "NPC_Think" will just keep running!
 	self.PLY_AnimLockTime = CurTime() + 2
 	//self:SendWeaponAnim(ACT_VM_HOLSTER)
-	return self:OnHolster(newWep) != true
+	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnDrop()

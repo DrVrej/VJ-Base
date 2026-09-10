@@ -1318,8 +1318,7 @@ function ENT:DoCoverTrace(startPos, endPos, acceptWorld, extra)
 	if !IsValid(ene) then return false, {} end
 	startPos = startPos or (fGetPos(self) + self:OBBCenter())
 	endPos = endPos or ene:EyePos()
-	extra = extra or {}
-		local setLastHiddenTime = extra.SetLastHiddenTime
+	local setLastHiddenTime = extra and extra.SetLastHiddenTime
 	local tr = util.TraceLine({
 		start = startPos,
 		endpos = endPos,
@@ -1329,7 +1328,7 @@ function ENT:DoCoverTrace(startPos, endPos, acceptWorld, extra)
 	})
 	local hitPos = tr.HitPos
 	local hitEnt = tr.Entity
-	if extra.Debug then
+	if extra && extra.Debug then
 		debugoverlay.Box(startPos, Vector(-2, -2, -2), Vector(2, 2, 2), 1, VJ.COLOR_GREEN)
 		debugoverlay.Text(startPos, "DoCoverTrace - startPos", 1)
 		debugoverlay.Box(endPos, Vector(-2, -2, -2), Vector(2, 2, 2), 1, VJ.COLOR_RED)
@@ -1339,13 +1338,19 @@ function ENT:DoCoverTrace(startPos, endPos, acceptWorld, extra)
 		debugoverlay.Text(hitPos, "DoCoverTrace - tr.HitPos", 1)
 	end
 	
-	-- Hiding zone: It hit world AND it's close, override "acceptWorld" option!
+	-- Hidden: It hit world AND it's close, override "acceptWorld" option!
 	if tr.HitWorld && startPos:Distance(hitPos) < 200 then
 		if setLastHiddenTime then self.LastHiddenZoneT = CurTime() + 20 end
 		return true, tr
 	end
 	
-	-- Sometimes tracing isn't 100%, a tiny find in sphere check fixes this issue...
+	-- Not Hidden: (World is NOT accepted as a hiding zone) OR (Trace ent is current enemy or a living entity or is moving fast) OR (Trace hit very close to the end position)
+	if (!acceptWorld && tr.HitWorld) or (IsValid(hitEnt) && (hitEnt == ene or hitEnt.VJ_ID_Living or hitEnt:GetVelocity():LengthSqr() > 1000)) or endPos:Distance(hitPos) <= 10 then
+		if setLastHiddenTime then self.LastHiddenZoneT = 0 end
+		return false, tr
+	end
+	
+	-- Not Hidden: Sometimes tracing isn't 100%, a tiny spatial check fixes this issue...
 	for _, v in ipairs(ents.FindInSphere(hitPos, 5)) do
 		if v == ene or v.VJ_ID_Living then
 			if setLastHiddenTime then self.LastHiddenZoneT = 0 end
@@ -1353,14 +1358,8 @@ function ENT:DoCoverTrace(startPos, endPos, acceptWorld, extra)
 		end
 	end
 	
-	-- Not a hiding zone: (Sphere found current enemy or a living entity) OR (World is NOT accepted as a hiding zone) OR (Trace ent is current enemy or a living entity or is moving fast) OR (Trace hit very close to the end position)
-	if (!acceptWorld && tr.HitWorld) or (IsValid(hitEnt) && (hitEnt == ene or hitEnt.VJ_ID_Living or hitEnt:GetVelocity():LengthSqr() > 1000)) or endPos:Distance(hitPos) <= 10 then
-		if setLastHiddenTime then self.LastHiddenZoneT = 0 end
-		return false, tr
-	else -- Hidden!
-		if setLastHiddenTime then self.LastHiddenZoneT = CurTime() + 20 end
-		return true, tr
-	end
+	if setLastHiddenTime then self.LastHiddenZoneT = CurTime() + 20 end -- Hidden
+	return true, tr
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1884,6 +1883,7 @@ function ENT:MaintainMedicBehavior()
 					timeUntilHeal = animTime
 				end
 			end
+			timeUntilHeal = timeUntilHeal or 0 -- In case both "self.Medic_TimeUntilHeal" and "self.AnimTbl_Medic_GiveHealth" are set to false
 			
 			self:SetTurnTarget(ally, timeUntilHeal)
 			
@@ -1897,7 +1897,7 @@ function ENT:MaintainMedicBehavior()
 			end
 			
 			timer.Simple(timeUntilHeal, function()
-				if IsValid(self) then
+				if IsValid(self) && self:Alive() then
 					if !IsValid(ally) then -- Ally doesn't exist anymore, reset
 						self:ResetMedicBehavior()
 					else -- If it exists...

@@ -170,7 +170,7 @@ function ENT:SpawnEntity(spawnKey, spawnTbl, initSpawn)
 	
 	-- Play spawn sound
 	local sdTbl = self.SoundTbl_SpawnEntity
-	if sdTbl && math.random(1, self.SpawnEntitySoundChance) then
+	if sdTbl && math.random(1, self.SpawnEntitySoundChance) == 1 then
 		VJ.EmitSound(self, sdTbl, self.SpawnEntitySoundLevel, math.random(self.SpawnEntitySoundPitch.a, self.SpawnEntitySoundPitch.b))
 	end
 end

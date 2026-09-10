@@ -22,19 +22,20 @@ VJ.Corpse_StinkyEnts = {}
 		- ent = The entity to add to the corpse list
 -----------------------------------------------------------]]
 function VJ.Corpse_Add(ent)
+	local corpses = VJ.Corpse_Ents
 	-- Clear out all removed corpses from the table
-	for k, v in ipairs(VJ.Corpse_Ents) do
+	for k, v in ipairs(corpses) do
 		if !IsValid(v) then
-			table_remove(VJ.Corpse_Ents, k)
+			table_remove(corpses, k)
 		end
 	end
 	
-	local count = #VJ.Corpse_Ents + 1
-	VJ.Corpse_Ents[count] = ent
+	local count = #corpses + 1
+	corpses[count] = ent
 	
 	-- Check if we surpassed the limit then remove the oldest corpse
 	if count > vj_npc_corpse_limit:GetInt() then
-		local oldestCorpse = table_remove(VJ.Corpse_Ents, 1)
+		local oldestCorpse = table_remove(corpses, 1)
 		if IsValid(oldestCorpse) then
 			local fadeType = oldestCorpse.FadeCorpseType
 			if fadeType then oldestCorpse:Fire(fadeType) end -- Fade out
@@ -48,28 +49,30 @@ end
 		- ent = The entity to add to the list
 		- checkMat = Should it check the entity's material type?
 	Returns
-		- false, Entity NOT added to stinky the list
+		- false, Entity NOT added to the stinky list
 		- true, Entity added to the stinky list
 -----------------------------------------------------------]]
 function VJ.Corpse_AddStinky(ent, checkMat)
+	local corpses = VJ.Corpse_StinkyEnts
 	local physObj = ent:GetPhysicsObject()
 	-- Clear out all removed ents from the table
-	for k, v in ipairs(VJ.Corpse_StinkyEnts) do
+	for k, v in ipairs(corpses) do
 		if !IsValid(v) then
-			table_remove(VJ.Corpse_StinkyEnts, k)
+			table_remove(corpses, k)
 		end
 	end
 	-- Add the entity to the stinky list (if possible)
 	if (!checkMat) or (IsValid(physObj) && stinkyMatTypes[physObj:GetMaterial()]) then
-		VJ.Corpse_StinkyEnts[#VJ.Corpse_StinkyEnts + 1] = ent -- Add entity to the table
+		corpses[#corpses + 1] = ent -- Add entity to the table
 		if !timer.Exists("vj_corpse_stink") then -- Start the stinky timer if it does NOT exist
 			timer.Create("vj_corpse_stink", 0.3, 0, function()
-				for k, corpse in RandomPairs(VJ.Corpse_StinkyEnts) do
+				local corpses2 = VJ.Corpse_StinkyEnts
+				for k, corpse in RandomPairs(corpses2) do
 					if IsValid(corpse) then
 						sdEmitHint(SOUND_CARCASS, corpse:GetPos(), 400, 0.15, corpse)
 					else -- No longer valid, remove it from the list
-						table_remove(VJ.Corpse_StinkyEnts, k)
-						if #VJ.Corpse_StinkyEnts == 0 then -- If this is the last stinky corpse then destroy the timer!
+						table_remove(corpses2, k)
+						if #corpses2 == 0 then -- If this is the last stinky corpse then destroy the timer!
 							timer.Remove("vj_corpse_stink")
 						end
 					end

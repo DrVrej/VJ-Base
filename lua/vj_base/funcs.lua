@@ -728,19 +728,19 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 	extra = extra or {}
 		local disableVisibilityCheck = extra.DisableVisibilityCheck or false
 		local baseForce = extra.Force or false
+		local forceUp = extra.UpForce or false
 	local hitEnts = {}
 	for _, ent in ipairs((type(extra.UseConeDegree) == "number" and ents.FindInCone(startPos, extra.UseConeDirection or attacker:GetForward(), dmgRadius, math_cos(math_rad(extra.UseConeDegree or 90)))) or ents.FindInSphere(startPos, dmgRadius)) do
 		if (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) or ent.VJ_IsControllingNPC then continue end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
-		if disableVisibilityCheck or (!disableVisibilityCheck && (ent:VisibleVec(startPos) or ent:Visible(attacker))) then
-			local entClass = ent:GetClass()
-			-- Self
-			if ent == attacker then
-				if !extra.DamageAttacker then continue end  -- Can't self hit, skip!
-			-- Other entities
-			elseif !((ignoreInnocents == false) or (!ent:IsNPC() && !ent:IsPlayer()) or (ent:IsNPC() && entClass != attacker:GetClass() && ent:Alive() && (attacker:IsPlayer() or (attacker:IsNPC() && attacker:Disposition(ent) != D_LI))) or (ent:IsPlayer() && ent:Alive() && (attacker:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !ent:IsFlagSet(FL_NOTARGET))))) then
-				continue
-			end
-			
+		local entClass = ent:GetClass()
+		-- Self
+		if ent == attacker then
+			if !extra.DamageAttacker then continue end  -- Can't self hit, skip!
+		-- Other entities
+		elseif !((ignoreInnocents == false) or (!ent.VJ_ID_Living) or (ent:Alive() && (ent:IsNPC() && entClass != attacker:GetClass() && (attacker:IsPlayer() or (attacker:IsNPC() && attacker:Disposition(ent) != D_LI))) or (ent:IsPlayer() && (attacker:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !ent:IsFlagSet(FL_NOTARGET)))))) then
+			continue
+		end
+		if disableVisibilityCheck or ent:VisibleVec(startPos) or ent:Visible(attacker) then
 			if customFunc then customFunc(ent) end
 			local dmgFinal = dmgMax
 			local nearestPos = ent:NearestPoint(startPos)
@@ -759,18 +759,15 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 				dmgInfo:SetDamagePosition(nearestPos)
 				if baseForce != false then
 					local force = baseForce
-					local forceUp = extra.UpForce or false
 					if ent.VJ_ID_Prop or entClass == "prop_ragdoll" then
 						local phys = ent:GetPhysicsObject()
 						if IsValid(phys) then
-							if forceUp == false then forceUp = force / 9.4 end
 							if entClass == "prop_ragdoll" then force = force * 1.5 end
-							phys:ApplyForceCenter(((ent:GetPos() + ent:OBBCenter() + ent:GetUp() * forceUp) - startPos) * force)
+							phys:ApplyForceCenter(((ent:GetPos() + ent:OBBCenter() + ent:GetUp() * (forceUp == false and force / 9.4 or forceUp)) - startPos) * force)
 						end
 					else
 						force = force * 1.2
-						if forceUp == false then forceUp = force end
-						dmgInfo:SetDamageForce(((ent:GetPos() + ent:OBBCenter() + ent:GetUp() * forceUp) - startPos) * force)
+						dmgInfo:SetDamageForce(((ent:GetPos() + ent:OBBCenter() + ent:GetUp() * (forceUp == false and force or forceUp)) - startPos) * force)
 					end
 				end
 				VJ.DamageSpecialEnts(attacker, ent, dmgInfo)
