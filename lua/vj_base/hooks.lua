@@ -212,7 +212,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 				for _, other in ents.Iterator() do
 					local otherClass = fGetClass(other)
 					local otherData = fGetTable(other)
-					if otherData.VJ_ID_Living && !ignoredNPCs[otherClass] then
+					if ent != other && otherData.VJ_ID_Living && !ignoredNPCs[otherClass] then
 						-- Add enemies to the created entity if it's a VJ Base NPC
 						if entIsVJ then
 							entData.ValidateNoCollide(ent, other)

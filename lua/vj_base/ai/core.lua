@@ -36,12 +36,14 @@ local fGetPos = metaEntity.GetPos
 
 local metaNPC = FindMetaTable("NPC")
 local fGetEnemy = metaNPC.GetEnemy
+local fGetMaxLookDistance = metaNPC.GetMaxLookDistance
 local fGetIdealActivity = metaNPC.GetIdealActivity
 local fGetActivity = metaNPC.GetActivity
 local fGetIdealSequence = metaNPC.GetIdealSequence
 local fSetIdealActivity = metaNPC.SetIdealActivity
 local fAddEntityRelationship = metaNPC.AddEntityRelationship
 local fIsInViewCone = metaNPC.IsInViewCone
+local fDisposition = metaNPC.Disposition
 
 local defPos = Vector()
 local defAng = Angle()
@@ -1756,7 +1758,7 @@ function ENT:Follow(ent, doToggle)
 		-- Refusals
 		local followData = self.FollowData
 		-- Check for enemy/neutral
-		if isLiving && fGetClass(self) != fGetClass(ent) && (self:Disposition(ent) == D_HT or self:Disposition(ent) == D_NU) then
+		if isLiving && fGetClass(self) != fGetClass(ent) && (fDisposition(self, ent) == D_HT or fDisposition(self, ent) == D_NU) then
 			if isPly && self.CanChatMessage then
 				ent:PrintMessage(HUD_PRINTTALK, VJ.GetName(self) .. " isn't friendly so it won't follow you.")
 			end
@@ -2100,7 +2102,7 @@ end
 function ENT:CheckRelationship(ent)
 	if ent:IsFlagSet(FL_NOTARGET) or !ent:Alive() or (ent:IsPlayer() && VJ_CVAR_IGNOREPLAYERS) then return D_ER end
 	if fGetClass(self) == fGetClass(ent) then return D_LI end
-	local myDisp = self:Disposition(ent)
+	local myDisp = fDisposition(self, ent)
 	if myDisp == D_VJ_INTEREST then return D_HT end
 	return myDisp
 end
@@ -2132,7 +2134,7 @@ function ENT:MaintainRelationships()
 	
 	local eneVisCount = 0
 	local myPos = fGetPos(self)
-	local mySightDist = self:GetMaxLookDistance()
+	local mySightDist = fGetMaxLookDistance(self)
 	local myHandlePerceived = self.HandlePerceivedRelationship
 	local myCanAlly = selfData.CanAlly
 	local myFriPlyAllies = selfData.AlliedWithPlayerAllies
@@ -2327,7 +2329,7 @@ function ENT:MaintainRelationships()
 								self:ForceSetEnemy(ent, true, true, eneValid)
 							end
 						-- If all else failed then check if we hate this entity
-						elseif self:Disposition(ent) != D_HT then
+						elseif fDisposition(self, ent) != D_HT then
 							-- Neutral NPCs will not engage enemies without a reason, so keep it as neutral
 							if !notIsNeutral then
 								//print("MaintainRelationships 2 - regular D_NU")
@@ -2382,7 +2384,7 @@ function ENT:MaintainRelationships()
 			if entType == ENT_TYPE_PLAYER && selfData.HasOnPlayerSight && CurTime() > selfData.NextOnPlayerSightT && distanceToEnt < selfData.OnPlayerSightDistance && fIsInViewCone(self, entPos) && fVisible(self, ent) then
 				-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 				local disp = selfData.OnPlayerSightDispositionLevel
-				if (disp == 0) or (disp == 1 && (self:Disposition(ent) == D_LI or self:Disposition(ent) == D_NU)) or (disp == 2 && self:Disposition(ent) != D_LI) then
+				if (disp == 0) or (disp == 1 && (fDisposition(self, ent) == D_LI or fDisposition(self, ent) == D_NU)) or (disp == 2 && fDisposition(self, ent) != D_LI) then
 					self:OnPlayerSight(ent)
 					self:PlaySoundSystem("OnPlayerSight")
 					if selfData.OnPlayerSightOnlyOnce then -- If it's only suppose to play it once then turn the system off
@@ -2407,25 +2409,25 @@ end
 -----------------------------------------------------------]]
 function ENT:Allies_CallHelp(dist)
 	local selfData = fGetTable(self)
-	local ene = fGetEnemy(self)
 	local myClass = fGetClass(self)
 	local myPos = fGetPos(self)
+	local ene = fGetEnemy(self)
 	local curTime = CurTime()
 	local isFirst = true -- Is this the first ent that received a call?
 	for _, ent in ipairs(ents.FindInSphere(myPos, dist or 800)) do
 		local entData = fGetTable(ent)
-		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && metaEntity.Alive(ent) && (fGetClass(ent) == myClass or metaNPC.Disposition(ent, self) == D_LI) && entData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && fGetClass(ene) != fGetClass(ent) && !IsValid(fGetEnemy(ent)) then
+		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && !IsValid(fGetEnemy(ent)) && metaEntity.Alive(ent) && (fGetClass(ent) == myClass or fDisposition(ent, self) == D_LI) && entData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && fGetClass(ene) != fGetClass(ent) then
 			-- If it's guarding and enemy is not visible, then don't call!
 			if entData.IsGuard && !fVisible(ent, ene) then continue end
 			local eneIsPlayer = ene:IsPlayer()
-			if eneIsPlayer or metaNPC.Disposition(ent, ene) != D_LI then
+			local eneIsFri = fDisposition(ent, ene) == D_LI
+			if eneIsPlayer or !eneIsFri then
 				-- Enemy too far away for ent
-				local entsPos = fGetPos(ent)
-				if entsPos:Distance(fGetPos(ene)) > metaNPC.GetMaxLookDistance(ent) then
+				if fGetPos(ent):Distance(fGetPos(ene)) > fGetMaxLookDistance(ent) then
 					-- See if you can move to the ent's location to get closer
 					if !entData.IsFollowing && !entData.IsBusy(ent) then
 						-- If it's wandering, then just override it as it's not important
-						if metaNPC.IsMoving(ent) && selfData.CurrentScheduleName != "SCHEDULE_IDLE_WANDER" then
+						if metaNPC.IsMoving(ent) && entData.CurrentScheduleName != "SCHEDULE_IDLE_WANDER" then
 							continue
 						end
 						metaNPC.SetLastPosition(ent, myPos + self:GetRight() * math.random(-50, 50) + self:GetForward() * math.random(-50, 50))
@@ -2435,7 +2437,7 @@ function ENT:Allies_CallHelp(dist)
 					end
 				else
 					-- If the enemy is a player and the ent is player-friendly then make that player an enemy to the ent
-					if eneIsPlayer && metaNPC.Disposition(ent, ene) == D_LI then
+					if eneIsPlayer && eneIsFri then
 						entData.SetRelationshipMemory(ent, ene, VJ.MEM_OVERRIDE_DISPOSITION, D_HT)
 					end
 					entData.ForceSetEnemy(ent, ene, true)
@@ -2451,13 +2453,14 @@ function ENT:Allies_CallHelp(dist)
 				end
 				
 				selfData.OnCallForHelp(self, ent, isFirst)
-				selfData.PlaySoundSystem(self, "CallForHelp")
-				-- Play the animation
-				if curTime > selfData.AnimLockTime && curTime > selfData.NextCallForHelpAnimationT then
-					local anims = selfData.AnimTbl_CallForHelp
-					if anims then
-						selfData.PlayAnim(self, anims, true, false, selfData.CallForHelpAnimFaceEnemy)
-						selfData.NextCallForHelpAnimationT = curTime + selfData.CallForHelpAnimCooldown
+				if isFirst then
+					selfData.PlaySoundSystem(self, "CallForHelp")
+					if curTime > selfData.AnimLockTime && curTime > selfData.NextCallForHelpAnimationT then
+						local anims = selfData.AnimTbl_CallForHelp
+						if anims then
+							selfData.PlayAnim(self, anims, true, false, selfData.CallForHelpAnimFaceEnemy)
+							selfData.NextCallForHelpAnimationT = curTime + selfData.CallForHelpAnimCooldown
+						end
 					end
 				end
 				isFirst = false
@@ -2480,7 +2483,7 @@ function ENT:Allies_Check(dist)
 	local myClass = fGetClass(self)
 	for _, ent in ipairs(ents.FindInSphere(fGetPos(self), dist or 800)) do
 		local entData = fGetTable(ent)
-		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && entData.IsInitialized && ent:Alive() && (fGetClass(ent) == myClass or ent:Disposition(self) == D_LI or entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && (!isPassive or entData.Behavior == VJ_BEHAVIOR_PASSIVE or entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) then
+		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && entData.IsInitialized && ent:Alive() && (fGetClass(ent) == myClass or fDisposition(ent, self) == D_LI or entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && (!isPassive or entData.Behavior == VJ_BEHAVIOR_PASSIVE or entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) then
 			alliesNum = alliesNum + 1
 			allies[alliesNum] = ent
 		end
@@ -2511,7 +2514,7 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 	local curTime = CurTime()
 	for _, ent in ipairs(entsTbl or ents.FindInSphere(myPos, dist)) do
 		local entData = fGetTable(ent)
-		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && ent:Alive() && (fGetClass(ent) == myClass or ent:Disposition(self) == D_LI) && entData.Behavior != VJ_BEHAVIOR_PASSIVE && entData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !entData.IsFollowing && !entData.IsGuard && curTime > entData.TakingCoverT then
+		if ent != self && entData.IsVJBaseSNPC && entData.CanReceiveOrders && ent:Alive() && (fGetClass(ent) == myClass or fDisposition(ent, self) == D_LI) && entData.Behavior != VJ_BEHAVIOR_PASSIVE && entData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !entData.IsFollowing && !entData.IsGuard && curTime > entData.TakingCoverT then
 			if onlyVis && !fVisible(ent, self) then continue end
 			if !IsValid(fGetEnemy(ent)) && myPos:Distance(fGetPos(ent)) < dist then
 				self.NextWanderTime = curTime + 8
@@ -3361,7 +3364,7 @@ function ENT:OnTakeDamage(dmginfo)
 	if !IsValid(dmgAttacker) then dmgAttacker = false end
 	
 	-- Don't take bullet damage from friendly NPCs
-	if dmgAttacker && dmginfo:IsBulletDamage() && dmgAttacker:IsNPC() && dmgAttacker:Disposition(self) != D_HT && (fGetClass(dmgAttacker) == fGetClass(self) or self:Disposition(dmgAttacker) == D_LI) then return 0 end
+	if dmgAttacker && dmginfo:IsBulletDamage() && dmgAttacker:IsNPC() && fDisposition(dmgAttacker, self) != D_HT && (fGetClass(dmgAttacker) == fGetClass(self) or fDisposition(dmgAttacker, self) == D_LI) then return 0 end
 	
 	local dmgInflictor = dmginfo:GetInflictor()
 	if !IsValid(dmgInflictor) then dmgInflictor = false end
@@ -3464,7 +3467,7 @@ function ENT:OnTakeDamage(dmginfo)
 				if selfData.BecomeEnemyToPlayer && self:CheckRelationship(dmgAttacker) == D_LI then
 					local relationMemory = selfData.RelationshipMemory[dmgAttacker]
 					self:SetRelationshipMemory(dmgAttacker, VJ.MEM_HOSTILITY_LEVEL, relationMemory[VJ.MEM_HOSTILITY_LEVEL] and relationMemory[VJ.MEM_HOSTILITY_LEVEL] + 1 or 1)
-					if relationMemory[VJ.MEM_HOSTILITY_LEVEL] > selfData.BecomeEnemyToPlayer && self:Disposition(dmgAttacker) != D_HT then
+					if relationMemory[VJ.MEM_HOSTILITY_LEVEL] > selfData.BecomeEnemyToPlayer && fDisposition(self, dmgAttacker) != D_HT then
 						self:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
 						if selfData.IsFollowing && selfData.FollowData.Target == dmgAttacker then self:ResetFollowBehavior() end
 						self:SetRelationshipMemory(dmgAttacker, VJ.MEM_OVERRIDE_DISPOSITION, D_HT)
@@ -3546,7 +3549,7 @@ function ENT:OnTakeDamage(dmginfo)
 				if dmgResponse && curTime > selfData.TakingCoverT && !self:IsBusy("Activities") then
 					-- Attempt to find who damaged me | RESULT: May become alerted and set its enemy if attacker is visible
 					if dmgAttacker && dmgAttacker.VJ_ID_Living && (dmgResponse == true or dmgResponse == "OnlySearch") then
-						local sightDist = self:GetMaxLookDistance()
+						local sightDist = fGetMaxLookDistance(self)
 						sightDist = math_min(math_max(sightDist / 2, sightDist <= 1000 and sightDist or 1000), sightDist)
 						-- IF normal sight dist is less than 1000 then change nothing, OR ELSE use half the distance with 1000 as minimum
 						if fGetPos(self):Distance(fGetPos(dmgAttacker)) <= sightDist && self:Visible(dmgAttacker) then
@@ -3658,11 +3661,11 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 				end
 				
 				-- BecomeEnemyToPlayer
-				if doBecomeEnemyToPlayer && ally.BecomeEnemyToPlayer && ally:Disposition(dmgAttacker) == D_LI then
+				if doBecomeEnemyToPlayer && ally.BecomeEnemyToPlayer && fDisposition(ally, dmgAttacker) == D_LI then
 					local relationMemory = ally.RelationshipMemory[dmgAttacker]
 					ally:SetRelationshipMemory(dmgAttacker, VJ.MEM_HOSTILITY_LEVEL, relationMemory[VJ.MEM_HOSTILITY_LEVEL] and relationMemory[VJ.MEM_HOSTILITY_LEVEL] + 1 or 1)
 					if relationMemory[VJ.MEM_HOSTILITY_LEVEL] > ally.BecomeEnemyToPlayer then
-						if ally:Disposition(dmgAttacker) != D_HT then
+						if fDisposition(ally, dmgAttacker) != D_HT then
 							ally:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
 							if ally.IsFollowing && ally.FollowData.Target == dmgAttacker then ally:ResetFollowBehavior() end
 							ally:SetRelationshipMemory(dmgAttacker, VJ.MEM_OVERRIDE_DISPOSITION, D_HT)
