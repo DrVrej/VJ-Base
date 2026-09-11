@@ -83,8 +83,8 @@ end
 function SWEP:OnReload(status)
 	if status == "Finish" then
 		local owner = self:GetOwner()
-		if !owner:IsPlayer() then return true end
-		self:GetOwner():RemoveAmmo(1, self.Primary.Ammo)
+		if !IsValid(owner) or !owner:IsPlayer() then return true end
+		owner:RemoveAmmo(1, self.Primary.Ammo)
 		self:SetClip1(self:Clip1() + 1)
 		if self.Primary.ClipSize > self:Clip1() then
 			timer.Simple(0.1, function()

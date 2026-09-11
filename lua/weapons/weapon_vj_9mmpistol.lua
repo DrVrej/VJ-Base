@@ -35,4 +35,3 @@ SWEP.PrimaryEffects_ShellType = "ShellEject"
 
 SWEP.HasReloadSound = true
 SWEP.ReloadSound = "weapons/pistol/pistol_reload1.wav"
-SWEP.Reload_TimeUntilAmmoIsSet	= 1

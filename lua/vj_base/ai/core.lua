@@ -2126,10 +2126,12 @@ function ENT:MaintainRelationships()
 	//PrintTable(entities)
 	//print("----------")
 	local myClasses = selfData.VJ_NPC_Class
-	local myClassesChanged = false
 	if selfData.CacheRelationshipClasses != myClasses then
-		myClassesChanged = true
 		selfData.CacheRelationshipClasses = myClasses
+		for _, memory in pairs(memories) do -- Clear caches otherwise stale data will be used and cause issues
+			memory[MEM_CACHE_CLASSES] = nil
+			memory[MEM_CACHE_DISPOSITION] = nil
+		end
 	end
 	
 	local eneVisCount = 0
@@ -2142,7 +2144,7 @@ function ENT:MaintainRelationships()
 	local customFunc = self.OnMaintainRelationships
 	local nearestDist = false
 	local it = 1
-	while it <= #entities do //for it = 1, #entities do //for k, ent in ipairs(entities) do
+	while it <= #entities do //for it = 1, #entities do
 		local ent = entities[it]
 		local entMemory = memories[ent]
 		if !IsValid(ent) then
@@ -2198,7 +2200,7 @@ function ENT:MaintainRelationships()
 				local entCachedClasses = entMemory[MEM_CACHE_CLASSES]
 				local entClasses = ent.VJ_NPC_Class
 				-- No cache found or the classes have changed, then recalculate the class disposition!
-				if myClassesChanged or entCachedClasses != entClasses then
+				if entCachedClasses != entClasses then
 					-- Handle "self.VJ_NPC_Class":
 						-- IF we both share a class and ent is a player then we are friendly
 						-- ELSE-IF we both share a class and do NOT have "CLASS_PLAYER_ALLY" then we are friendly
@@ -2381,10 +2383,11 @@ function ENT:MaintainRelationships()
 			end
 			
 			-- HasOnPlayerSight system, used to do certain actions when it sees the player
-			if entType == ENT_TYPE_PLAYER && selfData.HasOnPlayerSight && CurTime() > selfData.NextOnPlayerSightT && distanceToEnt < selfData.OnPlayerSightDistance && fIsInViewCone(self, entPos) && fVisible(self, ent) then
+			if entType == ENT_TYPE_PLAYER && selfData.HasOnPlayerSight && distanceToEnt < selfData.OnPlayerSightDistance && CurTime() > selfData.NextOnPlayerSightT then
 				-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
-				local disp = selfData.OnPlayerSightDispositionLevel
-				if (disp == 0) or (disp == 1 && (fDisposition(self, ent) == D_LI or fDisposition(self, ent) == D_NU)) or (disp == 2 && fDisposition(self, ent) != D_LI) then
+				local mode = selfData.OnPlayerSightDispositionLevel
+				local disp = (mode == 1 or mode == 2) && fDisposition(self, ent)
+				if ((mode == 0) or (mode == 1 && (disp == D_LI or disp == D_NU)) or (mode == 2 && disp != D_LI)) && fIsInViewCone(self, entPos) && fVisible(self, ent) then
 					self:OnPlayerSight(ent)
 					self:PlaySoundSystem("OnPlayerSight")
 					if selfData.OnPlayerSightOnlyOnce then -- If it's only suppose to play it once then turn the system off

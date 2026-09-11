@@ -737,7 +737,7 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 		if ent == attacker then
 			if !extra.DamageAttacker then continue end  -- Can't self hit, skip!
 		-- Other entities
-		elseif !((ignoreInnocents == false) or (!ent.VJ_ID_Living) or (ent:Alive() && (ent:IsNPC() && entClass != attacker:GetClass() && (attacker:IsPlayer() or (attacker:IsNPC() && attacker:Disposition(ent) != D_LI))) or (ent:IsPlayer() && (attacker:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !ent:IsFlagSet(FL_NOTARGET)))))) then
+		elseif !((ignoreInnocents == false) or (!ent.VJ_ID_Living) or (ent:Alive() && ((ent:IsNPC() or ent:IsNextBot()) && entClass != attacker:GetClass() && (attacker:IsPlayer() or (attacker:IsNPC() && attacker:Disposition(ent) != D_LI))) or (ent:IsPlayer() && (attacker:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !ent:IsFlagSet(FL_NOTARGET)))))) then
 			continue
 		end
 		if disableVisibilityCheck or ent:VisibleVec(startPos) or ent:Visible(attacker) then

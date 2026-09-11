@@ -222,14 +222,14 @@ end
 function Nodegraph:GetNearestNode(pos, nodeType)
 	nodeType = nodeType or self.NODE_TYPE_ANY
 	local anyType = nodeType == self.NODE_TYPE_ANY
-	local nearestNode = nil
-	local closestDist = 99999
-	for _, data in pairs(self.Data.Nodes) do -- Future readers: Starts at 0, so can NOT use "ipairs"!
+	local nearestNode;
+	local closestDistSqr = math.huge
+	for _, data in pairs(self.Data.Nodes) do -- Node IDs start at 0, do NOT use "ipairs"!
 		if anyType or (nodeType == data.type) then
-			local dist = data.pos:Distance(pos)
-			if dist < closestDist then
+			local distSqr = data.pos:DistToSqr(pos)
+			if distSqr < closestDistSqr then
 				nearestNode = data
-				closestDist = dist
+				closestDistSqr = distSqr
 			end
 		end
 	end

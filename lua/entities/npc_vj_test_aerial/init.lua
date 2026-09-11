@@ -34,7 +34,7 @@ ENT.SoundTbl_Death = "npc/waste_scanner/grenade_fire.wav"
 local spawnPos = Vector(0, 0, 10)
 --
 function ENT:Init()
-	self:SetCollisionBounds(Vector(33, 33, 26), Vector(-33, -33, -30))
+	self:SetCollisionBounds(Vector(-33, -33, -30), Vector(33, 33, 26))
 	self:SetPos(self:GetPos() + spawnPos)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

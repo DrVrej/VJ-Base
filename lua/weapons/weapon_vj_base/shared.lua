@@ -985,6 +985,7 @@ function SWEP:Reload()
 	if self:Clip1() < self.Primary.ClipSize then
 		self.Reloading = true
 		self:OnReload("Start")
+		local reloadTime = self.Reload_TimeUntilAmmoIsSet
 		if SERVER && self.HasReloadSound then
 			local reloadSD = VJ.PICK(self.ReloadSound)
 			if reloadSD then
@@ -992,7 +993,7 @@ function SWEP:Reload()
 			end
 		end
 		-- Handle clip
-		timer.Simple(self.Reload_TimeUntilAmmoIsSet, function()
+		timer.Simple(reloadTime, function()
 			if IsValid(self) && IsValid(owner) && fGetOwner(self) == owner && self:OnReload("Finish") != true then
 				local ammoUsed = math.Clamp(self.Primary.ClipSize - self:Clip1(), 0, owner:GetAmmoCount(self:GetPrimaryAmmoType())) -- Amount of ammo that it will use (Take from the reserve)
 				owner:RemoveAmmo(ammoUsed, self.Primary.Ammo)
@@ -1004,16 +1005,14 @@ function SWEP:Reload()
 		if anim then
 			owner:SetAnimation(PLAYER_RELOAD)
 			self:SendWeaponAnim(anim)
-			local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
-			self.PLY_AnimLockTime = CurTime() + animTime
-			timer.Simple(animTime, function()
-				if IsValid(self) then
-					self.Reloading = false
-				end
-			end)
-		else
-			self.Reloading = false
+			reloadTime = math.max(reloadTime, VJ.AnimDuration(owner:GetViewModel(), anim))
 		end
+		self.PLY_AnimLockTime = CurTime() + reloadTime
+		timer.Simple(reloadTime, function()
+			if IsValid(self) then
+				self.Reloading = false
+			end
+		end)
 		return true
 	end
 end
