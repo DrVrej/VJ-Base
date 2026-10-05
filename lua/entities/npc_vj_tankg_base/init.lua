@@ -18,8 +18,9 @@ ENT.CallForHelp = false
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Tank Base ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ENT.Tank_PitchLimit = 8.5 -- Maximum vertical (up/down) angle difference for the enemy to be considered reachable
+ENT.Tank_YawLimit = 5 -- Maximum horizontal (left/right) angle difference from the enemy before the tank can fire
 ENT.Tank_AngleOffset = 0 -- Use to offset the forward angle if the model's y-axis isn't facing the correct direction
-ENT.Tank_AngleDiffuseFiringLimit = 5 -- Firing angle diffuse limit, useful for larger barrel tanks by increasing it | lower number = More specific the barrel has to aim to fire
 ENT.Tank_TurningSpeed = 5 -- How fast the gun moves as it's aiming towards an enemy
 	-- ====== Projectile Shell ====== --
 ENT.Tank_HasShellAttack = true
@@ -144,7 +145,10 @@ function ENT:Init()
 	self:SetPhysicsDamageScale(0) -- Take no physics damage
 	if vj_npc_range:GetInt() == 0 then self.Tank_HasShellAttack = false end
 	self:Tank_Init()
-	if self.CustomInitialize_CustomTank then self:CustomInitialize_CustomTank() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self.CustomInitialize_CustomTank then self:CustomInitialize_CustomTank() end
+	if self.Tank_AngleDiffuseFiringLimit then sellf.Tank_YawLimit = self.Tank_AngleDiffuseFiringLimit end
+	--
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThink()
@@ -175,26 +179,26 @@ function ENT:OnThinkActive()
 			local myPos = self:GetPos()
 			local enePos = ene:GetPos()
 			local angEne = (enePos - myPos):Angle()
-			local angDiffuse = (angEne.y - (self:GetAngles().y + selfData.Tank_AngleOffset) + 180) % 360 - 180 -- Cannon looking direction
-			local heightRatio = (enePos.z - myPos.z) / myPos:Distance(Vector(enePos.x, enePos.y, myPos.z))
-			selfData.Tank_ReachableHeight = math.abs(heightRatio) < 0.15 -- How high it can fire
+			local angYaw = (angEne.y - (self:GetAngles().y + selfData.Tank_AngleOffset) + 180) % 360 - 180 -- left(+) / right(-)
+			local angPitch = (angEne.p + 180) % 360 - 180 -- up(-) / down(+)
+			selfData.Tank_ReachableHeight = math.abs(angPitch) < selfData.Tank_PitchLimit -- How high it can fire
 			-- If the enemy is within the barrel firing limit AND not already firing a shell AND its height is is reachable AND the enemy is not extremely close, then FIRE!
-			if math.abs(angDiffuse) < selfData.Tank_AngleDiffuseFiringLimit && selfData.Tank_ReachableHeight && selfData.EnemyData.Distance > selfData.Tank_Shell_FireMin then
+			if math.abs(angYaw) < selfData.Tank_YawLimit && selfData.Tank_ReachableHeight && selfData.EnemyData.Distance > selfData.Tank_Shell_FireMin then
 				selfData.Tank_FacingTarget = true
 				if self.Tank_HasShellAttack && self:Visible(ene) then
 					self:Tank_PrepareShell()
 				end
 			-- Turn Left
-			elseif angDiffuse > selfData.Tank_AngleDiffuseFiringLimit then
+			elseif angYaw > selfData.Tank_YawLimit then
 				if !selfData.Tank_TurningLerp then selfData.Tank_TurningLerp = self:GetLocalAngles() end
-				selfData.Tank_TurningLerp = LerpAngle(1, selfData.Tank_TurningLerp, selfData.Tank_TurningLerp + Angle(0, math.Clamp(angDiffuse, 0, selfData.Tank_TurningSpeed), 0))
+				selfData.Tank_TurningLerp = LerpAngle(1, selfData.Tank_TurningLerp, selfData.Tank_TurningLerp + Angle(0, math.Clamp(angYaw, 0, selfData.Tank_TurningSpeed), 0))
 				self:SetLocalAngles(selfData.Tank_TurningLerp)
 				turning = true
 				selfData.Tank_FacingTarget = false
 			-- Turn Right
-			elseif angDiffuse < -selfData.Tank_AngleDiffuseFiringLimit then
+			elseif angYaw < -selfData.Tank_YawLimit then
 				if !selfData.Tank_TurningLerp then selfData.Tank_TurningLerp = self:GetLocalAngles() end
-				selfData.Tank_TurningLerp = LerpAngle(1, selfData.Tank_TurningLerp, selfData.Tank_TurningLerp + Angle(0, -math.Clamp(math.abs(angDiffuse), 0, selfData.Tank_TurningSpeed), 0))
+				selfData.Tank_TurningLerp = LerpAngle(1, selfData.Tank_TurningLerp, selfData.Tank_TurningLerp + Angle(0, -math.Clamp(math.abs(angYaw), 0, selfData.Tank_TurningSpeed), 0))
 				self:SetLocalAngles(selfData.Tank_TurningLerp)
 				turning = true
 				selfData.Tank_FacingTarget = false

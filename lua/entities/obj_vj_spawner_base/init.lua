@@ -25,7 +25,7 @@ ENT.EntitiesToSpawn = {}
 				- ":1" = Spawn always or leave it empty
 				- WARNING: If no entity is left empty or set to ":1" then during randomization, the base will spawn the last NPC it checks if no other passes!
 		SpawnPosition = Vector() -- Spawn position of the entity based on the spawner's position | OPTIONAL | DEFAULT: Origin of the spawner
-		SpawnAngle = Angle(0, 0, 0) -- Spawn angle of the entity based on the spawner's angle | OPTIONAL | DEFAULT: Spawners current angle
+		SpawnAngle = Angle() -- Spawn angle of the entity based on the spawner's angle | OPTIONAL | DEFAULT: Spawners current angle
 		WeaponsList = {} -- List of weapons it can randomly spawn with | OPTIONAL | DEFAULT: Empty table
 			- "default" = Spawns the NPC with its default weapons list from the spawn menu
 		NPC_Class = "" or {} -- Overrides the NPC's relation class with the given string or table | OPTIONAL | DEFAULT: ""

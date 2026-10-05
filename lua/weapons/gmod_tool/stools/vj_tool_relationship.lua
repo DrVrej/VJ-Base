@@ -203,7 +203,7 @@ else
 					ent.AlliedWithPlayerAllies = true
 				end
 			else
-				ent.VJ_NPC_Class = {nil}
+				ent.VJ_NPC_Class = {}
 			end
 		end
 	end)

@@ -26,14 +26,15 @@ ENT.SoundTbl_Death = "VJ.Explosion"
 ------ Tank Base ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Tank_GunnerENT = false -- Gunner entity of the tank | false = No gunner | string = class name of the gunner
+ENT.Tank_PitchLimit = 8.5 -- Maximum vertical (up/down) angle difference for the enemy to be considered reachable
+ENT.Tank_YawLimit = 15 -- Maximum horizontal (left/right) angle difference from the enemy before the chassis starts turning
 ENT.Tank_AngleOffset = 0 -- Use to offset the forward angle if the model's y-axis isn't facing the correct direction
+ENT.Tank_TurningSpeed = 1.5 -- How fast the chassis turns while driving
+ENT.Tank_DrivingSpeed = 100 -- How fast the tank drives
 	-- ====== Sight ====== --
 ENT.Tank_DriveAwayDistance = 1000 -- If the enemy is closer than this number, than move by either running over them or moving away for the gunner to fire
 ENT.Tank_DriveTowardsDistance = 2000 -- If the enemy is higher than this number, than move towards the enemy
-ENT.Tank_RanOverDistance = 500 -- If the enemy is within self.Tank_DriveAwayDistance & this number & not high up, then run over them!
-	-- ====== Movement ====== --
-ENT.Tank_TurningSpeed = 1.5 -- How fast the chassis turns while driving
-ENT.Tank_DrivingSpeed = 100 -- How fast the tank drives
+ENT.Tank_RanOverDistance = 500 -- If the enemy is within "self.Tank_DriveAwayDistance" & this number & not high up, then run over them!
 	-- ====== Collision ====== --
 	-- Used when the NPC is spawned
 ENT.Tank_CollisionBoundSize = 90
@@ -242,7 +243,6 @@ function ENT:OnThink()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local vec80z = Vector(0, 0, 80)
 local FACE_NONE = VJ.FACE_NONE
 --
 function ENT:OnThinkActive()
@@ -270,14 +270,14 @@ function ENT:OnThinkActive()
 			if IsValid(ene) then
 				local plyControlled = selfData.VJ_IsBeingControlled
 				local enePos = ene:GetPos()
-				local angEne = (enePos - myPos + vec80z):Angle()
-				local angDiffuse = (angEne.y - (self:GetAngles().y + selfData.Tank_AngleOffset) + 180) % 360 - 180
-				local heightRatio = plyControlled and 1 or ((enePos.z - myPos.z) / myPos:Distance(Vector(enePos.x, enePos.y, myPos.z)))
-				local enemyIsHighUp = heightRatio > 0.15
+				local angEne = (enePos - myPos):Angle()
+				local angYaw = (angEne.y - (self:GetAngles().y + selfData.Tank_AngleOffset) + 180) % 360 - 180 -- left(+) / right(-)
+				local angPitch = (angEne.p + 180) % 360 - 180 -- up(-) / down(+)
+				local enemyIsHighUp = plyControlled or angPitch < -selfData.Tank_PitchLimit
 				-- If the enemy is very high up, then move away from it to help the gunner fire!
 				-- OR
 				-- If the enemy's height isn't very high AND the enemy is (within run over distance OR far away), then move towards the enemy!
-				if enemyIsHighUp or (heightRatio < 0.15 && ((eneData.Distance < selfData.Tank_RanOverDistance) or (eneData.Distance > selfData.Tank_DriveTowardsDistance))) then
+				if enemyIsHighUp or (angPitch > -selfData.Tank_PitchLimit && ((eneData.Distance < selfData.Tank_RanOverDistance) or (eneData.Distance > selfData.Tank_DriveTowardsDistance))) then
 					-- Turning
 					if plyControlled then
 						local reverse = selfData.VJ_TheController:KeyDown(IN_BACK) and -1 or 1 -- If we are reversing, then turn the opposite way to make it easier for the player to control
@@ -289,17 +289,17 @@ function ENT:OnThinkActive()
 							phys:SetAngles(self:GetAngles())
 						end
 					else
-						if angDiffuse > 15 then
+						if angYaw > selfData.Tank_YawLimit then
 							self:SetLocalAngles(self:GetLocalAngles() + Angle(0, selfData.Tank_TurningSpeed, 0))
 							phys:SetAngles(self:GetAngles())
-						elseif angDiffuse < -15 then
+						elseif angYaw < -selfData.Tank_YawLimit then
 							self:SetLocalAngles(self:GetLocalAngles() + Angle(0, -selfData.Tank_TurningSpeed, 0))
 							phys:SetAngles(self:GetAngles())
 						end
 					end
 					
 					-- Movement : Have a little grace zone so it doesn't constantly switch between forward and backwards driving
-					if enemyIsHighUp or heightRatio < 0.1490 then
+					if enemyIsHighUp or angPitch > (-selfData.Tank_PitchLimit + 1) then
 						local driveSpeed = selfData.Tank_DrivingSpeed
 						local moveVel = self:GetForward()
 						moveVel:Rotate(Angle(0, selfData.Tank_AngleOffset, 0))
