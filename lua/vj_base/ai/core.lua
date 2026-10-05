@@ -50,15 +50,12 @@ local defAng = Angle()
 local CurTime = CurTime
 local IsValid = IsValid
 local GetConVar = GetConVar
-local isnumber = isnumber
 local isvector = isvector
 local isstring = isstring
 local tonumber = tonumber
 local table_remove = table.remove
 local bAND = bit.band
-local math_rad = math.rad
 local math_deg = math.deg
-local math_cos = math.cos
 local math_atan2 = math.atan2
 local math_min = math.min
 local math_max = math.max
@@ -214,8 +211,7 @@ ENT.TimersToRemove = {
 	"attack_leap_reset",
 	"attack_leap_reset_able",
 	"attack_grenade_start",
-	"attack_grenade_reset",
-	"attack_grenade_reset_able"
+	"attack_grenade_reset"
 }
 //ENT.SavedDmgInfo = {} -- Set later
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -695,7 +691,8 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, delay, extra
 	lockAnimTime = lockAnimTime or false
 	delay = tonumber(delay) or 0
 	extra = extra or emptyTbl
-	local isString = isstring(animation)
+	local dataType = type(animation)
+	local isString = dataType == "string"
 	local isSequence = false
 	local isGesture = false
 	local isRecheck = false
@@ -722,7 +719,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, delay, extra
 	if extra.AlwaysUseSequence then -- Must play as a sequence
 		//isGesture = false -- Leave this alone to allow gesture-sequences to play even when "AlwaysUseSequence" is true!
 		isSequence = true
-		if isnumber(animation) then -- If it's an activity, then convert it to a sequence
+		if dataType == "number" then -- If it's an activity, then convert it to a sequence
 			animation = self:GetSequenceName(self:SelectWeightedSequence(animation))
 			isString = true
 		end
@@ -2107,7 +2104,7 @@ function ENT:CheckRelationship(ent)
 	return myDisp
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local cosRad20 = math_cos(math_rad(20))
+local cosRad20 = math.cos(math.rad(20))
 local ENT_TYPE_OTHER = 0
 local ENT_TYPE_NPC = 1
 local ENT_TYPE_PLAYER = 2

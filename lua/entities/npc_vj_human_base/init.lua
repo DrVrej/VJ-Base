@@ -2084,9 +2084,6 @@ local attackTimers = {
 				self:StopAttacks()
 			end)
 		end
-		//timer.Create("attack_grenade_reset_able" .. self:EntIndex(), self:GetAttackTimer(self.NextGrenadeAttackTime), 1, function()
-			//self.IsAbleToGrenadeAttack = true
-		//end)
 		self.NextThrowGrenadeT = CurTime() + self:GetAttackTimer(self.NextGrenadeAttackTime)
 	end
 }

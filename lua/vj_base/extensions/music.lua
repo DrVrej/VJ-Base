@@ -8,7 +8,6 @@ if !CLIENT then return end
 VJ.Music_Queue = {}
 --
 local IsValid = IsValid
-local table_remove = table.remove
 local vj_npc_snd_track_volume = GetConVar("vj_npc_snd_track_volume")
 --
 local function VJ_Music_Tick()
@@ -20,7 +19,7 @@ local function VJ_Music_Tick()
 		local chan = v.channel
 		if !IsValid(v.npc) or !IsValid(chan) then
 			if IsValid(chan) then chan:Stop() end
-			table_remove(queue, i)
+			table.remove(queue, i)
 		end
 	end
 	local v = queue[1]

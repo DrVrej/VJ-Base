@@ -74,7 +74,7 @@ VJ.AddKillIcon = addKillIcon
 VJ.AddNPC = function(name, class, category, extra, old1)
 	local data = {Name = name, Class = class, Category = category}
 	if extra != nil then
-		if type(extra) == "boolean" then  -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+		if isbool(extra) then  -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 			data.AdminOnly = extra; if old1 then old1(data) end
 		else
 			table.Merge(data, extra)
@@ -122,7 +122,7 @@ end
 VJ.AddWeapon = function(name, class, category, extra, old1)
 	local data = {PrintName = name, ClassName = class, Category = category, Spawnable = true}
 	if extra != nil then
-		if type(category) == "boolean" && type(extra) == "string" then  -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+		if isbool(category) && isstring(extra) then  -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 			data.AdminOnly = category; data.Category = extra; if old1 then old1(data) end
 		else
 			table.Merge(data, extra)
@@ -143,7 +143,7 @@ end
 VJ.AddEntity = function(name, class, category, extra, old1, old2, old3, old4)
 	local data = {PrintName = name, ClassName = class, Category = category, Spawnable = true, DropToFloor = true}
 	if extra != nil then
-		if type(category) == "string" && type(extra) == "boolean" && type(old1) == "number" && type(old2) == "boolean" then  -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+		if isstring(category) && isbool(extra) && isnumber(old1) && isbool(old2) then  -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 			data.Author = category; data.AdminOnly = extra; data.NormalOffset = old1; data.DropToFloor = old2; data.Category = old3; if old4 then old4(data) end
 		else
 			table.Merge(data, extra)

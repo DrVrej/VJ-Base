@@ -26,7 +26,7 @@ local bShiftL = bit.lshift
 -----------------------------------------------------------]]
 function VJ.PICK(values)
 	if !values then return false end
-	if type(values) == "table" then
+	if istable(values) then
 		return values[math.random(1, #values)] or false -- "or false" = To make sure it doesn't return nil when the table is empty!
 	end
 	return values
@@ -51,7 +51,7 @@ end
 		- boolean, whether or not it found the value
 -----------------------------------------------------------]]
 function VJ.HasValue(tbl, val)
-	if type(tbl) == "table" then
+	if istable(tbl) then
 		for x = 1, #tbl do
 			if tbl[x] == val then
 				return true
@@ -73,7 +73,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ.CreateSound(ent, sdFile, sdLevel, sdPitch)
 	if !sdFile then return end
-	if type(sdFile) == "table" then
+	if istable(sdFile) then
 		sdFile = sdFile[math.random(1, #sdFile)]
 		if !sdFile then return end -- Table is empty
 	end
@@ -87,7 +87,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ.EmitSound(ent, sdFile, sdLevel, sdPitch, sdVolume, sdChannel)
 	if !sdFile then return end
-	if type(sdFile) == "table" then
+	if istable(sdFile) then
 		sdFile = sdFile[math.random(1, #sdFile)]
 		if !sdFile then return end -- Table is empty
 	end
@@ -411,7 +411,7 @@ function VJ.AnimDurationEx(ent, anim, override, decrease)
 	if isbool(anim) then return 0 end
 	if !override then -- Base decides
 		return (VJ.AnimDuration(ent, anim) - (decrease or 0)) / ent.AnimPlaybackRate
-	elseif type(override) == "number" then -- User decides
+	elseif isnumber(override) then -- User decides
 		return override / ent.AnimPlaybackRate
 	else
 		return 0
@@ -455,7 +455,7 @@ function VJ.IsCurrentAnim(ent, anim)
 		local curSeq = ent:GetSequence()
 		local curAct = ent:GetActivity()
 		for _, v in ipairs(anim) do
-			if type(v) == "number" then
+			if isnumber(v) then
 				if v != -1 && v == curAct then
 					return true
 				end
@@ -527,7 +527,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 	extra = extra or {}
 	local predict = false
 	local predictProjSpeed = 1
-	if type(targetPos) == "number" then
+	if isnumber(targetPos) then
 		if IsValid(target) then
 			if self.IsVJBaseSNPC then -- Only VJ NPCs can adjust based on target's visibility and only they can predict!
 				if targetPos > 0 then -- Set to predict, so save the prediction rate!
@@ -730,7 +730,7 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 		local baseForce = extra.Force or false
 		local forceUp = extra.UpForce or false
 	local hitEnts = {}
-	for _, ent in ipairs((type(extra.UseConeDegree) == "number" and ents.FindInCone(startPos, extra.UseConeDirection or attacker:GetForward(), dmgRadius, math_cos(math_rad(extra.UseConeDegree or 90)))) or ents.FindInSphere(startPos, dmgRadius)) do
+	for _, ent in ipairs((isnumber(extra.UseConeDegree) and ents.FindInCone(startPos, extra.UseConeDirection or attacker:GetForward(), dmgRadius, math_cos(math_rad(extra.UseConeDegree or 90)))) or ents.FindInSphere(startPos, dmgRadius)) do
 		if (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) or ent.VJ_IsControllingNPC then continue end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
 		local entClass = ent:GetClass()
 		-- Self

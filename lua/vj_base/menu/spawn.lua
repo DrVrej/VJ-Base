@@ -136,8 +136,8 @@ if CLIENT then
 	-- Based on: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/gamemodes/sandbox/gamemode/cl_search_models.lua
 	search.AddProvider( function( str )
 
+		local searchTerms = string.Explode( " ", str )
 		local results = {}
-		
 		local function AddSearchProvider( listname, ctype )
 			for name_c, v in pairs( list.Get( listname ) ) do
 				if ( !istable( v ) ) then continue end -- Some mod doing something wrong
@@ -147,26 +147,36 @@ if CLIENT then
 				if ( !isstring( name ) and !isstring( name_c ) ) then continue end
 
 				local name_lang = ( isstring( name ) and language.GetPhrase( name ) or name )
-				if ( ( isstring( name_lang ) and name_lang:lower():find( str, nil, true ) ) or
-					( isstring( name_c ) and name_c:lower():find( str, nil, true ) ) ) then
+				
+				for srchId, srchTxt in ipairs( searchTerms ) do
 
-					local contentIconData = {
-						nicename = name or name_c,
-						spawnname = name_c,
-						material = "entities/" .. name_c .. ".png",
-						admin = v.AdminOnly
-					}
+					if ( !(
+						( isstring( name_lang ) and name_lang:lower():find( srchTxt, nil, true ) ) or
+						( isstring( name_c ) and name_c:lower():find( srchTxt, nil, true ) )
+					) ) then
 
-					if ( listname == "VJBASE_SPAWNABLE_NPC" ) then contentIconData.weapon = v.Weapons end
+						break
 
-					local entry = {
-						text = name or name_c,
-						icon = spawnmenu.CreateContentIcon( ctype or "entity", nil, contentIconData ),
-						words = { v }
-					}
+					elseif ( srchId == #searchTerms ) then
 
-					table.insert( results, entry )
+						local contentIconData = {
+							nicename = name or name_c,
+							spawnname = name_c,
+							material = v.IconOverride or "entities/" .. name_c .. ".png",
+							admin = v.AdminOnly
+						}
 
+						if ( listname == "VJBASE_SPAWNABLE_NPC" ) then contentIconData.weapon = v.Weapons end
+
+						local entry = {
+							text = name or name_c,
+							icon = spawnmenu.CreateContentIcon( ctype or "entity", nil, contentIconData ),
+							words = { v }
+						}
+
+						table.insert( results, entry )
+
+					end
 				end
 
 				//if ( #results >= sbox_search_maxresults:GetInt() / 4 ) then break end
