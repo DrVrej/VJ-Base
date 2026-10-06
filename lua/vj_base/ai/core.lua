@@ -3860,10 +3860,12 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		end
 		corpse:SetColor(self:GetColor())
 		corpse:SetMaterial(self:GetMaterial())
-		if !corpseMdlCustom && self.DeathCorpseSubMaterials then -- Take care of sub materials
-			for _, x in ipairs(self.DeathCorpseSubMaterials) do
-				if self:GetSubMaterial(x) != "" then
-					corpse:SetSubMaterial(x, self:GetSubMaterial(x))
+		if !corpseMdlCustom then -- Handle sub-materials
+			local materials = self:GetMaterials()
+			for index = 0, #materials - 1 do
+				local subMaterial = self:GetSubMaterial(index)
+				if subMaterial != "" then
+					corpse:SetSubMaterial(index, subMaterial)
 				end
 			end
 		end
