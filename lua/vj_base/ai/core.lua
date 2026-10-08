@@ -220,12 +220,10 @@ ENT.TimersToRemove = {
 		- class = The object class to use, common types: "prop_ragdoll", "prop_physics"
 		- models = Model(s) to use, can be a table which it will pick randomly from it OR a string | "None" = Doesn't set a model
 		- extra = Table that holds extra options to modify parts of the code
-			- Pos = Sets the spawn position
-			- Ang = Sets the spawn angle
-			- Vel = Sets the velocity | DEFAULT = Uses damage force + NPC velocity
-			- HasVel = If set to false, it won't set any velocity, allowing you to code your own in customFunc | DEFAULT = true
-			- ShouldFade = Should it fade away after certain time | DEFAULT = false
-			- ShouldFadeTime = How much time until the entity fades away | DEFAULT = 0
+			- Pos = Spawn position
+			- Ang = Spawn angle
+			- Vel = Spawn velocity | DEFAULT = nil
+				- nil = Damage force + NPC velocity | false = No velocity | Vector = Sets the velocity to the given vector
 			- RemoveOnCorpseDelete = Should the entity get removed if the corpse is removed? | DEFAULT = true
 		- customFunc(ent) = Use this to edit the entity which is given as parameter "ent"
 -----------------------------------------------------------]]
@@ -247,17 +245,9 @@ function ENT:CreateExtraDeathCorpse(class, models, extra, customFunc)
 		ent:Ignite(math.Rand(8, 10), 0)
 		ent:SetColor(colorGrey)
 	end
-	if extra.HasVel != false then
+	if extra.Vel != false then
 		local vel = extra.Vel or (self.DeathAnimationCodeRan and self:GetGroundSpeedVelocity()) or ((self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity())
 		ent:GetPhysicsObject():AddVelocity(vel)
-	end
-	if extra.ShouldFade == true then
-		local fadeTime = extra.ShouldFadeTime or 0
-		if fGetClass(ent) == "prop_ragdoll" then
-			ent:Fire("FadeAndRemove", nil, fadeTime)
-		else
-			ent:Fire("kill", nil, fadeTime)
-		end
 	end
 	if extra.RemoveOnCorpseDelete != false then //corpse:DeleteOnRemove(ent)
 		corpse.ChildEnts[#corpse.ChildEnts + 1] = ent
@@ -272,9 +262,9 @@ end
 		- models = Model(s) to use, can be a table which it will pick randomly from it OR a string
 			- Defined strings: "UseAlien_Small", "UseAlien_Big", "UseHuman_Small", "UseHuman_Big"
 		- extra = Table that holds extra options to modify parts of the code
-			- Pos = Sets the spawn position
-			- Ang = Sets the spawn angle | DEFAULT = Random angle
-			- Vel = Sets the velocity | "UseDamageForce" = To use the damage's force only | DEFAULT = Random velocity
+			- Pos = Spawn position
+			- Ang = Spawn angle | DEFAULT = Random angle
+			- Vel = Spawn velocity | "UseDamageForce" = To use the damage's force only | DEFAULT = Random velocity
 			- Vel_ApplyDmgForce = If set to false, it won't add the damage force to the given velocity | DEFAULT = true
 			- AngVel = Angle velocity, basically the speed it rotates as it's flying | DEFAULT = Random velocity
 			- BloodType = Sets the blood type of the gib | Overrides "CollisionDecal" option | Works only with "obj_vj_gib"
@@ -284,7 +274,7 @@ end
 			- RemoveOnCorpseDelete = Should the entity get removed if the corpse is removed? | DEFAULT = false
 		- customFunc(gib) = Use this to edit the entity which is given as parameter "gib"
 -----------------------------------------------------------]]
-local gib_mdlAAll = {"models/vj_base/gibs/alien/gib_small1.mdl", "models/vj_base/gibs/alien/gib_small2.mdl", "models/vj_base/gibs/alien/gib_small3.mdl", "models/vj_base/gibs/alien/gib1.mdl", "models/vj_base/gibs/alien/gib2.mdl", "models/vj_base/gibs/alien/gib3.mdl", "models/vj_base/gibs/alien/gib4.mdl", "models/vj_base/gibs/alien/gib5.mdl", "models/vj_base/gibs/alien/gib6.mdl", "models/vj_base/gibs/alien/gib7.mdl"}
+local gib_mdlAAll = {["models/vj_base/gibs/alien/gib_small1.mdl"] = true, ["models/vj_base/gibs/alien/gib_small2.mdl"] = true, ["models/vj_base/gibs/alien/gib_small3.mdl"] = true, ["models/vj_base/gibs/alien/gib1.mdl"] = true, ["models/vj_base/gibs/alien/gib2.mdl"] = true, ["models/vj_base/gibs/alien/gib3.mdl"] = true, ["models/vj_base/gibs/alien/gib4.mdl"] = true, ["models/vj_base/gibs/alien/gib5.mdl"] = true, ["models/vj_base/gibs/alien/gib6.mdl"] = true, ["models/vj_base/gibs/alien/gib7.mdl"] = true}
 local gib_mdlASmall = {"models/vj_base/gibs/alien/gib_small1.mdl", "models/vj_base/gibs/alien/gib_small2.mdl", "models/vj_base/gibs/alien/gib_small3.mdl"}
 local gib_mdlABig = {"models/vj_base/gibs/alien/gib1.mdl", "models/vj_base/gibs/alien/gib2.mdl", "models/vj_base/gibs/alien/gib3.mdl", "models/vj_base/gibs/alien/gib4.mdl", "models/vj_base/gibs/alien/gib5.mdl", "models/vj_base/gibs/alien/gib6.mdl", "models/vj_base/gibs/alien/gib7.mdl"}
 local gib_mdlHSmall = {"models/vj_base/gibs/human/gib_small1.mdl", "models/vj_base/gibs/human/gib_small2.mdl", "models/vj_base/gibs/human/gib_small3.mdl"}
@@ -307,7 +297,7 @@ function ENT:CreateGibEntity(class, models, extra, customFunc)
 		bloodType = VJ.BLOOD_COLOR_RED
 	else -- Custom models
 		models = PICK(models)
-		if VJ.HasValue(gib_mdlAAll, models) then
+		if gib_mdlAAll[models] then
 			bloodType = VJ.BLOOD_COLOR_YELLOW
 		end
 	end
@@ -1858,7 +1848,7 @@ function ENT:MaintainMedicBehavior()
 			-- Spawn the prop
 			if selfData.Medic_SpawnPropOnHeal && self:LookupAttachment(selfData.Medic_SpawnPropOnHealAttachment) != 0 then
 				local prop = ents.Create("prop_physics")
-				prop:SetModel(selfData.Medic_SpawnPropOnHealModel)
+				prop:SetModel(selfData.Medic_SpawnPropOnHeal)
 				prop:SetLocalPos(fGetPos(self))
 				prop:SetOwner(self)
 				prop:SetParent(self)
@@ -2572,34 +2562,24 @@ function ENT:Flinch(dmginfo, hitgroup)
 	local customDmgType = dmginfo:GetDamageCustom()
 	if customDmgType == VJ.DMG_FORCE_FLINCH or (customDmgType != VJ.DMG_BLEED && selfData.TakingCoverT < curTime && math.random(1, selfData.FlinchChance) == 1 && (flinchType == true or flinchType == 1 or ((flinchType == "DamageTypes" or flinchType == 2) && flinchDamageTypeCheck(selfData.FlinchDamageTypes, dmginfo:GetDamageType())))) then
 		if self:OnFlinch(dmginfo, hitgroup, "Init") then return end
+		local pickedAnim = selfData.AnimTbl_Flinch
 		
 		-- Handle HitGroup flinching
-		local hitGroupAnim;
 		local hitGroupMap = selfData.FlinchHitGroupMap
 		if hitGroupMap then
 			for _, v in ipairs(hitGroupMap) do
-				local hitGroups = v.HitGroup
-				if istable(hitGroups) then -- Sub-table hitgroup
-					for hitgroupX = 1, #hitGroups do
-						if hitGroups[hitgroupX] == hitgroup then
-							hitGroupAnim = v.Animation
-							break
-						end
-					end
-				else -- non-table hitgroup
-					if hitGroups == hitgroup then
-						hitGroupAnim = v.Animation
-						break
-					end
+				if VJ.HasValue(v.HitGroup, hitgroup) then -- Handles both sub-tables and single values
+					pickedAnim = v.Animation
+					break
 				end
 			end
-			if !hitGroupAnim && !selfData.FlinchHitGroupPlayDefault then return end
 		end
 		
+		if !pickedAnim then return end
 		selfData.Flinching = true
 		self:StopAttacks(true)
 		selfData.AttackAnimTime = 0
-		local _, animDur = self:PlayAnim(hitGroupAnim or selfData.AnimTbl_Flinch, true, false, false)
+		local _, animDur = self:PlayAnim(pickedAnim, true, false, false)
 		timer.Create("flinch_reset" .. self:EntIndex(), animDur, 1, function() self.Flinching = false end)
 		self:OnFlinch(dmginfo, hitgroup, "Execute")
 		selfData.NextFlinchT = curTime + (!selfData.FlinchCooldown and animDur or selfData.FlinchCooldown)
@@ -4181,7 +4161,7 @@ function ENT:InitConvars()
 	end
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- ///// Backwards Compatibility | Do not to use! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// Backwards Compatibility | DO NOT USE \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local dispToVal = {[D_LI] = false, [D_HT] = true, [D_NU] = "Neutral"}
 function ENT:DoRelationshipCheck(ent) return dispToVal[self:CheckRelationship(ent)] end
@@ -4290,7 +4270,7 @@ function ENT:ApplyBackwardsCompatibility()
 	if self.FootStepTimeWalk then self.FootstepSoundTimerWalk = self.FootStepTimeWalk end
 	if self.FootStepTimeRun then self.FootstepSoundTimerRun = self.FootStepTimeRun end
 	if self.HitGroupFlinching_Values then self.FlinchHitGroupMap = self.HitGroupFlinching_Values end
-	if self.HitGroupFlinching_DefaultWhenNotHit != nil then self.FlinchHitGroupPlayDefault = self.HitGroupFlinching_DefaultWhenNotHit end
+	if self.HitGroupFlinching_DefaultWhenNotHit == false or self.FlinchHitGroupPlayDefault == false then self.AnimTbl_Flinch = false end
 	if self.NextFlinchTime != nil then self.FlinchCooldown = self.NextFlinchTime end
 	if self.NextCallForHelpTime then self.CallForHelpCooldown = self.NextCallForHelpTime end
 	if self.CallForHelpAnimationFaceEnemy != nil then self.CallForHelpAnimFaceEnemy = self.CallForHelpAnimationFaceEnemy end
@@ -4361,6 +4341,8 @@ function ENT:ApplyBackwardsCompatibility()
 	if self.DisableFootStepOnRun then self.FootstepSoundTimerRun = false end
 	if self.FindEnemy_UseSphere then self.SightAngle = 360 end
 	if self.IsMedicSNPC then self.IsMedic = self.IsMedicSNPC end
+	if self.Medic_SpawnPropOnHealModel then self.Medic_SpawnPropOnHeal = self.Medic_SpawnPropOnHealModel end
+	if self.Medic_SpawnPropOnHeal == true then self.Medic_SpawnPropOnHeal = "models/healthvial.mdl" end
 	if self.BecomeEnemyToPlayer == true then self.BecomeEnemyToPlayer = self.BecomeEnemyToPlayerLevel or 2 end
 	if self.CustomBlood_Particle then self.BloodParticle = self.CustomBlood_Particle end
 	if self.CustomBlood_Pool then self.BloodPool = self.CustomBlood_Pool end

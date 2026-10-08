@@ -196,7 +196,7 @@ function ENT:Initialize()
 		if !IsValid(self) then return end
 		for spawnKey, spawnTbl in ipairs(self.EntitiesToSpawn) do
 			local spawnPos = spawnTbl.SpawnPosition
-			if istable(spawnPos) then -- !!!!!!!!!!!!!! DO NOT USE THESE VARIABLES !!!!!!!!!!!!!! [Backwards Compatibility!]
+			if istable(spawnPos) then -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 				spawnTbl.SpawnPosition = Vector(spawnPos.vForward or 0, spawnPos.vRight or 0, spawnPos.vUp or 0)
 			end
 			self:SpawnEntity(spawnKey, spawnTbl, true)

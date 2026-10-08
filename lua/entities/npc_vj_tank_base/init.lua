@@ -167,7 +167,7 @@ function ENT:Init()
 	self.Tank_NextIdleParticles = CurTime() + 1
 	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
 	self:Tank_Init()
-	-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	-- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self.CustomInitialize_CustomTank then self:CustomInitialize_CustomTank() end
 	if self.Tank_DeathSoldierModels then self.Tank_DeathDriverCorpse = self.Tank_DeathSoldierModels end
 	--

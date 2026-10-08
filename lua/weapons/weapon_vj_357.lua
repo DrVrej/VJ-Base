@@ -35,5 +35,4 @@ SWEP.Primary.Sound = "VJ.Weapon_357Magnum.Single"
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_SpawnShells = false
 
-SWEP.HasReloadSound = false
 SWEP.Reload_TimeUntilAmmoIsSet = 2.7

@@ -42,9 +42,8 @@ SWEP.Primary.DisableBulletCode = true
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_SpawnShells = false
 
-SWEP.HasReloadSound = true
-SWEP.Reload_TimeUntilAmmoIsSet = 0.8
 SWEP.ReloadSound = "vj_base/weapons/reload_rpg.wav"
+SWEP.Reload_TimeUntilAmmoIsSet = 0.8
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnPrimaryAttack(status, statusData)
 	if status == "Init" then

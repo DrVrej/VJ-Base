@@ -82,7 +82,7 @@ function ENT:CalcView(ply, origin, angles, fov)
 	if IsValid(viewEnt) && viewEnt:GetClass() == "gmod_cameraprop" then return end
 	local cameraMode = self:GetCameraMode()
 	local customData = npc.Controller_OnCalcView and npc:Controller_OnCalcView(self, ply, origin, angles, fov) or false
-	-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	-- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if npc.Controller_CalcView then
 		ply.VJCE_Camera = camera
 		ply.VJCE_Camera.Zoom = self.VJC_Camera_Zoom

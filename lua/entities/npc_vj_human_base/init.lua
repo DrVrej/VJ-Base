@@ -112,9 +112,8 @@ ENT.Medic_TimeUntilHeal = false -- Time until the ally receives health | false =
 ENT.AnimTbl_Medic_GiveHealth = ACT_SPECIAL_ATTACK1 -- Animations to play when it heals an ally | false = Don't play an animation
 ENT.Medic_HealAmount = 25 -- How health does it give?
 ENT.Medic_NextHealTime = VJ.SET(10, 15) -- How much time until it can give health to an ally again
-ENT.Medic_SpawnPropOnHeal = true -- Should it spawn a prop, such as small health vial at a attachment when healing an ally?
-ENT.Medic_SpawnPropOnHealModel = "models/healthvial.mdl" -- The model that it spawns
-ENT.Medic_SpawnPropOnHealAttachment = "anim_attachment_LH" -- The attachment it spawns on
+ENT.Medic_SpawnPropOnHeal = "models/healthvial.mdl" -- Should it spawn a prop when healing an ally? | false = Don't spawn a prop | string = Spawn the given model
+ENT.Medic_SpawnPropOnHealAttachment = "anim_attachment_LH" -- Attachment to use for spawning the prop
 	-- ====== Follow System ====== --
 	-- Associated variables: self.FollowData, self.IsFollowing
 	-- NOTE: Stationary NPCs can't use follow system!
@@ -178,13 +177,13 @@ ENT.Immune_Fire = false -- Immune to fire / flame damages
 ENT.Immune_Electricity = false -- Immune to electrical damages (Ex: Shocks, lasers, gravity gun)
 ENT.Immune_Sonic = false -- Immune to sonic damages (Ex: Sound blasts)
 	-- ====== Flinching ====== --
+	-- If both "self.AnimTbl_Flinch" and "self.FlinchHitGroupMap" are false, no animation will play!
 ENT.CanFlinch = false -- Can it flinch? | false = Don't flinch | true = Always flinch | "DamageTypes" = Flinch only from certain damages types
 ENT.FlinchDamageTypes = DMG_BLAST -- Which types of damage types should it flinch from when "DamageTypes" is used? | Can be an enum or a table of enums
 ENT.FlinchChance = 16 -- Chance of flinching from 1 to x | 1 = Always flinch
 ENT.FlinchCooldown = 5 -- How much time until it can flinch again? | false = Base auto calculates the duration
-ENT.AnimTbl_Flinch = ACT_FLINCH_PHYSICS
+ENT.AnimTbl_Flinch = ACT_FLINCH_PHYSICS -- Animations to play when it flinches | false = Don't play an animation / Only play "self.FlinchHitGroupMap" animations
 ENT.FlinchHitGroupMap = false -- EXAMPLE: {{HitGroup = HITGROUP_HEAD, Animation = ACT_FLINCH_HEAD}, {HitGroup = HITGROUP_LEFTARM, Animation = ACT_FLINCH_LEFTARM}, {HitGroup = HITGROUP_RIGHTARM, Animation = ACT_FLINCH_RIGHTARM}, {HitGroup = HITGROUP_LEFTLEG, Animation = ACT_FLINCH_LEFTLEG}, {HitGroup = HITGROUP_RIGHTLEG, Animation = ACT_FLINCH_RIGHTLEG}}
-ENT.FlinchHitGroupPlayDefault = true -- Should it play "self.AnimTbl_Flinch" when none of the mapped hit groups hit?
 	-- ====== Non-Combat Damage Response Behaviors ====== --
 	-- For passive behavior NPC, these responses will run regardless if it has an active enemy or not
 ENT.DamageResponse = true -- Should it respond to damages while it has no enemy?

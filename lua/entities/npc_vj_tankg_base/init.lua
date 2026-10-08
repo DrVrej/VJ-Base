@@ -25,7 +25,7 @@ ENT.Tank_TurningSpeed = 5 -- How fast the gun moves as it's aiming towards an en
 	-- ====== Projectile Shell ====== --
 ENT.Tank_HasShellAttack = true
 ENT.Tank_Shell_FireMin = 350 -- If the enemy is closer than this number, than don't shoot!
-ENT.Tank_Shell_FireMax = ENT.SightDistance -- If the enemy is higher than this number, than don't shoot!
+ENT.Tank_Shell_FireMax = false -- If the enemy is higher than this number, than don't shoot! | false = No limit as long as enemy is within max sight distance
 ENT.Tank_Shell_NextFireTime = 0 -- Delay between each fire, triggered the moment when the shell leaves the tank | It can NOT even reload if this delay is active!
 ENT.Tank_Shell_TimeUntilFire = 2.5 -- Delay until it fires the shell (Ran after reloading) | If Failure: it will instantly fire it the moment it's facing the enemy again!
 ENT.Tank_Shell_SpawnPos = Vector(-170, 0, 65)
@@ -145,9 +145,9 @@ function ENT:Init()
 	self:SetPhysicsDamageScale(0) -- Take no physics damage
 	if vj_npc_range:GetInt() == 0 then self.Tank_HasShellAttack = false end
 	self:Tank_Init()
-	-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	-- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self.CustomInitialize_CustomTank then self:CustomInitialize_CustomTank() end
-	if self.Tank_AngleDiffuseFiringLimit then sellf.Tank_YawLimit = self.Tank_AngleDiffuseFiringLimit end
+	if self.Tank_AngleDiffuseFiringLimit then self.Tank_YawLimit = self.Tank_AngleDiffuseFiringLimit end
 	--
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -225,9 +225,9 @@ function ENT:SelectSchedule()
 		if selfData.VJ_IsBeingControlled then
 			selfData.Tank_Status = 0
 		else
-			-- Between these 2 limits it can fire! --
+			-- Between these 2 limits it can fire!
 			local eneDist = selfData.EnemyData.Distance
-			if eneDist < selfData.Tank_Shell_FireMax && eneDist > selfData.Tank_Shell_FireMin then
+			if eneDist < (selfData.Tank_Shell_FireMax or self:GetMaxLookDistance()) && eneDist > selfData.Tank_Shell_FireMin then
 				selfData.Tank_Status = 0
 			-- Out of range, can't fire!
 			else

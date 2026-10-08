@@ -99,7 +99,6 @@ SWEP.HasDeploySound = true -- Does the weapon have a deploy sound?
 SWEP.DeploySound = false -- Sounds to play when the weapon is deployed | Can be string or table | false = Let base decide based on the hold type
 	-- ====== Reload ====== --
 SWEP.AnimTbl_Reload = ACT_VM_RELOAD -- Reload animation | false = Don't play an animation
-SWEP.HasReloadSound = false -- Can it play reload sounds?
 SWEP.ReloadSound = false -- Can be string or table | false = No sound
 SWEP.Reload_TimeUntilAmmoIsSet = 1
 	-- ====== Secondary Fire ====== --
@@ -154,8 +153,8 @@ SWEP.PrimaryEffects_MuzzleParticles = "vj_rifle_full" -- Can be string or table
 SWEP.PrimaryEffects_MuzzleParticlesAsOne = false -- Should all the particles spawn together instead of randomly picking one?
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = true
-SWEP.PrimaryEffects_ShellAttachment = "shell"
 SWEP.PrimaryEffects_ShellType = "RifleShellEject" -- Pistol = "ShellEject" | Rifle = "RifleShellEject" | Shotgun = "ShotgunShellEject"
+SWEP.PrimaryEffects_ShellAttachment = "shell"
 SWEP.PrimaryEffects_SpawnDynamicLight = true
 SWEP.PrimaryEffects_DynamicLightBrightness = 4
 SWEP.PrimaryEffects_DynamicLightDistance = 120
@@ -273,7 +272,7 @@ function SWEP:CustomOnRemove() end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:DecideAnimationLength(anim, override, decrease) return VJ.AnimDurationEx(self, anim, override, decrease) end -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
+function SWEP:DecideAnimationLength(anim, override, decrease) return VJ.AnimDurationEx(self, anim, override, decrease) end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 
 SWEP.RenderGroup = RENDERGROUP_OPAQUE
 
@@ -305,7 +304,7 @@ local vj_wep_muzzleflash = GetConVar("vj_wep_muzzleflash")
 local vj_wep_muzzleflash_light = GetConVar("vj_wep_muzzleflash_light")
 local vj_wep_shells = GetConVar("vj_wep_shells")
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local oldShells = {VJ_Weapon_PistolShell1 = "ShellEject", VJ_Weapon_RifleShell1 = "RifleShellEject", VJ_Weapon_ShotgunShell1 = "ShotgunShellEject"} -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
+local oldShells = {VJ_Weapon_PistolShell1 = "ShellEject", VJ_Weapon_RifleShell1 = "RifleShellEject", VJ_Weapon_ShotgunShell1 = "ShotgunShellEject"} -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 local comAttachments = {
 	muzzle = true,
 	muzzleA = true,
@@ -328,6 +327,7 @@ function SWEP:Initialize()
 	-- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	self.PrimaryEffects_ShellType = oldShells[self.PrimaryEffects_ShellType] or self.PrimaryEffects_ShellType
 	if self.CustomOnInitialize then self:CustomOnInitialize() end
+	if self.HasReloadSound == false then self.ReloadSound = false end
 	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end
 	if self.CustomOnEquip then self.OnEquip = function(_, newOwner) self:CustomOnEquip(newOwner) end end
 	if self.CustomOnDeploy then self.OnDeploy = function() self:CustomOnDeploy() end end
@@ -986,7 +986,7 @@ function SWEP:Reload()
 		self.Reloading = true
 		self:OnReload("Start")
 		local reloadTime = self.Reload_TimeUntilAmmoIsSet
-		if SERVER && self.HasReloadSound then
+		if SERVER then
 			local reloadSD = VJ.PICK(self.ReloadSound)
 			if reloadSD then
 				owner:EmitSound(reloadSD, 50, math.random(90, 100))

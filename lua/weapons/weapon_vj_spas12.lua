@@ -41,7 +41,6 @@ SWEP.PrimaryEffects_ShellType = "ShotgunShellEject"
 SWEP.Secondary.Automatic = true
 SWEP.Secondary.Ammo = "Buckshot"
 
-SWEP.HasReloadSound = true
 SWEP.ReloadSound = {"weapons/shotgun/shotgun_reload1.wav", "weapons/shotgun/shotgun_reload2.wav", "weapons/shotgun/shotgun_reload3.wav"}
 SWEP.Reload_TimeUntilAmmoIsSet = 0.3
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -33,5 +33,4 @@ SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = 2
 SWEP.PrimaryEffects_ShellType = "ShellEject"
 
-SWEP.HasReloadSound = true
 SWEP.ReloadSound = "weapons/pistol/pistol_reload1.wav"

@@ -44,8 +44,6 @@ SWEP.PrimaryEffects_DynamicLightColor = Color(0, 31, 225)
 SWEP.Secondary.Ammo = "AR2AltFire"
 
 SWEP.DryFireSound = "weapons/ar2/ar2_empty.wav"
-SWEP.HasReloadSound = false
-SWEP.ReloadSound = "weapons/ar2/ar2_reload.wav"
 SWEP.Reload_TimeUntilAmmoIsSet = 0.8
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_SecondaryFire_BeforeTimer(eneEnt, fireTime)

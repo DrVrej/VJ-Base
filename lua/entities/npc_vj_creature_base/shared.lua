@@ -55,7 +55,7 @@ if CLIENT then
 	function ENT:Initialize()
 		if GetConVar("vj_npc_ikchains"):GetInt() == 0 then self:SetIK(false) end
 		if GetConVar("vj_npc_forcelowlod"):GetInt() == 1 then self:SetLOD(8) end
-		if self.CustomOnDraw then -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
+		if self.CustomOnDraw then -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 			function self:Draw()
 				fDrawModel(self)
 				self:CustomOnDraw()

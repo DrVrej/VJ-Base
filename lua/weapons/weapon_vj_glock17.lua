@@ -36,7 +36,6 @@ SWEP.Secondary.Automatic = true
 SWEP.Secondary.Ammo = "Pistol"
 
 SWEP.AnimTbl_Deploy = ACT_VM_IDLE_TO_LOWERED
-SWEP.HasReloadSound = true
 SWEP.ReloadSound = "vj_base/weapons/glock17/reload.wav"
 SWEP.Reload_TimeUntilAmmoIsSet = 1.5
 ---------------------------------------------------------------------------------------------------------------------------------------------

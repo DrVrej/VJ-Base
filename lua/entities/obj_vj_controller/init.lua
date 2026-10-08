@@ -63,8 +63,13 @@ function ENT:Initialize()
 	self:DrawShadow(false)
 	self:SetRenderMode(RENDERMODE_NONE) -- Disable shadow for dynamic lights
 	self:Init()
-	if self.CustomOnInitialize then self:CustomOnInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
-	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	-- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self.CustomOnInitialize then self:CustomOnInitialize() end
+	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end
+	if self.CustomOnKeyPressed then self.OnKeyPressed = function(_, key) self:CustomOnKeyPressed(key) end end
+	if self.CustomOnKeyBindPressed then self.OnKeyBindPressed = function(_, key) self:CustomOnKeyBindPressed(key) end end
+	if self.CustomOnStopControlling then self.OnStopControlling = function(_, keyPressed) self:CustomOnStopControlling(keyPressed) end end
+	--
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:UpdateTransmitState()
@@ -112,7 +117,7 @@ function ENT:SetControlledNPC(npc)
 	npc.VJ_TheControllerBullseye = bullseye
 	npc:SetEnemy(NULL)
 	if npc.IsVJBaseSNPC then
-		local funcCustom = npc.Controller_IntMsg; if funcCustom then funcCustom(npc, ply, self) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
+		local funcCustom = npc.Controller_IntMsg; if funcCustom then funcCustom(npc, ply, self) end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 		npc:Controller_Initialize(ply, self)
 		local npcEnemy = npc:GetEnemy()
 		if IsValid(npcEnemy) then
@@ -200,11 +205,6 @@ function ENT:SetControlledNPC(npc)
 			end
 		end)
 	end
-	-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
-	if self.CustomOnKeyPressed then self.OnKeyPressed = function(_, key) self:CustomOnKeyPressed(key) end end
-	if self.CustomOnKeyBindPressed then self.OnKeyBindPressed = function(_, key) self:CustomOnKeyBindPressed(key) end end
-	if self.CustomOnStopControlling then self.OnStopControlling = function(_, keyPressed) self:CustomOnStopControlling(keyPressed) end end
-	--
 	npc:ClearSchedule()
 	npc:StopMoving()
 	self.VJCE_NPC = npc

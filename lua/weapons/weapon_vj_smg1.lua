@@ -35,7 +35,6 @@ SWEP.PrimaryEffects_ShellType = "ShellEject"
 SWEP.Secondary.Automatic = true
 SWEP.Secondary.Ammo = "SMG1_Grenade"
 
-SWEP.HasReloadSound = true
 SWEP.ReloadSound = "weapons/smg1/smg1_reload.wav"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnSecondaryAttack()
