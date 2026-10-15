@@ -47,11 +47,11 @@ ENT.Tank_DeathDecal = "Scorch" -- Decal to spawn under the tank's location on de
 	-- ====== Sounds ====== --
 	-- Driving movement sounds | Recommended to use looping WAV sounds!
 ENT.HasMoveSound = true
-ENT.Tank_SoundTbl_DrivingEngine = false
-ENT.Tank_SoundTbl_Track = false
+ENT.Tank_SoundTbl_DrivingEngine = "vj_base/vehicles/armored/engine_drive.wav"
+ENT.Tank_SoundTbl_Track = "vj_base/vehicles/armored/chassis_tracks.wav"
 	-- Run over sound
 ENT.HasRunOverSound = true
-ENT.Tank_SoundTbl_RunOver = false
+ENT.Tank_SoundTbl_RunOver = "VJ.Gib.Bone_Snap"
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -477,18 +477,18 @@ function ENT:Tank_PlaySoundSystem(sdSet)
 			local curMoveSD = selfData.CurrentTankMovingSound
 			if !curMoveSD or (curMoveSD && !curMoveSD:IsPlaying()) then
 				VJ.STOPSOUND(curMoveSD)
-				selfData.CurrentTankMovingSound = VJ.CreateSound(self, VJ.PICK(selfData.Tank_SoundTbl_DrivingEngine) or "vj_base/vehicles/armored/engine_drive.wav", 80, 100)
+				selfData.CurrentTankMovingSound = VJ.CreateSound(self, VJ.PICK(selfData.Tank_SoundTbl_DrivingEngine), 80, 100)
 			end
 			-- Track sound
 			local curTrackSD = selfData.CurrentTankTrackSound
 			if !curTrackSD or (curTrackSD && !curTrackSD:IsPlaying()) then
 				VJ.STOPSOUND(curTrackSD)
-				selfData.CurrentTankTrackSound = VJ.CreateSound(self, VJ.PICK(selfData.Tank_SoundTbl_Track) or "vj_base/vehicles/armored/chassis_tracks.wav", 70, 100)
+				selfData.CurrentTankTrackSound = VJ.CreateSound(self, VJ.PICK(selfData.Tank_SoundTbl_Track), 70, 100)
 			end
 		end
 	elseif sdSet == "RunOver" then
 		if selfData.HasRunOverSound && CurTime() > selfData.Tank_NextRunOverSound then
-			self:EmitSound(VJ.PICK(selfData.Tank_SoundTbl_RunOver) or "VJ.Gib.Bone_Snap", 80, math.random(80, 100))
+			self:EmitSound(VJ.PICK(selfData.Tank_SoundTbl_RunOver), 80, math.random(80, 100))
 			selfData.Tank_NextRunOverSound = CurTime() + 0.2
 		end
 	end

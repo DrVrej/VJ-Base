@@ -36,17 +36,17 @@ ENT.Tank_Shell_ParticlePos = Vector(-205, 0, 72)
 	-- ====== Sounds ====== --
 	-- Gun turning movement sound | Recommended to use looping WAV sounds!
 ENT.HasMoveSound = true
-ENT.Tank_SoundTbl_Turning = false
+ENT.Tank_SoundTbl_Turning = "vj_base/vehicles/armored/gun_move2.wav"
 ENT.Tank_TurningSoundLevel = 80
 ENT.Tank_TurningSoundPitch = VJ.SET(100, 100)
 	-- Shell reload sound
 ENT.HasReloadShellSound = true
-ENT.Tank_SoundTbl_ReloadShell = false
+ENT.Tank_SoundTbl_ReloadShell = "vj_base/vehicles/armored/gun_reload.wav"
 ENT.Tank_ReloadShellSoundLevel = 75
 ENT.Tank_ReloadShellSoundPitch = VJ.SET(90, 100)
 	-- Shell fire sound
 ENT.HasFireShellSound = true
-ENT.Tank_SoundTbl_FireShell = false
+ENT.Tank_SoundTbl_FireShell = "VJ.NPC_Tank.Fire"
 ENT.Tank_FireShellSoundLevel = 140
 ENT.Tank_FireShellSoundPitch = VJ.SET(90, 100)
 
@@ -124,7 +124,6 @@ ENT.Tank_FacingTarget = false -- Is it facing the enemy?
 ENT.Tank_ReachableHeight = false -- Is the enemy position proper height for it to shoot?
 ENT.Tank_Status = 0 -- 0 = Can fire | 1 = Can NOT fire
 ENT.Tank_Shell_NextFireT = 0
-ENT.Tank_TurningLerp = nil
 ENT.Tank_NextIdleParticles = 0
 
 local TANK_SHELL_STATUS_EMPTY = 0
@@ -188,18 +187,11 @@ function ENT:OnThinkActive()
 				if self.Tank_HasShellAttack && self:Visible(ene) then
 					self:Tank_PrepareShell()
 				end
-			-- Turn Left
-			elseif angYaw > selfData.Tank_YawLimit then
-				if !selfData.Tank_TurningLerp then selfData.Tank_TurningLerp = self:GetLocalAngles() end
-				selfData.Tank_TurningLerp = LerpAngle(1, selfData.Tank_TurningLerp, selfData.Tank_TurningLerp + Angle(0, math.Clamp(angYaw, 0, selfData.Tank_TurningSpeed), 0))
-				self:SetLocalAngles(selfData.Tank_TurningLerp)
-				turning = true
-				selfData.Tank_FacingTarget = false
-			-- Turn Right
-			elseif angYaw < -selfData.Tank_YawLimit then
-				if !selfData.Tank_TurningLerp then selfData.Tank_TurningLerp = self:GetLocalAngles() end
-				selfData.Tank_TurningLerp = LerpAngle(1, selfData.Tank_TurningLerp, selfData.Tank_TurningLerp + Angle(0, -math.Clamp(math.abs(angYaw), 0, selfData.Tank_TurningSpeed), 0))
-				self:SetLocalAngles(selfData.Tank_TurningLerp)
+			-- Turn towards the enemy
+			elseif math.abs(angYaw) > selfData.Tank_YawLimit then
+				local ang = self:GetLocalAngles()
+				ang.y = ang.y + math.Clamp(angYaw, -selfData.Tank_TurningSpeed, selfData.Tank_TurningSpeed)
+				self:SetLocalAngles(ang)
 				turning = true
 				selfData.Tank_FacingTarget = false
 			end
@@ -385,16 +377,16 @@ function ENT:Tank_PlaySoundSystem(sdSet)
 			local curMoveSD = selfData.CurrentTankMovingSound
 			if !curMoveSD or (curMoveSD && !curMoveSD:IsPlaying()) then
 				VJ.STOPSOUND(curMoveSD)
-				selfData.CurrentTankMovingSound = VJ.CreateSound(self, VJ.PICK(selfData.Tank_SoundTbl_Turning) or "vj_base/vehicles/armored/gun_move2.wav", selfData.Tank_TurningSoundLevel, math.random(selfData.Tank_TurningSoundPitch.a, selfData.Tank_TurningSoundPitch.b))
+				selfData.CurrentTankMovingSound = VJ.CreateSound(self, VJ.PICK(selfData.Tank_SoundTbl_Turning), selfData.Tank_TurningSoundLevel, math.random(selfData.Tank_TurningSoundPitch.a, selfData.Tank_TurningSoundPitch.b))
 			end
 		end
 	elseif sdSet == "ShellFire" then
 		if selfData.HasFireShellSound then
-			VJ.EmitSound(self, VJ.PICK(selfData.Tank_SoundTbl_FireShell) or "VJ.NPC_Tank.Fire", selfData.Tank_FireShellSoundLevel, math.random(selfData.Tank_FireShellSoundPitch.a, selfData.Tank_FireShellSoundPitch.b))
+			VJ.EmitSound(self, VJ.PICK(selfData.Tank_SoundTbl_FireShell), selfData.Tank_FireShellSoundLevel, math.random(selfData.Tank_FireShellSoundPitch.a, selfData.Tank_FireShellSoundPitch.b))
 		end
 	elseif sdSet == "ShellReload" then
 		if selfData.HasReloadShellSound then
-			VJ.EmitSound(self, VJ.PICK(selfData.Tank_SoundTbl_ReloadShell) or "vj_base/vehicles/armored/gun_reload.wav", selfData.Tank_ReloadShellSoundLevel, math.random(selfData.Tank_ReloadShellSoundPitch.a, selfData.Tank_ReloadShellSoundPitch.b))
+			VJ.EmitSound(self, VJ.PICK(selfData.Tank_SoundTbl_ReloadShell), selfData.Tank_ReloadShellSoundLevel, math.random(selfData.Tank_ReloadShellSoundPitch.a, selfData.Tank_ReloadShellSoundPitch.b))
 		end
 	end
 end

@@ -1592,7 +1592,6 @@ function ENT:OnEntityCopyTableFinish(data)
 	data.Tank_ReachableHeight = nil
 	data.Tank_Shell_NextFireT = nil
 	data.Tank_Shell_Status = nil
-	data.Tank_TurningLerp = nil
 	data.Gunner = nil
 
 	-- Following should be saved because:
