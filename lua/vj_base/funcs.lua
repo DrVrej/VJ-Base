@@ -381,7 +381,6 @@ end
 -----------------------------------------------------------]]
 function VJ.AnimDuration(ent, anim)
 	if !VJ.AnimExists(ent, anim) then return 0 end -- Invalid animation
-	
 	local objType = type(anim)
 	if objType == "number" then -- Activity
 		return ent:SequenceDuration(ent:SelectWeightedSequence(anim))

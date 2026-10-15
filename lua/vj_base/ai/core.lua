@@ -1945,7 +1945,7 @@ function ENT:Controller_Movement(cont, ply, bullseyePos)
 	local aimVector = ply:GetAimVector()
 	if ply:KeyDown(IN_FORWARD) then
 		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-			self:AA_MoveTo(cont.VJCE_Bullseye, true, ply:KeyDown(IN_SPEED) and "Alert" or "Calm", {IgnoreGround = true})
+			self:AA_MoveTo(cont:GetBullseye(), true, ply:KeyDown(IN_SPEED) and "Alert" or "Calm", {IgnoreGround = true})
 		else
 			if ply:KeyDown(IN_MOVELEFT) then
 				cont:StartMovement(aimVector, angY45)
@@ -4616,8 +4616,8 @@ function ENT:ApplyBackwardsCompatibility()
 		if self.CustomOnWeaponAttack then self.OnWeaponAttack = function() self:CustomOnWeaponAttack() end end
 		if self.CustomOnDropWeapon then self.OnDeathWeaponDrop = function(_, dmginfo, hitgroup, wepEnt) self:CustomOnDropWeapon(dmginfo, hitgroup, wepEnt) end end
 		if self.MoveRandomlyWhenShooting != nil then self.Weapon_Strafe = self.MoveRandomlyWhenShooting end
-		if self.GrenadeAttackThrowDistance then self.GrenadeAttackMaxDistance = self.GrenadeAttackThrowDistance end
 		if self.GrenadeAttackThrowDistanceClose then self.GrenadeAttackMinDistance = self.GrenadeAttackThrowDistanceClose end
+		if self.GrenadeAttackThrowDistance then self.GrenadeAttackMaxDistance = self.GrenadeAttackThrowDistance end
 		if self.NextThrowGrenadeTime != nil then self.NextGrenadeAttackTime = self.NextThrowGrenadeTime end
 		if self.TimeUntilGrenadeIsReleased != nil then self.GrenadeAttackThrowTime = self.TimeUntilGrenadeIsReleased end
 		if self.NextMoveRandomlyWhenShootingTime1 or self.NextMoveRandomlyWhenShootingTime2 then self.Weapon_StrafeCooldown = VJ.SET(self.NextMoveRandomlyWhenShootingTime1 or 3, self.NextMoveRandomlyWhenShootingTime2 or 6) end

@@ -36,7 +36,7 @@ properties.Add("vj_pr_npc_control", {
 		if !ent.VJ_IsBeingControlled then
 			if ent:Alive() then
 				local obj = ents.Create("obj_vj_controller")
-				obj.VJCE_Player = ply
+				obj:SetPlayer(ply)
 				obj:SetControlledNPC(ent)
 				obj:Spawn()
 				obj:StartControlling()

@@ -60,7 +60,7 @@ function SWEP:PrimaryAttack()
 			owner:ChatPrint("NOTE: NPC Controller is mainly made for VJ Base NPCs!")
 		end
 		local controller = ents.Create("obj_vj_controller")
-		controller.VJCE_Player = owner
+		controller:SetPlayer(owner)
 		controller:SetControlledNPC(ent)
 		controller:Spawn()
 		controller:StartControlling()
