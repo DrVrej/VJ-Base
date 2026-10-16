@@ -193,26 +193,7 @@ ENT.NextDamageAllyResponseT = 0
 ENT.NextDamageByPlayerSoundT = 0
 ENT.NextPainSoundT = 0
 ENT.MainSoundPitchValue = 0
-ENT.TimersToRemove = {
-	"state_reset",
-	"wep_state_reset",
-	"turn_reset",
-	"flinch_reset",
-	"alert_reset",
-	"attack_pause_reset",
-	"attack_melee_start",
-	"attack_melee_reset",
-	"attack_melee_reset_able",
-	"attack_range_start",
-	"attack_range_reset",
-	"attack_range_reset_able",
-	"attack_leap_jump",
-	"attack_leap_start",
-	"attack_leap_reset",
-	"attack_leap_reset_able",
-	"attack_grenade_start",
-	"attack_grenade_reset"
-}
+ENT.TimersToRemove = {"state_reset", "state_wep_reset", "turn_reset", "flinch_reset", "alert_reset", "attack_pause_reset", "attack_melee_start", "attack_melee_reset", "attack_melee_reset_able", "attack_range_start", "attack_range_reset", "attack_range_reset_able", "attack_leap_jump", "attack_leap_start", "attack_leap_reset", "attack_leap_reset_able", "attack_grenade_start", "attack_grenade_reset"}
 //ENT.SavedDmgInfo = {} -- Set later
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -2745,7 +2726,7 @@ function ENT:SpawnBloodPool(dmginfo, hitgroup, corpse)
 				mask = CONTENTS_SOLID
 			})
 			if tr.HitWorld && tr.HitNormal == vecZ1 then // tr.Fraction <= 0.405
-				ParticleEffect(particleName, tr.HitPos, defAng, nil)
+				ParticleEffect(particleName, tr.HitPos, defAng)
 			end
 		end
 	end)
@@ -3558,7 +3539,7 @@ function ENT:OnTakeDamage(dmginfo)
 			end
 		end
 		
-		-- Signal other passive NPCs of possible danager | RESULT: May cause other passive NPCs to move away from their current positions
+		-- Signal other passive NPCs of possible danger | RESULT: May cause other passive NPCs to move away from their current positions
 		if isPassive && curTime > selfData.TakingCoverT then
 			if selfData.Passive_AlliesRunOnDamage then -- Make passive allies run too!
 				local allies = self:Allies_Check(math_max(800, self:OBBMaxs():Distance(self:OBBMins()) * 20))

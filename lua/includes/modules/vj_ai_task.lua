@@ -23,10 +23,6 @@ Task.__index = Task
 local TYPE_ENGINE = 1
 local TYPE_CUSTOM = 2
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Task:Init()
-	self.Type = nil
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function Task:InitEngine(name, data) -- Creates an engine based task
 	self.Name = name
 	self.Data = data or 0 -- Engine data must be a number

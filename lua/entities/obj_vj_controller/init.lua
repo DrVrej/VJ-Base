@@ -41,14 +41,12 @@ function ENT:OnStopControlling(keyPressed) end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.VJC_SavedVars_PLY = nil -- A hash table to hold all the values that need to be reset after the player stops controlling
 ENT.VJC_SavedVars_NPC = nil -- A hash table to hold all the values that need to be reset after the NPC is uncontrolled
-ENT.VJC_Camera_Mode = 1 -- Current camera mode | 1 = Third, 2 = First | !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+ENT.VJC_Camera_Mode = 1 -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 ENT.VJC_Camera_CurZoom = Vector()
 ENT.VJC_NPC_LastPos = Vector()
 ENT.VJC_Removed = false
 
-local vecDef = Vector()
-local math_min = math.min
-local math_max = math.max
+local defPos = Vector()
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetMoveType(MOVETYPE_NONE)
@@ -296,7 +294,7 @@ function ENT:StartControlling()
 				ent.VJC_Camera_CurZoom = ent.VJC_Camera_CurZoom - (ply2:KeyDown(IN_SPEED) and Vector(0, 0, zoom) or Vector(zoom, 0, 0))
 			end
 			if button == KEY_BACKSPACE then
-				ent.VJC_Camera_CurZoom = vecDef
+				ent.VJC_Camera_CurZoom:Zero()
 			end
 		end
 	end)
@@ -323,8 +321,8 @@ function ENT:SendDataToClient(reset)
 	local npcData = npc.ControllerParams
 	self:SetHUDEnabled(self.VJC_Player_DrawHUD)
 	if reset then self:SetCameraMode(1) end
-	self:SetCameraTP_Offset((reset and vecDef) or (npcData.ThirdP_Offset + self.VJC_Camera_CurZoom))
-	self:SetCameraFP_Offset((reset and vecDef) or npcData.FirstP_Offset)
+	self:SetCameraTP_Offset((reset and defPos) or (npcData.ThirdP_Offset + self.VJC_Camera_CurZoom))
+	self:SetCameraFP_Offset((reset and defPos) or npcData.FirstP_Offset)
 	if IsValid(npc) then
 		self:SetCameraFP_Bone(npc:LookupBone(npcData.FirstP_Bone) or -1)
 	end
@@ -460,7 +458,7 @@ function ENT:StartMovement(direction, rotation)
 	local npcPosOrg = npc:GetPos()
 	local centerToPos = npc:OBBCenter():Distance(npc:OBBMins()) + 20 // npc:OBBMaxs().z
 	local npcPos = npcPosOrg + npc:GetUp() * centerToPos
-	local groundSpeed = math_min(math_max(npc:GetSequenceGroundSpeed(npc:GetSequence()), 300), 9999)
+	local groundSpeed = math.min(math.max(npc:GetSequenceGroundSpeed(npc:GetSequence()), 300), 9999)
 	local defaultFilter = {self, npc, ply}
 	local forwardTr = util.TraceLine({start = npcPos, endpos = npcPos + plyAimVec * groundSpeed, filter = defaultFilter})
 	local forwardDist = npcPos:Distance(forwardTr.HitPos)

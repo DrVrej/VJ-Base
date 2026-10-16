@@ -275,9 +275,9 @@ function SWEP:CustomOnRemove() end
 function SWEP:DecideAnimationLength(anim, override, decrease) return VJ.AnimDurationEx(self, anim, override, decrease) end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 
 SWEP.RenderGroup = RENDERGROUP_OPAQUE
-
 SWEP.Primary.DefaultClip = 0
 SWEP.Secondary.DefaultClip = 0
+
 SWEP.Reloading = false
 SWEP.PLY_AnimLockTime = 0
 SWEP.PLY_NextIdleAnimT = 0
@@ -995,7 +995,7 @@ function SWEP:Reload()
 		-- Handle clip
 		timer.Simple(reloadTime, function()
 			if IsValid(self) && IsValid(owner) && fGetOwner(self) == owner && self:OnReload("Finish") != true then
-				local ammoUsed = math.Clamp(self.Primary.ClipSize - self:Clip1(), 0, owner:GetAmmoCount(self:GetPrimaryAmmoType())) -- Amount of ammo that it will use (Take from the reserve)
+				local ammoUsed = math.Clamp(self.Primary.ClipSize - self:Clip1(), 0, owner:GetAmmoCount(self:GetPrimaryAmmoType())) -- Amount of ammo that it will use (taken from reserve)
 				owner:RemoveAmmo(ammoUsed, self.Primary.Ammo)
 				self:SetClip1(self:Clip1() + ammoUsed)
 			end

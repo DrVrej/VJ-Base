@@ -2326,7 +2326,7 @@ function ENT:SelectSchedule()
 					self:StopMoving()
 					self:SetLastPosition(sdSrc.origin)
 					self:SCHEDULE_FACE("TASK_FACE_LASTPOSITION")
-					-- Works but just faces the enemy that fired at
+					-- Works but just faces the enemy that caused the hint instead of the sound's origin
 					//local sched = vj_ai_schedule.New("SCHEDULE_HEAR_SOUND")
 					//sched:EngTask("TASK_STORE_BESTSOUND_REACTORIGIN_IN_SAVEPOSITION", 0)
 					//sched:EngTask("TASK_STOP_MOVING", 0)
@@ -2345,7 +2345,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(checkAllies, checkVis)
 	local selfData = fGetTable(self)
-	if selfData.Dead or (selfData.VJ_IsBeingControlled && selfData.VJ_TheControllerBullseye == fGetEnemy(self)) then selfData.EnemyData.Reset = false return false end
+	if selfData.Dead or (selfData.VJ_IsBeingControlled && selfData.VJ_TheControllerEntity:GetBullseye() == fGetEnemy(self)) then selfData.EnemyData.Reset = false return false end
 	local ene = fGetEnemy(self)
 	local eneValid = IsValid(ene)
 	local eneData = selfData.EnemyData

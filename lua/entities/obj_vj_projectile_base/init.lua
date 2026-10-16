@@ -99,7 +99,6 @@ function ENT:CustomOnRemove() end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Dead = false
 ENT.NextIdleSoundT = 0
-ENT.PaintedFinalDecal = false
 ENT.NextPersistCollisionT = 0
 
 local defVec = Vector()
@@ -313,26 +312,19 @@ function ENT:PhysicsCollide(data, phys)
 			selfData.Dead = true
 			self:DealDamage(data, phys)
 			self:PlaySound("OnCollide")
-			if !selfData.PaintedFinalDecal then
-				local decals = PICK(selfData.CollisionDecal)
-				if decals then
-					selfData.PaintedFinalDecal = true
-					util.Decal(decals, data.HitPos + data.HitNormal * -15, data.HitPos - data.HitNormal * -2)
-				end
+			local decals = PICK(selfData.CollisionDecal)
+			if decals then
+				util.Decal(decals, data.HitPos + data.HitNormal * -15, data.HitPos - data.HitNormal * -2)
 			end
-			
-			-- Remove the entity
 			if selfData.ShakeWorldOnDeath then util.ScreenShake(data.HitPos, selfData.ShakeWorldOnDeathAmplitude or 16, selfData.ShakeWorldOnDeathFrequency or 200, selfData.ShakeWorldOnDeathDuration or 1, selfData.ShakeWorldOnDeathRadius or 3000) end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
-			self:Destroy(data, phys)
+			self:Destroy(data, phys) -- Remove the entity
 		elseif colBehavior == PROJ_COLLISION_PERSIST then
 			if CurTime() < selfData.NextPersistCollisionT then return end
 			self:DealDamage(data, phys)
 			self:PlaySound("OnCollide")
-			if !selfData.PaintedFinalDecal then
-				local decals = PICK(selfData.CollisionDecal)
-				if decals then
-					util.Decal(decals, data.HitPos + data.HitNormal * -15, data.HitPos - data.HitNormal * -2)
-				end
+			local decals = PICK(selfData.CollisionDecal)
+			if decals then
+				util.Decal(decals, data.HitPos + data.HitNormal * -15, data.HitPos - data.HitNormal * -2)
 			end
 			-- Avoids "Changing collision rules within a callback is likely to cause crashes!"
 			timer.Simple(0, function()

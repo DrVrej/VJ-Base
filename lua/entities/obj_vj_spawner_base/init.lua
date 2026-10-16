@@ -151,21 +151,19 @@ function ENT:SpawnEntity(spawnKey, spawnTbl, initSpawn)
 		end)
 	else
 		ent:CallOnRemove("vj_spawner_remove", function(dataEnt, dataSpawnKey)
-			if IsValid(self) then
-				local entSpawnTbl = self.CurrentEntities[dataSpawnKey]
-				if !entSpawnTbl.Respawning then
-					entSpawnTbl.Respawning = true -- To make sure it only respawns it once!
-					timer.Simple(self.RespawnCooldown, function()
-						if IsValid(self) then
-							self:SpawnEntity(dataSpawnKey, entSpawnTbl, false)
-						end
-					end)
+			if !IsValid(self) then return end
+			local entSpawnTbl = self.CurrentEntities[dataSpawnKey]
+			if !entSpawnTbl or entSpawnTbl.Ent != dataEnt then return end
+			entSpawnTbl.Ent = nil -- To make sure it only respawns it once!
+			timer.Simple(self.RespawnCooldown, function()
+				if IsValid(self) && self.CurrentEntities[dataSpawnKey] == entSpawnTbl then
+					self:SpawnEntity(dataSpawnKey, entSpawnTbl, false)
 				end
-			end
+			end)
 		end, spawnKey)
 	end
 	
-	self.CurrentEntities[spawnKey] = {Entities = spawnEnts, SpawnPosition = spawnPos, SpawnAngle = spawnAng, WeaponsList = spawnTbl.WeaponsList, NPC_Class = spawnNPCClass, FriToPlyAllies = spawnFriToPlyAllies, Ent = ent, Respawning = false}
+	self.CurrentEntities[spawnKey] = {Entities = spawnEnts, SpawnPosition = spawnPos, SpawnAngle = spawnAng, WeaponsList = spawnTbl.WeaponsList, NPC_Class = spawnNPCClass, FriToPlyAllies = spawnFriToPlyAllies, Ent = ent}
 	self:OnSpawnEntity(ent, spawnKey, spawnTbl, initSpawn)
 	
 	-- Play spawn sound
