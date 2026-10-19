@@ -143,19 +143,23 @@ else
 			for _ = 1, entCount do
 				local ent = net.ReadEntity()
 				if editType == 0 then -- Add
-					ent.VJ_IsBeingControlled_Tool = true
 					ent:StopMoving()
-					ent.VJ_MoverToolOrg_Wander = ent.DisableWandering
-					ent.VJ_MoverToolOrg_Chase = ent.DisableChasingEnemy
 					if ent.IsVJBaseSNPC then
+						ent.VJ_Mover_Wander = ent.DisableWandering
+						ent.VJ_Mover_Chase = ent.DisableChasingEnemy
+						ent.VJ_Mover_Weapon_FindCoverOnReload = ent.Weapon_FindCoverOnReload
 						ent.DisableWandering = true
 						ent.DisableChasingEnemy = true
+						ent.Weapon_FindCoverOnReload = false
 					end
 				elseif editType == 1 then -- Remove
-					ent.VJ_IsBeingControlled_Tool = false
 					if ent.IsVJBaseSNPC then
-						ent.DisableWandering = ent.VJ_MoverToolOrg_Wander != nil and ent.VJ_MoverToolOrg_Wander or false
-						ent.DisableChasingEnemy = ent.VJ_MoverToolOrg_Chase != nil and ent.VJ_MoverToolOrg_Chase or false
+						ent.DisableWandering = ent.VJ_Mover_Wander != nil and ent.VJ_Mover_Wander or false
+						ent.DisableChasingEnemy = ent.VJ_Mover_Chase != nil and ent.VJ_Mover_Chase or false
+						ent.Weapon_FindCoverOnReload = ent.VJ_Mover_Weapon_FindCoverOnReload != nil and ent.VJ_Mover_Weapon_FindCoverOnReload or false
+						ent.VJ_Mover_Wander = nil
+						ent.VJ_Mover_Chase = nil
+						ent.VJ_Mover_Weapon_FindCoverOnReload = nil
 						ent:SelectSchedule()
 					end
 				end

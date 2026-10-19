@@ -205,7 +205,7 @@ function ENT:DealDamage(data, phys)
 	local dataEnt = data and data.HitEntity
 	local hitEnts = false -- Entities that have been damaged (direct or radius)
 	local dmgPos = (data and data.HitPos) or self:GetPos()
-	if IsValid(dataEnt) && ((dataEnt.IsVJBaseBullseye && dataEnt.VJ_IsBeingControlled) or dataEnt.VJ_IsControllingNPC) then return end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
+	if IsValid(dataEnt) && ((dataEnt.IsVJBaseBullseye && dataEnt.VJ_Controlled) or dataEnt.VJ_Controlling) then return end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
 	local selfData = self:GetTable()
 	
 	if selfData.DoesRadiusDamage then
@@ -249,7 +249,7 @@ function ENT:StartTouch(ent)
 	//print("START TOUCH", ent)
 	-- Filter out entities that shouldn't be hit (such as clips or triggers)
 	if !ent:IsPlayer() && !ent:IsNPC() && !ent:IsNextBot() && !ent:IsFlagSet(FL_OBJECT) /*&& ent:GetSolid() != SOLID_VPHYSICS*/ then return end
-	if ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled then return end
+	if ent.IsVJBaseBullseye && ent.VJ_Controlled then return end
 	local owner = self:GetOwner()
 	-- Skip the following cases:
 	-- Owner is the ent

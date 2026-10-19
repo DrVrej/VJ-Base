@@ -53,7 +53,7 @@ function SWEP:PrimaryAttack()
 		owner:ChatPrint(VJ.PICK(msg_prop))
 	elseif !ent:IsNPC() then
 		owner:ChatPrint("This isn't an NPC, therefore you can't control it.")
-	elseif ent.VJ_IsBeingControlled then
+	elseif ent.VJ_Controlled then
 		owner:ChatPrint("NPC is currently controlled by someone else.")
 	else
 		if !ent.IsVJBaseSNPC then

@@ -730,7 +730,7 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 		local forceUp = extra.UpForce or false
 	local hitEnts = {}
 	for _, ent in ipairs((isnumber(extra.UseConeDegree) and ents.FindInCone(startPos, extra.UseConeDirection or attacker:GetForward(), dmgRadius, math_cos(math_rad(extra.UseConeDegree or 90)))) or ents.FindInSphere(startPos, dmgRadius)) do
-		if (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) or ent.VJ_IsControllingNPC then continue end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
+		if (ent.IsVJBaseBullseye && ent.VJ_Controlled) or ent.VJ_Controlling then continue end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
 		local entClass = ent:GetClass()
 		-- Self
 		if ent == attacker then

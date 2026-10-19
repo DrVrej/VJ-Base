@@ -1166,7 +1166,7 @@ end
 function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to always make the NPC chase
 	local curTime = CurTime()
 	local selfData = fGetTable(self)
-	if selfData.NextChaseTime > curTime or selfData.Dead or selfData.VJ_IsBeingControlled or selfData.Flinching or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
+	if selfData.NextChaseTime > curTime or selfData.Dead or selfData.VJ_Controlled or selfData.Flinching or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
 	local eneData = selfData.EnemyData
 	local ene = eneData.Target
 	local moveType = selfData.MovementType
@@ -1486,7 +1486,7 @@ function ENT:Think()
 				//selfData.NextProcessT = curTime + selfData.NextProcessTime
 			end
 			
-			local plyControlled = selfData.VJ_IsBeingControlled
+			local plyControlled = selfData.VJ_Controlled
 			local myPos = fGetPos(self)
 			local ene = fGetEnemy(self)
 			local eneValid = IsValid(ene)
@@ -1673,7 +1673,7 @@ function ENT:Think()
 					if selfData.HasMeleeAttack && selfData.IsAbleToMeleeAttack && !selfData.AttackType then
 						local atkType = false -- false = No attack | 1 = Normal attack | 2 = Prop attack
 						if plyControlled then
-							if selfData.VJ_TheController:KeyDown(IN_ATTACK) then
+							if selfData.VJ_Controller:GetPlayer():KeyDown(IN_ATTACK) then
 								atkType = 1
 							end
 						else
@@ -1730,7 +1730,7 @@ function ENT:Think()
 					end
 					
 					-- Range Attack
-					if eneIsVisible && selfData.HasRangeAttack && selfData.IsAbleToRangeAttack && !selfData.AttackType && ((plyControlled && selfData.VJ_TheController:KeyDown(IN_ATTACK2)) or (!plyControlled && (eneDist < selfData.RangeAttackMaxDistance) && (eneDist > selfData.RangeAttackMinDistance) && (self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.RangeAttackAngleRadius))))) && self:OnRangeAttack("PreInit", ene) != true then
+					if eneIsVisible && selfData.HasRangeAttack && selfData.IsAbleToRangeAttack && !selfData.AttackType && ((plyControlled && selfData.VJ_Controller:GetPlayer():KeyDown(IN_ATTACK2)) or (!plyControlled && (eneDist < selfData.RangeAttackMaxDistance) && (eneDist > selfData.RangeAttackMinDistance) && (self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.RangeAttackAngleRadius))))) && self:OnRangeAttack("PreInit", ene) != true then
 						local seed = curTime; selfData.AttackSeed = seed
 						selfData.IsAbleToRangeAttack = false
 						selfData.AttackType = VJ.ATTACK_TYPE_RANGE
@@ -1764,7 +1764,7 @@ function ENT:Think()
 					end
 					
 					-- Leap Attack
-					if eneIsVisible && selfData.HasLeapAttack && selfData.IsAbleToLeapAttack && !selfData.AttackType && ((plyControlled && selfData.VJ_TheController:KeyDown(IN_JUMP)) or (!plyControlled && (self:IsOnGround() && eneDist < selfData.LeapAttackMaxDistance) && (eneDist > selfData.LeapAttackMinDistance) && (self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.LeapAttackAngleRadius))))) && self:OnLeapAttack("PreInit", ene) != true then
+					if eneIsVisible && selfData.HasLeapAttack && selfData.IsAbleToLeapAttack && !selfData.AttackType && ((plyControlled && selfData.VJ_Controller:GetPlayer():KeyDown(IN_JUMP)) or (!plyControlled && (self:IsOnGround() && eneDist < selfData.LeapAttackMaxDistance) && (eneDist > selfData.LeapAttackMinDistance) && (self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.LeapAttackAngleRadius))))) && self:OnLeapAttack("PreInit", ene) != true then
 						local seed = curTime; selfData.AttackSeed = seed
 						selfData.IsAbleToLeapAttack = false
 						selfData.LeapAttackHasJumped = false
@@ -1931,8 +1931,8 @@ function ENT:ExecuteMeleeAttack(isPropAttack)
 		//debugoverlay.Cross(self:MeleeAttackTraceOrigin() + self:GetForward()*selfData.MeleeAttackDamageDistance, 5, 3, Color(238, 119, 222))
 		//debugoverlay.EntityTextAtPosition(self:MeleeAttackTraceOrigin() + self:GetForward()*selfData.MeleeAttackDamageDistance, 0, "Melee damage distance", 3, Color(238, 119, 222))
 		for _, ent in ipairs(ents.FindInSphere(self:MeleeAttackTraceOrigin(), selfData.MeleeAttackDamageDistance)) do
-			if ent == self or fGetClass(ent) == myClass or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then continue end
-			if ent:IsPlayer() && (ent.VJ_IsControllingNPC or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
+			if ent == self or fGetClass(ent) == myClass or (ent.IsVJBaseBullseye && ent.VJ_Controlled) then continue end
+			if ent:IsPlayer() && (ent.VJ_Controlling or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
 			if ((ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible) && self:MeleeAttackTraceDirection():Dot((Vector(fGetPos(ent).x, fGetPos(ent).y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackDamageAngleRadius)) then
 				if isPropAttack && ent.VJ_ID_Living && VJ.GetNearestDistance(self, ent, true) > selfData.MeleeAttackDistance then continue end -- Since this attack initiated as prop attack, its melee distance may be off!
 				local applyDmg = true
@@ -2142,8 +2142,8 @@ function ENT:ExecuteLeapAttack()
 	if !skip then
 		local myClass = fGetClass(self)
 		for _, ent in ipairs(ents.FindInSphere(fGetPos(self), selfData.LeapAttackDamageDistance)) do
-			if ent == self or fGetClass(ent) == myClass or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then continue end
-			if ent:IsPlayer() && (ent.VJ_IsControllingNPC or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
+			if ent == self or fGetClass(ent) == myClass or (ent.IsVJBaseBullseye && ent.VJ_Controlled) then continue end
+			if ent:IsPlayer() && (ent.VJ_Controlling or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
 			if (ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible then
 				if self:OnLeapAttackExecute("PreDamage", ent) == true then continue end
 				local dmgAmount = self:ScaleByDifficulty(selfData.LeapAttackDamage)
@@ -2269,7 +2269,7 @@ local bitsDanger = bit.bor(SOUND_BULLET_IMPACT, SOUND_COMBAT, SOUND_WORLD, SOUND
 --
 function ENT:SelectSchedule()
 	local selfData = fGetTable(self)
-	if selfData.VJ_IsBeingControlled or selfData.Dead then return end
+	if selfData.VJ_Controlled or selfData.Dead then return end
 	
 	local curTime = CurTime()
 	local eneValid = IsValid(fGetEnemy(self))
@@ -2345,7 +2345,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(checkAllies, checkVis)
 	local selfData = fGetTable(self)
-	if selfData.Dead or (selfData.VJ_IsBeingControlled && selfData.VJ_TheControllerEntity:GetBullseye() == fGetEnemy(self)) then selfData.EnemyData.Reset = false return false end
+	if selfData.Dead or (selfData.VJ_Controlled && selfData.VJ_Controller:GetBullseye() == fGetEnemy(self)) then selfData.EnemyData.Reset = false return false end
 	local ene = fGetEnemy(self)
 	local eneValid = IsValid(ene)
 	local eneData = selfData.EnemyData
@@ -2385,7 +2385,7 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 	self:OnResetEnemy()
 	local moveToEnemy = false
 	if eneValid then
-		if !selfData.IsFollowing && !selfData.IsGuard && !selfData.IsVJBaseSNPC_Tank && !selfData.VJ_IsBeingControlled && selfData.LastHiddenZone_CanWander && !selfData.Weapon_UnarmedBehavior_Active && selfData.Behavior != VJ_BEHAVIOR_PASSIVE && selfData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !self:IsBusy() && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
+		if !selfData.IsFollowing && !selfData.IsGuard && !selfData.IsVJBaseSNPC_Tank && !selfData.VJ_Controlled && selfData.LastHiddenZone_CanWander && !selfData.Weapon_UnarmedBehavior_Active && selfData.Behavior != VJ_BEHAVIOR_PASSIVE && selfData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !self:IsBusy() && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
 			moveToEnemy = self:GetEnemyLastKnownPos()
 		end
 		self:MarkEnemyAsEluded(ene)

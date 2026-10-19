@@ -214,7 +214,7 @@ function ENT:SelectSchedule()
 	
 	if eneValid then
 		-- Can always fire when being controlled
-		if selfData.VJ_IsBeingControlled then
+		if selfData.VJ_Controlled then
 			selfData.Tank_Status = 0
 		else
 			-- Between these 2 limits it can fire!
@@ -230,7 +230,7 @@ function ENT:SelectSchedule()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_PrepareShell()
-	if (CurTime() < self.Tank_Shell_NextFireT) or (self:GetParent().VJ_IsBeingControlled && !self:GetParent().VJ_TheController:KeyDown(IN_ATTACK2)) then return end
+	if (CurTime() < self.Tank_Shell_NextFireT) or (self:GetParent().VJ_Controlled && !self:GetParent().VJ_Controller:GetPlayer():KeyDown(IN_ATTACK2)) then return end
 	
 	-- If it's already ready, then just fire it!
 	if self.Tank_Shell_Status == TANK_SHELL_STATUS_READY then

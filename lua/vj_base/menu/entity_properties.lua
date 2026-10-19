@@ -32,8 +32,8 @@ properties.Add("vj_pr_npc_control", {
 		local ent = net.ReadEntity()
 		if !properties.CanBeTargeted(ent, ply) or !self:Filter(ent, ply) then return end
 		if !ply:Alive() then return end -- Keep the player from becoming a zombie =)
-		if ply.VJ_IsControllingNPC then ply:ChatPrint("Can't control " .. ent:GetName() .. " because you are already controlling another NPC!") return end
-		if !ent.VJ_IsBeingControlled then
+		if ply.VJ_Controlling then ply:ChatPrint("Can't control " .. ent:GetName() .. " because you are already controlling another NPC!") return end
+		if !ent.VJ_Controlled then
 			if ent:Alive() then
 				local obj = ents.Create("obj_vj_controller")
 				obj:SetPlayer(ply)
@@ -61,7 +61,7 @@ properties.Add("vj_pr_npc_guard", {
 	Receive = function(self, length, ply) -- SERVER: Called when the property is clicked
 		local ent = net.ReadEntity()
 		if !properties.CanBeTargeted(ent, ply) or !self:Filter(ent, ply) then return end
-		if !ent.VJ_IsBeingControlled then
+		if !ent.VJ_Controlled then
 			if ent.IsGuard then
 				ply:ChatPrint("Disabled Guarding for " .. ent:GetName() .. ".")
 				ent.IsGuard = false
@@ -91,7 +91,7 @@ properties.Add("vj_pr_npc_wander", {
 	Receive = function(self, length, ply) -- SERVER: Called when the property is clicked
 		local ent = net.ReadEntity()
 		if !properties.CanBeTargeted(ent, ply) or !self:Filter(ent, ply) then return end
-		if !ent.VJ_IsBeingControlled then
+		if !ent.VJ_Controlled then
 			if ent.DisableWandering then
 				ply:ChatPrint("Enabled Wandering for " .. ent:GetName() .. ".")
 				ent.DisableWandering = false

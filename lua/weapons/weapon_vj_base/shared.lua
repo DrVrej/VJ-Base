@@ -605,10 +605,10 @@ function SWEP:NPC_CanFire(selfData, owner)
 	end
 	if !isVJHuman or ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE or (ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND && VJ.IsCurrentAnim(owner, ownerData.WeaponAttackAnim)) then
 		if selfData.IsMeleeWeapon then return true end
-		local isControlled = ownerData.VJ_IsBeingControlled
+		local isControlled = ownerData.VJ_Controlled
 		-- For VJ Humans only, ammo check
 		if isVJHuman && ownerData.Weapon_CanReload && self:Clip1() <= 0 then -- No ammo!
-			if isControlled then ownerData.VJ_TheController:PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
+			if isControlled then ownerData.VJ_Controller:GetPlayer():PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
 			if selfData.HasDryFireSound && CurTime() > selfData.NPC_NextDrySoundT then
 				local sdTbl = VJ.PICK(selfData.DryFireSound)
 				if sdTbl then
@@ -621,7 +621,7 @@ function SWEP:NPC_CanFire(selfData, owner)
 			return false
 		end
 		-- Check to make sure the enemy is within the firing cone!
-		if IsValid(ene) && (!isControlled or owner.VJ_TheController:KeyDown(IN_ATTACK2)) then
+		if IsValid(ene) && (!isControlled or owner.VJ_Controller:GetPlayer():KeyDown(IN_ATTACK2)) then
 			local spawnPos = fGetPos(self) //self:GetBulletPos() -- Because "GetBulletPos" is VERY costly sadly =(
 			local aimPos = ownerData.IsVJBaseSNPC and ownerData.GetAimPosition(owner, ene, spawnPos, 0) or ene:BodyTarget(spawnPos)
 			local aimDir = aimPos - spawnPos
@@ -643,7 +643,7 @@ function SWEP:NPCShoot_Primary()
 	local owner = fGetOwner(self)
 	if !IsValid(owner) then return end
 	local ene = owner:GetEnemy()
-	if !owner.VJ_IsBeingControlled && (!IsValid(ene) or !owner:Visible(ene)) then return end
+	if !owner.VJ_Controlled && (!IsValid(ene) or !owner:Visible(ene)) then return end
 	if owner.IsVJBaseSNPC then
 		owner:UpdatePoseParamTracking()
 	end
@@ -712,7 +712,7 @@ function SWEP:PrimaryAttack()
 	local isPly = owner:IsPlayer()
 	
 	if selfData.Reloading or self:GetNextSecondaryFire() > curTime then return end // owner:KeyDown(IN_RELOAD)
-	if isNPC && !ownerData.VJ_IsBeingControlled && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return
+	if isNPC && !ownerData.VJ_Controlled && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return
 	if !selfData.IsMeleeWeapon && ((isPly && !selfData.Primary.AllowInWater && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then
 		if SERVER && selfData.HasDryFireSound then
 			local dryFireSound = VJ.PICK(selfData.DryFireSound)
@@ -759,7 +759,7 @@ function SWEP:PrimaryAttack()
 		local ownersPos = fGetPos(owner)
 		for _, ent in ipairs(ents.FindInSphere(ownersPos, selfData.MeleeWeaponDistance + 20)) do
 			local entData = fGetTable(ent)
-			if (entData.IsVJBaseBullseye && entData.VJ_IsBeingControlled) or (ent:IsPlayer() && entData.VJ_IsControllingNPC) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
+			if (entData.IsVJBaseBullseye && entData.VJ_Controlled) or (ent:IsPlayer() && entData.VJ_Controlling) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
 			if ent != owner && (isPly or (isNPC && (ent:IsNPC() or (ent:IsPlayer() && ent:Alive() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot() or entData.VJ_ID_Attackable or entData.VJ_ID_Destructible) && owner:Disposition(ent) != D_LI && ent:GetClass() != owner:GetClass() && (owner:GetForward():Dot((fGetPos(ent) - ownersPos):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius))))) then
 				local dmginfo = DamageInfo()
 				local dmgAmount = isNPC and ownerData.ScaleByDifficulty(owner, selfData.Primary.Damage) or selfData.Primary.Damage
@@ -821,7 +821,7 @@ function SWEP:PrimaryAttack()
 				local ene = owner:GetEnemy()
 				local spawnPos = selfData.GetBulletPos(self)
 				local aimPos = ownerData.GetAimPosition(owner, ene, spawnPos, 0)
-				local spread = ownerData.GetAimSpread(owner, ene, aimPos, selfData.NPC_CustomSpread or 1) // owner:GetPos():Distance(owner.VJ_TheController:GetEyeTrace().HitPos) -- Was used when NPC was being controlled
+				local spread = ownerData.GetAimSpread(owner, ene, aimPos, selfData.NPC_CustomSpread or 1) // owner:GetPos():Distance(owner.VJ_Controller:GetPlayer():GetEyeTrace().HitPos) -- Was used when NPC was being controlled
 				bullet.Spread = Vector(spread, spread, 0)
 				bullet.Dir = (aimPos - spawnPos):GetNormalized()
 				bullet.Src = spawnPos

@@ -300,54 +300,53 @@ COND_WEAPON_SIGHT_OCCLUDED			= 45
 [Name]							[Type]		[Description]
 
 -- Base types
-IsVJBaseSNPC					bool		It's inherited from a VJ NPC base
-IsVJBaseSNPC_Creature			bool		It's inherited from "npc_vj_creature_base"
-IsVJBaseSNPC_Human				bool		It's inherited from "npc_vj_human_base"
-IsVJBaseSNPC_Tank				bool		It's inherited from "npc_vj_tank_base" or "npc_vj_tankg_base"
-IsVJBaseSNPC_TankChassis		bool		It's inherited from "npc_vj_tank_base"
-IsVJBaseSNPC_TankGun			bool		It's inherited from "npc_vj_tankg_base"
-IsVJBaseWeapon					bool		It's inherited from "weapon_vj_base"
-IsVJBaseProjectile				bool		It's inherited from "obj_vj_projectile_base"
-IsVJBaseCorpse					bool		It's spawned as a corpse from a VJ NPC or inherited from "obj_vj_gib"
-IsVJBaseCorpse_Gib				bool		It's spawned as a gib from a VJ NPC or inherited from "obj_vj_gib"
-IsVJBaseSpawner					bool		It's inherited from "obj_vj_spawner_base"
-IsVJBaseBullseye				bool		It's inherited from "obj_vj_bullseye"
-IsVJBaseEdited					bool		its meta table has been edited by VJ Base
+IsVJBaseSNPC					bool		Inherits from a VJ NPC base
+IsVJBaseSNPC_Creature			bool		Inherits from "npc_vj_creature_base"
+IsVJBaseSNPC_Human				bool		Inherits from "npc_vj_human_base"
+IsVJBaseSNPC_Tank				bool		Inherits from "npc_vj_tank_base" or "npc_vj_tankg_base"
+IsVJBaseSNPC_TankChassis		bool		Inherits from "npc_vj_tank_base"
+IsVJBaseSNPC_TankGun			bool		Inherits from "npc_vj_tankg_base"
+IsVJBaseWeapon					bool		Inherits from "weapon_vj_base"
+IsVJBaseProjectile				bool		Inherits from "obj_vj_projectile_base"
+IsVJBaseCorpse					bool		spawned as a corpse from a VJ NPC or inherited from "obj_vj_gib"
+IsVJBaseCorpse_Gib				bool		spawned as a gib from a VJ NPC or inherited from "obj_vj_gib"
+IsVJBaseSpawner					bool		Inherits from "obj_vj_spawner_base"
+IsVJBaseBullseye				bool		Inherits from "obj_vj_bullseye"
+IsVJBaseEdited					bool		Entity's meta table has been edited by VJ Base
 
 -- States
-VJ_ST_Grabbed					bool		It's currently grabbed by an NPC and most likely throwing it away (Ex: Grenades)
-VJ_ST_GrabOrgMoveType			enum		Its original move type before being grabbed, set alongside "VJ_ST_Grabbed"
-VJ_ST_Healing					bool		It's healing itself or by another entity
-VJ_ST_Eating					bool		It's eating something (Ex: a corpse)
-VJ_ST_BeingEaten				bool		It's being eaten by something
+VJ_ST_Grabbed					bool		Currently grabbed by an NPC (Ex: Grenades being thrown away)
+VJ_ST_GrabOrgMoveType			enum		Original movement type before being grabbed, used alongside "VJ_ST_Grabbed"
+VJ_ST_Healing					bool		Currently healing itself or by another entity
+VJ_ST_Eating					bool		Currently eating something
+VJ_ST_BeingEaten				bool		Currently being eaten by something
 
 -- Identifiers & Tags
-VJ_ID_Living					bool		It's a living entity and should be detected by VJ NPCs | Default includes: Players, NPCs, NextBots
-VJ_ID_Prop						bool		Includes all the different types of physics prop entities
-VJ_ID_Attackable				bool		Can it be attacked or pushed by NPCs in certain cases? (Ex: It's in the way while an NPC is chasing)
-VJ_ID_Destructible				bool		Can it be damaged by attacks, projectiles, etc? (Ex: It's in the crossfire of a melee attack)
-VJ_ID_Grabbable					bool		Can it be grabbed up by NPCs (Ex: Humanoids picking up grenades)
-VJ_ID_Healable					bool		Can it be healed by NPCs? (Ex: Allied medic NPCs)
-VJ_ID_Danger					bool		Should it be detected as a regular danger by NPCs?
-VJ_ID_Grenade					bool		Should it be detected as a grenade type of danger by NPCs?
-VJ_ID_Boss						bool		Large and/or boss entities (Ex: It won't receive melee knock backs)
-VJ_ID_Police					bool		Police officers, metrocops, etc
-VJ_ID_Civilian					bool		Civilians, citizens, refugees, scientists, non-combatant humanoids, etc
-VJ_ID_Headcrab					bool		Headcrabs (headhumpers!)
-VJ_ID_Undead					bool		Zombies, skeletons, ghouls, vampires, mummies, etc
-VJ_ID_Turret					bool		Turrets, sentry guns, etc
-VJ_ID_Vehicle					bool		Cars, tanks, APCs, helicopters, planes, boats, etc
-VJ_ID_Aircraft					bool		Helicopters, jets, planes, drones, alien ships, etc
+VJ_ID_Living					bool		Classified as a living entity for NPC detection | Default includes: Players, NPCs, NextBots
+VJ_ID_Prop						bool		Classified as a physics prop
+VJ_ID_Attackable				bool		Eligible for to be attacked or pushed by NPCs (Ex: Obstructing the path of a chasing NPC)
+VJ_ID_Destructible				bool		Eligible for damage in relevant attack/projectile checks (Ex: In the crossfire of a melee attack)
+VJ_ID_Grabbable					bool		Eligible to be grabbed by NPCs (Ex: Humanoids picking up grenades)
+VJ_ID_Healable					bool		Eligible to receive healing from NPCs
+VJ_ID_Danger					bool		Classified as a danger by NPCs
+VJ_ID_Grenade					bool		Classified as a grenade type of danger by NPCs
+--
+VJ_ID_Boss						bool		Large or boss entity (Ex: It won't receive melee knock backs)
+VJ_ID_Police					bool		Police officer, metrocop, etc
+VJ_ID_Civilian					bool		Civilian, citizen, refugee, scientist, non-combatant humanoid, etc
+VJ_ID_Headcrab					bool		Headcrab (headhumper!)
+VJ_ID_Undead					bool		Zombie, skeleton, ghoul, vampire, mummy, etc
+VJ_ID_Turret					bool		Turret, sentry gun, etc
+VJ_ID_Vehicle					bool		Car, tank, APC, helicopter, plane, boat, etc
+VJ_ID_Aircraft					bool		Helicopter, jet, plane, drone, alien ship, etc
 
 -- Sounds
 VJ_SD_InvestTime				number		Last time this entity has made a investigatable sound that should be heard by enemy NPCs
 VJ_SD_InvestLevel				number		Sound level of the last investigatable sound made by this entity | Used alongside "VJ_SD_InvestTime"
-VJ_SD_PlayingMusic				bool		It's playing a soundtrack / music
+VJ_SD_PlayingMusic				bool		Currently playing a soundtrack or music
 
--- Controllers
-VJ_IsControllingNPC				bool		It's controlling an NPC, usually using the NPC Controller | Mainly used for players
-VJ_IsBeingControlled			bool		It's being controlled by the NPC Controller | Also applied to the bullseye entity!
-VJ_IsBeingControlled_Tool		bool		It's being controlled by the NPC Mover tool
-VJ_TheController				entity		The player that's controlling this entity through the NPC Controller
-VJ_TheControllerEntity			entity		The controller entity
+-- NPC Controller
+VJ_Controlling					bool		Currently controlling an NPC | Set for the player
+VJ_Controlled					bool		Currently under NPC Controller control | Set for the NPC and bullseye
+VJ_Controller					entity		NPC controller entity | Set for the player and NPC
 */

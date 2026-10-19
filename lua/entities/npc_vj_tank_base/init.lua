@@ -268,7 +268,7 @@ function ENT:OnThinkActive()
 			local eneData = selfData.EnemyData
 			local ene = eneData.Target
 			if IsValid(ene) then
-				local plyControlled = selfData.VJ_IsBeingControlled
+				local plyControlled = selfData.VJ_Controlled
 				local enePos = ene:GetPos()
 				local angEne = (enePos - myPos):Angle()
 				local angYaw = (angEne.y - (self:GetAngles().y + selfData.Tank_AngleOffset) + 180) % 360 - 180 -- left(+) / right(-)
@@ -280,11 +280,11 @@ function ENT:OnThinkActive()
 				if enemyIsHighUp or (angPitch > -selfData.Tank_PitchLimit && ((eneData.Distance < selfData.Tank_RanOverDistance) or (eneData.Distance > selfData.Tank_DriveTowardsDistance))) then
 					-- Turning
 					if plyControlled then
-						local reverse = selfData.VJ_TheController:KeyDown(IN_BACK) and -1 or 1 -- If we are reversing, then turn the opposite way to make it easier for the player to control
-						if selfData.VJ_TheController:KeyDown(IN_MOVERIGHT) then
+						local reverse = selfData.VJ_Controller:GetPlayer():KeyDown(IN_BACK) and -1 or 1 -- If we are reversing, then turn the opposite way to make it easier for the player to control
+						if selfData.VJ_Controller:GetPlayer():KeyDown(IN_MOVERIGHT) then
 							self:SetLocalAngles(self:GetLocalAngles() + Angle(0, -selfData.Tank_TurningSpeed * reverse, 0))
 							phys:SetAngles(self:GetAngles())
-						elseif selfData.VJ_TheController:KeyDown(IN_MOVELEFT) then
+						elseif selfData.VJ_Controller:GetPlayer():KeyDown(IN_MOVELEFT) then
 							self:SetLocalAngles(self:GetLocalAngles() + Angle(0, selfData.Tank_TurningSpeed * reverse, 0))
 							phys:SetAngles(self:GetAngles())
 						end
@@ -312,11 +312,11 @@ function ENT:OnThinkActive()
 						
 						if plyControlled then
 							-- Increase speed if the player is holding the sprint key
-							if selfData.VJ_TheController:KeyDown(IN_SPEED) then
+							if selfData.VJ_Controller:GetPlayer():KeyDown(IN_SPEED) then
 								driveSpeed = driveSpeed * 1.8
 							end
 							-- Reverse if player is holding the back key
-							if selfData.VJ_TheController:KeyDown(IN_BACK) then
+							if selfData.VJ_Controller:GetPlayer():KeyDown(IN_BACK) then
 								driveSpeed = -driveSpeed
 							end
 						else
@@ -366,8 +366,8 @@ function ENT:SelectSchedule()
 	self:MaintainIdleBehavior()
 	
 	if eneValid then
-		if selfData.VJ_IsBeingControlled then
-			if selfData.VJ_TheController:KeyDown(IN_FORWARD) or selfData.VJ_TheController:KeyDown(IN_BACK) then
+		if selfData.VJ_Controlled then
+			if selfData.VJ_Controller:GetPlayer():KeyDown(IN_FORWARD) or selfData.VJ_Controller:GetPlayer():KeyDown(IN_BACK) then
 				selfData.Tank_Status = 0
 			else
 				selfData.Tank_Status = 1

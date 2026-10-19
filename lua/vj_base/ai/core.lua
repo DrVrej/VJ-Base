@@ -101,11 +101,8 @@ ENT.VJ_ID_Healable = true
 
 -- Data & control variables
 ENT.VJ_DEBUG = false
-ENT.VJ_IsBeingControlled = false
-ENT.VJ_IsBeingControlled_Tool = false
-ENT.VJ_TheController = NULL
-ENT.VJ_TheControllerEntity = NULL
-ENT.VJ_TheControllerBullseye = NULL
+ENT.VJ_Controlled = false
+ENT.VJ_Controller = NULL
 ENT.SelectedDifficulty = VJ.DIFFICULTY_NORMAL
 ENT.AIState = VJ_STATE_NONE
 ENT.NextProcessT = 0
@@ -587,7 +584,7 @@ end
 function ENT:MaintainIdleBehavior(idleType) -- idleType: nil = Random | 1 = Wander | 2 = Stand
 	local curTime = CurTime()
 	local selfData = fGetTable(self)
-	if selfData.Dead or selfData.VJ_IsBeingControlled or (selfData.AttackAnimTime > curTime) or (selfData.NextIdleTime > curTime) or selfData.AA_CurrentMovePos or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
+	if selfData.Dead or selfData.VJ_Controlled or (selfData.AttackAnimTime > curTime) or (selfData.NextIdleTime > curTime) or selfData.AA_CurrentMovePos or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
 	if self:IsGoalActive() or selfData.DisableWandering or selfData.IsGuard or selfData.MovementType == VJ_MOVETYPE_STATIONARY or !selfData.LastHiddenZone_CanWander or selfData.NextWanderTime > curTime or selfData.IsFollowing or selfData.MedicData.Status then
@@ -1633,7 +1630,7 @@ function ENT:Touch(entity)
 	local selfData = fGetTable(self)
 	if selfData.VJ_DEBUG && GetConVar("vj_npc_debug_touch"):GetInt() == 1 then VJ.DEBUG_Print(self, "Touch", fGetClass(entity)) end
 	local funcCustom = self.OnTouch; if funcCustom then funcCustom(self, entity) end
-	if !VJ_CVAR_AI_ENABLED or selfData.VJ_IsBeingControlled then return end
+	if !VJ_CVAR_AI_ENABLED or selfData.VJ_Controlled then return end
 	
 	-- If it's a passive SNPC...
 	if selfData.Behavior == VJ_BEHAVIOR_PASSIVE or selfData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
@@ -1806,7 +1803,7 @@ function ENT:MaintainMedicBehavior()
 		if CurTime() < medicData.Cooldown then return end
 		for _, ent in ipairs(ents.FindInSphere(fGetPos(self), selfData.Medic_CheckDistance)) do
 			local entData = fGetTable(ent)
-			if ent != self && ((entData.IsVJBaseSNPC && !entData.VJ_ID_Vehicle && !IsValid(fGetEnemy(self)) && (!IsValid(fGetEnemy(ent)) or entData.VJ_IsBeingControlled)) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && entData.VJ_ID_Healable && !entData.VJ_ST_Healing && ent:Health() <= (ent:GetMaxHealth() * 0.75) && self:CheckRelationship(ent) == D_LI then
+			if ent != self && ((entData.IsVJBaseSNPC && !entData.VJ_ID_Vehicle && !IsValid(fGetEnemy(self)) && (!IsValid(fGetEnemy(ent)) or entData.VJ_Controlled)) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && entData.VJ_ID_Healable && !entData.VJ_ST_Healing && ent:Health() <= (ent:GetMaxHealth() * 0.75) && self:CheckRelationship(ent) == D_LI then
 				medicData.Target = ent
 				medicData.Status = "Active"
 				entData.VJ_ST_Healing = true
@@ -2784,7 +2781,7 @@ function ENT:PlayIdleSound(combatIdle)
 						local hasDialogueAnswer = PICK(entData.SoundTbl_IdleDialogueAnswer)
 						if !self:OnIdleDialogue(ent, "CheckEnt", hasDialogueAnswer) then
 							foundEnt = ent
-							if hasDialogueAnswer && !entData.VJ_IsBeingControlled then
+							if hasDialogueAnswer && !entData.VJ_Controlled then
 								canAnswer = true
 								break
 							end
@@ -4174,6 +4171,7 @@ function ENT:GetFaceAngle(ang) return self:GetTurnAngle(ang) end
 function ENT:DoFlinch(dmginfo, hitgroup) self:Flinch(dmginfo, hitgroup) end
 ENT.LatestEnemyDistance = 0 -- Only here to avoid errors
 ENT.NearestPointToEnemyDistance = 0 -- Only here to avoid errors
+ENT.VJ_IsBeingControlled = false -- Only here to avoid errors
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_CheckAllFourSides(checkDist, returnPos, sides)
 	checkDist = checkDist or 200

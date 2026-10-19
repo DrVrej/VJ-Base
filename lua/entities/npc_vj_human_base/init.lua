@@ -1885,7 +1885,7 @@ end
 function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to always make the NPC chase
 	local curTime = CurTime()
 	local selfData = fGetTable(self)
-	if selfData.NextChaseTime > curTime or selfData.Dead or selfData.VJ_IsBeingControlled or selfData.Flinching or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
+	if selfData.NextChaseTime > curTime or selfData.Dead or selfData.VJ_Controlled or selfData.Flinching or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
 	local eneData = selfData.EnemyData
 	local ene = eneData.Target
 	local moveType = selfData.MovementType
@@ -1952,7 +1952,7 @@ function ENT:TranslateActivity(act)
 			return ACT_IDLE_ANGRY // PICK(selfData.AnimTbl_WeaponAim)
 		end
 	-- Handle running while scared animation
-	elseif act == ACT_RUN && selfData.Weapon_UnarmedBehavior_Active && !selfData.VJ_IsBeingControlled then
+	elseif act == ACT_RUN && selfData.Weapon_UnarmedBehavior_Active && !selfData.VJ_Controlled then
 		return ACT_RUN_PROTECTED // PICK(selfData.AnimTbl_ScaredBehaviorMovement)
 	-- Handle movement while alerted
 	elseif (act == ACT_RUN or act == ACT_WALK) && selfData.Alerted then
@@ -2102,7 +2102,7 @@ local function playReloadAnimation(self, anims)
 		if wep.IsVJBaseWeapon then wep:NPC_Reload() end
 		self.AllowWeaponOcclusionDelay = false
 		-- If NOT controlled by a player AND is a gesture make it stop moving so it doesn't run after the enemy right away
-		if !self.VJ_IsBeingControlled && animType == ANIM_TYPE_GESTURE then
+		if !self.VJ_Controlled && animType == ANIM_TYPE_GESTURE then
 			self:StopMoving()
 		end
 		return true -- We have successfully ran the reload animation!
@@ -2251,7 +2251,7 @@ function ENT:Think()
 				//selfData.NextProcessT = curTime + selfData.NextProcessTime
 			end
 			
-			local plyControlled = selfData.VJ_IsBeingControlled
+			local plyControlled = selfData.VJ_Controlled
 			local myPos = fGetPos(self)
 			local ene = fGetEnemy(self)
 			local eneValid = IsValid(ene)
@@ -2308,7 +2308,7 @@ function ENT:Think()
 				end
 				
 				-- Weapon Reloading
-				if selfData.Weapon_CanReload && !selfData.AttackType && !curWep.IsMeleeWeapon && self:GetWeaponState() == VJ.WEP_STATE_READY && ((!plyControlled && ((!eneValid && curWep:GetMaxClip1() > curWep:Clip1() && (curTime - eneData.TimeSet) > math.random(3, 8) && !self:IsMoving()) or (eneValid && curWep:Clip1() <= 0))) or (plyControlled && selfData.VJ_TheController:KeyDown(IN_RELOAD) && curWep:GetMaxClip1() > curWep:Clip1())) then
+				if selfData.Weapon_CanReload && !selfData.AttackType && !curWep.IsMeleeWeapon && self:GetWeaponState() == VJ.WEP_STATE_READY && ((!plyControlled && ((!eneValid && curWep:GetMaxClip1() > curWep:Clip1() && (curTime - eneData.TimeSet) > math.random(3, 8) && !self:IsMoving()) or (eneValid && curWep:Clip1() <= 0))) or (plyControlled && selfData.VJ_Controller:GetPlayer():KeyDown(IN_RELOAD) && curWep:GetMaxClip1() > curWep:Clip1())) then
 					selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 					selfData.NextChaseTime = curTime + 2
 					selfData.WeaponReloadSeed = curTime
@@ -2335,7 +2335,7 @@ function ENT:Think()
 							-- NPC is NOT hidden...
 							else
 								-- Under certain situations, simply do standing reload without running to a hiding spot
-								if !selfData.Weapon_FindCoverOnReload or selfData.IsGuard or selfData.IsFollowing or selfData.VJ_IsBeingControlled_Tool or !eneValid or selfData.MovementType == VJ_MOVETYPE_STATIONARY or eneData.Distance < 650 then
+								if !selfData.Weapon_FindCoverOnReload or selfData.IsGuard or selfData.IsFollowing or !eneValid or selfData.MovementType == VJ_MOVETYPE_STATIONARY or eneData.Distance < 650 then
 									playReloadAnimation(self, self:TranslateActivity(PICK(selfData.AnimTbl_WeaponReload)))
 								else -- If all is good, then run to a hiding spot and reload!
 									local schedule = vj_ai_schedule.New("SCHEDULE_COVER_RELOAD")
@@ -2402,7 +2402,7 @@ function ENT:Think()
 					local curWepValid = IsValid(curWep)
 					
 					-- Melee Attack
-					if selfData.HasMeleeAttack && selfData.IsAbleToMeleeAttack && !selfData.AttackType && (!curWepValid or (curWepValid && (!curWep.IsMeleeWeapon))) && ((plyControlled && selfData.VJ_TheController:KeyDown(IN_ATTACK)) or (!plyControlled && (eneDistNear < selfData.MeleeAttackDistance && eneIsVisible) && (self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackAngleRadius))))) && self:OnMeleeAttack("PreInit", ene) != true then
+					if selfData.HasMeleeAttack && selfData.IsAbleToMeleeAttack && !selfData.AttackType && (!curWepValid or (curWepValid && (!curWep.IsMeleeWeapon))) && ((plyControlled && selfData.VJ_Controller:GetPlayer():KeyDown(IN_ATTACK)) or (!plyControlled && (eneDistNear < selfData.MeleeAttackDistance && eneIsVisible) && (self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackAngleRadius))))) && self:OnMeleeAttack("PreInit", ene) != true then
 						local seed = curTime; selfData.AttackSeed = seed
 						selfData.IsAbleToMeleeAttack = false
 						selfData.AttackType = VJ.ATTACK_TYPE_MELEE
@@ -2440,7 +2440,7 @@ function ENT:Think()
 					-- Grenade attack
 					if selfData.HasGrenadeAttack && curTime > selfData.NextThrowGrenadeT && curTime > selfData.TakingCoverT && self:GetWeaponState() != VJ.WEP_STATE_RELOADING && !self:IsBusy("Activities") then
 						if plyControlled then
-							if selfData.VJ_TheController:KeyDown(IN_JUMP) then
+							if selfData.VJ_Controller:GetPlayer():KeyDown(IN_JUMP) then
 								self:GrenadeAttack()
 								selfData.NextThrowGrenadeT = curTime + self:GetAttackTimer(selfData.NextGrenadeAttackTime)
 							end
@@ -2532,8 +2532,8 @@ function ENT:ExecuteMeleeAttack()
 	local myPos = fGetPos(self)
 	local myClass = fGetClass(self)
 		for _, ent in ipairs(ents.FindInSphere(self:MeleeAttackTraceOrigin(), selfData.MeleeAttackDamageDistance)) do
-			if ent == self or fGetClass(ent) == myClass or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then continue end
-			if ent:IsPlayer() && (ent.VJ_IsControllingNPC or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
+			if ent == self or fGetClass(ent) == myClass or (ent.IsVJBaseBullseye && ent.VJ_Controlled) then continue end
+			if ent:IsPlayer() && (ent.VJ_Controlling or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
 			if ((ent.VJ_ID_Living && self:Disposition(ent) != D_LI) or ent.VJ_ID_Attackable or ent.VJ_ID_Destructible) && self:MeleeAttackTraceDirection():Dot((Vector(fGetPos(ent).x, fGetPos(ent).y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackDamageAngleRadius)) then
 				local isProp = ent.VJ_ID_Attackable
 				if self:OnMeleeAttackExecute("PreDamage", ent, isProp) == true then continue end
@@ -2959,7 +2959,7 @@ end
 --
 function ENT:UpdatePoseParamTracking(resetPoses)
 	local selfData = fGetTable(self)
-	if !selfData.HasPoseParameterLooking or (!selfData.VJ_IsBeingControlled && (!selfData.WeaponAttackState or (!selfData.EnemyData.Visible && selfData.WeaponAttackState < VJ.WEP_ATTACK_STATE_FIRE))) then return end
+	if !selfData.HasPoseParameterLooking or (!selfData.VJ_Controlled && (!selfData.WeaponAttackState or (!selfData.EnemyData.Visible && selfData.WeaponAttackState < VJ.WEP_ATTACK_STATE_FIRE))) then return end
 	//VJ.GetPoseParameters(self)
 	local ene = fGetEnemy(self)
 	local newPitch = 0
@@ -3015,7 +3015,7 @@ function ENT:CanFireWeapon(checkDist, checkDistOnly)
 	local curWep = selfData.WeaponEntity
 	if selfData.PauseAttacks or !IsValid(curWep) or self:GetWeaponState() != VJ.WEP_STATE_READY then return false end
 	
-	if selfData.VJ_IsBeingControlled then
+	if selfData.VJ_Controlled then
 		return checkDistOnly or (!selfData.AttackType && !self:IsBusy("Activities"))
 	end
 	
@@ -3044,7 +3044,7 @@ local bitsDanger = bit.bor(SOUND_BULLET_IMPACT, SOUND_COMBAT, SOUND_WORLD, SOUND
 --
 function ENT:SelectSchedule()
 	local selfData = fGetTable(self)
-	if selfData.VJ_IsBeingControlled or selfData.Dead then return end
+	if selfData.VJ_Controlled or selfData.Dead then return end
 	
 	local curTime = CurTime()
 	local ene = fGetEnemy(self)
@@ -3364,7 +3364,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(checkAllies, checkVis)
 	local selfData = fGetTable(self)
-	if selfData.Dead or (selfData.VJ_IsBeingControlled && selfData.VJ_TheControllerEntity:GetBullseye() == fGetEnemy(self)) then selfData.EnemyData.Reset = false return false end
+	if selfData.Dead or (selfData.VJ_Controlled && selfData.VJ_Controller:GetBullseye() == fGetEnemy(self)) then selfData.EnemyData.Reset = false return false end
 	local ene = fGetEnemy(self)
 	local eneValid = IsValid(ene)
 	local eneData = selfData.EnemyData
@@ -3405,7 +3405,7 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 	self:OnResetEnemy()
 	local moveToEnemy = false
 	if eneValid then
-		if !selfData.IsFollowing && !selfData.IsGuard && !selfData.IsVJBaseSNPC_Tank && !selfData.VJ_IsBeingControlled && selfData.LastHiddenZone_CanWander && !selfData.Weapon_UnarmedBehavior_Active && selfData.Behavior != VJ_BEHAVIOR_PASSIVE && selfData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !self:IsBusy() && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
+		if !selfData.IsFollowing && !selfData.IsGuard && !selfData.IsVJBaseSNPC_Tank && !selfData.VJ_Controlled && selfData.LastHiddenZone_CanWander && !selfData.Weapon_UnarmedBehavior_Active && selfData.Behavior != VJ_BEHAVIOR_PASSIVE && selfData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !self:IsBusy() && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
 			moveToEnemy = self:GetEnemyLastKnownPos()
 		end
 		self:MarkEnemyAsEluded(ene)

@@ -39,9 +39,8 @@ function ENT:OnStopControlling(keyPressed) end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.VJC_SavedVars_PLY = nil -- A hash table to hold all the values that need to be reset after the player stops controlling
-ENT.VJC_SavedVars_NPC = nil -- A hash table to hold all the values that need to be reset after the NPC is uncontrolled
-ENT.VJC_Camera_Mode = 1 -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+ENT.VJC_SavedVars_PLY = nil -- Hash table to hold all the values that need to be reset after the player stops controlling
+ENT.VJC_SavedVars_NPC = nil -- Hash table to hold all the values that need to be reset after the NPC is uncontrolled
 ENT.VJC_Camera_CurZoom = Vector()
 ENT.VJC_NPC_LastPos = Vector()
 ENT.VJC_Removed = false
@@ -56,6 +55,7 @@ function ENT:Initialize()
 	self:Init()
 	-- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	-- Following variables = self.VJCE_Player, self.VJCE_NPC, self.VJCE_Bullseye, self.VJCE_Camera
+	self.VJC_Camera_Mode = 1
 	if self.CustomOnInitialize then self:CustomOnInitialize() end
 	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end
 	if self.CustomOnKeyPressed then self.OnKeyPressed = function(_, key) self:CustomOnKeyPressed(key) end end
@@ -85,7 +85,7 @@ function ENT:SetControlledNPC(npc)
 		end
 		return D_NU
 	end
-	bullseye.VJ_IsBeingControlled = true
+	bullseye.VJ_Controlled = true
 	self:DeleteOnRemove(bullseye)
 	self:SetBullseye(bullseye)
 	self.VJCE_Bullseye = bullseye
@@ -104,10 +104,12 @@ function ENT:SetControlledNPC(npc)
 	self.VJCE_Player = ply
 	self:SetCameraMode(npc.ControllerParams.CameraMode) -- Get the NPC's default camera mode
 	self.VJC_NPC_LastPos = npc:GetPos()
-	npc.VJ_IsBeingControlled = true
-	npc.VJ_TheController = ply
-	npc.VJ_TheControllerEntity = self
-	npc.VJ_TheControllerBullseye = bullseye
+	npc.VJ_Controller = self
+	npc.VJ_Controlled = true
+	npc.VJ_IsBeingControlled = true -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	npc.VJ_TheControllerEntity = self -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	npc.VJ_TheController = ply -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	npc.VJ_TheControllerBullseye = bullseye -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	npc:SetEnemy(NULL)
 	if npc.IsVJBaseSNPC then
 		local funcCustom = npc.Controller_IntMsg; if funcCustom then funcCustom(npc, ply, self) end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -186,7 +188,7 @@ function ENT:SetControlledNPC(npc)
 		if npc.IsVJBaseSNPC_Tank then
 			local gunner = npc.Gunner
 			if IsValid(gunner) then
-				gunner.VJ_IsBeingControlled = true
+				gunner.VJ_Controlled = true
 				gunner:ResetEnemy()
 				gunner:SetEnemy(bullseye)
 			end
@@ -233,8 +235,10 @@ function ENT:StartControlling()
 	-- Set up the player
 	local ply = self:GetPlayer()
 	self.VJCE_Player = ply
-	ply.VJ_IsControllingNPC = true
-	ply.VJ_TheControllerEntity = self
+	ply.VJ_Controller = self
+	ply.VJ_Controlling = true
+	ply.VJ_IsControllingNPC = true -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	ply.VJ_TheControllerEntity = self -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	ply:Spectate(OBS_MODE_CHASE)
 	ply:SpectateEntity(camera)
 	ply:DrawShadow(false)
@@ -259,7 +263,7 @@ function ENT:StartControlling()
 	if ply:GetInfoNum("vj_npc_cont_diewithnpc", 0) == 1 then self.VJC_Player_CanRespawn = false end
 
 	hook.Add("PlayerButtonDown", self, function(ent, ply2, button)
-		if IsValid(ent) && ply2.VJ_IsControllingNPC && ent:GetPlayer() == ply2 then
+		if IsValid(ent) && ply2.VJ_Controlling && ent:GetPlayer() == ply2 then
 			ent:OnKeyPressed(button)
 			
 			-- Stop Controlling
@@ -301,7 +305,7 @@ function ENT:StartControlling()
 
 	hook.Add("KeyPress", self, function(ent, ply2, key)
 		//print(key)
-		if IsValid(ent) && ply2.VJ_IsControllingNPC && ent:GetPlayer() == ply2 then
+		if IsValid(ent) && ply2.VJ_Controlling && ent:GetPlayer() == ply2 then
 			ent:OnKeyBindPressed(key)
 		end
 	end)
@@ -311,8 +315,8 @@ end
 	-- Also avoids garbage positions that output from other methods
 net.Receive("vj_controller_sv", function(len, ply)
 	-- Set the controller's bullseye position if the player is controlling an NPC AND controller entity exists AND Bullseye exists --> Protect against spam ?
-	if ply.VJ_IsControllingNPC && IsValid(ply.VJ_TheControllerEntity) && ply.VJ_TheControllerEntity.VJC_Bullseye_RefreshPos && IsValid(ply.VJ_TheControllerEntity:GetBullseye()) then
-		ply.VJ_TheControllerEntity:GetBullseye():SetPos(net.ReadVector())
+	if ply.VJ_Controlling && IsValid(ply.VJ_Controller) && ply.VJ_Controller.VJC_Bullseye_RefreshPos && IsValid(ply.VJ_Controller:GetBullseye()) then
+		ply.VJ_Controller:GetBullseye():SetPos(net.ReadVector())
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -354,7 +358,7 @@ function ENT:Think()
 	local npc = self:GetNPC()
 	local camera = self:GetCamera()
 	local bullseye = self:GetBullseye()
-	if !IsValid(ply) or !IsValid(npc) or !IsValid(camera) or !IsValid(bullseye) or !ply.VJ_IsControllingNPC or !ply:Alive() or !npc:Alive() then self:StopControlling() return end
+	if !IsValid(ply) or !IsValid(npc) or !IsValid(camera) or !IsValid(bullseye) or !ply.VJ_Controlling or !ply:Alive() or !npc:Alive() then self:StopControlling() return end
 	local curTime = CurTime()
 	local npcWeapon = npc:GetActiveWeapon()
 	local npcEnemy = npc:GetEnemy()
@@ -525,11 +529,10 @@ function ENT:ToggleMovementJumping()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopControlling(keyPressed)
-	//if !IsValid(self:GetPlayer()) then return self:Remove() end
 	keyPressed = keyPressed or false
-
 	local npc = self:GetNPC()
 	local ply = self:GetPlayer()
+	
 	if IsValid(ply) then
 		local plyData = self.VJC_SavedVars_PLY
 		ply:UnSpectate()
@@ -558,19 +561,23 @@ function ENT:StopControlling(keyPressed)
 		ply:DrawViewModel(true)
 		ply:DrawWorldModel(true)
 		//ply:SetMoveType(MOVETYPE_WALK)
-		ply.VJ_IsControllingNPC = false
-		ply.VJ_TheControllerEntity = NULL
+		ply.VJ_Controller = NULL
+		ply.VJ_Controlling = false
+		ply.VJ_IsControllingNPC = false -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+		ply.VJ_TheControllerEntity = NULL -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 		self:SendDataToClient(true)
 	end
-	self:SetPlayer(NULL)
+	//self:SetPlayer(NULL)
 	self.VJCE_Player = NULL
 
 	if IsValid(npc) then
 		local npcData = self.VJC_SavedVars_NPC
 		//npc:StopMoving()
-		npc.VJ_IsBeingControlled = false
-		npc.VJ_TheController = NULL
-		npc.VJ_TheControllerEntity = NULL
+		npc.VJ_Controller = NULL
+		npc.VJ_Controlled = false
+		npc.VJ_IsBeingControlled = false -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+		npc.VJ_TheController = NULL -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+		npc.VJ_TheControllerEntity = NULL -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 		//npc:ClearSchedule()
 		if npc.IsVJBaseSNPC then
 			npc.DisableWandering = npcData[1]
@@ -598,7 +605,7 @@ function ENT:StopControlling(keyPressed)
 			if npc.IsVJBaseSNPC_Tank then
 				local gunner = npc.Gunner
 				if IsValid(gunner) then
-					gunner.VJ_IsBeingControlled = false
+					gunner.VJ_Controlled = false
 				end
 			end
 		end
