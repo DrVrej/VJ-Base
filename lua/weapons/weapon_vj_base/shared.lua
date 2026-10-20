@@ -583,7 +583,7 @@ end
 function SWEP:NPC_Think()
 	if !IsValid(self) then return end
 	local owner = fGetOwner(self)
-	if !IsValid(owner) or !owner:IsNPC() or fGetActiveWeapon(owner) != self then return end
+	if !IsValid(owner) or !owner:IsNPC() or fGetActiveWeapon(owner) != self then hook.Remove("Think", self) return end
 	
 	local selfData = fGetTable(self)
 	selfData.MaintainWorldModel(self, selfData, owner)
@@ -623,11 +623,11 @@ function SWEP:NPC_CanFire(selfData, owner)
 		-- Check to make sure the enemy is within the firing cone!
 		if IsValid(ene) && (!isControlled or owner.VJ_Controller:GetPlayer():KeyDown(IN_ATTACK2)) then
 			local spawnPos = fGetPos(self) //self:GetBulletPos() -- Because "GetBulletPos" is VERY costly sadly =(
-			local aimPos = ownerData.IsVJBaseSNPC and ownerData.GetAimPosition(owner, ene, spawnPos, 0) or ene:BodyTarget(spawnPos)
-			local aimDir = aimPos - spawnPos
-			local sightDir = owner:GetHeadDirection() // owner:GetForward() -- Owner's sight direction
+			local aimDir = ownerData.IsVJBaseSNPC and ownerData.GetAimPosition(owner, ene, spawnPos, 0) or ene:BodyTarget(spawnPos)
+			aimDir:Sub(spawnPos)
 			aimDir.z = 0
 			aimDir:Normalize()
+			local sightDir = owner:GetHeadDirection() // owner:GetForward() -- Owner's sight direction
 			sightDir.z = 0
 			sightDir:Normalize()
 			//print(sightDir:Dot(aimDir))
@@ -1028,14 +1028,9 @@ end
 function SWEP:Holster(newWep)
 	if self == newWep or self.Reloading then return end
 	if self:OnHolster(newWep) == true then return false end
-	hook.Remove("Think", self) -- Otherwise "NPC_Think" will just keep running!
 	self.PLY_AnimLockTime = CurTime() + 2
 	//self:SendWeaponAnim(ACT_VM_HOLSTER)
 	return true
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:OnDrop()
-	hook.Remove("Think", self) -- Otherwise "NPC_Think" will just keep running!
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OwnerChanged()

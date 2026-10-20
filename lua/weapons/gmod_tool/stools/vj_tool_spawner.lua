@@ -166,7 +166,7 @@ if CLIENT then
 			addButton:SetSize(150, 25)
 			addButton:SetColor(VJ.COLOR_BLACK)
 			function addButton:DoClick()
-				table.insert(VJ_TOOL_SPAWNER_LIST, {Ent=string.lower(GetConVar("vj_tool_spawner_spawnent"):GetString()), SpawnPosition=Vector(GetConVar("vj_tool_spawner_spawnpos_forward"):GetString(), GetConVar("vj_tool_spawner_spawnpos_right"):GetString(), GetConVar("vj_tool_spawner_spawnpos_up"):GetString()), Wep=string.lower(GetConVar("vj_tool_spawner_weapon"):GetString()), Relationship={Class = GetConVar("vj_tool_spawner_spawnnpclass"):GetString(), FriToPlyAllies = GetConVar("vj_tool_spawner_fritoplyallies"):GetString()}})
+				table.insert(VJ_TOOL_SPAWNER_LIST, {Ent = string.lower(GetConVar("vj_tool_spawner_spawnent"):GetString()), SpawnPosition = Vector(GetConVar("vj_tool_spawner_spawnpos_forward"):GetString(), GetConVar("vj_tool_spawner_spawnpos_right"):GetString(), GetConVar("vj_tool_spawner_spawnpos_up"):GetString()), Wep = string.lower(GetConVar("vj_tool_spawner_weapon"):GetString()), Relationship = {Class = GetConVar("vj_tool_spawner_spawnnpclass"):GetString(), FriToPlyAllies = GetConVar("vj_tool_spawner_fritoplyallies"):GetString()}})
 				local getPanel = controlpanel.Get("vj_tool_spawner")
 				getPanel:Clear()
 				ControlPanel(getPanel)
@@ -190,7 +190,7 @@ if CLIENT then
 				spawnList:RemoveLine(lineID)
 				VJ_TOOL_SPAWNER_LIST = {}
 				for _, vLine in pairs(spawnList:GetLines()) do
-					table.insert(VJ_TOOL_SPAWNER_LIST, {Ent=vLine:GetValue(4), SpawnPosition=vLine:GetValue(2), Wep=vLine:GetValue(3), Relationship=vLine:GetValue(5)})
+					table.insert(VJ_TOOL_SPAWNER_LIST, {Ent = vLine:GetValue(4), SpawnPosition = vLine:GetValue(2), Wep = vLine:GetValue(3), Relationship = vLine:GetValue(5)})
 				end
 			end
 		panel:AddItem(spawnList)
@@ -251,14 +251,12 @@ else
 				//if v.IsVJBaseSpawner == true then ply:ChatPrint("Can't be spawned because it's a spawner") end
 				local relClass = v.Relationship.Class
 				if relClass == "" then relClass = nil end
-				spawner.EntitiesToSpawn[k] = {SpawnPosition=v.SpawnPosition, Entities={v.Ent}, WeaponsList={v.Wep}, NPC_Class = relClass, FriToPlyAllies = tobool(v.Relationship.FriToPlyAllies)}
+				spawner.EntitiesToSpawn[k] = {SpawnPosition = v.SpawnPosition, Entities = {v.Ent}, WeaponsList = {v.Wep}, NPC_Class = relClass, FriToPlyAllies = tobool(v.Relationship.FriToPlyAllies)}
 			end
 			if ply:GetInfoNum("vj_tool_spawner_playsound", 1) == 1 then
 				spawner.SoundTbl_SpawnEntity = spawnSounds
 			end
-			if spawnType == 1 then
-				spawner.SingleSpawner = true
-			end
+			spawner.SingleSpawner = spawnType == 1
 			spawner.RespawnCooldown = ply:GetInfoNum("vj_tool_spawner_nextspawntime", 3)
 			spawner:SetCreator(ply)
 			spawner:Spawn()

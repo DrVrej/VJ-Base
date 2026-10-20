@@ -183,8 +183,7 @@ if CLIENT then
 		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" && hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_relationship") then
 			local ent = net.ReadEntity()
 			local entName = language.GetPhrase(net.ReadString())
-			local applyType = net.ReadBit()
-			chat.AddText(VJ.COLOR_GREEN, "#tool.vj_tool_relationship.print.applied", VJ.COLOR_ORANGE_VIVID, " " .. (applyType == 1 and "Yourself" or entName))
+			chat.AddText(VJ.COLOR_GREEN, "#tool.vj_tool_relationship.print.applied", VJ.COLOR_ORANGE_VIVID, tostring(entName))
 			net.Start("vj_tool_relationship_sv_apply")
 				net.WriteEntity(ent)
 				net.WriteTable(VJ_TOOL_RELATIONSHIP_LIST)
@@ -216,7 +215,6 @@ function TOOL:LeftClick(tr)
 		net.Start("vj_tool_relationship_cl_apply")
 			net.WriteEntity(ent)
 			net.WriteString(VJ.GetName(ent))
-			net.WriteBit(0)
 		net.Send(self:GetOwner())
 		return true
 	end
@@ -251,8 +249,7 @@ function TOOL:Reload(tr)
 	if CLIENT then return true end
 	net.Start("vj_tool_relationship_cl_apply")
 		net.WriteEntity(self:GetOwner())
-		net.WriteString("Me")
-		net.WriteBit(1)
+		net.WriteString("Yourself")
 	net.Send(self:GetOwner())
 	return true
 end

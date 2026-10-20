@@ -83,14 +83,10 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- For saves and duplications
 local function ApplyWeapon(ply, ent, data)
-	if data then
-		local className = data[1]
-		if className then
-			ent:Give(className)
-			if SERVER then
-				duplicator.StoreEntityModifier(ent, "vj_tool_equipment", data)
-			end
-		end
+	if !data or !data[1] then return end
+	ent:Give(data[1])
+	if SERVER then
+		duplicator.StoreEntityModifier(ent, "vj_tool_equipment", data)
 	end
 end
 duplicator.RegisterEntityModifier("vj_tool_equipment", ApplyWeapon)
@@ -111,7 +107,7 @@ end
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
-	if !IsValid(ent) or !ent:IsNPC() then return end
-	if IsValid(ent:GetActiveWeapon()) then ent:GetActiveWeapon():Remove() end
+	if !IsValid(ent) or !ent:IsNPC() or !IsValid(ent:GetActiveWeapon()) then return end
+	ent:GetActiveWeapon():Remove()
 	return true
 end

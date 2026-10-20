@@ -2045,6 +2045,7 @@ function ENT:DoChangeWeapon(wep, invSwitch)
 		self.WeaponEntity = curWep
 	else
 		self.WeaponInventoryStatus = VJ.WEP_INVENTORY_NONE
+		self:UpdateAnimationTranslations()
 	end
 	return curWep
 end

@@ -62,75 +62,45 @@ end
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
-	if !IsValid(ent) then return end
-	local ply = self:GetOwner()
-	local heal = true
-	
-	if ent:Health() != 0 or ent.VJ_ID_Living then
-		if ent:IsPlayer() && !ply:IsAdmin() then
-			heal = false
-		end
-		if heal then
-			ent:SetHealth(self:GetClientNumber("health"))
-			ply:ChatPrint("Set " .. ent:GetClass() .. "'s health to " .. self:GetClientNumber("health"))
-			if ent:IsNPC() then
-				if self:GetClientNumber("godmode") == 1 then ent.GodMode = true else ent.GodMode = false end
-				if ent.IsVJBaseSNPC && self:GetClientNumber("healthregen") == 1 then
-					local healthRegen = ent.HealthRegenParams
-					healthRegen.Enabled = true
-					healthRegen.Amount = self:GetClientNumber("healthregen_amt")
-					healthRegen.Delay = VJ.SET(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
-				end
-			end
-			return true
+	if !IsValid(ent) or (ent:Health() == 0 && !ent.VJ_ID_Living) or (ent:IsPlayer() && !self:GetOwner():IsAdmin()) then return end
+	ent:SetHealth(self:GetClientNumber("health"))
+	self:GetOwner():ChatPrint("Set " .. ent:GetClass() .. "'s health to " .. self:GetClientNumber("health"))
+	if ent:IsNPC() then
+		ent.GodMode = self:GetClientNumber("godmode") == 1
+		if ent.IsVJBaseSNPC && self:GetClientNumber("healthregen") == 1 then
+			local healthRegen = ent.HealthRegenParams
+			healthRegen.Enabled = true
+			healthRegen.Amount = self:GetClientNumber("healthregen_amt")
+			healthRegen.Delay = VJ.SET(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
 		end
 	end
+	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
-	if !IsValid(ent) then return end
-	local ply = self:GetOwner()
-	local heal = true
-	
-	if (ent:Health() != 0) or ent.VJ_ID_Living then
-		if ent:IsPlayer() && !ply:IsAdmin() then
-			heal = false
-		end
-		if heal then
-			ent:SetHealth(self:GetClientNumber("health"))
-			ent:SetMaxHealth(self:GetClientNumber("health"))
-			ply:ChatPrint("Set " .. ent:GetClass() .. "'s health and max health to " .. self:GetClientNumber("health"))
-			if ent:IsNPC() then
-				if self:GetClientNumber("godmode") == 1 then ent.GodMode = true else ent.GodMode = false end
-				if ent.IsVJBaseSNPC && self:GetClientNumber("healthregen") == 1 then
-					local healthRegen = ent.HealthRegenParams
-					healthRegen.Enabled = true
-					healthRegen.Amount = self:GetClientNumber("healthregen_amt")
-					healthRegen.Delay = VJ.SET(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
-				end
-			end
-			return true
+	if !IsValid(ent) or (ent:Health() == 0 && !ent.VJ_ID_Living) or (ent:IsPlayer() && !self:GetOwner():IsAdmin()) then return end
+	ent:SetHealth(self:GetClientNumber("health"))
+	ent:SetMaxHealth(self:GetClientNumber("health"))
+	self:GetOwner():ChatPrint("Set " .. ent:GetClass() .. "'s health and max health to " .. self:GetClientNumber("health"))
+	if ent:IsNPC() then
+		ent.GodMode = self:GetClientNumber("godmode") == 1
+		if ent.IsVJBaseSNPC && self:GetClientNumber("healthregen") == 1 then
+			local healthRegen = ent.HealthRegenParams
+			healthRegen.Enabled = true
+			healthRegen.Amount = self:GetClientNumber("healthregen_amt")
+			healthRegen.Delay = VJ.SET(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
 		end
 	end
+	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:Reload(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
-	if !IsValid(ent) then return end
-	local ply = self:GetOwner()
-	local heal = true
-	
-	if ent:Health() != 0 or ent.VJ_ID_Living then
-		if ent:IsPlayer() && !ply:IsAdmin() then
-			heal = false
-		end
-		if heal then
-			ent:SetHealth(ent:GetMaxHealth())
-			ply:ChatPrint("Healed " .. ent:GetClass() .. " to its max health (" .. ent:GetMaxHealth() .. ")")
-			return true
-		end
-	end
+	if !IsValid(ent) or (ent:Health() == 0 && !ent.VJ_ID_Living) or (ent:IsPlayer() && !self:GetOwner():IsAdmin()) then return end
+	ent:SetHealth(ent:GetMaxHealth())
+	self:GetOwner():ChatPrint("Healed " .. ent:GetClass() .. " to its max health (" .. ent:GetMaxHealth() .. ")")
+	return true
 end
