@@ -2533,7 +2533,7 @@ function ENT:Flinch(dmginfo, hitgroup)
 	local curTime = CurTime()
 	local selfData = fGetTable(self)
 	local flinchType = selfData.CanFlinch
-	if !flinchType or flinchType == 0 or (!selfData.Flinching && selfData.AnimLockTime > curTime) or selfData.NextFlinchT > curTime or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB or selfData.AttackType == VJ.ATTACK_TYPE_GRENADE then return end
+	if !flinchType or flinchType == 0 or (!selfData.Flinching && selfData.AnimLockTime > curTime) or selfData.NextFlinchT > curTime or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB or selfData.AttackType == VJ.ATTACK_TYPE_GRENADE or (selfData.AttackType == VJ.ATTACK_TYPE_LEAP && !self:IsOnGround()) then return end
 	
 	-- DMG_FORCE_FLINCH: Skip secondary checks, flinch chance, and damage types!
 	local customDmgType = dmginfo:GetDamageCustom()

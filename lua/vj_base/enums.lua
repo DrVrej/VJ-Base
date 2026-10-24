@@ -76,7 +76,7 @@ VJ.ATTACK_STATE_NONE				= 0 -- No attack state is set | DEFAULT
 VJ.ATTACK_STATE_DONE				= 1 -- Current attack has been executed completely and is marked as done
 VJ.ATTACK_STATE_STARTED				= 2 -- Current attack has started and is expected to execute soon
 VJ.ATTACK_STATE_EXECUTED			= 3 -- Current attack has been executed at least once
-VJ.ATTACK_STATE_EXECUTED_HIT		= 4 -- Current attack has been executed at least once AND hit an entity at least once (Melee & Leap attacks)
+VJ.ATTACK_STATE_EXECUTED_HIT		= 4 -- Current attack has been executed at least once AND hit an entity at least once (melee & Leap only)
 
 -- NPC facing status
 VJ.FACE_NONE						= false -- Not currently facing anything | DEFAULT
