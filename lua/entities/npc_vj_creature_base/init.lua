@@ -1775,7 +1775,7 @@ function ENT:Think()
 						selfData.AttackAnimTime = 0
 						self:OnLeapAttack("Init", ene)
 						self:PlaySoundSystem("BeforeLeapAttack")
-						timer.Create("attack_leap_jump" .. self:EntIndex(), selfData.TimeUntilLeapAttackVelocity / selfData.AnimPlaybackRate, 1, function() self:LeapAttackJump() end)
+						timer.Create("attack_leap_jump" .. self:EntIndex(), selfData.TimeUntilLeapAttackVelocity / selfData.AnimPlaybackRate, 1, function() if selfData.AttackSeed == seed then self:LeapAttackJump() end end)
 						if selfData.AnimTbl_LeapAttack then
 							local anim, animDur, animType = self:PlayAnim(selfData.AnimTbl_LeapAttack, false, 0, false)
 							if anim != ACT_INVALID then

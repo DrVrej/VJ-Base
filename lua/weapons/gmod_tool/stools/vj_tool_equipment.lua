@@ -100,6 +100,8 @@ function TOOL:LeftClick(tr)
 	if equipment != "None" then
 		ApplyWeapon(self:GetOwner(), ent, {equipment})
 		//ent:SetSaveValue("additionalequipment", equipment)
+	else
+		duplicator.ClearEntityModifier(ent, "vj_tool_equipment")
 	end
 	return true
 end
@@ -109,5 +111,6 @@ function TOOL:RightClick(tr)
 	local ent = tr.Entity
 	if !IsValid(ent) or !ent:IsNPC() or !IsValid(ent:GetActiveWeapon()) then return end
 	ent:GetActiveWeapon():Remove()
+	duplicator.ClearEntityModifier(ent, "vj_tool_equipment")
 	return true
 end

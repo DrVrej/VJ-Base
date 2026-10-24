@@ -2533,7 +2533,7 @@ function ENT:Flinch(dmginfo, hitgroup)
 	local curTime = CurTime()
 	local selfData = fGetTable(self)
 	local flinchType = selfData.CanFlinch
-	if !flinchType or flinchType == 0 or selfData.Flinching or selfData.AnimLockTime > curTime or selfData.NextFlinchT > curTime or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB or selfData.AttackType == VJ.ATTACK_TYPE_GRENADE then return end
+	if !flinchType or flinchType == 0 or (!selfData.Flinching && selfData.AnimLockTime > curTime) or selfData.NextFlinchT > curTime or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB or selfData.AttackType == VJ.ATTACK_TYPE_GRENADE then return end
 	
 	-- DMG_FORCE_FLINCH: Skip secondary checks, flinch chance, and damage types!
 	local customDmgType = dmginfo:GetDamageCustom()
@@ -3495,7 +3495,7 @@ function ENT:OnTakeDamage(dmginfo)
 							local anim = self:PlayAnim(selfData.AnimTbl_DamageAllyResponse, true, false, true)
 							if anim != ACT_INVALID then
 								canMove = false
-								selfData.NextFlinchT = curTime + 1
+								selfData.NextFlinchT = math.max(selfData.NextFlinchT, curTime + 1)
 							end
 						end
 						selfData.NextDamageAllyResponseT = curTime + math.Rand(selfData.DamageAllyResponse_Cooldown.a, selfData.DamageAllyResponse_Cooldown.b)

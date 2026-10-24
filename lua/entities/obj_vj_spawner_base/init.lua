@@ -95,7 +95,7 @@ function ENT:SpawnEntity(spawnKey, spawnTbl, initSpawn)
 	if self.PauseSpawning then
 		-- Add to the queue to spawn later
 		self.CurrentQueue = self.CurrentQueue or {}
-		table.insert(self.CurrentQueue, {spawnKey = spawnKey, spawnTbl = spawnTbl})
+		table.insert(self.CurrentQueue, {spawnKey = spawnKey, spawnTbl = spawnTbl, initSpawn = initSpawn})
 		return
 	end
 	
@@ -221,10 +221,10 @@ function ENT:Think()
 	if !selfData.PauseSpawning then
 		local queue = selfData.CurrentQueue
 		if queue then
+			selfData.CurrentQueue = nil
 			for _, backData in ipairs(queue) do
 				self:SpawnEntity(backData.spawnKey, backData.spawnTbl, false)
 			end
-			self.CurrentQueue = nil
 		end
 	end
 	

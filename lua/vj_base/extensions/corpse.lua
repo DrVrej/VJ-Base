@@ -24,9 +24,9 @@ VJ.Corpse_StinkyEnts = {}
 function VJ.Corpse_Add(ent)
 	local corpses = VJ.Corpse_Ents
 	-- Clear out all removed corpses from the table
-	for k, v in ipairs(corpses) do
-		if !IsValid(v) then
-			table_remove(corpses, k)
+	for i = #corpses, 1, -1 do
+		if !IsValid(corpses[i]) then
+			table_remove(corpses, i)
 		end
 	end
 	
@@ -56,9 +56,9 @@ function VJ.Corpse_AddStinky(ent, checkMat)
 	local corpses = VJ.Corpse_StinkyEnts
 	local physObj = ent:GetPhysicsObject()
 	-- Clear out all removed ents from the table
-	for k, v in ipairs(corpses) do
-		if !IsValid(v) then
-			table_remove(corpses, k)
+	for i = #corpses, 1, -1 do
+		if !IsValid(corpses[i]) then
+			table_remove(corpses, i)
 		end
 	end
 	-- Add the entity to the stinky list (if possible)

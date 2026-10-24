@@ -2003,8 +2003,8 @@ function ENT:DoChangeWeapon(wep, invSwitch)
 	local curWep = fGetActiveWeapon(self)
 	
 	-- If not supposed to have a weapon, then return!
-	if self.Weapon_Disabled && IsValid(curWep) then
-		curWep:Remove()
+	if self.Weapon_Disabled then
+		if IsValid(curWep) then curWep:Remove() end
 		return NULL
 	end
 	

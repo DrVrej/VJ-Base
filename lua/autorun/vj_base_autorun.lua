@@ -35,39 +35,30 @@ AddCSLuaFile("vj_base/convars.lua")
 AddCSLuaFile("vj_base/debug.lua")
 AddCSLuaFile("vj_base/funcs.lua")
 AddCSLuaFile("vj_base/hooks.lua")
+AddCSLuaFile("vj_base/menu/main.lua")
+AddCSLuaFile("vj_base/menu/spawn.lua")
+AddCSLuaFile("vj_base/menu/entity_configures.lua")
+AddCSLuaFile("vj_base/menu/entity_properties.lua")
+AddCSLuaFile("vj_base/resources/localization.lua")
+AddCSLuaFile("vj_base/resources/main.lua")
+AddCSLuaFile("vj_base/resources/particles.lua")
+AddCSLuaFile("vj_base/resources/sounds.lua")
+AddCSLuaFile("vj_base/extensions/corpse.lua")
+AddCSLuaFile("vj_base/extensions/music.lua")
 
 include("vj_base/convars.lua")
 include("vj_base/debug.lua")
 include("vj_base/enums.lua")
 include("vj_base/funcs.lua")
 include("vj_base/hooks.lua")
-
-	-- ====== Menu ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-AddCSLuaFile("vj_base/menu/main.lua")
-AddCSLuaFile("vj_base/menu/spawn.lua")
-AddCSLuaFile("vj_base/menu/entity_configures.lua")
-AddCSLuaFile("vj_base/menu/entity_properties.lua")
-
 include("vj_base/menu/main.lua")
 include("vj_base/menu/spawn.lua")
 include("vj_base/menu/entity_configures.lua")
 include("vj_base/menu/entity_properties.lua")
-
-	-- ====== Resources ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-AddCSLuaFile("vj_base/resources/localization.lua")
-AddCSLuaFile("vj_base/resources/main.lua")
-AddCSLuaFile("vj_base/resources/particles.lua")
-AddCSLuaFile("vj_base/resources/sounds.lua")
-
 include("vj_base/resources/localization.lua")
 include("vj_base/resources/main.lua")
 include("vj_base/resources/particles.lua")
 include("vj_base/resources/sounds.lua")
-
-	-- ====== Extensions ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-AddCSLuaFile("vj_base/extensions/corpse.lua")
-AddCSLuaFile("vj_base/extensions/music.lua")
-
 include("vj_base/extensions/corpse.lua")
 include("vj_base/extensions/music.lua")
 

@@ -523,7 +523,6 @@ end
 		- Vector, the calculated velocity
 -----------------------------------------------------------]]
 function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos, strength, extra)
-	extra = extra or {}
 	local predict = false
 	local predictProjSpeed = 1
 	if isnumber(targetPos) then
@@ -551,7 +550,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 		local gravity = math.abs(physenv.GetGravity().z)
 		local dist = startPos:Distance(targetPos)
 		local midPoint = startPos + (targetPos - startPos) * 0.5 -- The halfway point of the start and end positions, basically the RIGHT side of a triangle
-		local applyDist = extra.ApplyDist; if applyDist == nil then applyDist = true end
+		local applyDist = !extra or extra.ApplyDist != false
 		-- Adjust the Z-axis to account for the following:
 			-- 1. How high/low the end position is
 			-- 2. Apply the strength to adjust the size of the arc

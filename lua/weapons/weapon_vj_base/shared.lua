@@ -679,7 +679,7 @@ function SWEP:NPCShoot_Primary()
 		if !IsValid(self) then return end
 		local curTime = CurTime()
 		owner = fGetOwner(self)
-		if IsValid(owner) && owner:IsNPC() && self:NPC_CanFire() && curTime > self.NPC_NextPrimaryFireT then
+		if curTime > self.NPC_NextPrimaryFireT && IsValid(owner) && owner:IsNPC() && self:NPC_CanFire() then
 			self:PrimaryAttack()
 			owner.WeaponLastShotTime = curTime
 			if self.NPC_NextPrimaryFire != false then -- Support for animation events

@@ -63,55 +63,20 @@ util.PrecacheModel("models/vj_base/projectiles/spit_acid_small.mdl")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Fonts ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if CLIENT then
-	local fontName = "Roboto" -- Tahoma | Helvetica | Roboto | Arial
-	
-	surface.CreateFont("VJBaseLarge", {
-		font = fontName,
-		size = 34,
+if !CLIENT then return end
+for name, size in pairs({
+	VJBaseLarge = 34,
+	VJBaseMediumLarge = 26,
+	VJBaseMedium = 24,
+	VJBaseSmallMedium = 17,
+	VJBaseSmall = 16,
+	VJBaseTinySmall = 14,
+	VJBaseTiny = 11
+}) do
+	surface.CreateFont(name, {
+		font = "Roboto", -- Tahoma | Helvetica | Roboto | Arial
+		size = size,
 		weight = 600,
-		antialias = true,
-	})
-
-	surface.CreateFont("VJBaseMediumLarge", {
-		font = fontName,
-		size = 26,
-		weight = 600,
-		antialias = true,
-	})
-
-	surface.CreateFont("VJBaseMedium", {
-		font = fontName,
-		size = 24,
-		weight = 600,
-		antialias = true,
-	})
-
-	surface.CreateFont("VJBaseSmallMedium", {
-		font = fontName,
-		size = 17,
-		weight = 600,
-		antialias = true,
-	})
-
-	surface.CreateFont("VJBaseSmall", {
-		font = fontName,
-		size = 16,
-		weight = 600,
-		antialias = true,
-	})
-	
-	surface.CreateFont("VJBaseTinySmall", {
-		font = fontName,
-		size = 14,
-		weight = 600,
-		antialias = true,
-	})
-
-	surface.CreateFont("VJBaseTiny", {
-		font = fontName,
-		size = 11,
-		weight = 600,
-		antialias = true,
+		antialias = true
 	})
 end
