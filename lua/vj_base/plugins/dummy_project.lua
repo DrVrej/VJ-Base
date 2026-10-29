@@ -1,30 +1,22 @@
-VJ.AddPlugin("Addon name, Example: Dummy SNPCs", "Addon type(s), Example: NPC", "Version, Example: 1.0.0 OR remove this parameter to not have a version")
+VJ.AddPlugin("Addon name [Dummy SNPCs]", "Addon type(s) [NPC]", "Version [1.0.0 OR remove this parameter to not have a version]")
 
-local spawnCategory = "VJ Dummy Category"
+local spawnCategory = "VJ Base Dummy"
 
 /* Example Registrations
 -- The following are common examples, there are many more functions and options you can use ...
 -- Please view the VJ Base controls file for in-depth details for each function ...
--- Navigate to the "lua/autorun/vj_controls.lua" or view it on GitHub: https://github.com/DrVrej/VJ-Base/blob/master/lua/autorun/vj_controls.lua
+-- Navigate to "lua/autorun/vj_controls.lua" or view it on GitHub: https://github.com/DrVrej/VJ-Base/blob/master/lua/autorun/vj_controls.lua
 
 -- NPCs
-VJ.AddNPC("Dummy NPC", "npc_vj_dum_dummy", spawnCategory)
-VJ.AddNPC_HUMAN("Dummy Human NPC", "npc_vj_dum_dummy", {"weapon_vj_dummy"}, spawnCategory)
+VJ.AddNPC("Dummy NPC", "npc_vj_dummy", spawnCategory)
+VJ.AddNPC_HUMAN("Dummy Human NPC", "npc_vj_dummy", {"weapon_vj_dummy"}, spawnCategory)
 
 -- Weapons
-VJ.AddWeapon("Dummy Weapon", "weapon_vj_dummy", false, spawnCategory)
+VJ.AddWeapon("Dummy Weapon", "weapon_vj_dummy", spawnCategory)
 VJ.AddNPCWeapon("VJ_Dummy", "weapon_vj_dummy", spawnCategory)
 
 -- Entities
-VJ.AddEntity("Dummy Entity", "sent_vj_dummy", "Author Name", false, 0, true, spawnCategory)
-
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Decals ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-game.AddDecal("VJ_Dummy_Splat", {"vj_dummy/decals/splat1", "vj_dummy/decals/splat2"})
-
--- Add to the paint tool
-list.Add("PaintMaterials", "VJ_Dummy_Splat")
+VJ.AddEntity("Dummy Entity", "sent_vj_dummy", spawnCategory)
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Particles ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -33,6 +25,14 @@ VJ.AddParticle("particles/dummy_particle.pcf", {
 	"dummy_particle1",
 	"dummy_particle2",
 })
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Decals ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+game.AddDecal("VJ_Dummy_Splat", {"vj_dummy/decals/splat1", "vj_dummy/decals/splat2"})
+
+-- Add to the paint tool
+list.Add("PaintMaterials", "VJ_Dummy_Splat")
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Precaches ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

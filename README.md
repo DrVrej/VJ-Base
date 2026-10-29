@@ -1,6 +1,7 @@
-# VJ Base Dummy File #
-Use this as an initial starting point for a new VJ Base project.
+# VJ Base Dummy Project
 
-[Documentation](https://drvrej.com/project/vjbase/)
+Starter template for creating a new VJ Base project.
 
-For help with specific functions / variables in the base: Navigate to the file where it is defined and look for the comments.
+## Documentation
+- **[Documentation Page](https://drvrej.com/project/vjbase/)** : Official documentations and resources.
+- **Functions & Variables** : For details on specific functions, variables, and hooks, navigate to their definitions in the base code and look at the accompanying comments for explanations.
