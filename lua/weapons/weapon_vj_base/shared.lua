@@ -311,6 +311,7 @@ local comAttachments = {
 	muzzle_flash = true,
 	muzzle_flash1 = true,
 	muzzle_flash2 = true,
+	flash = true,
 	["ValveBiped.muzzle"] = true,
 	["1"] = true
 }

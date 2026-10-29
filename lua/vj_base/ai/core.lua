@@ -1037,7 +1037,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 	local resultAng = false -- The final angle it's going to face
 	local updateTurn = true -- An override to disallow applying the angle now
 	local turnData = selfData.TurnData
-	-- Enemy facing
+	-- ENEMY
 	if target == "Enemy" then
 		//VJ.DEBUG_Print(self, "SetTurnTarget", "ENEMY")
 		self:ResetTurnTarget()
@@ -1055,7 +1055,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 		if faceTime then -- 0 = Face only this frame, so don't actually set turning data!
 			turnData.Type = visibleOnly and VJ.FACE_ENEMY_VISIBLE or VJ.FACE_ENEMY
 		end
-	-- Vector facing
+	-- VECTOR
 	elseif isvector(target) then
 		//VJ.DEBUG_Print(self, "SetTurnTarget", "VECTOR")
 		self:ResetTurnTarget()
@@ -1064,7 +1064,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 			turnData.Type = visibleOnly and VJ.FACE_POSITION_VISIBLE or VJ.FACE_POSITION
 			turnData.Target = target
 		end
-	-- Entity facing
+	-- ENTITY
 	elseif IsValid(target) then
 		//VJ.DEBUG_Print(self, "SetTurnTarget", "ENTITY")
 		self:ResetTurnTarget()
@@ -1685,11 +1685,7 @@ function ENT:ResetFollowBehavior()
 	local followData = self.FollowData
 	local followEnt = followData.Target
 	if IsValid(followEnt) && followEnt:IsPlayer() && self.CanChatMessage then
-		if self.Dead then
-			followEnt:PrintMessage(HUD_PRINTTALK, VJ.GetName(self) .. " has been killed.")
-		else
-			followEnt:PrintMessage(HUD_PRINTTALK, VJ.GetName(self) .. " is no longer following you.")
-		end
+		followEnt:PrintMessage(HUD_PRINTTALK, VJ.GetName(self) .. (self.Dead and " has been killed." or " is no longer following you."))
 	end
 	self.IsFollowing = false
 	followData.Target = NULL
@@ -4278,9 +4274,7 @@ function ENT:ApplyBackwardsCompatibility()
 	if self.Passive_RunOnDamage == false then self.DamageResponse = false end
 	if self.HideOnUnknownDamage == false then self.DamageResponse = "OnlySearch" end
 	if self.DisableTakeDamageFindEnemy == true then if self.HideOnUnknownDamage == false then self.DamageResponse = false else self.DamageResponse = "OnlyMove" end end
-	if self.CanFlinch == 0 then self.CanFlinch = false
-	elseif self.CanFlinch == 1 then self.CanFlinch = true
-	elseif self.CanFlinch == 2 then self.CanFlinch = "DamageTypes" end
+	if self.CanFlinch == 0 then self.CanFlinch = false elseif self.CanFlinch == 1 then self.CanFlinch = true elseif self.CanFlinch == 2 then self.CanFlinch = "DamageTypes" end
 	if self.BringFriendsOnDeath != nil or self.AlertFriendsOnDeath != nil then
 		if self.AlertFriendsOnDeath == true && (self.BringFriendsOnDeath == false or self.BringFriendsOnDeath == nil) then
 			self.DeathAllyResponse = "OnlyAlert"

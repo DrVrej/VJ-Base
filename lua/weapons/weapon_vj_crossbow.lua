@@ -10,11 +10,11 @@ if CLIENT then
 	VJ.AddKillIcon("weapon_vj_crossbow", SWEP.PrintName, VJ.KILLICON_TYPE_ALIAS, "crossbow_bolt")
 end
 
+SWEP.MadeForNPCsOnly = true
+SWEP.ReplacementWeapon = "weapon_crossbow"
 SWEP.WorldModel = "models/weapons/w_crossbow.mdl"
 SWEP.HoldType = "crossbow"
 
-SWEP.MadeForNPCsOnly = true
-SWEP.ReplacementWeapon = "weapon_crossbow"
 SWEP.NPC_NextPrimaryFire = 1
 SWEP.NPC_TimeUntilFire = 0.15
 SWEP.NPC_ReloadSound = "weapons/crossbow/reload1.wav"

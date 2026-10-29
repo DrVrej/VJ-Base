@@ -79,11 +79,8 @@ function ENT:SetControlledNPC(npc)
 	bullseye:SetNoDraw(false)
 	bullseye:DrawShadow(false)
 	bullseye.ForceEntAsEnemy = npc
-	bullseye.HandlePerceivedRelationship = function(_, otherEnt, distance, isFriendly)
-		if otherEnt == npc then
-			return D_HT
-		end
-		return D_NU
+	bullseye.HandlePerceivedRelationship = function(_, otherEnt)
+		return otherEnt == npc and D_HT or D_NU
 	end
 	bullseye.VJ_Controlled = true
 	self:DeleteOnRemove(bullseye)
@@ -189,6 +186,7 @@ function ENT:SetControlledNPC(npc)
 			local gunner = npc.Gunner
 			if IsValid(gunner) then
 				gunner.VJ_Controlled = true
+				gunner.VJ_Controller = self
 				gunner:ResetEnemy()
 				gunner:SetEnemy(bullseye)
 			end
@@ -477,7 +475,7 @@ function ENT:StartMovement(direction, rotation)
 		local finalPos = npcPosOrg + plyAimVec * wallToSelf
 		finalPos.z = forwardTr.HitPos.z
 		-- Check if ground is valid!
-		local downTr = util.TraceLine({start = finalPos, endpos = finalPos + self:GetUp()*-(200 + centerToPos), filter = defaultFilter})
+		local downTr = util.TraceLine({start = finalPos, endpos = finalPos + self:GetUp() * -(200 + centerToPos), filter = defaultFilter})
 		local downDist = (finalPos.z - centerToPos) - downTr.HitPos.z
 		if downDist >= 150 then -- If the drop is this big, then don't move!
 			//wallToSelf = wallToSelf - downDist -- No need, we are returning anyway
@@ -509,22 +507,17 @@ function ENT:StartMovement(direction, rotation)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ToggleBullseyeTracking()
-	if !self.VJC_BullseyeTracking then
-		if self.VJC_Player_CanChatMessage then self:GetPlayer():ChatPrint("#vjbase.controller.print.tracking.activated") end
-		self.VJC_BullseyeTracking = true
-	else
-		if self.VJC_Player_CanChatMessage then self:GetPlayer():ChatPrint("#vjbase.controller.print.tracking.deactivated") end
-		self.VJC_BullseyeTracking = false
+	self.VJC_BullseyeTracking = !self.VJC_BullseyeTracking
+	if self.VJC_Player_CanChatMessage then
+		self:GetPlayer():ChatPrint(self.VJC_BullseyeTracking and "#vjbase.controller.print.tracking.activated" or "#vjbase.controller.print.tracking.deactivated")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ToggleMovementJumping()
-	if !self:GetNPC().JumpParams.Enabled then
-		if self.VJC_Player_CanChatMessage then self:GetPlayer():ChatPrint("#vjbase.controller.print.jump.enable") end
-		self:GetNPC().JumpParams.Enabled = true
-	else
-		if self.VJC_Player_CanChatMessage then self:GetPlayer():ChatPrint("#vjbase.controller.print.jump.disable") end
-		self:GetNPC().JumpParams.Enabled = false
+	local jumpData = self:GetNPC().JumpParams
+	jumpData.Enabled = !jumpData.Enabled
+	if self.VJC_Player_CanChatMessage then
+		self:GetPlayer():ChatPrint(jumpData.Enabled and "#vjbase.controller.print.jump.enable" or "#vjbase.controller.print.jump.disable")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -606,6 +599,7 @@ function ENT:StopControlling(keyPressed)
 				local gunner = npc.Gunner
 				if IsValid(gunner) then
 					gunner.VJ_Controlled = false
+					gunner.VJ_Controller = NULL
 				end
 			end
 		end
