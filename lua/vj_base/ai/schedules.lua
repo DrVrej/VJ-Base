@@ -201,7 +201,8 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 		end
 		
 		self:DoSchedule(curSchedule)
-		if curSchedule.CanBeInterrupted or self:IsScheduleFinished(curSchedule) or (curSchedule.HasMovement && !self:IsMoving()) then
+		local activeSchedule = selfData.CurrentSchedule -- Prevent chained schedules from being interrupted by the previous schedule, such as turning animations started by OnFinish (otherwise they break)
+		if !activeSchedule or (activeSchedule == curSchedule && (curSchedule.CanBeInterrupted or self:IsScheduleFinished(curSchedule) or (curSchedule.HasMovement && !self:IsMoving()))) then
 			self:SelectSchedule()
 		end
 	else
@@ -448,7 +449,6 @@ function ENT:ScheduleFinished(schedule)
 		-- Handle "RunCode_OnFinish"
 		if !schedule.OnFinishExecuted && schedule.RunCode_OnFinish then
 			schedule.OnFinishExecuted = true
-			schedule.HasMovement = false -- Otherwise it can leak into the next schedule if OnFinish calls one, can break things like turning animations
 			runFinish = schedule.RunCode_OnFinish
 		end
 		-- Handle COND_TASK_FAILED, unless we have handled the failure case, we should keep the failure condition forever until it's handled or new schedule is ran

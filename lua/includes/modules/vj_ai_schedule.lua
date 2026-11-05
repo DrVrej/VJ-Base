@@ -19,19 +19,47 @@ local tasksMove = {TASK_WAIT_FOR_MOVEMENT = true, TASK_MOVE_TO_TARGET_RANGE = tr
 module("vj_ai_schedule")
 local Schedule = {}
 Schedule.__index = Schedule
+--[[---------------------------------------------------------
+    Schedule Variables & Flags
+
+    -- Core
+    Name                = Schedule name / identifier
+    Tasks               = Table containing all tasks in execution order
+    TaskCount           = Total number of tasks in the schedule
+
+    -- Behavior Flags
+    HasMovement         = Whether the schedule contains a movement task | Automatically set when adding movement tasks
+    ResetOnFail         = Stop the NPC's movement and mark the failure as handled when a task fails
+    CanBeInterrupted    = Allow the NPC's AI to interrupt the schedule for other behaviors
+    CanShootWhenMoving  = Allow the NPC to maintain weapon firing while performing movement tasks
+    IsPlayAnim          = Marks an animation schedule so it can run during animation-only AI states
+
+    -- Optional Settings
+    TurnData            = Table controlling the NPC's facing direction while performing the schedule
+        Type            = Facing behavior | Uses VJ.FACE_* enums
+        Target          = Entity or position to face | Not required when facing an enemy
+    IgnoreConditions    = Conditions the NPC should ignore while the schedule is active | Removed when the schedule finishes
+
+    -- Callbacks
+    RunCode_OnFail      = Function called once when a task fails
+    RunCode_OnFinish    = Function called once when the schedule finishes, including when interrupted or failed
+
+    -- Execution Flags (Reset on each start)
+    OnFailExecuted      = Whether RunCode_OnFail has already executed
+    OnFinishExecuted    = Whether RunCode_OnFinish has already executed
+    FailureHandled      = Whether the task failure was handled by ResetOnFail
+-----------------------------------------------------------]]
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Schedule:Init(Name)
 	self.Name = tostring(Name)
 	self.Tasks = {}
 	self.TaskCount = 0
-	self.HasMovement = false -- Does this schedule contain a movement task?
-	self.ResetOnFail = false -- Should the NPC stop moving if one of the tasks fail?
-	self.CanBeInterrupted = false -- Can this schedule be interrupted? Especially by regular things like idle / alert maintain
-	self.CanShootWhenMoving = false -- Can the NPC fire its active weapon while doing this schedule?
-	self.RunCode_OnFail = nil -- Code that will run ONLY when it fails!
-	self.RunCode_OnFinish = nil -- Code that will run once the schedule finished (Will run even if failed)
-	self.OnFailExecuted = false
-	self.OnFinishExecuted = false
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function Schedule:Reset()
+    self.OnFailExecuted = false
+    self.OnFinishExecuted = false
+    self.FailureHandled = false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Schedule:EngTask(taskName, taskData) -- Set an engine defined task

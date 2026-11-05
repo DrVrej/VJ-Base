@@ -26,7 +26,7 @@ SWEP.HoldType = "ar2"
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.WorldModel = "models/weapons/w_rif_ak47.mdl"
 SWEP.WorldModelOffsetParams = {
-	Enabled = true, -- Enables manual world model positioning when engine bonemerging isn't possible
+	Enabled = false, -- Enables manual world model positioning when engine bonemerging isn't possible
 	Bone = "ValveBiped.Bip01_R_Hand", -- Owner bone used as the transform origin
 	Pos = Vector(),
 	Ang = Angle()

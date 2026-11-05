@@ -210,23 +210,23 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 				local entEneCount = 1
 				local entIsNature = entData.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE
 				for _, other in ents.Iterator() do
+					if other == ent or !other.VJ_ID_Living then continue end
 					local otherClass = fGetClass(other)
+					if ignoredNPCs[otherClass] then continue end
 					local otherData = fGetTable(other)
-					if ent != other && otherData.VJ_ID_Living && !ignoredNPCs[otherClass] then
-						-- Add enemies to the created entity if it's a VJ Base NPC
-						if entIsVJ then
-							entData.ValidateNoCollide(ent, other)
-							if (other:IsNPC() && entClass != otherClass && otherData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) or (other:IsPlayer() && cvSeePlys) or other:IsNextBot() then
-								entData.RelationshipEnts[entEneCount] = other
-								if !entData.RelationshipMemory[other] then entData.RelationshipMemory[other] = {} end
-								entEneCount = entEneCount + 1
-							end
+					-- Add enemies to the created entity if it's a VJ Base NPC
+					if entIsVJ then
+						entData.ValidateNoCollide(ent, other)
+						if (other:IsNPC() && entClass != otherClass && otherData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) or (other:IsPlayer() && cvSeePlys) or other:IsNextBot() then
+							entData.RelationshipEnts[entEneCount] = other
+							if !entData.RelationshipMemory[other] then entData.RelationshipMemory[other] = {} end
+							entEneCount = entEneCount + 1
 						end
-						-- Add the created entity to the list of possible enemies of existing VJ Base NPCs
-						if !entIsNature && entClass != otherClass && otherData.IsVJBaseSNPC then
-							otherData.RelationshipEnts[#otherData.RelationshipEnts + 1] = ent
-							if !otherData.RelationshipMemory[ent] then otherData.RelationshipMemory[ent] = {} end
-						end
+					end
+					-- Add the created entity to the list of possible enemies of existing VJ Base NPCs
+					if !entIsNature && entClass != otherClass && otherData.IsVJBaseSNPC then
+						otherData.RelationshipEnts[#otherData.RelationshipEnts + 1] = ent
+						if !otherData.RelationshipMemory[ent] then otherData.RelationshipMemory[ent] = {} end
 					end
 				end
 			end)

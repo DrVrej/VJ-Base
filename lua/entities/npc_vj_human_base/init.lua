@@ -1845,40 +1845,53 @@ function ENT:Initialize()
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local schedule_alert_chaseLOS = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE")
-	schedule_alert_chaseLOS:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
-	//schedule_alert_chaseLOS:EngTask("TASK_RUN_PATH", 0)
-	schedule_alert_chaseLOS:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	//schedule_alert_chaseLOS:EngTask("TASK_FACE_ENEMY", 0)
-	//schedule_alert_chaseLOS.ResetOnFail = true
-	schedule_alert_chaseLOS.CanShootWhenMoving = true
-	schedule_alert_chaseLOS.CanBeInterrupted = true
---
-local schedule_alert_chase = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE")
-	schedule_alert_chase:EngTask("TASK_GET_PATH_TO_ENEMY", 0)
-	schedule_alert_chase:EngTask("TASK_RUN_PATH", 0)
-	schedule_alert_chase:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	//schedule_alert_chase:EngTask("TASK_FACE_ENEMY", 0)
-	//schedule_alert_chase.ResetOnFail = true
-	schedule_alert_chase.CanShootWhenMoving = true
-	schedule_alert_chase.CanBeInterrupted = true
---
 function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 	self:ClearCondition(COND_ENEMY_UNREACHABLE)
-	local moveType = self.MovementType; if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then self:AA_ChaseEnemy() return end
-	if self.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" then return end // && (self:GetEnemyLastKnownPos():Distance(fGetPos(fGetEnemy(self))) <= 12)
+	local selfData = fGetTable(self)
+	local moveType = selfData.MovementType; if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then self:AA_ChaseEnemy() return end
+	if selfData.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" then return end // && (self:GetEnemyLastKnownPos():Distance(fGetPos(fGetEnemy(self))) <= 12)
 	local navType = self:GetNavType(); if navType == NAV_JUMP or navType == NAV_CLIMB then return end
 	if doLOSChase then
-		schedule_alert_chaseLOS.RunCode_OnFinish = function()
-			local ene = fGetEnemy(self)
-			if IsValid(ene) then
-				self:RememberUnreachable(ene, 0)
-				//self:SCHEDULE_ALERT_CHASE(false)
+		local cachedSchedule = selfData.CacheScheduleChaseLOS
+		if !cachedSchedule then
+			local schedule_alert_chase = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE")
+			schedule_alert_chase:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
+			//schedule_alert_chase:EngTask("TASK_RUN_PATH", 0)
+			schedule_alert_chase:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+			//schedule_alert_chase:EngTask("TASK_FACE_ENEMY", 0)
+			//schedule_alert_chase.ResetOnFail = true
+			schedule_alert_chase.CanShootWhenMoving = true
+			schedule_alert_chase.CanBeInterrupted = true
+			schedule_alert_chase.RunCode_OnFail = function()
+				local ene = fGetEnemy(self)
+				if IsValid(ene) then
+					self:RememberUnreachable(ene, 0)
+					//self:SCHEDULE_ALERT_CHASE(false)
+				end
 			end
+			cachedSchedule = schedule_alert_chase
+			selfData.CacheScheduleChaseLOS = cachedSchedule
+			self:StartSchedule(schedule_alert_chase)
 		end
-		self:StartSchedule(schedule_alert_chaseLOS)
+		cachedSchedule:Reset()
+		self:StartSchedule(cachedSchedule)
 	else
-		self:StartSchedule(schedule_alert_chase)
+		local cachedSchedule = selfData.CacheScheduleChase
+		if !cachedSchedule then
+			local schedule_alert_chase = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE")
+			schedule_alert_chase:EngTask("TASK_GET_PATH_TO_ENEMY", 0)
+			schedule_alert_chase:EngTask("TASK_RUN_PATH", 0)
+			schedule_alert_chase:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+			//schedule_alert_chase:EngTask("TASK_FACE_ENEMY", 0)
+			//schedule_alert_chase.ResetOnFail = true
+			schedule_alert_chase.CanShootWhenMoving = true
+			schedule_alert_chase.CanBeInterrupted = true
+			cachedSchedule = schedule_alert_chase
+			selfData.CacheScheduleChase = cachedSchedule
+			self:StartSchedule(schedule_alert_chase)
+		end
+		cachedSchedule:Reset()
+		self:StartSchedule(cachedSchedule)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

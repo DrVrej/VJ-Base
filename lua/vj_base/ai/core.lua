@@ -3419,8 +3419,9 @@ function ENT:OnTakeDamage(dmginfo)
 				-- Become enemy to a friendly player | RESULT: May become hostile to an allied player
 				if selfData.BecomeEnemyToPlayer && self:CheckRelationship(dmgAttacker) == D_LI then
 					local relationMemory = selfData.RelationshipMemory[dmgAttacker]
-					self:SetRelationshipMemory(dmgAttacker, VJ.MEM_HOSTILITY_LEVEL, relationMemory[VJ.MEM_HOSTILITY_LEVEL] and relationMemory[VJ.MEM_HOSTILITY_LEVEL] + 1 or 1)
-					if relationMemory[VJ.MEM_HOSTILITY_LEVEL] > selfData.BecomeEnemyToPlayer && fDisposition(self, dmgAttacker) != D_HT then
+					local hostility = (relationMemory[VJ.MEM_HOSTILITY_LEVEL] or 0) + 1
+					self:SetRelationshipMemory(dmgAttacker, VJ.MEM_HOSTILITY_LEVEL, hostility)
+					if hostility > selfData.BecomeEnemyToPlayer && fDisposition(self, dmgAttacker) != D_HT then
 						self:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
 						if selfData.IsFollowing && selfData.FollowData.Target == dmgAttacker then self:ResetFollowBehavior() end
 						self:SetRelationshipMemory(dmgAttacker, VJ.MEM_OVERRIDE_DISPOSITION, D_HT)
@@ -3616,8 +3617,9 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 				-- BecomeEnemyToPlayer
 				if doBecomeEnemyToPlayer && ally.BecomeEnemyToPlayer && fDisposition(ally, dmgAttacker) == D_LI then
 					local relationMemory = ally.RelationshipMemory[dmgAttacker]
-					ally:SetRelationshipMemory(dmgAttacker, VJ.MEM_HOSTILITY_LEVEL, relationMemory[VJ.MEM_HOSTILITY_LEVEL] and relationMemory[VJ.MEM_HOSTILITY_LEVEL] + 1 or 1)
-					if relationMemory[VJ.MEM_HOSTILITY_LEVEL] > ally.BecomeEnemyToPlayer then
+					local hostility = (relationMemory[VJ.MEM_HOSTILITY_LEVEL] or 0) + 1
+					ally:SetRelationshipMemory(dmgAttacker, VJ.MEM_HOSTILITY_LEVEL, hostility)
+					if hostility > ally.BecomeEnemyToPlayer then
 						if fDisposition(ally, dmgAttacker) != D_HT then
 							ally:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
 							if ally.IsFollowing && ally.FollowData.Target == dmgAttacker then ally:ResetFollowBehavior() end
