@@ -11,24 +11,24 @@
 	-- Example --
 	effectBlood:SetColor(VJ.Color2Byte(Color(130, 19, 10)))
 --------------------------------------*/
+---------------------------------------------------------------------------------------------------------------------------------------------
 local bAND = bit.band
 local bShiftR = bit.rshift
 --
-local function color8Bit2Color(bits)
-	return Color(bShiftR(bits, 5) * 255 / 7, bAND(bShiftR(bits, 2), 0x07) * 255 / 7, bAND(bits, 0x03) * 85)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function EFFECT:Init(data)
 	local origin = data:GetOrigin()
 	local scale = data:GetScale()
-	local color = color8Bit2Color(data:GetColor())
+	local cBits = data:GetColor()
+	local cR, cG, cB = bShiftR(cBits, 5) * 255 / 7, bAND(bShiftR(cBits, 2), 0x07) * 255 / 7, bAND(cBits, 0x03) * 85
 	local emitter = ParticleEmitter(origin)
+	local tempVec = Vector()
 	
 	-- Blood mist
 	for _ = 0, 6 do
 		local mist = emitter:Add("particle/smokesprites_000" .. math.random(1, 9), origin)
 		if mist then
-			mist:SetVelocity(Vector(math.random(-20, 20), math.random(-20, 20), math.random(-30, 30)))
+			tempVec:SetUnpacked(math.random(-20, 20), math.random(-20, 20), math.random(-30, 30))
+			mist:SetVelocity(tempVec)
 			mist:SetDieTime(math.Rand(2.2, 2.4))
 			mist:SetStartAlpha(150)
 			mist:SetEndAlpha(0)
@@ -37,8 +37,9 @@ function EFFECT:Init(data)
 			mist:SetRoll(1)
 			mist:SetRollDelta(0)
 			mist:SetAirResistance(1)
-			mist:SetGravity(Vector(math.Rand(-20, 20), math.Rand(-20, 20), math.Rand(10, -10)))
-			mist:SetColor(color.r, color.g, color.b)
+			tempVec:SetUnpacked(math.Rand(-20, 20), math.Rand(-20, 20), math.Rand(10, -10))
+			mist:SetGravity(tempVec)
+			mist:SetColor(cR, cG, cB)
 			mist:SetCollide(true)
 		end
 	end

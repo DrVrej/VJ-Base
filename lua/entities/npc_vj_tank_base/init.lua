@@ -279,23 +279,25 @@ function ENT:OnThinkActive()
 				-- If the enemy's height isn't very high AND the enemy is (within run over distance OR far away), then move towards the enemy!
 				if enemyIsHighUp or (angPitch > -selfData.Tank_PitchLimit && ((eneData.Distance < selfData.Tank_RanOverDistance) or (eneData.Distance > selfData.Tank_DriveTowardsDistance))) then
 					-- Turning
+					local turnYaw;
 					if plyControlled then
-						local reverse = selfData.VJ_Controller:GetPlayer():KeyDown(IN_BACK) and -1 or 1 -- If we are reversing, then turn the opposite way to make it easier for the player to control
-						if selfData.VJ_Controller:GetPlayer():KeyDown(IN_MOVERIGHT) then
-							self:SetLocalAngles(self:GetLocalAngles() + Angle(0, -selfData.Tank_TurningSpeed * reverse, 0))
-							phys:SetAngles(self:GetAngles())
-						elseif selfData.VJ_Controller:GetPlayer():KeyDown(IN_MOVELEFT) then
-							self:SetLocalAngles(self:GetLocalAngles() + Angle(0, selfData.Tank_TurningSpeed * reverse, 0))
-							phys:SetAngles(self:GetAngles())
+						local ply = selfData.VJ_Controller:GetPlayer()
+						local reverse = ply:KeyDown(IN_BACK) and -1 or 1 -- If we are reversing, then turn the opposite way to make it easier for the player to control
+						if ply:KeyDown(IN_MOVERIGHT) then
+							turnYaw = -selfData.Tank_TurningSpeed * reverse
+						elseif ply:KeyDown(IN_MOVELEFT) then
+							turnYaw = selfData.Tank_TurningSpeed * reverse
 						end
-					else
-						if angYaw > selfData.Tank_YawLimit then
-							self:SetLocalAngles(self:GetLocalAngles() + Angle(0, selfData.Tank_TurningSpeed, 0))
-							phys:SetAngles(self:GetAngles())
-						elseif angYaw < -selfData.Tank_YawLimit then
-							self:SetLocalAngles(self:GetLocalAngles() + Angle(0, -selfData.Tank_TurningSpeed, 0))
-							phys:SetAngles(self:GetAngles())
-						end
+					elseif angYaw > selfData.Tank_YawLimit then
+						turnYaw = selfData.Tank_TurningSpeed
+					elseif angYaw < -selfData.Tank_YawLimit then
+						turnYaw = -selfData.Tank_TurningSpeed
+					end
+					if turnYaw then
+						local ang = self:GetLocalAngles()
+						ang.y = ang.y + turnYaw
+						self:SetLocalAngles(ang)
+						phys:SetAngles(self:GetAngles())
 					end
 					
 					-- Movement : Have a little grace zone so it doesn't constantly switch between forward and backwards driving
@@ -327,7 +329,9 @@ function ENT:OnThinkActive()
 						end
 						
 						if selfData.VJ_DEBUG then VJ.DEBUG_Print(self, false, "Driving Speed = ", driveSpeed) end
-						phys:SetVelocity(moveVel:GetNormalized() * driveSpeed)
+						moveVel:Normalize()
+						moveVel:Mul(driveSpeed)
+						phys:SetVelocity(moveVel)
 						hasMoved = true
 					end
 				end

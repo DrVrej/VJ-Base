@@ -383,6 +383,7 @@ function SWEP:Initialize()
 		local attachData = attachments[i]
 		if comAttachments[attachData.name] then
 			self.ComAttachmentID = attachData.id
+			break
 		end
 	end
 end
@@ -824,13 +825,15 @@ function SWEP:PrimaryAttack()
 				local aimPos = ownerData.GetAimPosition(owner, ene, spawnPos, 0)
 				local spread = ownerData.GetAimSpread(owner, ene, aimPos, selfData.NPC_CustomSpread or 1) // owner:GetPos():Distance(owner.VJ_Controller:GetPlayer():GetEyeTrace().HitPos) -- Was used when NPC was being controlled
 				bullet.Spread = Vector(spread, spread, 0)
-				bullet.Dir = (aimPos - spawnPos):GetNormalized()
+				bullet.Dir = aimPos - spawnPos
+					bullet.Dir:Normalize()
 				bullet.Src = spawnPos
 				bullet.Damage = ownerData.ScaleByDifficulty(owner, selfData.Primary.Damage)
 			else
 				local spawnPos = selfData.GetBulletPos(self)
 				bullet.Spread = Vector(0.05, 0.05, 0)
-				bullet.Dir = (owner:GetEnemy():BodyTarget(spawnPos) - spawnPos):GetNormalized()
+				bullet.Dir = owner:GetEnemy():BodyTarget(spawnPos) - spawnPos
+					bullet.Dir:Normalize()
 				bullet.Src = spawnPos
 				bullet.Damage = selfData.Primary.Damage
 			end

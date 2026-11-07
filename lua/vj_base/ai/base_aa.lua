@@ -220,7 +220,9 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime() * selfData.AA_MoveAccelerate, self:GetVelocity():Length(), moveSpeed) end
 	
 	-- Set the velocity
-	local velPos = (finalPos - startPos):GetNormalized() * moveSpeed //+ self:GetUp()*velUp + self:GetForward()
+	local velPos = finalPos - startPos //+ self:GetUp()*velUp + self:GetForward()
+		velPos:Normalize()
+		velPos:Mul(moveSpeed)
 	local velTime = math.sqrt((finalPos.x - startPos.x)^2 + (finalPos.y - startPos.y)^2) / math.max((self:GetVelocity():Length() + selfData.AA_CurrentMoveMaxSpeed) * 0.5, 1) -- Use 2D distance for timing
 	if selfData.AA_MoveDecelerate > 1 then
 		velTime = velTime + (1 / selfData.AA_MoveDecelerate)
@@ -289,10 +291,12 @@ function ENT:AA_IdleWander(playAnim, moveType, extra)
 	-- Movement Calculations
 	local myPos = self:GetPos()
 	local myMaxs = self:OBBMaxs():Length()
-	local minDist = math.random(selfData.AA_MinWanderDist, selfData.AA_MinWanderDist + 150)
-	local tr_endpos = myPos + self:GetForward()*((myMaxs + minDist)*(math.random(1, 2) == 1 and -1 or 1)) + self:GetRight()*((myMaxs + minDist)*(math.random(1, 2) == 1 and -1 or 1)) + self:GetUp()*((myMaxs + minDist)*(math.random(1, 2) == 1 and -1 or 1))
+	local tr_endpos;
 	if moveDown then
-		tr_endpos = myPos + self:GetUp()*((myMaxs + math.random(100, 150))*-1)
+		tr_endpos = myPos + self:GetUp() * -(myMaxs + math.random(100, 150))
+	else
+		local minDist = math.random(selfData.AA_MinWanderDist, selfData.AA_MinWanderDist + 150)
+		tr_endpos = myPos + self:GetForward() * ((myMaxs + minDist) * (math.random(1, 2) == 1 and -1 or 1)) + self:GetRight() * ((myMaxs + minDist) * (math.random(1, 2) == 1 and -1 or 1)) + self:GetUp() * ((myMaxs + minDist) * (math.random(1, 2) == 1 and -1 or 1))
 	end
 	local trFilter = {self, "phys_bone_follower"}
 	local tr = util.TraceLine({start = myPos, endpos = tr_endpos, filter = trFilter})
@@ -325,7 +329,9 @@ function ENT:AA_IdleWander(playAnim, moveType, extra)
 	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime() * selfData.AA_MoveAccelerate, self:GetVelocity():Length(), moveSpeed) end
 	
 	-- Set the velocity
-	local velPos = (finalPos - myPos):GetNormalized() * moveSpeed
+	local velPos = finalPos - myPos
+		velPos:Normalize()
+		velPos:Mul(moveSpeed)
 	local velTime = math.sqrt((finalPos.x - myPos.x)^2 + (finalPos.y - myPos.y)^2) / math.max((self:GetVelocity():Length() + selfData.AA_CurrentMoveMaxSpeed) * 0.5, 1)
 	if selfData.AA_MoveDecelerate > 1 then
 		velTime = velTime + (1 / selfData.AA_MoveDecelerate)

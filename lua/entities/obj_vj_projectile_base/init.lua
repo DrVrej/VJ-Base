@@ -384,7 +384,7 @@ function ENT:PlaySound(sdSet)
 		end
 	elseif sdSet == "Idle" then
 		local curIdleSD = selfData.CurrentIdleSound
-		if selfData.HasIdleSounds && (!curIdleSD or (curIdleSD && !curIdleSD:IsPlaying())) && CurTime() > selfData.NextIdleSoundT then
+		if selfData.HasIdleSounds && CurTime() > selfData.NextIdleSoundT && (!curIdleSD or !curIdleSD:IsPlaying()) then
 			if math.random(1, selfData.IdleSoundChance) == 1 then
 				VJ.STOPSOUND(selfData.CurrentIdleSound)
 				selfData.CurrentIdleSound = VJ.CreateSound(self, selfData.SoundTbl_Idle, selfData.IdleSoundLevel, math.random(selfData.IdleSoundPitch.a, selfData.IdleSoundPitch.b))

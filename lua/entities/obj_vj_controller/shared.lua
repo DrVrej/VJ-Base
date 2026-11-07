@@ -139,11 +139,13 @@ function ENT:CalcView(ply, origin, angles, fov)
 		if self:GetCameraFP_Bone() != -1 then -- Reset the NPC's bone manipulation
 			npc:ManipulateBoneScale(self:GetCameraFP_Bone(), vec1)
 		end
-		local offset = self:GetCameraTP_Offset() + Vector(0, 0, npc:OBBMaxs().z - npc:OBBMins().z)
+		local offset = self:GetCameraTP_Offset()
+		offset.z = offset.z + npc:OBBMaxs().z - npc:OBBMins().z
+		local center = npc:GetPos() + npc:OBBCenter()
 		//camera:SetLocalPos(camera:GetLocalPos() + self:GetCameraTP_Offset()) -- Help keep the camera stable
 		local tr = util.TraceHull({
-			start = npc:GetPos() + npc:OBBCenter(),
-			endpos = npc:GetPos() + npc:OBBCenter() + angles:Forward() * -self.VJC_Camera_Zoom + (npc:GetForward() * offset.x + npc:GetRight() * offset.y + npc:GetUp() * offset.z),
+			start = center,
+			endpos = center + angles:Forward() * -self.VJC_Camera_Zoom + (npc:GetForward() * offset.x + npc:GetRight() * offset.y + npc:GetUp() * offset.z),
 			filter = {ply, camera, npc},
 			mins = Vector(-5, -5, -5),
 			maxs = Vector(5, 5, 5),

@@ -363,12 +363,9 @@ cvars.AddChangeCallback("ai_ignoreplayers", function(name, oldValue, newValue)
 	if tonumber(newValue) == 0 then -- Turn off ignore players
 		VJ_CVAR_IGNOREPLAYERS = false
 		if SERVER then
-			local getPlys = player.GetAll()
-			local getAll = ents.GetAll()
-			for x = 1, #getAll do
-				local ent = getAll[x]
+			for _, ent in ents.Iterator() do
 				if ent:IsNPC() && ent.IsVJBaseSNPC then
-					for _, ply in ipairs(getPlys) do
+					for _, ply in player.Iterator() do
 						ent.RelationshipEnts[#ent.RelationshipEnts + 1] = ply
 						if !ent.RelationshipMemory[ply] then
 							ent.RelationshipMemory[ply] = {}

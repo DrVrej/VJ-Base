@@ -40,6 +40,7 @@ net.Receive("vj_music_cl", function(len)
 	-- Flags: "noplay" = Forces the sound not to play as soon as this function is called
 	sound.PlayFile("sound/" .. sdFile, "noplay", function(sdChan, errorID, errorName)
 		if IsValid(sdChan) then
+			if !IsValid(ent) then sdChan:Stop() return end
 			//if #VJ.Music_Queue <= 0 then sdChan:Play() end -- Plays too soon for menu volume setting to be applied
 			sdChan:EnableLooping(true)
 			sdChan:SetPlaybackRate(sdPlayback)

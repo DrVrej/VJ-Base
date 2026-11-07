@@ -13,7 +13,11 @@ function EFFECT:Init(data)
 	-- Dust
 	local dust = emitter:Add("particles/smokey", origin)
 	if dust then
-		dust:SetVelocity(ent:GetVelocity() + ent:GetForward() * math.Rand(100, 200) + Vector(math.Rand(5, -5), math.Rand(5, -5), math.Rand(5, -5)))
+		local tempVec = ent:GetForward()
+		tempVec:Mul(math.Rand(100, 200))
+		tempVec:Add(ent:GetVelocity())
+		tempVec:SetUnpacked(tempVec.x + math.Rand(5, -5), tempVec.y + math.Rand(5, -5), tempVec.z + math.Rand(5, -5))
+		dust:SetVelocity(tempVec)
 		dust:SetDieTime(4)
 		dust:SetStartAlpha(50)
 		dust:SetEndAlpha(0)
@@ -22,7 +26,8 @@ function EFFECT:Init(data)
 		dust:SetRoll(math.Rand(-0.2, 0.2))
 		dust:SetColor(80, 60, 20)
 		dust:SetAirResistance(300)
-		dust:SetGravity(Vector(0, 0, 50))
+		tempVec:SetUnpacked(0, 0, 50)
+		dust:SetGravity(tempVec)
 	end
 	emitter:Finish()
 end

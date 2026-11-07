@@ -6,12 +6,14 @@
 function EFFECT:Init(data)
 	local origin = data:GetOrigin()
 	local emitter = ParticleEmitter(origin)
+	local tempVec = Vector()
 	
 	-- Cloud of dust that goes up
 	for _ = 1, 8 do
 		local dust = emitter:Add("particles/smokey", origin)
 		if dust then
-			dust:SetVelocity(Vector(math.random(-40, 40), math.random(-40, 40), math.random(5, 15)))
+			tempVec:SetUnpacked(math.random(-40, 40), math.random(-40, 40), math.random(5, 15))
+			dust:SetVelocity(tempVec)
 			dust:SetDieTime(math.Rand(7, 9))
 			dust:SetStartAlpha(150)
 			dust:SetEndAlpha(0)
@@ -20,7 +22,8 @@ function EFFECT:Init(data)
 			dust:SetRoll(math.Rand(480, 540))
 			dust:SetRollDelta(math.Rand(-0.2, 0.2))
 			dust:SetColor(80, 60, 20)
-			dust:SetGravity(Vector())
+			tempVec:SetUnpacked(0, 0, 0)
+			dust:SetGravity(tempVec)
 			dust:SetAirResistance(15)
 			dust:SetCollide(true)
 		end
