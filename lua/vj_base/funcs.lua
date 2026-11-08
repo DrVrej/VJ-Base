@@ -19,15 +19,18 @@ local bShiftL = bit.lshift
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Takes a table and returns a random value from it | Expects the table to be sequentially indexed
-		- tbl = The table to pick randomly from
+		- values = Table to pick randomly from
 	Returns
-		- false, Table is empty or value is non existent
-		- value, the randomly picked value from the table (Can be anything)
+		- false, table is empty or value is non existent
+		- value, the randomly picked value from the table
 -----------------------------------------------------------]]
 function VJ.PICK(values)
 	if !values then return false end
 	if istable(values) then
-		return values[math.random(1, #values)] or false -- "or false" = To make sure it doesn't return nil when the table is empty!
+		local count = #values
+		if count == 0 then return false end
+		if count == 1 then return values[1] or false end
+		return values[math.random(1, count)] or false
 	end
 	return values
 end
@@ -72,11 +75,8 @@ function VJ.STOPSOUND(sdName)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ.CreateSound(ent, sdFile, sdLevel, sdPitch)
+	sdFile = VJ.PICK(sdFile)
 	if !sdFile then return end
-	if istable(sdFile) then
-		sdFile = sdFile[math.random(1, #sdFile)]
-		if !sdFile then return end -- Table is empty
-	end
 	local funcCustom = ent.OnPlaySound; if funcCustom then sdFile = funcCustom(ent, sdFile) end -- Allow altering sounds before they are played
 	local sdID = CreateSound(ent, sdFile, VJ_RecipientFilter)
 	sdID:SetSoundLevel(sdLevel or 75)
@@ -86,11 +86,8 @@ function VJ.CreateSound(ent, sdFile, sdLevel, sdPitch)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ.EmitSound(ent, sdFile, sdLevel, sdPitch, sdVolume, sdChannel)
+	sdFile = VJ.PICK(sdFile)
 	if !sdFile then return end
-	if istable(sdFile) then
-		sdFile = sdFile[math.random(1, #sdFile)]
-		if !sdFile then return end -- Table is empty
-	end
 	local funcCustom = ent.OnPlaySound; if funcCustom then sdFile = funcCustom(ent, sdFile) end -- Allow altering sounds before they are played
 	ent:EmitSound(sdFile, sdLevel, sdPitch, sdVolume, sdChannel, 0, 1, VJ_RecipientFilter)
 	local funcCustom2 = ent.OnEmitSound; if funcCustom2 then funcCustom2(ent, sdFile) end
@@ -542,7 +539,9 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 	local result; -- Final result that will be used as the velocity
 
 	if algorithmType == "Line" then -- Suggested to disable gravity!
-		result = ((targetPos - startPos):GetNormalized()) * strength
+		result = targetPos - startPos
+			result:Normalize()
+			result:Mul(strength)
 		if predict then predictProjSpeed = result:Length() * 0.8 end
 	elseif algorithmType == "Curve" then
 		if startPos == targetPos then return Vector() end -- Zero-distance trajectory return empty vector to avoid invalid values
@@ -630,14 +629,15 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 			pitch = angpos
 		end
 		result.z = math.tan(pitch) * pos_x
-		result = result:GetNormalized() * strength
+		result:Normalize()
+		result:Mul(strength)
 		predictProjSpeed = strength
 	elseif algorithmType == "CurveAntlion" then
 		if startPos == targetPos then return Vector() end -- Zero-distance trajectory return empty vector to avoid invalid values
 		local gravity = math.abs(physenv.GetGravity().z)
 		result = targetPos - startPos
 		local time = result:Length() / strength -- Throw at a constant time
-		result = result * (1.0 / time)
+		result:Mul(1.0 / time)
 		result.z = result.z + (gravity * time * 0.5) -- Adjust upward toss to compensate for gravity loss
 		predictProjSpeed = strength
 	else

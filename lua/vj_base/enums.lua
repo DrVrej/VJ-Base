@@ -59,9 +59,9 @@ VJ_BEHAVIOR_PASSIVE_NATURE			= 4 -- Doesn't target anything, and isn't targeted 
 -- NPC AI states
 VJ_STATE_NONE						= 0 -- No state is set | DEFAULT
 VJ_STATE_FREEZE						= 1 -- AI Completely freezes, basically "Disable AI" on the NPC (Including relationship system!)
-VJ_STATE_ONLY_ANIMATION				= 2 -- Only allow animation tasks, and attacks | Disables: Movements, turning, and other non-animation tasks!
+VJ_STATE_ONLY_ANIMATION				= 2 -- Only allow animation tasks, and attacks | Disables: Movements, engine turning animation, and other non-animation tasks!
 VJ_STATE_ONLY_ANIMATION_CONSTANT	= 3 -- Same as VJ_STATE_ONLY_ANIMATION + Disables idle animations
-VJ_STATE_ONLY_ANIMATION_NOATTACK	= 4 -- Same as VJ_STATE_ONLY_ANIMATION + Disables attack
+VJ_STATE_ONLY_ANIMATION_NOATTACK	= 4 -- Same as VJ_STATE_ONLY_ANIMATION + Disables attacks
 
 -- NPC attack type
 VJ.ATTACK_TYPE_NONE					= false -- No attack is set | DEFAULT

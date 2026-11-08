@@ -1033,7 +1033,7 @@ end
 -----------------------------------------------------------]]
 function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 	local selfData = fGetTable(self)
-	if selfData.MovementType == VJ_MOVETYPE_STATIONARY && !selfData.CanTurnWhileStationary then return false end
+	if (selfData.MovementType == VJ_MOVETYPE_STATIONARY && !selfData.CanTurnWhileStationary) or (selfData.AIState == VJ_STATE_FREEZE) then return false end
 	local resultAng = false -- The final angle it's going to face
 	local updateTurn = true -- An override to disallow applying the angle now
 	local turnData = selfData.TurnData
@@ -1052,7 +1052,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 			resultAng = self:GetTurnAngle(self:GetAngles())
 			updateTurn = false
 		end
-		if faceTime then -- 0 = Face only this frame, so don't actually set turning data!
+		if faceTime && faceTime != 0 then -- 0 = Face only this frame, so don't actually set turning data!
 			turnData.Type = visibleOnly and VJ.FACE_ENEMY_VISIBLE or VJ.FACE_ENEMY
 		end
 	-- VECTOR
@@ -1060,7 +1060,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 		//VJ.DEBUG_Print(self, "SetTurnTarget", "VECTOR")
 		self:ResetTurnTarget()
 		resultAng = self:GetTurnAngle((target - fGetPos(self)):Angle())
-		if faceTime then -- 0 = Face only this frame, so don't actually set turning data!
+		if faceTime && faceTime != 0 then -- 0 = Face only this frame, so don't actually set turning data!
 			turnData.Type = visibleOnly and VJ.FACE_POSITION_VISIBLE or VJ.FACE_POSITION
 			turnData.Target = target
 		end
@@ -1072,7 +1072,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 		if selfData.TurningUseAllAxis then dir:Add(target:OBBCenter()) end
 		dir:Sub(fGetPos(self))
 		resultAng = self:GetTurnAngle(dir:Angle())
-		if faceTime then -- 0 = Face only this frame, so don't actually set turning data!
+		if faceTime && faceTime != 0 then -- 0 = Face only this frame, so don't actually set turning data!
 			turnData.Type = visibleOnly and VJ.FACE_ENTITY_VISIBLE or VJ.FACE_ENTITY
 			turnData.Target = target
 		end
@@ -1088,7 +1088,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 		else -- Only set it, do NOT update it!
 			self:SetIdealYaw(resultAng.y)
 		end
-		if faceTime then -- 0 = Face only this frame, so don't actually set turning data!
+		if faceTime && faceTime != 0 then -- 0 = Face only this frame, so don't actually set turning data!
 			turnData.StopOnFace = stopOnFace or false
 			turnData.LastYaw = resultAng.y
 			if faceTime != -1 then -- -1 = Face forever and never reset unless overridden
@@ -1223,7 +1223,7 @@ end
 		--
 		-- Misc modifiers
 		13. Multiply it by the owner's weapon accuracy (Weapon_Accuracy)
-		14. Apply the modifier parameter, if any
+		14. Apply the "modifier" parameter, if any
 -----------------------------------------------------------]]
 -- To convert division to multiplication do (1 / division_number) | NOTE: Multiplication a bit faster!
 local aimMaxDist = 0.0000001 -- Distance at which the bullet spread is at its max (most inaccurate) | Equivalent = Dividing by 10000000
@@ -3860,11 +3860,13 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		
 		-- Bone & Angle
 		-- If it's a bullet, it will use localized velocity on each bone depending on how far away the bone is from the dmg position
-		local useLocalVel = bit.band(self.SavedDmgInfo.type, DMG_BULLET) != 0 and self.SavedDmgInfo.pos != defPos
-		local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
+		local useLocalVel = false
+		local dmgForce
 		if self.DeathAnimationCodeRan then
-			useLocalVel = false
 			dmgForce = self:GetGroundSpeedVelocity()
+		else
+			useLocalVel = bit.band(self.SavedDmgInfo.type, DMG_BULLET) != 0 and self.SavedDmgInfo.pos != defPos
+			dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
 		end
 		local totalSurface = 0
 		local physCount = corpse:GetPhysicsObjectCount()

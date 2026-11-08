@@ -216,14 +216,15 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 		end
 	end*/
 	
+	local currentSpeed = self:GetVelocity():Length()
 	selfData.AA_CurrentMoveMaxSpeed = moveSpeed
-	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime() * selfData.AA_MoveAccelerate, self:GetVelocity():Length(), moveSpeed) end
+	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime() * selfData.AA_MoveAccelerate, currentSpeed, moveSpeed) end
 	
 	-- Set the velocity
 	local velPos = finalPos - startPos //+ self:GetUp()*velUp + self:GetForward()
 		velPos:Normalize()
 		velPos:Mul(moveSpeed)
-	local velTime = math.sqrt((finalPos.x - startPos.x)^2 + (finalPos.y - startPos.y)^2) / math.max((self:GetVelocity():Length() + selfData.AA_CurrentMoveMaxSpeed) * 0.5, 1) -- Use 2D distance for timing
+	local velTime = math.sqrt((finalPos.x - startPos.x)^2 + (finalPos.y - startPos.y)^2) / math.max((currentSpeed + selfData.AA_CurrentMoveMaxSpeed) * 0.5, 1) -- Use 2D distance for timing
 	if selfData.AA_MoveDecelerate > 1 then
 		velTime = velTime + (1 / selfData.AA_MoveDecelerate)
 	end
@@ -325,14 +326,15 @@ function ENT:AA_IdleWander(playAnim, moveType, extra)
 		debugoverlay.Box(finalPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, VJ.COLOR_CYAN)
 	end
 	
+	local currentSpeed = self:GetVelocity():Length()
 	selfData.AA_CurrentMoveMaxSpeed = moveSpeed
-	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime() * selfData.AA_MoveAccelerate, self:GetVelocity():Length(), moveSpeed) end
+	if selfData.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime() * selfData.AA_MoveAccelerate, currentSpeed, moveSpeed) end
 	
 	-- Set the velocity
 	local velPos = finalPos - myPos
 		velPos:Normalize()
 		velPos:Mul(moveSpeed)
-	local velTime = math.sqrt((finalPos.x - myPos.x)^2 + (finalPos.y - myPos.y)^2) / math.max((self:GetVelocity():Length() + selfData.AA_CurrentMoveMaxSpeed) * 0.5, 1)
+	local velTime = math.sqrt((finalPos.x - myPos.x)^2 + (finalPos.y - myPos.y)^2) / math.max((currentSpeed + selfData.AA_CurrentMoveMaxSpeed) * 0.5, 1)
 	if selfData.AA_MoveDecelerate > 1 then
 		velTime = velTime + (1 / selfData.AA_MoveDecelerate)
 	end
