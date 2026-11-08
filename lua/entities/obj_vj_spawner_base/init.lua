@@ -20,7 +20,7 @@ ENT.EntitiesToSpawn = {}
 			{Entities = {"npc_name_three", "npc_name_one:1", "npc_name_two:5"}, SpawnPosition = Vector(0, 100, 0)},
 		}
 	Options:
-		Entities = {} -- The table of entities it spawns randomly, REQUIRED!
+		Entities = {} -- The table of entities it spawns randomly | REQUIRED
 			- ":" = Add at the end to apply a chance, it starts from 1
 				- ":1" = Spawn always or leave it empty
 				- WARNING: If no entity is left empty or set to ":1" then during randomization, the base will spawn the last NPC it checks if no other passes!
@@ -135,7 +135,8 @@ function ENT:SpawnEntity(spawnKey, spawnTbl, initSpawn)
 	end
 	if ent:IsNPC() && spawnWepPicked != false && string.lower(spawnWepPicked) != "none" then
 		if string.lower(spawnWepPicked) == "default" then -- Default weapon from the spawn menu
-			local getDefWep = VJ.PICK(list.GetEntry("NPC", ent:GetClass()).Weapons)
+			local npcInfo = list.GetEntry("NPC", ent:GetClass())
+			local getDefWep = npcInfo && VJ.PICK(npcInfo.Weapons)
 			if getDefWep then
 				ent:Give(getDefWep)
 			end
@@ -223,7 +224,7 @@ function ENT:Think()
 		if queue then
 			selfData.CurrentQueue = nil
 			for _, backData in ipairs(queue) do
-				self:SpawnEntity(backData.spawnKey, backData.spawnTbl, false)
+				self:SpawnEntity(backData.spawnKey, backData.spawnTbl, backData.initSpawn)
 			end
 		end
 	end
