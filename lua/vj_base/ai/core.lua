@@ -1180,8 +1180,11 @@ function ENT:GetAimPosition(target, aimOrigin, predictionRate, projectileSpeed)
 		if !self:VisibleVec(result) then
 			result = target:HeadTarget(aimOrigin) or target:EyePos() -- Certain non player/NPC targets will return nil, so just use "EyePos"
 		end
-	else -- If not visible, use the last known position! -- !!! BUG !!! What if target is NOT the current enemy?
-		return Vector(self.EnemyData.VisiblePos) -- Enemy is not visible, do NOT predict!
+	else -- NOT visible
+		if target == fGetEnemy(self) then -- For current enemy, use the last known enemy location
+			return Vector(self.EnemyData.VisiblePos)
+		end
+		return target:BodyTarget(aimOrigin)
 	end
 	if (predictionRate or 0) > 0 then -- If prediction is enabled
 		-- 1. Calculate the distance between the origin and target position
