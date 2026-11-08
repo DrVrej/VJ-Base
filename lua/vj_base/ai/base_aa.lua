@@ -69,9 +69,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 	if selfData.MovementType == VJ_MOVETYPE_AQUATIC then
 		moveSpeed = (moveType == "Calm" and selfData.Aquatic_SwimmingSpeed_Calm) or selfData.Aquatic_SwimmingSpeed_Alerted
 		if debug then
-			print("----------------")
-			print("[MoveTo] My WaterLevel: " .. self:WaterLevel())
-			if !destVec then print("[MoveTo] dest WaterLevel: " .. dest:WaterLevel()) end
+			VJ.DEBUG_Print(self, "AA_MoveTo", "my WaterLevel: " .. self:WaterLevel() .. " | dest WaterLevel: " .. (destVec and "N/A" or dest:WaterLevel()))
 		end
 		-- NPC not fully in water, so forget the destination, instead wander OR go deeper into the war
 		if self:WaterLevel() <= 2 then self:MaintainIdleBehavior(1) return end
@@ -125,13 +123,13 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 		local tr_check1 = util.TraceLine({start = startPos, endpos = startPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
 		local tr_check2 = !tr_check1.Hit and util.TraceLine({start = trHitPos, endpos = trHitPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
 		if debug then
-			print("[MoveTo] checking...")
+			VJ.DEBUG_Print(self, "AA_MoveTo", "checking ground...")
 			debugoverlay.Box(startPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(145, 255, 0))
 			debugoverlay.Box(tr_check1.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(0, 183, 255))
 		end
 		-- If it hit the world, then we are too close to the ground, replace "tr" with a new position!
 		if tr_check1.Hit or (tr_check2.Hit && !tr_check2.Entity:IsNPC()) then
-			if debug then print("[MoveTo] Ground Hit!", tr_check1.HitPos:Distance(startPos)) end
+			if debug then VJ.DEBUG_Print(self, "AA_MoveTo", "Ground Hit!", tr_check1.HitPos:Distance(startPos)) end
 			//groundLimited = true
 			endPos.z = (tr_check1.Hit and myPos.z or endPos.z) + selfData.AA_GroundLimit
 			tr = util.TraceHull({
@@ -148,7 +146,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 	if !destVec then
 		-- If world is hit then our hitbox can't fully fit through the path to the destination
 		if tr.HitWorld then
-			if debug then print("[MoveTo] hitworld") end
+			if debug then VJ.DEBUG_Print(self, "AA_MoveTo", "hitworld") end
 			-- If we are already going to the last destination...
 			if selfData.AA_DoingLastChasePos then
 				-- Its movement is finished, therefore it's not moving there anymore!
@@ -185,7 +183,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 	
 	local finalPos = trHitPos
 	if trDistStart <= 16 && tr.HitWorld then
-		if debug then print("[MoveTo] Forward Blocked!") end
+		if debug then VJ.DEBUG_Print(self, "AA_MoveTo", "Forward Blocked!") end
 		finalPos = endPos
 		-- Make sure the trace actually went somewhere...
 		if tr.Fraction > 0 then
@@ -208,10 +206,10 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 	local distZFinal = finalPos.z - startPos.z -- Distance between the hit position and the start position
 	if !groundLimited then
 		if distZFinal > 5 then -- Up
-			if debug then print("[MoveTo] GOING UP") end
+			if debug then VJ.DEBUG_Print(self, "AA_MoveTo", "GOING UP") end
 			velUp = math.Clamp(distZFinal, 20, moveSpeed)
 		elseif distZFinal < 5 then -- Down
-			if debug then print("[MoveTo] GOING DOWN") end
+			if debug then VJ.DEBUG_Print(self, "AA_MoveTo", "GOING DOWN") end
 			velUp = -math.Clamp(math.abs(distZFinal), 20, moveSpeed)
 		end
 	end*/
@@ -307,13 +305,13 @@ function ENT:AA_IdleWander(playAnim, moveType, extra)
 	if extra.IgnoreGround != true && !moveDown && selfData.MovementType == VJ_MOVETYPE_AERIAL then
 		local tr_check = util.TraceLine({start = finalPos, endpos = finalPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
 		if debug then
-			print("[IdleWander] checking...")
+			VJ.DEBUG_Print(self, "AA_IdleWander", "checking ground...")
 			debugoverlay.Box(finalPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, VJ.COLOR_WHITE)
 			debugoverlay.Box(tr_check.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(255, 0, 255))
 		end
 		-- If it hit the world, then we are too close to the ground, replace "tr" with a new position!
 		if tr_check.HitWorld then
-			if debug then print("[IdleWander] Ground Hit!", tr_check.HitPos:Distance(finalPos)) end
+			if debug then VJ.DEBUG_Print(self, "AA_IdleWander", "Ground Hit!", tr_check.HitPos:Distance(finalPos)) end
 			tr_endpos.z = myPos.z + selfData.AA_GroundLimit
 			tr = util.TraceLine({start = myPos, endpos = tr_endpos, filter = trFilter})
 			finalPos = tr.HitPos

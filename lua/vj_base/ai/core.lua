@@ -190,7 +190,7 @@ ENT.NextDamageAllyResponseT = 0
 ENT.NextDamageByPlayerSoundT = 0
 ENT.NextPainSoundT = 0
 ENT.MainSoundPitchValue = 0
-ENT.TimersToRemove = {"state_reset", "state_wep_reset", "turn_reset", "flinch_reset", "alert_reset", "attack_pause_reset", "attack_melee_start", "attack_melee_reset", "attack_melee_reset_able", "attack_range_start", "attack_range_reset", "attack_range_reset_able", "attack_leap_jump", "attack_leap_start", "attack_leap_reset", "attack_leap_reset_able", "attack_grenade_start", "attack_grenade_reset"}
+ENT.TimersToRemove = {"medic_heal", "state_reset", "state_wep_reset", "turn_reset", "flinch_reset", "alert_reset", "attack_pause_reset", "attack_melee_start", "attack_melee_reset", "attack_melee_reset_able", "attack_range_start", "attack_range_reset", "attack_range_reset_able", "attack_leap_jump", "attack_leap_start", "attack_leap_reset", "attack_leap_reset_able", "attack_grenade_start", "attack_grenade_reset"}
 //ENT.SavedDmgInfo = {} -- Set later
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1784,6 +1784,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetMedicBehavior()
 	self:OnMedicBehavior("OnReset", "End")
+	timer.Remove("medic_heal" .. self:EntIndex())
 	local medicData = self.MedicData
 	if IsValid(medicData.Target) then medicData.Target.VJ_ST_Healing = false end
 	if IsValid(medicData.Prop) then medicData.Prop:Remove() end
@@ -1861,7 +1862,7 @@ function ENT:MaintainMedicBehavior()
 				ally:SCHEDULE_FACE("TASK_FACE_TARGET")
 			end
 			
-			timer.Simple(timeUntilHeal, function()
+			timer.Create("medic_heal" .. self:EntIndex(), timeUntilHeal, 1, function()
 				if IsValid(self) && self:Alive() then
 					if !IsValid(ally) then -- Ally doesn't exist anymore, reset
 						self:ResetMedicBehavior()
@@ -1870,7 +1871,7 @@ function ENT:MaintainMedicBehavior()
 						if VJ.GetNearestDistance(self, ally) <= (selfData.Medic_HealDistance + 20) then -- Are we still in healing distance?
 							if self:OnMedicBehavior("OnHeal", ally) != false then
 								local friCurHP = ally:Health()
-								ally:SetHealth(math_min(math_max(friCurHP + selfData.Medic_HealAmount, friCurHP), ally:GetMaxHealth()))
+								ally:SetHealth(math_max(friCurHP, math_min(friCurHP + selfData.Medic_HealAmount, ally:GetMaxHealth())))
 								timer.Remove("timer_melee_bleed" .. ally:EntIndex())
 								timer.Adjust("timer_melee_slowply" .. ally:EntIndex(), 0)
 								ally.VJ_SpeedEffectT = 0
@@ -1903,7 +1904,7 @@ end
 function ENT:MaintainConstantlyFaceEnemy()
 	local selfData = fGetTable(self)
 	local eneData = selfData.EnemyData
-	if eneData.Distance < selfData.ConstantlyFaceEnemy_MinDistance && ((!selfData.ConstantlyFaceEnemy_IfVisible or eneData.Visible) or (!selfData.ConstantlyFaceEnemy_IfAttacking && selfData.AttackType)) then
+	if eneData.Distance < selfData.ConstantlyFaceEnemy_MinDistance && (!selfData.ConstantlyFaceEnemy_IfVisible or eneData.Visible) && (!selfData.AttackType or selfData.ConstantlyFaceEnemy_IfAttacking) then
 		local postures = selfData.ConstantlyFaceEnemy_Postures
 		if (postures == "Both") or (postures == "Moving" && self:IsMoving()) or (postures == "Standing" && !self:IsMoving()) then
 			self:SetTurnTarget("Enemy")
@@ -2818,7 +2819,7 @@ function ENT:PlayIdleSound(combatIdle)
 					
 					-- For the other NPC to answer back
 					timer.Simple(dur + 0.3, function()
-						if IsValid(self) && IsValid(foundEnt) && !foundEnt:OnIdleDialogue(self, "Answer") then
+						if IsValid(self) && IsValid(foundEnt) && self:Alive() && foundEnt:Alive() && !foundEnt:OnIdleDialogue(self, "Answer") then
 							local response = foundEnt:PlaySoundSystem("IdleDialogueAnswer") or 0
 							if response > 0 then -- If the ally responded, then make sure both NPCs stand still & don't play another idle sound until the whole conversation is finished!
 								local curTime2 = CurTime()

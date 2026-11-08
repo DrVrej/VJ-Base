@@ -677,6 +677,7 @@ function VJ.ApplySpeedEffect(ent, speed, setTime)
 				return
 			elseif (ent.VJ_SpeedEffectT < CurTime()) or (ent:Health() <= 0) then
 				hook.Remove("Think", hookName)
+				ent.VJ_SpeedEffectT = 0
 				ent:SetPlaybackRate(orgPlayback)
 				if ent:IsPlayer() then
 					ent:SetWalkSpeed(plyOrgWalk)

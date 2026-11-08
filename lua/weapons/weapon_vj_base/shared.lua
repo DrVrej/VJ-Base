@@ -767,8 +767,8 @@ function SWEP:PrimaryAttack()
 				local dmgAmount = isNPC and ownerData.ScaleByDifficulty(owner, selfData.Primary.Damage) or selfData.Primary.Damage
 				dmginfo:SetDamage(dmgAmount)
 				if ent.VJ_ID_Living then dmginfo:SetDamageForce(owner:GetForward() * ((dmgAmount + 100) * 70)) end
-				dmginfo:SetInflictor(owner)
 				dmginfo:SetAttacker(owner)
+				dmginfo:SetInflictor(self)
 				dmginfo:SetDamageType(selfData.MeleeWeaponDamageType)
 				VJ.DamageSpecialEnts(owner, ent, dmginfo)
 				ent:TakeDamageInfo(dmginfo, owner)

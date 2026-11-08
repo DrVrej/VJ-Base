@@ -75,7 +75,10 @@ function ENT:Initialize()
 				phys:SetMass(0.005)
 				timer.Simple(10, function()
 					if IsValid(self) then
-						phys:SetMass(5)
+						phys = self:GetPhysicsObject()
+						if IsValid(phys) then
+							phys:SetMass(5)
+						end
 					end
 				end)
 			end
