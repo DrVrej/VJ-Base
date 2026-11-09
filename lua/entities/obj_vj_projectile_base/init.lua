@@ -210,7 +210,7 @@ function ENT:DealDamage(data, phys)
 	
 	if selfData.DoesRadiusDamage then
 		local attackEnt = ownerValid and owner or self -- The entity that will be set as the attacker
-		-- If the projectile is picked up (Such as a grenade picked up by a human NPC), then the damage position is the parent's position
+		-- If the projectile is picked up (ex: grenade picked up by a human NPC), then the damage position is the parent's position
 		if selfData.VJ_ST_Grabbed then
 			local parent = self:GetParent()
 			if IsValid(parent) && parent:IsNPC() then

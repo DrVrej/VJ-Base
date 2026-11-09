@@ -1625,7 +1625,6 @@ local VJ_MOVETYPE_GROUND = VJ_MOVETYPE_GROUND
 local VJ_MOVETYPE_AERIAL = VJ_MOVETYPE_AERIAL
 local VJ_MOVETYPE_AQUATIC = VJ_MOVETYPE_AQUATIC
 local VJ_MOVETYPE_STATIONARY = VJ_MOVETYPE_STATIONARY
-local ANIM_TYPE_GESTURE = VJ.ANIM_TYPE_GESTURE
 
 local metaEntity = FindMetaTable("Entity")
 local fGetTable = metaEntity.GetTable
@@ -2116,7 +2115,7 @@ local function playReloadAnimation(self, anims)
 		if wep.IsVJBaseWeapon then wep:NPC_Reload() end
 		self.AllowWeaponOcclusionDelay = false
 		-- If NOT controlled by a player AND is a gesture make it stop moving so it doesn't run after the enemy right away
-		if !self.VJ_Controlled && animType == ANIM_TYPE_GESTURE then
+		if !self.VJ_Controlled && animType == VJ.ANIM_TYPE_GESTURE then
 			self:StopMoving()
 		end
 		return true -- We have successfully ran the reload animation!
@@ -2433,7 +2432,7 @@ function ENT:Think()
 							if anim != ACT_INVALID then
 								selfData.AttackAnim = anim
 								selfData.AttackAnimDuration = animDur - (selfData.MeleeAttackAnimationDecreaseLengthAmount / selfData.AnimPlaybackRate)
-								if animType != ANIM_TYPE_GESTURE then -- Allow things like chasing to continue for gestures
+								if animType != VJ.ANIM_TYPE_GESTURE then -- Allow things like chasing to continue for gestures
 									selfData.AttackAnimTime = curTime + selfData.AttackAnimDuration
 								end
 							end
@@ -2821,7 +2820,7 @@ function ENT:ExecuteGrenadeAttack(customEnt, disableOwner, landDir)
 		end
 	end
 	
-	if !disableOwner then grenade:SetOwner(self) end
+	grenade:SetOwner(disableOwner and NULL or self) -- Clear ownership on release so redirected grenades can damage both sides
 	grenade:SetPos(spawnPos)
 	grenade:SetAngles(spawnAng)
 	

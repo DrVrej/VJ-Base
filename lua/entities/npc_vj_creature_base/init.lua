@@ -959,7 +959,6 @@ local VJ_MOVETYPE_GROUND = VJ_MOVETYPE_GROUND
 local VJ_MOVETYPE_AERIAL = VJ_MOVETYPE_AERIAL
 local VJ_MOVETYPE_AQUATIC = VJ_MOVETYPE_AQUATIC
 local VJ_MOVETYPE_STATIONARY = VJ_MOVETYPE_STATIONARY
-local ANIM_TYPE_GESTURE = VJ.ANIM_TYPE_GESTURE
 
 local metaEntity = FindMetaTable("Entity")
 local fGetTable = metaEntity.GetTable
@@ -1723,7 +1722,7 @@ function ENT:Think()
 								if anim != ACT_INVALID then
 									selfData.AttackAnim = anim
 									selfData.AttackAnimDuration = animDur - (selfData.MeleeAttackAnimationDecreaseLengthAmount / selfData.AnimPlaybackRate)
-									if animType != ANIM_TYPE_GESTURE then -- Allow things like chasing to continue for gestures
+									if animType != VJ.ANIM_TYPE_GESTURE then -- Allow things like chasing to continue for gestures
 										selfData.AttackAnimTime = curTime + selfData.AttackAnimDuration
 									end
 								end
@@ -1758,7 +1757,7 @@ function ENT:Think()
 							if anim != ACT_INVALID then
 								selfData.AttackAnim = anim
 								selfData.AttackAnimDuration = animDur - (selfData.RangeAttackAnimationDecreaseLengthAmount / selfData.AnimPlaybackRate)
-								if animType != ANIM_TYPE_GESTURE then -- Allow things like chasing to continue for gestures
+								if animType != VJ.ANIM_TYPE_GESTURE then -- Allow things like chasing to continue for gestures
 									selfData.AttackAnimTime = curTime + selfData.AttackAnimDuration
 								end
 							end
@@ -1794,7 +1793,7 @@ function ENT:Think()
 							if anim != ACT_INVALID then
 								selfData.AttackAnim = anim
 								selfData.AttackAnimDuration = animDur - (selfData.LeapAttackAnimationDecreaseLengthAmount / selfData.AnimPlaybackRate)
-								if animType != ANIM_TYPE_GESTURE then -- Allow things like chasing to continue for gestures
+								if animType != VJ.ANIM_TYPE_GESTURE then -- Allow things like chasing to continue for gestures
 									selfData.AttackAnimTime = curTime + selfData.AttackAnimDuration
 								end
 							end
