@@ -2554,16 +2554,16 @@ function ENT:ExecuteMeleeAttack()
 				-- Knockback (Don't push things like doors, trains, elevators as it will make them fly when activated)
 				if selfData.HasMeleeAttackKnockBack && ent:GetMoveType() != MOVETYPE_PUSH && ent.MovementType != VJ_MOVETYPE_STATIONARY && (!ent.VJ_ID_Boss or ent.IsVJBaseSNPC_Tank) then
 					local isNextBot = ent:IsNextBot()
-						if !isNextBot then
-							ent:SetGroundEntity(NULL)
-						end
-						local vel = self:MeleeAttackKnockbackVelocity(ent)
-						ent:SetVelocity(vel)
-						if isNextBot then
-							ent.loco:Approach(vel, 1)
-							ent.loco:Jump()
-							ent.loco:SetVelocity(vel)
-						end
+					if !isNextBot then
+						ent:SetGroundEntity(NULL)
+					end
+					local vel = self:MeleeAttackKnockbackVelocity(ent)
+					ent:SetVelocity(vel)
+					if isNextBot then
+						ent.loco:Approach(vel, 1)
+						ent.loco:Jump()
+						ent.loco:SetVelocity(vel)
+					end
 				end
 				-- Apply actual damage
 				if !selfData.DisableDefaultMeleeAttackDamageCode then

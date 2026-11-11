@@ -739,8 +739,6 @@ function SWEP:PrimaryAttack()
 	local fireSd = VJ.PICK(selfData.Primary.Sound)
 	if fireSd then
 		self:EmitSound(fireSd, selfData.Primary.SoundLevel, math.random(selfData.Primary.SoundPitch.a, selfData.Primary.SoundPitch.b), selfData.Primary.SoundVolume, CHAN_WEAPON, 0, 0, VJ_RecipientFilter)
-		//EmitSound(fireSd, ownersPos, owner:EntIndex(), CHAN_WEAPON, 1, 140, 0, 100, 0, filter)
-		//sound.Play(fireSd, ownersPos, self.Primary.SoundLevel, math.random(self.Primary.SoundPitch.a, self.Primary.SoundPitch.b), self.Primary.SoundVolume)
 	end
 	if selfData.Primary.HasDistantSound then
 		local fireFarSd = VJ.PICK(selfData.Primary.DistantSound)
@@ -761,8 +759,9 @@ function SWEP:PrimaryAttack()
 		local ownersPos = fGetPos(owner)
 		for _, ent in ipairs(ents.FindInSphere(ownersPos, selfData.MeleeWeaponDistance + 20)) do
 			local entData = fGetTable(ent)
-			if (entData.IsVJBaseBullseye && entData.VJ_Controlled) or (ent:IsPlayer() && entData.VJ_Controlling) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
-			if ent != owner && (isPly or (isNPC && (ent:IsNPC() or (ent:IsPlayer() && ent:Alive() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot() or entData.VJ_ID_Attackable or entData.VJ_ID_Destructible) && owner:Disposition(ent) != D_LI && ent:GetClass() != owner:GetClass() && (owner:GetForward():Dot((fGetPos(ent) - ownersPos):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius))))) then
+			if ent == self or ent == owner or (entData.IsVJBaseBullseye && entData.VJ_Controlled) then continue end
+			if isNPC && ((ent:IsPlayer() && (entData.VJ_Controlling or !ent:Alive() or VJ_CVAR_IGNOREPLAYERS)) or (ent:GetClass() == owner:GetClass())) then continue end -- Only check these if owner is an NPC
+			if isPly or (isNPC && ((entData.VJ_ID_Living && owner:Disposition(ent) != D_LI) or entData.VJ_ID_Attackable or entData.VJ_ID_Destructible) && owner:GetForward():Dot((Vector(fGetPos(ent).x, fGetPos(ent).y, 0) - Vector(ownersPos.x, ownersPos.y, 0)):GetNormalized()) > math.cos(math.rad(ownerData.MeleeAttackDamageAngleRadius))) then
 				local dmginfo = DamageInfo()
 				local dmgAmount = isNPC and ownerData.ScaleByDifficulty(owner, selfData.Primary.Damage) or selfData.Primary.Damage
 				dmginfo:SetDamage(dmgAmount)
