@@ -661,7 +661,7 @@ function SWEP:NPCShoot_Primary()
 			self.NPC_SecondaryFireNextT = CurTime() + fireTime + 0.5 -- Prevent attempting to fire again
 			self:NPC_SecondaryFire_BeforeTimer(ene, fireTime)
 			timer.Simple(fireTime, function()
-				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && (anim == ACT_INVALID or animType == VJ.ANIM_TYPE_GESTURE or VJ.IsCurrentAnim(owner, anim)) then -- ONLY check for cur anim IF it even had one!
+				if IsValid(self) && IsValid(owner) && fGetOwner(self) == owner && fGetActiveWeapon(owner) == self && IsValid(owner:GetEnemy()) && (anim == ACT_INVALID or animType == VJ.ANIM_TYPE_GESTURE or VJ.IsCurrentAnim(owner, anim)) then -- ONLY check for cur anim IF it even had one!
 					self:NPC_SecondaryFire()
 					local fireSd = VJ.PICK(self.NPC_SecondaryFireSound)
 					if fireSd then
@@ -680,17 +680,14 @@ function SWEP:NPCShoot_Primary()
 	timer.Simple(self.NPC_TimeUntilFire, function()
 		if !IsValid(self) then return end
 		local curTime = CurTime()
-		owner = fGetOwner(self)
-		if curTime > self.NPC_NextPrimaryFireT && IsValid(owner) && owner:IsNPC() && self:NPC_CanFire() then
+		if curTime > self.NPC_NextPrimaryFireT && IsValid(owner) && fGetOwner(self) == owner && fGetActiveWeapon(owner) == self && self:NPC_CanFire() then
 			self:PrimaryAttack()
 			owner.WeaponLastShotTime = curTime
 			if self.NPC_NextPrimaryFire != false then -- Support for animation events
 				self.NPC_NextPrimaryFireT = curTime + self.NPC_NextPrimaryFire
 				for _, tv in ipairs(self.NPC_TimeUntilFireExtraTimers) do
 					timer.Simple(tv, function()
-						if !IsValid(self) then return end
-						owner = fGetOwner(self)
-						if IsValid(owner) && owner:IsNPC() && self:NPC_CanFire() then
+						if IsValid(self) && IsValid(owner) && fGetOwner(self) == owner && fGetActiveWeapon(owner) == self && self:NPC_CanFire() then
 							self:PrimaryAttack()
 						end
 					end)
