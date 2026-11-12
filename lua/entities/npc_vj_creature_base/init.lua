@@ -1150,9 +1150,7 @@ function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 			end
 			cachedSchedule = schedule_alert_chase
 			selfData.CacheScheduleChaseLOS = cachedSchedule
-			self:StartSchedule(schedule_alert_chase)
 		end
-		cachedSchedule:Reset()
 		self:StartSchedule(cachedSchedule)
 	else
 		local cachedSchedule = selfData.CacheScheduleChase
@@ -1168,9 +1166,7 @@ function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 			schedule_alert_chase.RunCode_OnFail = function() self:SCHEDULE_IDLE_STAND() end
 			cachedSchedule = schedule_alert_chase
 			selfData.CacheScheduleChase = cachedSchedule
-			self:StartSchedule(schedule_alert_chase)
 		end
-		cachedSchedule:Reset()
 		self:StartSchedule(cachedSchedule)
 	end
 end

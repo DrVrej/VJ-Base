@@ -1436,6 +1436,8 @@ function ENT:OnRestore()
 	//VJ.DEBUG_Print(self, "OnRestore")
 	self:StopMoving()
 	self:ResetMoveCalc()
+	self.CacheScheduleChase = nil
+	self.CacheScheduleChaseLOS = nil
 	-- Reset the current schedule because often times GMod attempts to run it before AI task modules have loaded!
 	if self.CurrentSchedule then
 		self.CurrentSchedule = nil
@@ -1462,6 +1464,8 @@ function ENT:OnEntityCopyTableFinish(data)
 	data.CurrentScheduleName = nil
 	data.CurrentTask = nil
 	data.CurrentTaskID = nil
+	data.CacheScheduleChase = nil
+	data.CacheScheduleChaseLOS = nil
 	data.RelationshipEnts = nil
 	data.RelationshipMemory = nil
 	data.PoseParameterLooking_Names = nil
@@ -1570,7 +1574,6 @@ function ENT:OnEntityCopyTableFinish(data)
 	data.Tank_NextRunOverSound = nil
 	data.Tank_NextIdleParticles = nil
 	data.Tank_FacingTarget = nil
-	data.Tank_ReachableHeight = nil
 	data.Tank_Shell_NextFireT = nil
 	data.Tank_Shell_Status = nil
 	data.Gunner = nil

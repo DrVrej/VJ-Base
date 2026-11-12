@@ -142,6 +142,7 @@ else
 			local entCount = net.ReadUInt(MAX_EDICT_BITS)
 			for _ = 1, entCount do
 				local ent = net.ReadEntity()
+				if !IsValid(ent) or !ent:IsNPC() then continue end
 				if editType == 0 then -- Add
 					ent:StopMoving()
 					if ent.IsVJBaseSNPC then
@@ -175,9 +176,9 @@ else
 			local moveTypeVJ = moveType == 1 and "TASK_RUN_PATH" or "TASK_WALK_PATH"
 			local moveTypeReg = moveType == 1 and SCHED_FORCED_GO_RUN or SCHED_FORCED_GO
 			local entCount = net.ReadUInt(MAX_EDICT_BITS)
-			for _ = 1, entCount do
+			for k = 1, entCount do
 				local ent = net.ReadEntity()
-				if IsValid(ent) then
+				if IsValid(ent) && ent:IsNPC() then
 					ent:StopMoving()
 					ent:SetLastPosition(movePos)
 					if ent.IsVJBaseSNPC then

@@ -372,11 +372,7 @@ function ENT:StartSchedule(schedule)
 		end
 	end
 	self:ClearCondition(COND_TASK_FAILED)
-	
-	-- Reset flags in case it's a reused schedule
-	schedule.OnFinishExecuted = false
-	schedule.OnFailExecuted = false
-	schedule.FailureHandled = false
+	schedule:Reset() -- In case it's a reused schedule
 	
 	-- Handle facing data sent by schedule's "TurnData"
 		-- Type = Type of facing it should do | Target = The vector/ent to face (Not required for enemy facing!)

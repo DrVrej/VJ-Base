@@ -252,109 +252,111 @@ function ENT:OnThinkActive()
 	self:Tank_OnThinkActive()
 	self:SelectSchedule()
 
+	local hasDebug = selfData.VJ_DEBUG
 	local hasMoved = false
-	local myPos = self:GetPos()
-	local tr = util.TraceLine({start = myPos + self:GetUp() * 20, endpos = myPos + self:GetUp() * -50, filter = self})
-	if selfData.VJ_DEBUG then
-		debugoverlay.Cross(tr.StartPos, 4, 2, VJ.COLOR_GREEN, true)
-		debugoverlay.Cross(myPos + self:GetUp() * -50, 4, 2, VJ.COLOR_YELLOW, true)
-		debugoverlay.Cross(tr.HitPos, 4, 2, VJ.COLOR_RED, true)
-		debugoverlay.Line(tr.StartPos, tr.HitPos, 2, nil, true)
-		VJ.DEBUG_Print(self, false, "Tank Status = ", selfData.Tank_Status, " | Trace HitNormal = ", tr.HitNormal)
-	end
-	if tr.Hit && selfData.Tank_Status == 0 then
-		local phys = self:GetPhysicsObject()
-		if IsValid(phys) && #phys:GetFrictionSnapshot() > 0 then
-			local eneData = selfData.EnemyData
-			local ene = eneData.Target
-			if IsValid(ene) then
-				local plyControlled = selfData.VJ_Controlled
-				local enePos = ene:GetPos()
-				local angEne = (enePos - myPos):Angle()
-				local angYaw = (angEne.y - (self:GetAngles().y + selfData.Tank_AngleOffset) + 180) % 360 - 180 -- left(+) / right(-)
-				local angPitch = (angEne.p + 180) % 360 - 180 -- up(-) / down(+)
-				local enemyIsHighUp = plyControlled or angPitch < -selfData.Tank_PitchLimit
-				-- If the enemy is very high up, then move away from it to help the gunner fire!
-				-- OR
-				-- If the enemy's height isn't very high AND the enemy is (within run over distance OR far away), then move towards the enemy!
-				if enemyIsHighUp or (angPitch > -selfData.Tank_PitchLimit && ((eneData.Distance < selfData.Tank_RanOverDistance) or (eneData.Distance > selfData.Tank_DriveTowardsDistance))) then
-					-- Turning
-					local turnYaw;
-					if plyControlled then
-						local ply = selfData.VJ_Controller:GetPlayer()
-						local reverse = ply:KeyDown(IN_BACK) and -1 or 1 -- If we are reversing, then turn the opposite way to make it easier for the player to control
-						if ply:KeyDown(IN_MOVERIGHT) then
-							turnYaw = -selfData.Tank_TurningSpeed * reverse
-						elseif ply:KeyDown(IN_MOVELEFT) then
-							turnYaw = selfData.Tank_TurningSpeed * reverse
-						end
-					elseif angYaw > selfData.Tank_YawLimit then
-						turnYaw = selfData.Tank_TurningSpeed
-					elseif angYaw < -selfData.Tank_YawLimit then
-						turnYaw = -selfData.Tank_TurningSpeed
-					end
-					if turnYaw then
-						local ang = self:GetLocalAngles()
-						ang.y = ang.y + turnYaw
-						self:SetLocalAngles(ang)
-						phys:SetAngles(self:GetAngles())
-					end
-					
-					-- Movement : Have a little grace zone so it doesn't constantly switch between forward and backwards driving
-					if enemyIsHighUp or angPitch > (-selfData.Tank_PitchLimit + 1) then
-						local driveSpeed = selfData.Tank_DrivingSpeed
-						local moveVel = self:GetForward()
-						moveVel:Rotate(Angle(0, selfData.Tank_AngleOffset, 0))
-						
-						-- Increase speed based on how steep the slope is
-						local slopeFactor = tr.HitNormal.z
-						if slopeFactor < 1 then
-							driveSpeed = driveSpeed * (1.1 + (1 - slopeFactor))
-						end
-						
+	if selfData.Tank_Status == 0 or hasDebug then
+		local myPos = self:GetPos()
+		local tr = util.TraceLine({start = myPos + self:GetUp() * 20, endpos = myPos + self:GetUp() * -50, filter = self})
+		if hasDebug then
+			debugoverlay.Cross(tr.StartPos, 4, 2, VJ.COLOR_GREEN, true)
+			debugoverlay.Cross(myPos + self:GetUp() * -50, 4, 2, VJ.COLOR_YELLOW, true)
+			debugoverlay.Cross(tr.HitPos, 4, 2, VJ.COLOR_RED, true)
+			debugoverlay.Line(tr.StartPos, tr.HitPos, 2, nil, true)
+			VJ.DEBUG_Print(self, false, "Tank Status = ", selfData.Tank_Status, " | Trace HitNormal = ", tr.HitNormal)
+		end
+		if tr.Hit then
+			local phys = self:GetPhysicsObject()
+			if IsValid(phys) && #phys:GetFrictionSnapshot() > 0 then
+				local eneData = selfData.EnemyData
+				local ene = eneData.Target
+				if IsValid(ene) then
+					local plyControlled = selfData.VJ_Controlled
+					local enePos = ene:GetPos()
+					local angEne = (enePos - myPos):Angle()
+					local angYaw = (angEne.y - (self:GetAngles().y + selfData.Tank_AngleOffset) + 180) % 360 - 180 -- left(+) / right(-)
+					local angPitch = (angEne.p + 180) % 360 - 180 -- up(-) / down(+)
+					local enemyIsHighUp = plyControlled or angPitch < -selfData.Tank_PitchLimit
+					-- If the enemy is very high up, then move away from it to help the gunner fire!
+					-- OR
+					-- If the enemy's height isn't very high AND the enemy is (within run over distance OR far away), then move towards the enemy!
+					if enemyIsHighUp or (angPitch > -selfData.Tank_PitchLimit && ((eneData.Distance < selfData.Tank_RanOverDistance) or (eneData.Distance > selfData.Tank_DriveTowardsDistance))) then
+						-- Turning
+						local turnYaw;
 						if plyControlled then
-							-- Increase speed if the player is holding the sprint key
-							if selfData.VJ_Controller:GetPlayer():KeyDown(IN_SPEED) then
-								driveSpeed = driveSpeed * 1.8
+							local ply = selfData.VJ_Controller:GetPlayer()
+							local reverse = ply:KeyDown(IN_BACK) and -1 or 1 -- If we are reversing, then turn the opposite way to make it easier for the player to control
+							if ply:KeyDown(IN_MOVERIGHT) then
+								turnYaw = -selfData.Tank_TurningSpeed * reverse
+							elseif ply:KeyDown(IN_MOVELEFT) then
+								turnYaw = selfData.Tank_TurningSpeed * reverse
 							end
-							-- Reverse if player is holding the back key
-							if selfData.VJ_Controller:GetPlayer():KeyDown(IN_BACK) then
-								driveSpeed = -driveSpeed
-							end
-						else
-							-- Move away instead of towards the enemy!
-							if enemyIsHighUp then
-								driveSpeed = -driveSpeed
-							end
+						elseif angYaw > selfData.Tank_YawLimit then
+							turnYaw = selfData.Tank_TurningSpeed
+						elseif angYaw < -selfData.Tank_YawLimit then
+							turnYaw = -selfData.Tank_TurningSpeed
+						end
+						if turnYaw then
+							local ang = self:GetLocalAngles()
+							ang.y = ang.y + turnYaw
+							self:SetLocalAngles(ang)
+							phys:SetAngles(self:GetAngles())
 						end
 						
-						if selfData.VJ_DEBUG then VJ.DEBUG_Print(self, false, "Driving Speed = ", driveSpeed) end
-						moveVel:Normalize()
-						moveVel:Mul(driveSpeed)
-						phys:SetVelocity(moveVel)
-						hasMoved = true
+						-- Movement : Have a little grace zone so it doesn't constantly switch between forward and backwards driving
+						if enemyIsHighUp or angPitch > (-selfData.Tank_PitchLimit + 1) then
+							local driveSpeed = selfData.Tank_DrivingSpeed
+							local moveVel = self:GetForward()
+							moveVel:Rotate(Angle(0, selfData.Tank_AngleOffset, 0))
+							
+							-- Increase speed based on how steep the slope is
+							local slopeFactor = tr.HitNormal.z
+							if slopeFactor < 1 then
+								driveSpeed = driveSpeed * (1.1 + (1 - slopeFactor))
+							end
+							
+							if plyControlled then
+								-- Increase speed if the player is holding the sprint key
+								if selfData.VJ_Controller:GetPlayer():KeyDown(IN_SPEED) then
+									driveSpeed = driveSpeed * 1.8
+								end
+								-- Reverse if player is holding the back key
+								if selfData.VJ_Controller:GetPlayer():KeyDown(IN_BACK) then
+									driveSpeed = -driveSpeed
+								end
+							else
+								-- Move away instead of towards the enemy!
+								if enemyIsHighUp then
+									driveSpeed = -driveSpeed
+								end
+							end
+							
+							if hasDebug then VJ.DEBUG_Print(self, false, "Driving Speed = ", driveSpeed) end
+							moveVel:Normalize()
+							moveVel:Mul(driveSpeed)
+							phys:SetVelocity(moveVel)
+							hasMoved = true
+						end
 					end
 				end
-			end
-			
-			if hasMoved or phys:GetVelocity():Length() > 10 then
-				hasMoved = true
-				selfData.Tank_IsMoving = true
-				self:Tank_PlaySoundSystem("Movement")
-				self:Tank_UpdateMoveParticles()
+				
+				if hasMoved or phys:GetVelocity():Length() > 10 then
+					hasMoved = true
+					selfData.Tank_IsMoving = true
+					self:Tank_PlaySoundSystem("Movement")
+					self:Tank_UpdateMoveParticles()
+					local curTime = CurTime()
+					if vj_npc_melee:GetInt() != 0 && selfData.Tank_NextRunOver < curTime then
+						for _, v in ipairs(ents.FindInSphere(myPos, 100)) do
+							self:Tank_RunOver(v)
+						end
+						selfData.Tank_NextRunOver = curTime + 0.2
+					end
+				end
 			end
 		end
 	end
 
-	if hasMoved then
-		local curTime = CurTime()
-		if vj_npc_melee:GetInt() != 0 && selfData.Tank_NextRunOver < curTime then
-			for _, v in ipairs(ents.FindInSphere(myPos, 100)) do
-				self:Tank_RunOver(v)
-			end
-			selfData.Tank_NextRunOver = curTime + 0.2
-		end
-	else -- Not moving
+	if !hasMoved then -- Not moving
 		VJ.STOPSOUND(selfData.CurrentTankMovingSound)
 		VJ.STOPSOUND(selfData.CurrentTankTrackSound)
 		selfData.Tank_IsMoving = false

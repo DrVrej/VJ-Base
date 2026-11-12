@@ -1870,9 +1870,7 @@ function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 			end
 			cachedSchedule = schedule_alert_chase
 			selfData.CacheScheduleChaseLOS = cachedSchedule
-			self:StartSchedule(schedule_alert_chase)
 		end
-		cachedSchedule:Reset()
 		self:StartSchedule(cachedSchedule)
 	else
 		local cachedSchedule = selfData.CacheScheduleChase
@@ -1887,9 +1885,7 @@ function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 			schedule_alert_chase.CanBeInterrupted = true
 			cachedSchedule = schedule_alert_chase
 			selfData.CacheScheduleChase = cachedSchedule
-			self:StartSchedule(schedule_alert_chase)
 		end
-		cachedSchedule:Reset()
 		self:StartSchedule(cachedSchedule)
 	end
 end
@@ -2031,7 +2027,6 @@ function ENT:DoChangeWeapon(wep, invSwitch)
 				curWep:Remove()
 			end
 			curWep = self:Give(wep)
-			self.WeaponInventory.Primary = curWep
 		end
 	end
 	

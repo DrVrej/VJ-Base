@@ -19,8 +19,6 @@ ENT.CollisionSoundPitch = VJ.SET(90, 100)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.NextStinkyTime = 0
-
 local stinkyMatTypes = {alienflesh = true, antlion = true, armorflesh = true, bloodyflesh = true, flesh = true, zombieflesh = true, player = true}
 local defDecals = {
 	[VJ.BLOOD_COLOR_RED] = "VJ_Blood_Red",
@@ -76,14 +74,10 @@ function ENT:Initialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	local selfData = fGetTable(self)
-	local curTime = CurTime()
-	
-	-- Stinky gib! yuck!
-	if selfData.IsStinky && selfData.NextStinkyTime < curTime then
-		// SOUND_MEAT = Do NOT use this because we would need to call "GetLoudestSoundHint" twice for each sound type!
-		sound.EmitHint(SOUND_CARCASS, self:GetPos(), 400, 0.15, self)
-		selfData.NextStinkyTime = curTime + 2
+	if self.IsStinky then
+		sound.EmitHint(SOUND_CARCASS, self:GetPos(), 400, 0.15, self) -- SOUND_MEAT = Do NOT use this because we would need to call "GetLoudestSoundHint" twice for each sound type!
+		self:NextThink(CurTime() + 2)
+		return true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

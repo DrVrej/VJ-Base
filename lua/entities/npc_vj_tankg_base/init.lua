@@ -121,7 +121,6 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Tank_FacingTarget = false -- Is it facing the enemy?
-ENT.Tank_ReachableHeight = false -- Is the enemy position proper height for it to shoot?
 ENT.Tank_Status = 0 -- 0 = Can fire | 1 = Can NOT fire
 ENT.Tank_Shell_NextFireT = 0
 ENT.Tank_NextIdleParticles = 0
@@ -171,6 +170,7 @@ function ENT:OnThinkActive()
 	self:SetEnemy(ene)
 	self:Tank_OnThinkActive()
 	self:SelectSchedule()
+	selfData.Tank_FacingTarget = false
 	
 	if selfData.Tank_Status == 0 then
 		if IsValid(ene) then
@@ -180,9 +180,8 @@ function ENT:OnThinkActive()
 			local angEne = (enePos - myPos):Angle()
 			local angYaw = (angEne.y - (self:GetAngles().y + selfData.Tank_AngleOffset) + 180) % 360 - 180 -- left(+) / right(-)
 			local angPitch = (angEne.p + 180) % 360 - 180 -- up(-) / down(+)
-			selfData.Tank_ReachableHeight = math.abs(angPitch) < selfData.Tank_PitchLimit -- How high it can fire
-			-- If the enemy is within the barrel firing limit AND not already firing a shell AND its height is is reachable AND the enemy is not extremely close, then FIRE!
-			if math.abs(angYaw) < selfData.Tank_YawLimit && selfData.Tank_ReachableHeight && selfData.EnemyData.Distance > selfData.Tank_Shell_FireMin then
+			-- If the enemy is within the barrel firing limit AND its height is is reachable AND the enemy is not extremely close, then FIRE!
+			if math.abs(angYaw) < selfData.Tank_YawLimit && math.abs(angPitch) < selfData.Tank_PitchLimit && selfData.EnemyData.Distance > selfData.Tank_Shell_FireMin then
 				selfData.Tank_FacingTarget = true
 				if self.Tank_HasShellAttack && self:Visible(ene) then
 					self:Tank_PrepareShell()
@@ -254,7 +253,7 @@ end
 function ENT:Tank_FireShell()
 	local selfData = fGetTable(self)
 	local ene = self:GetEnemy()
-	if !VJ_CVAR_AI_ENABLED or selfData.Dead or !selfData.Tank_ReachableHeight or !selfData.Tank_FacingTarget or !IsValid(ene) then return end
+	if !VJ_CVAR_AI_ENABLED or selfData.Dead or !selfData.Tank_FacingTarget or !IsValid(ene) then return end
 	if self:Visible(ene) then
 		self:Tank_PlaySoundSystem("ShellFire")
 		
