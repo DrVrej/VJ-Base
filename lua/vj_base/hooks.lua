@@ -225,8 +225,11 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 					end
 					-- Add the created entity to the list of possible enemies of existing VJ Base NPCs
 					if !entIsNature && entClass != otherClass && otherData.IsVJBaseSNPC then
-						otherData.RelationshipEnts[#otherData.RelationshipEnts + 1] = ent
-						if !otherData.RelationshipMemory[ent] then otherData.RelationshipMemory[ent] = {} end
+						local noMem = !otherData.RelationshipMemory[ent]
+						if noMem or !VJ.HasValue(otherData.RelationshipEnts, ent) then -- Prevent duplicate entries
+							otherData.RelationshipEnts[#otherData.RelationshipEnts + 1] = ent
+						end
+						if noMem then otherData.RelationshipMemory[ent] = {} end
 					end
 				end
 			end)

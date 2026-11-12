@@ -67,7 +67,7 @@ function VJ.Corpse_AddStinky(ent, checkMat)
 		if !timer.Exists("vj_corpse_stink") then -- Start the stinky timer if it does NOT exist
 			timer.Create("vj_corpse_stink", 0.3, 0, function()
 				local corpses2 = VJ.Corpse_StinkyEnts
-				for k, corpse in RandomPairs(corpses2) do
+				for k, corpse in RandomPairs(corpses2) do -- Must be random to make sure all corpses get a chance to stink due to hint limit
 					if IsValid(corpse) then
 						sdEmitHint(SOUND_CARCASS, corpse:GetPos(), 400, 0.15, corpse)
 					else -- No longer valid, remove it from the list
