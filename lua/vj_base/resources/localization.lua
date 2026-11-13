@@ -3,28 +3,27 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
-/*
+--[[---------------------------------------------------------
 	HOW IT WORKS:
 		* Detects the current language and translates all available strings.
 		* If a string is missing, it automatically falls back to English.
 		* When updated during a map session, most menus will refresh automatically while some may require a map restart.
-	
+
 	HOW TO CONTRIBUTE:
 		* Edit or add translations for any language you would like.
 		* If a line is missing in your language, copy it from the default (English) list.
 		* Once you are done translating or editing, push the updated file to GitHub and open a pull request.
 		* I will review and merge the changes into the base, which will be included in the next update on Workshop.
 		* NOTE: Over time new lines may be added in the default (English) list. Feel free to check back periodically and translate any new entries.
-	
+
 	Q: My language isn't listed, can I still translate?!
 	A: No worries! Simply contact me (DrVrej) and I will setup a profile for your language!
-	
+
 	Q: My language is already translated, how can I contribute?
 	A: Review the existing translations, fix any errors, and compare them with the English version to ensure all lines are up to date!
-	
+
 	Thank you to everyone who has contributed!
-*/
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------]]
 if !CLIENT then return end
 
 local strings_english = {
@@ -503,7 +502,7 @@ local strings_english = {
 	["vjbase.spawnpoint.print.activated"] = "Spawn Point activated!",
 	["vjbase.spawnpoint.print.deactivated"] = "Spawn Point deactivated!",
 }
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 local strings_russian = {
 	-- Spawn Menu
 	["vjbase.menu.spawn.npc.disablethinking"] = "Выключить ИИ",
@@ -927,7 +926,7 @@ local strings_russian = {
 	["vjbase.spawnpoint.print.activated"] = "Точка возрождения активирована!",
 	["vjbase.spawnpoint.print.deactivated"] = "Точка возрождения деактивирована!",
 }
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 local strings_lithuanian = {
 	-- General Menu (Used everywhere)
 	["vjbase.menu.general.default"] = "Numatytieji",
@@ -1305,7 +1304,7 @@ local strings_lithuanian = {
 	["tool.vj_tool_spawner.menu.popup.title.npc"] = "Dukart spustelėkite, kad pasirinktumėte personažą.",
 	["tool.vj_tool_spawner.menu.popup.title.wep"] = "Dukart spustelėkite, kad pasirinktumėte ginklą.",
 }
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 local strings_spanish_latin = {
 	-- General Menu (Used everywhere)
 	["vjbase.menu.general.default"] = "Predeterminado",
@@ -1374,7 +1373,7 @@ local strings_spanish_latin = {
 	["vjbase.menu.plugins.changelog"] = "Registro de Cambios",
 	["vjbase.menu.plugins.makeaddon"] = "¿Quieres hacer un addon?",
 }
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 local strings_chinese_simplified = {
 	-- Spawn Menu
 	["vjbase.menu.spawn.npc.disablethinking"] = "AI 停止思考",
@@ -1835,7 +1834,7 @@ local strings_chinese_simplified = {
 	["vjbase.spawnpoint.print.activated"] = "已激活此出生点！",
 	["vjbase.spawnpoint.print.deactivated"] = "已禁用此出生点！",
 }
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 local strings_turkish = {
 	-- Spawn Menu
 	["vjbase.menu.spawn.npc.disablethinking"] = "AI Düşünmesini Kapat",
@@ -2254,18 +2253,14 @@ local strings_turkish = {
 	["vjbase.spawnpoint.print.activated"] = "Bu doğma noktası etkinleştirildi!",
 	["vjbase.spawnpoint.print.deactivated"] = "Bu doğma noktası devre dışı!",
 }
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- ///// IMPLEMENTATION BELOW — Don't change anything below! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------=[ ///// BASE IMPLEMENTATION BELOW | Don't change! \\\\\ ]=--------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------
 VJ.AddClientConVar("vj_language", "english", "Current language VJ Base is set to")
 VJ.AddClientConVar("vj_language_auto", 1, "Automatically set the language of VJ Base to the one selected by Garry's Mod")
 --
 local add = language.Add
---
 local defToVJ = {
 	["en"] = "english",
 	["ru"] = "russian",
@@ -2283,7 +2278,6 @@ local defToVJ = {
 	["ja"] = "japanese",
 	["vi"] = "vietnamese"
 }
---
 local langLookup = {
 	russian = strings_russian,
 	lithuanian = strings_lithuanian,
@@ -2298,7 +2292,7 @@ function VJ.RefreshLanguage()
 	-- Automatically set VJ Base to whatever GMod's language is set to
 		-- Based on: https://wiki.facepunch.com/gmod/Addon_Localization
 		-- Skip if VJ Base is set to a language unsupported by Garry's Mod
-	if GetConVar("vj_language_auto"):GetInt() == 1 && conv != "armenian" then
+	if GetConVar("vj_language_auto"):GetInt() == 1 and conv != "armenian" then
 		local converted = defToVJ[GetConVar("gmod_language"):GetString()]
 		if converted then
 			RunConsoleCommand("vj_language", converted)

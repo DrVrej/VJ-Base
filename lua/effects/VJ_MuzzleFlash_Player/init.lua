@@ -10,10 +10,10 @@ function EFFECT:Init(data)
 	if !IsValid(owner) then return end
 	
 	-- (if the owner is NOT the local player OR in third person, then use world model) OR (Use the owner's view model)
-	local muzEnt = ((owner != LocalPlayer()) or owner:ShouldDrawLocalPlayer()) && ent or owner:GetViewModel()
+	local muzEnt = ((owner != LocalPlayer()) or owner:ShouldDrawLocalPlayer()) and ent or owner:GetViewModel()
 	ParticleEffectAttach(VJ.PICK(ent.PrimaryEffects_MuzzleParticles), PATTACH_POINT_FOLLOW, muzEnt, data:GetAttachment())
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function EFFECT:Think() return false end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function EFFECT:Render() end -- Avoid "ERROR" from appearing for single a tick

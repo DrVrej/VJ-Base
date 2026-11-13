@@ -16,11 +16,11 @@ ENT.Spawnable = true
 
 ENT.VJ_ID_Grenade = true
 ENT.VJ_ID_Grabbable = true
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	VJ.AddKillIcon("obj_vj_grenade", ENT.PrintName, VJ.KILLICON_GRENADE)
 end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 if !SERVER then return end
 
 ENT.Model = "models/vj_base/weapons/w_grenade.mdl"
@@ -37,7 +37,7 @@ ENT.SoundTbl_OnCollide = "weapons/hegrenade/he_bounce-1.wav"
 
 -- Custom
 ENT.FuseTime = 3
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Init()
 	self:AddFlags(FL_GRENADE)
 	timer.Simple(self.FuseTime, function()
@@ -46,14 +46,14 @@ function ENT:Init()
 		end
 	end)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnDamaged(dmginfo)
 	local phys = self:GetPhysicsObject()
 	if IsValid(phys) then
 		phys:AddVelocity(dmginfo:GetDamageForce() * 0.1)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnCollision(data, phys)
 	local getVel = phys:GetVelocity()
 	local curVelSpeed = getVel:Length()
@@ -64,7 +64,7 @@ function ENT:OnCollision(data, phys)
 		self:PlaySound("OnCollide")
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local defAngle = Angle()
 local vecZ4 = Vector(0, 0, 4)
 local vezZ100 = Vector(0, 0, 100)
@@ -73,8 +73,8 @@ function ENT:OnDestroy()
 	local myPos = self:GetPos()
 	
 	VJ.EmitSound(self, "VJ.Explosion")
-	ParticleEffect("vj_explosion1", myPos, defAngle)
 	util.ScreenShake(myPos, 100, 200, 1, 2500)
+	ParticleEffect("vj_explosion1", myPos, defAngle)
 	
 	local effectData = EffectData()
 	effectData:SetOrigin(myPos)

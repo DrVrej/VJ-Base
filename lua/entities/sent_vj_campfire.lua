@@ -15,22 +15,22 @@ ENT.Category = "VJ Base"
 ENT.Spawnable = true
 
 scripted_ents.Alias("sent_vj_fireplace", "sent_vj_campfire") -- !! Backwards Compatibility !!
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:SetupDataTables()
 	self:NetworkVar("Bool", "Activated")
 	if SERVER then
 		self:SetActivated(false)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	ENT.NextActivationCheck = 0
 	ENT.CreatedParticles = false
-	---------------------------------------------------------------------------------------------------------------------------------------------
+	
 	function ENT:Draw()
 		self:DrawModel()
 	end
-	---------------------------------------------------------------------------------------------------------------------------------------------
+	
 	function ENT:Think()
 		local curTime = CurTime()
 		if curTime > self.NextActivationCheck then
@@ -63,10 +63,9 @@ if CLIENT then
 		end
 	end
 end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 if !SERVER then return end
 
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetModel("models/vj_base/fireplace.mdl")
 	//self:PhysicsInit(SOLID_VPHYSICS)
@@ -80,7 +79,7 @@ function ENT:Initialize()
 		self:CampfireToggle(true)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:CampfireToggle(activate)
 	if activate then
 		self:SetActivated(true)
@@ -95,7 +94,7 @@ function ENT:CampfireToggle(activate)
 		VJ.STOPSOUND(self.FireSound)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Use(activator)
 	local activate = !self:GetActivated()
 	self:CampfireToggle(activate)
@@ -103,13 +102,13 @@ function ENT:Use(activator)
 		activator:PrintMessage(HUD_PRINTTALK, activate and "#vjbase.campfire.print.activated" or "#vjbase.campfire.print.deactivated")
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Touch(entity)
-	if IsValid(entity) && self:GetActivated() && entity.VJ_ID_Living && entity:GetPos():Distance(self:GetPos()) <= 38 then
+	if IsValid(entity) and self:GetActivated() and entity.VJ_ID_Living and entity:GetPos():Distance(self:GetPos()) <= 38 then
 		entity:Ignite(math.Rand(3, 5))
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnRemove()
 	self:StopParticles()
 	VJ.STOPSOUND(self.FireSound)

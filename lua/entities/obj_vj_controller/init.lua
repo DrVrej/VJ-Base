@@ -12,33 +12,26 @@ ENT.VJC_Player_DrawHUD = true -- Should the controller HUD be displayed?
 ENT.VJC_NPC_CanTurn = true -- Should the NPC be allowed to turn while idle?
 ENT.VJC_Bullseye_RefreshPos = true -- Should bullseye's position update every tick?
 ENT.VJC_BullseyeTracking = false -- Activates bullseye tracking (Will not turn to the move location!)
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---
+
+--------------------------------------=[ HOOKS ]=--------------------------------------
 -- Use the functions below to customize or add new systems and behaviors
 -- Use "self.BaseClass.FuncName(self)" or "baseclass.Get(baseName).FuncName(self)" to run the base code as well when overriding functions not listed below
---
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Init() end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnThink() end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 -- Different from self:OnKeyBindPressed(), this uses: https://wiki.facepunch.com/gmod/Enums/KEY
 function ENT:OnKeyPressed(key) end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 -- Different from self:OnKeyPressed(), this uses: https://wiki.facepunch.com/gmod/Enums/IN
 function ENT:OnKeyBindPressed(key) end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnStopControlling(keyPressed) end
----------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- ///// BASE IMPLEMENTATION BELOW — Override with caution and only when necessary! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------=[ ///// BASE IMPLEMENTATION BELOW | Override with caution! \\\\\ ]=--------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.VJC_SavedVars_PLY = nil -- Hash table to hold all the values that need to be reset after the player stops controlling
 ENT.VJC_SavedVars_NPC = nil -- Hash table to hold all the values that need to be reset after the NPC is uncontrolled
 ENT.VJC_Camera_CurZoom = Vector()
@@ -46,7 +39,7 @@ ENT.VJC_NPC_LastPos = Vector()
 ENT.VJC_Removed = false
 
 local defPos = Vector()
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Initialize()
 	self:SetMoveType(MOVETYPE_NONE)
 	self:SetSolid(SOLID_NONE)
@@ -63,11 +56,11 @@ function ENT:Initialize()
 	if self.CustomOnStopControlling then self.OnStopControlling = function(_, keyPressed) self:CustomOnStopControlling(keyPressed) end end
 	--
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:UpdateTransmitState()
 	return TRANSMIT_ALWAYS -- This entity should always transmit as its client side code is essential!
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:SetControlledNPC(npc)
 	-- Set the bullseye entity values
 	local bullseye = ents.Create("obj_vj_bullseye")
@@ -193,7 +186,7 @@ function ENT:SetControlledNPC(npc)
 		end
 		-- Apply a small delay to assure that the bullseye is in the NPC's "RelationshipEnts"
 		timer.Simple(0.1, function()
-			if IsValid(self) && IsValid(npc) then
+			if IsValid(self) and IsValid(npc) then
 				npc:MaintainRelationships()
 			end
 		end)
@@ -203,7 +196,7 @@ function ENT:SetControlledNPC(npc)
 	self:SetNPC(npc)
 	self.VJCE_NPC = npc
 	timer.Simple(0, function() -- This only needs to be 0 seconds because we just need a tick to pass
-		if IsValid(self) && IsValid(self:GetNPC()) then
+		if IsValid(self) and IsValid(self:GetNPC()) then
 			if npc.IsVJBaseSNPC then
 				self:GetNPC().PauseAttacks = false
 				self:GetNPC():ForceSetEnemy(self:GetBullseye(), false)
@@ -213,7 +206,7 @@ function ENT:SetControlledNPC(npc)
 	end)
 	self:SendDataToClient()
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:StartControlling()
 	local npc = self:GetNPC()
 	
@@ -261,7 +254,7 @@ function ENT:StartControlling()
 	if ply:GetInfoNum("vj_npc_cont_diewithnpc", 0) == 1 then self.VJC_Player_CanRespawn = false end
 
 	hook.Add("PlayerButtonDown", self, function(ent, ply2, button)
-		if IsValid(ent) && ply2.VJ_Controlling && ent:GetPlayer() == ply2 then
+		if IsValid(ent) and ply2.VJ_Controlling and ent:GetPlayer() == ply2 then
 			ent:OnKeyPressed(button)
 			
 			-- Stop Controlling
@@ -303,21 +296,21 @@ function ENT:StartControlling()
 
 	hook.Add("KeyPress", self, function(ent, ply2, key)
 		//print(key)
-		if IsValid(ent) && ply2.VJ_Controlling && ent:GetPlayer() == ply2 then
+		if IsValid(ent) and ply2.VJ_Controlling and ent:GetPlayer() == ply2 then
 			ent:OnKeyBindPressed(key)
 		end
 	end)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 -- Sadly no other way, this is the most reliable way to sync the position from client to server in time
 	-- Also avoids garbage positions that output from other methods
 net.Receive("vj_controller_sv", function(len, ply)
 	-- Set the controller's bullseye position if the player is controlling an NPC AND controller entity exists AND Bullseye exists --> Protect against spam ?
-	if ply.VJ_Controlling && IsValid(ply.VJ_Controller) && ply.VJ_Controller.VJC_Bullseye_RefreshPos && IsValid(ply.VJ_Controller:GetBullseye()) then
+	if ply.VJ_Controlling and IsValid(ply.VJ_Controller) and ply.VJ_Controller.VJC_Bullseye_RefreshPos and IsValid(ply.VJ_Controller:GetBullseye()) then
 		ply.VJ_Controller:GetBullseye():SetPos(net.ReadVector())
 	end
 end)
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:SendDataToClient(reset)
 	local npc = self:GetNPC()
 	local npcData = npc.ControllerParams
@@ -332,12 +325,12 @@ function ENT:SendDataToClient(reset)
 	self:SetCameraFP_BoneAng((reset != true and npcData.FirstP_CameraBoneAng) or 0)
 	self:SetCameraFP_BoneAngOffset((reset != true and npcData.FirstP_CameraBoneAng_Offset) or 0)
 	
-	if !reset && IsValid(npc) then
+	if !reset and IsValid(npc) then
 		self:SetNPCName(npc:GetName())
-		self:SetNPCAttackMelee(npc.HasMeleeAttack && (((npc.IsAbleToMeleeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_MELEE) and 2) or 1) or 0)
-		self:SetNPCRangeAttack(npc.HasRangeAttack && (((npc.IsAbleToRangeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_RANGE) and 2) or 1) or 0)
-		self:SetNPCLeapAttack(npc.HasLeapAttack && (((npc.IsAbleToLeapAttack != true or npc.AttackType == VJ.ATTACK_TYPE_LEAP) and 2) or 1) or 0)
-		self:SetNPCGrenadeAttack(npc.HasGrenadeAttack && ((CurTime() <= npc.NextThrowGrenadeT and 2) or 1) or 0)
+		self:SetNPCAttackMelee(npc.HasMeleeAttack and (((npc.IsAbleToMeleeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_MELEE) and 2) or 1) or 0)
+		self:SetNPCRangeAttack(npc.HasRangeAttack and (((npc.IsAbleToRangeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_RANGE) and 2) or 1) or 0)
+		self:SetNPCLeapAttack(npc.HasLeapAttack and (((npc.IsAbleToLeapAttack != true or npc.AttackType == VJ.ATTACK_TYPE_LEAP) and 2) or 1) or 0)
+		self:SetNPCGrenadeAttack(npc.HasGrenadeAttack and ((CurTime() <= npc.NextThrowGrenadeT and 2) or 1) or 0)
 		local npcWeapon = npc:GetActiveWeapon()
 		if IsValid(npcWeapon) then
 			self:SetNPCWeapon(npcWeapon)
@@ -348,7 +341,7 @@ function ENT:SendDataToClient(reset)
 		end
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local vecZ20 = Vector(0, 0, 20)
 --
 function ENT:Think()
@@ -390,11 +383,11 @@ function ENT:Think()
 	self:OnThink()
 
 	local canTurn = true
-	if npc.Flinching or (((npc.CurrentSchedule && !npc.CurrentSchedule.IsPlayAnim) or !npc.CurrentSchedule) && npc:GetNavType() == NAV_JUMP) then return end
+	if npc.Flinching or (((npc.CurrentSchedule and !npc.CurrentSchedule.IsPlayAnim) or !npc.CurrentSchedule) and npc:GetNavType() == NAV_JUMP) then return end
 
 	-- NPC Weapon attack
 	if npc.IsVJBaseSNPC_Human then
-		if IsValid(npcWeapon) && !npc:IsMoving() && npcWeapon.IsVJBaseWeapon && ply:KeyDown(IN_ATTACK2) && !npc.AttackType && !npc.PauseAttacks && npc:GetWeaponState() == VJ.WEP_STATE_READY then
+		if IsValid(npcWeapon) and !npc:IsMoving() and npcWeapon.IsVJBaseWeapon and ply:KeyDown(IN_ATTACK2) and !npc.AttackType and !npc.PauseAttacks and npc:GetWeaponState() == VJ.WEP_STATE_READY then
 			//npc:SetAngles(Angle(0, math.ApproachAngle(npc:GetAngles().y, ply:GetAimVector():Angle().y, 100), 0))
 			npc:SetTurnTarget(bullseyePos, 0.2)
 			canTurn = false
@@ -410,7 +403,7 @@ function ENT:Think()
 					npcWeapon.NPC_NextPrimaryFire = animDur -- Make melee weapons dynamically change the next primary fire
 					npcWeapon:NPCShoot_Primary()
 				end
-			elseif !VJ.IsCurrentAnim(npc, npc:TranslateActivity(npc.WeaponAttackAnim)) && !VJ.IsCurrentAnim(npc, npc.AnimTbl_WeaponAttack) then
+			elseif !VJ.IsCurrentAnim(npc, npc:TranslateActivity(npc.WeaponAttackAnim)) and !VJ.IsCurrentAnim(npc, npc.AnimTbl_WeaponAttack) then
 				npc:OnWeaponAttack()
 				local anim = npc:TranslateActivity(VJ.PICK(npc.AnimTbl_WeaponAttack))
 				npc.WeaponAttackAnim = anim
@@ -423,15 +416,15 @@ function ENT:Think()
 		end
 	end
 	
-	if npc.IsVJBaseSNPC && npc.AttackAnimTime < curTime && curTime > npc.NextChaseTime && !npc.IsVJBaseSNPC_Tank then
+	if npc.IsVJBaseSNPC and npc.AttackAnimTime < curTime and curTime > npc.NextChaseTime and !npc.IsVJBaseSNPC_Tank then
 		-- NPC Turning
-		if !npc:IsMoving() && canTurn && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ.WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
+		if !npc:IsMoving() and canTurn and npc.MovementType != VJ_MOVETYPE_PHYSICS and ((npc.IsVJBaseSNPC_Human and npc:GetWeaponState() != VJ.WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
 			npc:SCHEDULE_IDLE_STAND()
 			if self.VJC_NPC_CanTurn then
 				local turnData = npc.TurnData
 				if turnData.Target != bullseye then
 					npc:SetTurnTarget(bullseye, 1)
-				elseif npc:GetActivity() == ACT_IDLE && npc:GetIdealActivity() == ACT_IDLE && (npc:DeltaIdealYaw() <= -45 or npc:DeltaIdealYaw() >= 45) then -- Check both current act AND ideal act because certain activities only change the current act (Ex: UpdateTurnActivity function)
+				elseif npc:GetActivity() == ACT_IDLE and npc:GetIdealActivity() == ACT_IDLE and (npc:DeltaIdealYaw() <= -45 or npc:DeltaIdealYaw() >= 45) then -- Check both current act AND ideal act because certain activities only change the current act (Ex: UpdateTurnActivity function)
 					npc:UpdateTurnActivity()
 					if npc:GetIdealActivity() != ACT_IDLE then -- If ideal act is no longer idle, then we have selected a turn activity!
 						npc.NextIdleTime = curTime + VJ.AnimDurationEx(npc, npc:GetIdealActivity())
@@ -447,7 +440,7 @@ function ENT:Think()
 	end
 	self:NextThink(curTime)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:StartMovement(direction, rotation)
 	local npc = self:GetNPC()
 	local ply = self:GetPlayer()
@@ -491,7 +484,7 @@ function ENT:StartMovement(direction, rotation)
 		npc:SCHEDULE_GOTO_POSITION(ply:KeyDown(IN_SPEED) and "TASK_RUN_PATH" or "TASK_WALK_PATH", function(x)
 			-- Since are constantly setting the schedule, we need to manually update the movement activity every time to avoid stuttering between walk/run
 			npc:SetMovementActivity(ply:KeyDown(IN_SPEED) and ACT_RUN or ACT_WALK)
-			if ply:KeyDown(IN_ATTACK2) && npc.IsVJBaseSNPC_Human then
+			if ply:KeyDown(IN_ATTACK2) and npc.IsVJBaseSNPC_Human then
 				x.TurnData = {Type = VJ.FACE_ENEMY}
 				x.CanShootWhenMoving = true
 			else
@@ -505,14 +498,14 @@ function ENT:StartMovement(direction, rotation)
 		end)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:ToggleBullseyeTracking()
 	self.VJC_BullseyeTracking = !self.VJC_BullseyeTracking
 	if self.VJC_Player_CanChatMessage then
 		self:GetPlayer():ChatPrint(self.VJC_BullseyeTracking and "#vjbase.controller.print.tracking.activated" or "#vjbase.controller.print.tracking.deactivated")
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:ToggleMovementJumping()
 	local jumpData = self:GetNPC().JumpParams
 	jumpData.Enabled = !jumpData.Enabled
@@ -520,7 +513,7 @@ function ENT:ToggleMovementJumping()
 		self:GetPlayer():ChatPrint(jumpData.Enabled and "#vjbase.controller.print.jump.enable" or "#vjbase.controller.print.jump.disable")
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:StopControlling(keyPressed)
 	keyPressed = keyPressed or false
 	local npc = self:GetNPC()
@@ -609,7 +602,7 @@ function ENT:StopControlling(keyPressed)
 	self.VJC_Removed = true
 	self:Remove()
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnRemove()
 	if !self.VJC_Removed then
 		self:StopControlling()

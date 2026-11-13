@@ -18,7 +18,7 @@ TOOL.ClientConVar = {
 }
 
 local defaultConvars = TOOL:BuildConVarList()
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	local function ControlPanel(panel)
 		local reset = vgui.Create("DButton")
@@ -209,10 +209,10 @@ if CLIENT then
 		panel:CheckBox("#tool.vj_tool_spawner.menu.toggle.sound", "vj_tool_spawner_playsound")
 		panel:NumSlider("#tool.vj_tool_spawner.menu.delaytime", "vj_tool_spawner_nextspawntime", 0, 1000, 0)
 	end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 	net.Receive("vj_tool_spawner_cl_create", function(len)
 		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_spawner" && hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_spawner") then
+		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_spawner" and hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_spawner") then
 			local spawnPos = net.ReadVector()
 			local spawnType = net.ReadBit()
 			net.Start("vj_tool_spawner_sv_create")
@@ -222,7 +222,7 @@ if CLIENT then
 			net.SendToServer()
 		end
 	end)
----------------------------------------------------------------------------------------------------------------------------------------------
+
 	function TOOL.BuildCPanel(panel)
 		ControlPanel(panel)
 	end
@@ -231,7 +231,7 @@ else
 	--
 	net.Receive("vj_tool_spawner_sv_create", function(len, ply)
 		local wep = ply:GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_spawner" && hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_spawner") then
+		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_spawner" and hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_spawner") then
 			local spawnPos = net.ReadVector()
 			local spawnType = net.ReadBit()
 			local spawnEntries = net.ReadType()
@@ -268,7 +268,7 @@ else
 		end
 	end)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	net.Start("vj_tool_spawner_cl_create")
@@ -277,7 +277,7 @@ function TOOL:LeftClick(tr)
 	net.Send(self:GetOwner())
 	return true
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
 	net.Start("vj_tool_spawner_cl_create")

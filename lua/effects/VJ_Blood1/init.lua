@@ -3,15 +3,15 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
-/*--------------------------------------
+--[[---------------------------------------------------------
 	-- Common Blood Types --
 	Red 		= Color(130, 19, 10)
 	Yellow 		= Color(255, 221, 35)
 
 	-- Example --
 	effectBlood:SetColor(VJ.Color2Byte(Color(130, 19, 10)))
---------------------------------------*/
----------------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------]]
+
 local bAND = bit.band
 local bShiftR = bit.rshift
 --
@@ -45,7 +45,7 @@ function EFFECT:Init(data)
 	end
 	emitter:Finish()
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function EFFECT:Think() return false end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function EFFECT:Render() end -- Avoid "ERROR" from appearing for single a tick

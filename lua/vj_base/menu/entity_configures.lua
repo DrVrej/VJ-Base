@@ -3,9 +3,9 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local function VJ_NPC_SETTINGS_AI(panel)
-	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
+	if !game.SinglePlayer() and !LocalPlayer():IsAdmin() then
 		panel:Help("#vjbase.menu.general.admin.not")
 		panel:Help("#vjbase.menu.general.admin.only")
 		return
@@ -41,9 +41,9 @@ local function VJ_NPC_SETTINGS_AI(panel)
 	panel:CheckBox("#vjbase.menu.npc.settings.ai.relation.base", "vj_npc_fri_base")
 	panel:ControlHelp("#vjbase.menu.npc.settings.ai.relation.base.label")
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local function VJ_NPC_SETTINGS_ATTACKS(panel)
-	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
+	if !game.SinglePlayer() and !LocalPlayer():IsAdmin() then
 		panel:Help("#vjbase.menu.general.admin.not")
 		panel:Help("#vjbase.menu.general.admin.only")
 		return
@@ -73,9 +73,9 @@ local function VJ_NPC_SETTINGS_ATTACKS(panel)
 	panel:CheckBox("#vjbase.menu.npc.settings.atk.wep.drop", "vj_npc_wep_drop")
 	panel:CheckBox("#vjbase.menu.npc.settings.atk.wep.ply.pickup", "vj_npc_wep_ply_pickup")
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local function VJ_NPC_SETTINGS_GENERAL(panel)
-	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
+	if !game.SinglePlayer() and !LocalPlayer():IsAdmin() then
 		panel:Help("#vjbase.menu.general.admin.not")
 		panel:Help("#vjbase.menu.general.admin.only")
 		return
@@ -154,9 +154,9 @@ local function VJ_NPC_SETTINGS_GENERAL(panel)
 	panel:CheckBox("#vjbase.menu.npc.settings.gen.ply.chat", "vj_npc_ply_chat")
 	panel:ControlHelp("#vjbase.menu.npc.settings.gen.ply.chat.label")
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local function VJ_NPC_SETTINGS_SOUND(panel)
-	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
+	if !game.SinglePlayer() and !LocalPlayer():IsAdmin() then
 		panel:Help("#vjbase.menu.general.admin.not")
 		panel:Help("#vjbase.menu.general.admin.only")
 		return
@@ -194,9 +194,9 @@ local function VJ_NPC_SETTINGS_SOUND(panel)
 	panel:CheckBox("#vjbase.menu.npc.settings.snd.gibbing", "vj_npc_snd_gib")
 	panel:ControlHelp("#vjbase.menu.npc.settings.snd.gibbing.label")
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local function VJ_NPC_SETTINGS_DEV(panel)
-	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
+	if !game.SinglePlayer() and !LocalPlayer():IsAdmin() then
 		panel:Help("#vjbase.menu.general.admin.not")
 		panel:Help("#vjbase.menu.general.admin.only")
 		return
@@ -225,7 +225,7 @@ local function VJ_NPC_SETTINGS_DEV(panel)
 	panel:Button("#vjbase.menu.npc.settings.dev.reload.models", "r_flushlod")
 	panel:Button("#vjbase.menu.npc.settings.dev.reload.menus", "spawnmenu_reload")
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local function VJ_NPC_SETTINGS_CONTROLLER(panel)
 	panel:Help("#vjbase.menu.npc.settings.con.header")
 	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_cont_hud 1\n vj_npc_cont_cam_zoom_dist 5\n vj_npc_cont_debug 0\n vj_npc_cont_cam_speed 6\n vj_npc_cont_cam_zoom_speed 10\n vj_npc_cont_diewithnpc 0"})
@@ -265,9 +265,9 @@ local function VJ_NPC_SETTINGS_CONTROLLER(panel)
 		end
 	panel:AddItem(bindList)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local function VJ_NPC_SETTINGS_PERFORMANCE(panel)
-	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
+	if !game.SinglePlayer() and !LocalPlayer():IsAdmin() then
 		panel:Help("#vjbase.menu.general.admin.not")
 		panel:Help("#vjbase.menu.general.admin.only")
 		return
@@ -294,14 +294,14 @@ local function VJ_NPC_SETTINGS_PERFORMANCE(panel)
 	panel:CheckBox("#vjbase.menu.npc.settings.perf.reducevfx", "vj_npc_reduce_vfx")
 	panel:ControlHelp("#vjbase.menu.npc.settings.perf.reducevfx.label")
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local function VJ_NPC_SETTINGS_CLIENT(panel)
 	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_spawn_guard 0\n vj_npc_snd_track_volume 1"})
 	panel:CheckBox("#vjbase.menu.npc.settings.cl.guard", "vj_npc_spawn_guard")
 	panel:NumSlider("#vjbase.menu.npc.settings.cl.snd_track.volume", "vj_npc_snd_track_volume", 0, 5, 2)
 	panel:ControlHelp("#vjbase.menu.npc.settings.cl.snd_track.volume.label")
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local function VJ_WEAPON_SETTINGS_CLIENT(panel)
 	panel:Help("#vjbase.menu.wep.settings.client.notice")
 	panel:AddControl("Button", {Text = "#vjbase.menu.general.reset.everything", Command = "vj_wep_autopickup 0\n vj_wep_muzzleflash 1\n vj_wep_shells 1\n vj_wep_muzzleflash_light 1"})
@@ -313,7 +313,7 @@ local function VJ_WEAPON_SETTINGS_CLIENT(panel)
 	panel:ControlHelp("#vjbase.menu.wep.settings.client.toggle.muzzlelight.label")
 	panel:CheckBox("#vjbase.menu.wep.settings.client.toggle.shells", "vj_wep_shells")
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 hook.Add("PopulateToolMenu", "VJ_PopulateToolMenu_Configures", function()
 	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_ai", "#vjbase.menu.npc.settings.ai", "", "", VJ_NPC_SETTINGS_AI)
 	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_atk", "#vjbase.menu.npc.settings.atk", "", "", VJ_NPC_SETTINGS_ATTACKS)

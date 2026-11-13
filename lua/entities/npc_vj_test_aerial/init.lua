@@ -30,14 +30,14 @@ ENT.SoundTbl_MeleeAttack = "npc/scanner/scanner_electric1.wav"
 ENT.SoundTbl_MeleeAttackMiss = {"npc/zombie/claw_miss1.wav", "npc/zombie/claw_miss2.wav"}
 ENT.SoundTbl_Pain = {"npc/scanner/scanner_pain1.wav", "npc/scanner/scanner_pain2.wav"}
 ENT.SoundTbl_Death = "npc/waste_scanner/grenade_fire.wav"
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local spawnPos = Vector(0, 0, 10)
 --
 function ENT:Init()
 	self:SetCollisionBounds(Vector(-33, -33, -30), Vector(33, 33, 26))
 	self:SetPos(self:GetPos() + spawnPos)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local defAng = Angle()
 --
 function ENT:OnDeath(dmginfo, hitgroup, status)

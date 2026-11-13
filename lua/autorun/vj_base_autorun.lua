@@ -13,9 +13,8 @@
 AddCSLuaFile()
 
 if CLIENT then MsgC(Color(255, 163, 121), "VJ Base: ", Color(255, 241, 122, 200), "Initializing client files...\n") else MsgC(Color(255, 163, 121), "VJ Base: ", Color(156, 241, 255, 200), "Initializing server files...\n") end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Global Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------=[ Global Variables ]=--------------------------------------
 VJBASE_INSTALLED = true
 VJBASE_VERSION = "3.3.0" -- Major Release . Version . Patches
 
@@ -23,55 +22,52 @@ VJ_CVAR_IGNOREPLAYERS = GetConVar("ai_ignoreplayers"):GetInt() != 0
 VJ_CVAR_AI_ENABLED = GetConVar("ai_disabled"):GetInt() != 1
 if SERVER then VJ_RecipientFilter = RecipientFilter() VJ_RecipientFilter:AddAllPlayers() end
 if !VJ then VJ = {} end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- File Initialization ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------=[ File Initialization ]=--------------------------------------
 AddCSLuaFile("autorun/vj_controls.lua")
 include("autorun/vj_controls.lua")
 
-	-- ====== Core ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	---------= Core =---------
 AddCSLuaFile("vj_base/enums.lua")
-AddCSLuaFile("vj_base/convars.lua")
-AddCSLuaFile("vj_base/debug.lua")
-AddCSLuaFile("vj_base/funcs.lua")
-AddCSLuaFile("vj_base/hooks.lua")
-AddCSLuaFile("vj_base/menu/main.lua")
-AddCSLuaFile("vj_base/menu/spawn.lua")
-AddCSLuaFile("vj_base/menu/entity_configures.lua")
-AddCSLuaFile("vj_base/menu/entity_properties.lua")
-AddCSLuaFile("vj_base/resources/localization.lua")
-AddCSLuaFile("vj_base/resources/main.lua")
-AddCSLuaFile("vj_base/resources/particles.lua")
-AddCSLuaFile("vj_base/resources/sounds.lua")
-AddCSLuaFile("vj_base/extensions/corpse.lua")
-AddCSLuaFile("vj_base/extensions/music.lua")
-
-include("vj_base/convars.lua")
-include("vj_base/debug.lua")
 include("vj_base/enums.lua")
+AddCSLuaFile("vj_base/convars.lua")
+include("vj_base/convars.lua")
+AddCSLuaFile("vj_base/debug.lua")
+include("vj_base/debug.lua")
+AddCSLuaFile("vj_base/funcs.lua")
 include("vj_base/funcs.lua")
+AddCSLuaFile("vj_base/hooks.lua")
 include("vj_base/hooks.lua")
+AddCSLuaFile("vj_base/menu/main.lua")
 include("vj_base/menu/main.lua")
+AddCSLuaFile("vj_base/menu/spawn.lua")
 include("vj_base/menu/spawn.lua")
+AddCSLuaFile("vj_base/menu/entity_configures.lua")
 include("vj_base/menu/entity_configures.lua")
+AddCSLuaFile("vj_base/menu/entity_properties.lua")
 include("vj_base/menu/entity_properties.lua")
+AddCSLuaFile("vj_base/resources/localization.lua")
 include("vj_base/resources/localization.lua")
+AddCSLuaFile("vj_base/resources/main.lua")
 include("vj_base/resources/main.lua")
+AddCSLuaFile("vj_base/resources/particles.lua")
 include("vj_base/resources/particles.lua")
+AddCSLuaFile("vj_base/resources/sounds.lua")
 include("vj_base/resources/sounds.lua")
+AddCSLuaFile("vj_base/extensions/corpse.lua")
 include("vj_base/extensions/corpse.lua")
+AddCSLuaFile("vj_base/extensions/music.lua")
 include("vj_base/extensions/music.lua")
 
-	-- ====== Modules ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	---------= Modules =---------
 AddCSLuaFile("includes/modules/vj_ai_nodegraph.lua")
 AddCSLuaFile("includes/modules/vj_ai_schedule.lua")
 AddCSLuaFile("includes/modules/vj_ai_task.lua")
 
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Spawn Menu Initialization ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------=[ Spawn Menu Initialization ]=--------------------------------------
 local spawnCategory = "VJ Base"
-	-- ====== Category Information (including popular categories) ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	---------= Categories =---------
 	-- Game icons can be found in: "Steam\appcache\librarycache"
 VJ.AddCategoryInfo(spawnCategory, {Icon = "vj_base/icons/vrejgaming.png"})
 VJ.AddCategoryInfo("Alien Swarm", {Icon = "vj_base/icons/alienswarm.png"})
@@ -85,11 +81,13 @@ VJ.AddCategoryInfo("Military", {Icon = "vj_base/icons/mil1.png"})
 VJ.AddCategoryInfo("No More Room In Hell", {Icon = "vj_base/icons/nmrih.png"})
 VJ.AddCategoryInfo("Star Wars", {Icon = "vj_base/icons/starwars.png"})
 VJ.AddCategoryInfo("Zombies", {Icon = "vj_base/icons/zombies.png"})
-	-- ====== NPCs ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	---------= NPCs =---------
 VJ.AddNPC("Aerial NPC", "npc_vj_test_aerial", spawnCategory)
 VJ.AddNPC("Interactive NPC", "npc_vj_test_interactive", spawnCategory, {AdminOnly = true})
 VJ.AddNPC_HUMAN("Player NPC", "npc_vj_test_player", {"weapon_vj_ak47", "weapon_vj_glock17", "weapon_vj_m16a1", "weapon_vj_mp40", "weapon_vj_9mmpistol", "weapon_vj_357", "weapon_vj_ar2", "weapon_vj_blaster", "weapon_vj_smg1", "weapon_vj_spas12", "weapon_vj_k3", "weapon_vj_crossbow", "weapon_vj_ssg08"}, spawnCategory)
-	-- ====== Entities ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	---------= Entities =---------
 VJ.AddEntity("Admin Health Kit", "sent_vj_ply_healthkit", spawnCategory, {AdminOnly = true})
 VJ.AddEntity("Player Spawn Point", "sent_vj_ply_spawn", spawnCategory, {AdminOnly = true})
 VJ.AddEntity("Campfire", "sent_vj_campfire", spawnCategory)
@@ -97,7 +95,8 @@ VJ.AddEntity("Wooden Board", "prop_vj_board", spawnCategory)
 VJ.AddEntity("Grenade", "obj_vj_grenade", spawnCategory)
 VJ.AddEntity("Flare Round", "obj_vj_flareround", spawnCategory)
 VJ.AddEntity("Flag", "prop_vj_flag", spawnCategory)
-	-- ====== Weapons ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	---------= Weapons =---------
 VJ.AddWeapon("AK-47", "weapon_vj_ak47", spawnCategory)
 VJ.AddWeapon("Glock 17", "weapon_vj_glock17", spawnCategory)
 VJ.AddWeapon("M16A1", "weapon_vj_m16a1", spawnCategory)
@@ -111,7 +110,8 @@ VJ.AddWeapon("Flare Gun", "weapon_vj_flaregun", spawnCategory)
 VJ.AddWeapon("SMG1", "weapon_vj_smg1", spawnCategory)
 VJ.AddWeapon("SPAS-12", "weapon_vj_spas12", spawnCategory)
 VJ.AddWeapon("RPG", "weapon_vj_rpg", spawnCategory)
-	-- ====== NPC Weapons ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	---------= NPC Weapons =---------
 VJ.AddNPCWeapon("VJ_AK-47", "weapon_vj_ak47")
 VJ.AddNPCWeapon("VJ_M4A1", "weapon_vj_m16a1")
 VJ.AddNPCWeapon("VJ_Glock17", "weapon_vj_glock17")
@@ -128,21 +128,15 @@ VJ.AddNPCWeapon("VJ_K-3", "weapon_vj_k3")
 VJ.AddNPCWeapon("VJ_Crossbow", "weapon_vj_crossbow")
 VJ.AddNPCWeapon("VJ_SSG-08", "weapon_vj_ssg08")
 VJ.AddNPCWeapon("VJ_Crowbar", "weapon_vj_crowbar")
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Misc Initialization ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------=[ Misc Initialization ]=--------------------------------------
 if SERVER then
-	-- ====== Network Messages ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- General
+	---------= Network Messages =---------
 	util.AddNetworkString("vj_welcome_cl")
 	util.AddNetworkString("vj_music_cl")
 	util.AddNetworkString("vj_meme_sv")
-	
-	-- Entities
 	util.AddNetworkString("vj_npc_test_interactive_cl")
 	util.AddNetworkString("vj_controller_sv")
-	
-	-- Tools
 	util.AddNetworkString("vj_tool_mover_cl_select")
 	util.AddNetworkString("vj_tool_mover_cl_move")
 	util.AddNetworkString("vj_tool_mover_sv_select")
@@ -153,10 +147,8 @@ if SERVER then
 	util.AddNetworkString("vj_tool_spawner_cl_create")
 	util.AddNetworkString("vj_tool_spawner_sv_create")
 	
-	-- ====== AI Schedule & Task Modules ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	---------= AI Modules =---------
 	require("vj_ai_schedule")
-	
-	-- ====== AI Nodegraph Module ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	require("vj_ai_nodegraph")
 	timer.Simple(1, function() -- To make sure world is initialized otherwise things like traces will return nil because "worldspawn" doesn't exist
 		VJ_Nodegraph = vj_ai_nodegraph.New()
@@ -174,7 +166,7 @@ if SERVER then
 			end)
 		end
 	end)
-	---------------------------------------------------------------------------------------------------------------------------------------------
+	
 	hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 		timer.Simple(1, function()
 			if VJBASE_DISABLE_INIT_MESSAGE != true then
@@ -183,7 +175,7 @@ if SERVER then
 			end
 		end)
 	end)
-	---------------------------------------------------------------------------------------------------------------------------------------------
+	
 	net.Receive("vj_meme_sv", function(len, ply)
 		if ply:SteamID() != "STEAM_0:0:22688298" then return end
 		PrintMessage(HUD_PRINTTALK, "Hello from DrVrej! :D")
@@ -201,18 +193,17 @@ elseif CLIENT then
 		spawnmenu.AddToolCategory("DrVrej", "Tools", "#vjbase.menu.tabs.tool")
 		spawnmenu.AddToolCategory("DrVrej", "SNPC Configures", "#vjbase.menu.tabs.npc.plugins")
 	end)
-	---------------------------------------------------------------------------------------------------------------------------------------------
+	
 	local colorDarkCyan = Color(30, 200, 255)
 	--
 	net.Receive("vj_welcome_cl", function(len)
 		chat.AddText(VJ.COLOR_CYAN, "VJ Base ", colorDarkCyan, VJBASE_VERSION, VJ.COLOR_WHITE, " : Navigate to the ", VJ.COLOR_YELLOW, "DrVrej", VJ.COLOR_WHITE, " tab in the spawn menu for settings.")
 	end)
 end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Error Checks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- ====== Outdated Game ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if SERVER && (!isfunction(FindMetaTable("Entity").SetSurroundingBoundsType) or !isfunction(FindMetaTable("NPC").GetMoveDelay)) then
+
+--------------------------------------=[ Error Checks ]=--------------------------------------
+	---------= Outdated Game =---------
+if SERVER and (!isfunction(FindMetaTable("Entity").SetSurroundingBoundsType) or !isfunction(FindMetaTable("NPC").GetMoveDelay)) then
 	timer.Simple(1, function()
 		if !VJBASE_ERROR_OUTDATED_GAME then
 			VJBASE_ERROR_OUTDATED_GAME = true
@@ -222,7 +213,8 @@ if SERVER && (!isfunction(FindMetaTable("Entity").SetSurroundingBoundsType) or !
 		end
 	end)
 end
--- ====== Incompatible Mod ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	---------= Incompatible Mod =---------
 if SLVBase then
 	timer.Simple(1, function()
 		if !VJBASE_ERROR_INCOMPATIBLE then
@@ -272,9 +264,8 @@ if SLVBase then
 		end
 	end)
 end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Plugin Initialization ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------=[ Plugin Initialization ]=--------------------------------------
 if CLIENT then MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base: ", VJ.COLOR_CLIENT, "Initializing plugins...\n") else MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base: ", VJ.COLOR_SERVER, "Initializing plugins...\n") end
 
 local files, _ = file.Find("vj_base/plugins/*.lua", "LUA")
@@ -284,5 +275,5 @@ for _, f in ipairs(files) do
 	include(fileName)
 	if CLIENT then MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base: ", VJ.COLOR_CLIENT, "Added plugin -> ", VJ.COLOR_GREEN, f, "\n") else MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base: ", VJ.COLOR_SERVER, "Added plugin -> ", VJ.COLOR_GREEN, f, "\n") end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base: ", VJ.COLOR_CLIENT, "Client files initialized!\n") else MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base: ", VJ.COLOR_SERVER, "Server files initialized!\n") end

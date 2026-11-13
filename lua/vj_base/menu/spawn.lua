@@ -3,10 +3,6 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
-
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	local translatedCategories = {
 		["VJ Base"] = "Default",
@@ -95,7 +91,8 @@ if CLIENT then
 			end
 		end
 	end
-	--[-------------------------------------------------------]--
+	
+	--------------------------------------=[ Populate VJ Base Tab ]=--------------------------------------
 	hook.Add("VJBASE_MENU_SPAWN", "VJBASE_MENU_SPAWN", function(pnlContent, tree, browseNode)
 		populateTree(pnlContent, tree, browseNode, "NPCs", "icon16/monkey.png", "VJBASE_SPAWNABLE_NPC")
 		populateTree(pnlContent, tree, browseNode, "Weapons", "icon16/gun.png", "VJBASE_SPAWNABLE_WEAPON")
@@ -131,8 +128,7 @@ if CLIENT then
 		-- END: Tools category
 	end)
 	
-	--[-------------------------------------------------------]--
-	-- Adds the searching functionality for the VJ Base spawn menu.
+	--------------------------------------=[ Search Functionality ]=--------------------------------------
 	-- Based on: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/gamemodes/sandbox/gamemode/cl_search_models.lua
 	search.AddProvider( function( str )
 
@@ -191,8 +187,8 @@ if CLIENT then
 		return results
 
 	end, "vjbase" )
-
-	--[-------------------------------------------------------]--
+	
+	--------------------------------------=[ Create Spawn Menu Tab ]=--------------------------------------
 	-- Create the main spawn menu tab, set it to be placed after the default "Vehicles" tab
 	if VJBASE_DISABLE_MENU_SPAWN != true then
 		spawnmenu.AddCreationTab("VJ Base", function()
@@ -208,7 +204,7 @@ if CLIENT then
 		end, "vj_base/icons/vrejgaming.png", 60, "All VJ Base entities are located here!") // icon16/plugin.png
 	end
 	
-	--[-------------------------------------------------------]--
+	--------------------------------------=[ Sidebar Toolbox ]=--------------------------------------
 	-- Based on: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/gamemodes/sandbox/gamemode/spawnmenu/creationmenu/content/contenttypes/npcs.lua
 	local PANEL = {}
 	Derma_Hook(PANEL, "Paint", "Paint", "Tree")
@@ -273,9 +269,10 @@ if CLIENT then
 	end
 	vgui.Register("VJ_SpawnmenuNPCSidebarToolbox", PANEL, "DDrawer")
 end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- NPC Duplicator & Save Support ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------------------
+--------------------------------------=[ NPC Duplicator & Save Support ]=--------------------------------------
+---------------------------------------------------------------------------------------------------------------
 -- Based on: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/gamemodes/sandbox/gamemode/commands.lua
 --
 local function InternalSpawnNPC( NPCData, ply, Position, Normal, Class, Equipment, SpawnFlagsSaved, NoDropToFloor )
@@ -284,8 +281,8 @@ local function InternalSpawnNPC( NPCData, ply, Position, Normal, Class, Equipmen
 	-- We don't want them spawning any entity they like!
 	if ( !NPCData ) then return NULL end
 
-	local isAdmin = ( IsValid( ply ) && ply:IsAdmin() ) or game.SinglePlayer()
-	if ( NPCData.AdminOnly && !isAdmin ) then return NULL end
+	local isAdmin = ( IsValid( ply ) and ply:IsAdmin() ) or game.SinglePlayer()
+	if ( NPCData.AdminOnly and !isAdmin ) then return NULL end
 
 	local bDropToFloor = false
 	local wasSpawnedOnCeiling = false
@@ -299,13 +296,13 @@ local function InternalSpawnNPC( NPCData, ply, Position, Normal, Class, Equipmen
 		local isOnFloor		= Vector( 0, 0,  1 ):Dot( Normal ) >= 0.95
 
 		-- Not on ceiling, and we can't be on floor
-		if ( !isOnCeiling && !NPCData.OnFloor ) then return NULL end
+		if ( !isOnCeiling and !NPCData.OnFloor ) then return NULL end
 
 		-- Not on floor, and we can't be on ceiling
-		if ( !isOnFloor && !NPCData.OnCeiling ) then return NULL end
+		if ( !isOnFloor and !NPCData.OnCeiling ) then return NULL end
 
 		-- We can be on either, and we are on neither
-		if ( !isOnFloor && !isOnCeiling ) then return NULL end
+		if ( !isOnFloor and !isOnCeiling ) then return NULL end
 
 		wasSpawnedOnCeiling = isOnCeiling
 		wasSpawnedOnFloor = isOnFloor
@@ -417,14 +414,14 @@ local function InternalSpawnNPC( NPCData, ply, Position, Normal, Class, Equipmen
 		if ( v == Equipment ) then valid = true break end
 	end
 
-	if ( Equipment && Equipment != "none" && valid ) then
+	if ( Equipment and Equipment != "none" and valid ) then
 		NPC:SetKeyValue( "additionalequipment", Equipment )
 		NPC.Equipment = Equipment
 	end
 
-	if ( wasSpawnedOnCeiling && isfunction( NPCData.OnCeiling ) ) then
+	if ( wasSpawnedOnCeiling and isfunction( NPCData.OnCeiling ) ) then
 		NPCData.OnCeiling( NPC )
-	elseif ( wasSpawnedOnFloor && isfunction( NPCData.OnFloor ) ) then
+	elseif ( wasSpawnedOnFloor and isfunction( NPCData.OnFloor ) ) then
 		NPCData.OnFloor( NPC )
 	end
 
@@ -445,7 +442,7 @@ local function InternalSpawnNPC( NPCData, ply, Position, Normal, Class, Equipmen
 	-- For those NPCs that set their model/skin in Spawn function
 	-- We have to keep the call above for NPCs that want a model set by Spawn() time
 	-- BAD: They may adversly affect entity collision bounds
-	if ( NPCModel && NPC:GetModel():lower() != NPCModel:lower() ) then
+	if ( NPCModel and NPC:GetModel():lower() != NPCModel:lower() ) then
 		NPC:SetModel( NPCModel )
 	end
 	if ( NPCData.Skin ) then
@@ -471,18 +468,18 @@ local function InternalSpawnNPC( NPCData, ply, Position, Normal, Class, Equipmen
 	return NPC
 
 end
--------------------------------------------------------------------------------------------------------------------------
+
 VJ.CreateDupe_NPC = function( ply, class, equipment, spawnflags, data )
 
 	-- Match the behavior of Spawn_NPC above - class should be the one in the list, NOT the entity class!
 	if ( data.NPCName ) then class = data.NPCName end
 
-	if ( IsValid( ply ) && !gamemode.Call( "PlayerSpawnNPC", ply, class, equipment ) ) then return NULL end
+	if ( IsValid( ply ) and !gamemode.Call( "PlayerSpawnNPC", ply, class, equipment ) ) then return NULL end
 
 	local NPCData = list.GetEntry( "NPC", class )
 
 	local normal = Vector( 0, 0, 1 )
-	if ( NPCData && NPCData.OnCeiling && ( NPCData.OnFloor && data._wasSpawnedOnCeiling or !NPCData.OnFloor ) ) then
+	if ( NPCData and NPCData.OnCeiling and ( NPCData.OnFloor and data._wasSpawnedOnCeiling or !NPCData.OnFloor ) ) then
 		normal = Vector( 0, 0, -1 )
 	end
 
@@ -493,7 +490,7 @@ VJ.CreateDupe_NPC = function( ply, class, equipment, spawnflags, data )
 
 		duplicator.DoGeneric( ent, data )
 
-		if ( NPCData && !NPCData.OnCeiling && !NPCData.NoDrop ) then
+		if ( NPCData and !NPCData.OnCeiling and !NPCData.NoDrop ) then
 			ent:SetPos( pos )
 		end
 
@@ -519,13 +516,14 @@ VJ.CreateDupe_NPC = function( ply, class, equipment, spawnflags, data )
 	return ent
 
 end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Entity & Weapon Duplicator & Save Support ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------------------------------
+--------------------------------------=[ Entity / Weapon Duplicator & Save Support ]=--------------------------------------
+---------------------------------------------------------------------------------------------------------------------------
 -- Based on: https://github.com/Facepunch/garrysmod/blob/master/garrysmod/lua/autorun/game_hl2.lua
 --
 VJ.CreateDupe_Entity = function( ply, data )
-	if ( IsValid( ply ) && !gamemode.Call( "PlayerSpawnSENT", ply, data.Class ) ) then return NULL end
+	if ( IsValid( ply ) and !gamemode.Call( "PlayerSpawnSENT", ply, data.Class ) ) then return NULL end
 
 	local ent = ents.Create( data.Class )
 	if ( !IsValid( ent ) ) then return NULL end -- Must've hit edict limit
@@ -535,7 +533,7 @@ VJ.CreateDupe_Entity = function( ply, data )
 
 	-- Restore the keyvalues
 	local entTable = list.GetEntry( "SpawnableEntities", data.EntityName )
-	if ( entTable && entTable.ClassName == data.Class && entTable.KeyValues ) then
+	if ( entTable and entTable.ClassName == data.Class and entTable.KeyValues ) then
 		for k, v in pairs( entTable.KeyValues ) do
 			ent:SetKeyValue( k, v )
 		end
@@ -561,9 +559,9 @@ VJ.CreateDupe_Entity = function( ply, data )
 
 	return ent
 end
--------------------------------------------------------------------------------------------------------------------------
+
 VJ.CreateDupe_Weapon = function( ply, data )
-	if ( IsValid( ply ) && !gamemode.Call( "PlayerSpawnSWEP", ply, data.Class, list.GetEntry( "Weapon", data.Class ) ) ) then return NULL end
+	if ( IsValid( ply ) and !gamemode.Call( "PlayerSpawnSWEP", ply, data.Class, list.GetEntry( "Weapon", data.Class ) ) ) then return NULL end
 
 	local ent = ents.Create( data.Class )
 	if ( !IsValid( ent ) ) then return NULL end -- Must've hit edict limit

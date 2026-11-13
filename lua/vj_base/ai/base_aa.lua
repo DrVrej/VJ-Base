@@ -3,9 +3,7 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
----------------------------------------------------------------------------------------------------------------------------------------------
--- AERIAL & AQUATIC BASE --
-// MOVETYPE_FLY | MOVETYPE_FLYGRAVITY
+-- MOVETYPE_FLY | MOVETYPE_FLYGRAVITY
 ENT.AA_NextMoveAnimTime = 0
 ENT.AA_CurrentMoveAnim = false -- false = No animation set | -1 = Don't play an animation
 ENT.AA_CurrentMoveAnimType = "Calm" -- "Calm" | "Alert"
@@ -23,7 +21,7 @@ local defAng = Angle()
 
 local metaEntity = FindMetaTable("Entity")
 local fGetTable = metaEntity.GetTable
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Stops the current NPC, similar to ground NPCs calling self:StopMoving()
 -----------------------------------------------------------]]
@@ -37,7 +35,7 @@ function ENT:AA_StopMoving()
 	selfData.AA_CurrentMoveDist = -1
 	self:SetLocalVelocity(defPos)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Moves to the provided destination (If it can)
 		- dest = The destination to move to, it can be an entity or a vector
@@ -56,7 +54,7 @@ local vecEnd = Vector(0, 0, 40)
 function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 	local destVec = isvector(dest) and dest
 	local selfData = fGetTable(self)
-	if selfData.Dead or (!destVec && !IsValid(dest)) then return end
+	if selfData.Dead or (!destVec and !IsValid(dest)) then return end
 	moveType = moveType or "Calm" -- "Calm" | "Alert"
 	extra = extra or {}
 		local addPos = extra.AddPos or defPos -- This will be added to the given entity's position
@@ -98,7 +96,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 				//PrintTable(trene)
 				//debugoverlay.Box(trene.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, VJ.COLOR_GREEN)
 				if trene.Hit then return end
-				//if IsValid(trene.Entity) && trene.Entity == dest then return end
+				//if IsValid(trene.Entity) and trene.Entity == dest then return end
 			end
 		end
 	end
@@ -119,7 +117,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 	-- Preform ground check if:
 		-- It's an aerial NPC AND it is not ignoring ground AND-
 		-- It's NOT a chase enemy OR it is but the NPC doesn't have a melee attack
-	if selfData.MovementType == VJ_MOVETYPE_AERIAL && extra.IgnoreGround != true && (!extra.ChaseEnemy or !selfData.HasMeleeAttack) then
+	if selfData.MovementType == VJ_MOVETYPE_AERIAL and extra.IgnoreGround != true and (!extra.ChaseEnemy or !selfData.HasMeleeAttack) then
 		local tr_check1 = util.TraceLine({start = startPos, endpos = startPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
 		local tr_check2 = !tr_check1.Hit and util.TraceLine({start = trHitPos, endpos = trHitPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
 		if debug then
@@ -128,7 +126,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 			debugoverlay.Box(tr_check1.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(0, 183, 255))
 		end
 		-- If it hit the world, then we are too close to the ground, replace "tr" with a new position!
-		if tr_check1.Hit or (tr_check2.Hit && !tr_check2.Entity:IsNPC()) then
+		if tr_check1.Hit or (tr_check2.Hit and !tr_check2.Entity:IsNPC()) then
 			if debug then VJ.DEBUG_Print(self, "AA_MoveTo", "Ground Hit!", tr_check1.HitPos:Distance(startPos)) end
 			//groundLimited = true
 			endPos.z = (tr_check1.Hit and myPos.z or endPos.z) + selfData.AA_GroundLimit
@@ -182,7 +180,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 	end
 	
 	local finalPos = trHitPos
-	if trDistStart <= 16 && tr.HitWorld then
+	if trDistStart <= 16 and tr.HitWorld then
 		if debug then VJ.DEBUG_Print(self, "AA_MoveTo", "Forward Blocked!") end
 		finalPos = endPos
 		-- Make sure the trace actually went somewhere...
@@ -193,7 +191,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 	if destVec then
 		finalPos = finalPos + addPos
 	-- If the enemy is a bit above water, try to go for its GetPos, which is usually at its feet
-	elseif selfData.MovementType == VJ_MOVETYPE_AQUATIC && dest:WaterLevel() < 3 then
+	elseif selfData.MovementType == VJ_MOVETYPE_AQUATIC and dest:WaterLevel() < 3 then
 		finalPos = dest:GetPos() + dest:GetForward() * addPos.x + dest:GetRight() * addPos.y + dest:GetUp() * addPos.z
 	else
 		finalPos = finalPos + dest:GetForward() * addPos.x + dest:GetRight() * addPos.y + dest:GetUp() * addPos.z
@@ -231,7 +229,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 		selfData.AA_CurrentMoveTime = velTimeCur
 		//selfData.NextIdleTime = velTimeCur
 	end
-	if extra.FaceDest != false && selfData.CanTurnWhileMoving then
+	if extra.FaceDest != false and selfData.CanTurnWhileMoving then
 		if extra.FaceDestTarget then
 			self:SetTurnTarget(extra.ChaseEnemy and "Enemy" or dest, velTime)
 		else
@@ -258,7 +256,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extra)
 		selfData.AA_CurrentMoveAnim = -1
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Makes the NPC wander, if it's aquatic then it will move deeper into water if it finds it necessary
 		- playAnim = Should it play movement animation? | DEFAULT: true
@@ -302,7 +300,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extra)
 	local finalPos = tr.HitPos
 	//PrintTable(tr)
 	-- If we aren't being forced to move down, then make sure we limit how close we get to the ground!
-	if extra.IgnoreGround != true && !moveDown && selfData.MovementType == VJ_MOVETYPE_AERIAL then
+	if extra.IgnoreGround != true and !moveDown and selfData.MovementType == VJ_MOVETYPE_AERIAL then
 		local tr_check = util.TraceLine({start = finalPos, endpos = finalPos + Vector(0, 0, -selfData.AA_GroundLimit), filter = trFilter})
 		if debug then
 			VJ.DEBUG_Print(self, "AA_IdleWander", "checking ground...")
@@ -341,7 +339,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extra)
 		selfData.AA_CurrentMoveTime = velTimeCur
 		//selfData.NextIdleTime = velTimeCur
 	end
-	if extra.FaceDest != false && selfData.CanTurnWhileMoving then
+	if extra.FaceDest != false and selfData.CanTurnWhileMoving then
 		self:SetTurnTarget(finalPos, velTime)
 		//selfData.AA_CurrentTurnAng = self:GetTurnAngle((finalPos - tr.StartPos):Angle())
 		//self:SetLocalAngularVelocity(self:GetTurnAngle((finalPos-tr.StartPos):Angle()))
@@ -362,7 +360,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extra)
 		selfData.AA_CurrentMoveAnim = -1
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Makes the NPC chase its current enemy (If it has one)
 		- playAnim = Should it play movement animation? | DEFAULT: true
@@ -374,12 +372,12 @@ function ENT:AA_ChaseEnemy(playAnim, moveType)
 	if !IsValid(ene) then return false end
 	self:AA_MoveTo(ene, playAnim != false, moveType or "Alert", {FaceDestTarget = true, ChaseEnemy = true})
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Internal function, handles the movement animations
 -----------------------------------------------------------]]
--- Activities that should be played as sequences otherwise the engine will override it and set it back to idle | Issue: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L3023
 local badACTs = {[ACT_WALK] = true, [ACT_WALK_AIM] = true, [ACT_RUN] = true, [ACT_RUN_AIM] = true}
+-- Activities that should be played as sequences otherwise the engine will override it and set it back to idle | Issue: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc.cpp#L3023
 --
 function ENT:AA_MoveAnimation()
 	-- NOTE: Unique condition used for directional flying animations in TranslateActivity:
@@ -387,7 +385,8 @@ function ENT:AA_MoveAnimation()
 	local selfData = fGetTable(self)
 	local curSeq = self:GetSequence()
 	local curACT = self:GetActivity()
-	if ((CurTime() > selfData.AA_NextMoveAnimTime) or (curSeq != selfData.AA_CurrentMoveAnim or (curACT != ACT_DO_NOT_DISTURB && self:GetSequenceActivity(curSeq) != self:TranslateActivity(curACT)))) && !self:IsBusy("Activities") then
+	local curTime = CurTime()
+	if ((curTime > selfData.AA_NextMoveAnimTime) or (curSeq != selfData.AA_CurrentMoveAnim or (curACT != ACT_DO_NOT_DISTURB and self:GetSequenceActivity(curSeq) != self:TranslateActivity(curACT)))) and !self:IsBusy("Activities") then
 		local chosenAnim = false
 		if selfData.AA_CurrentMoveAnimType == "Calm" then
 			chosenAnim = (selfData.MovementType == VJ_MOVETYPE_AQUATIC and selfData.Aquatic_AnimTbl_Calm) or selfData.Aerial_AnimTbl_Calm
@@ -397,6 +396,6 @@ function ENT:AA_MoveAnimation()
 		chosenAnim = VJ.PICK(chosenAnim)
 		local _, animDur = self:PlayAnim(chosenAnim, false, 0, false, 0, {AlwaysUseSequence = badACTs[chosenAnim] or false})
 		selfData.AA_CurrentMoveAnim = self:GetActivity() == ACT_DO_NOT_DISTURB and self:GetSequence() or self:GetIdealSequence() -- In case we played a non-sequence
-		selfData.AA_NextMoveAnimTime = CurTime() + animDur -- animDur will always be accurate
+		selfData.AA_NextMoveAnimTime = curTime + animDur -- animDur will always be accurate
 	end
 end

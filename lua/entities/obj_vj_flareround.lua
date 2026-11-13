@@ -15,7 +15,7 @@ ENT.Category = "VJ Base"
 ENT.Spawnable = true
 
 ENT.PhysicsSounds = true
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	VJ.AddKillIcon("obj_vj_flareround", ENT.PrintName, VJ.KILLICON_PROJECTILE)
 	
@@ -23,11 +23,11 @@ if CLIENT then
 		//self:DrawModel()
 	end
 end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 if !SERVER then return end
 
 ENT.FuseTime = 60
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local colorTrailRed = Color(155, 0, 0, 150)
 --
 function ENT:Initialize()
@@ -71,7 +71,7 @@ function ENT:Initialize()
 	timer.Simple(2, function()
 		if IsValid(self) then
 			phys = self:GetPhysicsObject()
-			if IsValid(phys) && phys:GetVelocity():Length() > 500 then
+			if IsValid(phys) and phys:GetVelocity():Length() > 500 then
 				phys:SetMass(0.005)
 				timer.Simple(10, function()
 					if IsValid(self) then
@@ -92,17 +92,17 @@ function ENT:Initialize()
 		end
 	end)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Use(activator)
-	if IsValid(activator) && activator:IsPlayer() then
+	if IsValid(activator) and activator:IsPlayer() then
 		activator:PickupObject(self)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:PhysicsCollide(data, physobj)
 	-- Make living things take damage on collision
 	local hitEnt = data.HitEntity
-	if IsValid(hitEnt) && hitEnt.VJ_ID_Living then
+	if IsValid(hitEnt) and hitEnt.VJ_ID_Living then
 		local owner = self:GetOwner()
 		local dmg = DamageInfo()
 		dmg:SetDamage(math.random(4, 8))
@@ -114,11 +114,11 @@ function ENT:PhysicsCollide(data, physobj)
 		//hitEnt:Ignite(1)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnTakeDamage(dmginfo)
 	self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() * 0.1)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnRemove()
 	VJ.STOPSOUND(self.IdleSound)
 	self:StopParticles()

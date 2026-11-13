@@ -11,7 +11,7 @@ TOOL.ClientConVar = {
 }
 
 local defaultConvars = TOOL:BuildConVarList()
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	local function ControlPanel(panel)
 		local reset = vgui.Create("DButton")
@@ -155,14 +155,14 @@ if CLIENT then
 		panel:CheckBox("#tool.vj_tool_relationship.menu.toggle.plyallied", "vj_tool_relationship_allytoplyallies")
 		panel:ControlHelp(language.GetPhrase("#tool.vj_tool_relationship.menu.toggle.plyallied.help"))
 	end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 	function TOOL.BuildCPanel(panel)
 		ControlPanel(panel)
 	end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 	net.Receive("vj_tool_relationship_cl_select", function(len)
 		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" && hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_relationship") then
+		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_relationship" and hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_relationship") then
 			local entName = language.GetPhrase(net.ReadString())
 			local classCount = net.ReadUInt(9)
 			chat.AddText(VJ.COLOR_GREEN, "Obtained", VJ.COLOR_ORANGE_VIVID, " " .. entName .. "'s ", VJ.COLOR_GREEN, "relationship class list!")
@@ -177,10 +177,10 @@ if CLIENT then
 			end)
 		end
 	end)
----------------------------------------------------------------------------------------------------------------------------------------------
+
 	net.Receive("vj_tool_relationship_cl_apply", function(len)
 		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" && hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_relationship") then
+		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_relationship" and hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_relationship") then
 			local ent = net.ReadEntity()
 			local entName = language.GetPhrase(net.ReadString())
 			chat.AddText(VJ.COLOR_GREEN, "#tool.vj_tool_relationship.print.applied", VJ.COLOR_ORANGE_VIVID, tostring(entName))
@@ -193,12 +193,12 @@ if CLIENT then
 else
 	net.Receive("vj_tool_relationship_sv_apply", function(len, ply)
 		local wep = ply:GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" && hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_relationship") then
+		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_relationship" and hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_relationship") then
 			local ent = net.ReadEntity()
 			local classtbl = net.ReadTable()
 			if #classtbl > 0 then
 				ent.VJ_NPC_Class = classtbl
-				if !ent:IsPlayer() && table.HasValue(classtbl, "CLASS_PLAYER_ALLY") && ply:GetInfoNum("vj_tool_relationship_allytoplyallies", 1) == 1 then
+				if !ent:IsPlayer() and table.HasValue(classtbl, "CLASS_PLAYER_ALLY") and ply:GetInfoNum("vj_tool_relationship_allytoplyallies", 1) == 1 then
 					ent.AlliedWithPlayerAllies = true
 				end
 			else
@@ -207,11 +207,11 @@ else
 		end
 	end)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
-	if IsValid(ent) && ent.VJ_ID_Living then
+	if IsValid(ent) and ent.VJ_ID_Living then
 		net.Start("vj_tool_relationship_cl_apply")
 			net.WriteEntity(ent)
 			net.WriteString(VJ.GetName(ent))
@@ -219,11 +219,11 @@ function TOOL:LeftClick(tr)
 		return true
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
-	if IsValid(ent) && ent.VJ_ID_Living then
+	if IsValid(ent) and ent.VJ_ID_Living then
 		local owner = self:GetOwner()
 		local entName = VJ.GetName(ent)
 		local entClasses = ent.VJ_NPC_Class
@@ -244,7 +244,7 @@ function TOOL:RightClick(tr)
 		return true
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:Reload(tr)
 	if CLIENT then return true end
 	net.Start("vj_tool_relationship_cl_apply")

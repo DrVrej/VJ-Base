@@ -6,13 +6,13 @@ TOOL.Information = {
 	{name = "right"},
 	{name = "reload"},
 }
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	function TOOL.BuildCPanel(panel)
 		panel:Help("#tool.vj_tool_scanner.menu.label")
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
@@ -29,14 +29,14 @@ function TOOL:LeftClick(tr)
 		ply:PrintMessage(HUD_PRINTCONSOLE, "VELOCITY ==> Vector(" .. phys:GetVelocity().x .. ", " .. phys:GetVelocity().y .. ", " .. phys:GetVelocity().z .. ") ;;; Length = " .. phys:GetVelocity():Length() .. "\n\n")
 		ply:PrintMessage(HUD_PRINTCONSOLE, "PHYSICS  ==> Mass = " .. phys:GetMass() .. " ;;; Surface Area = " .. phys:GetSurfaceArea() .. " ;;; Volume = " .. phys:GetVolume() .. "\n\n")
 	else
-		ply:PrintMessage(HUD_PRINTCONSOLE, "VELOCITY ==> Model doesn't have a physics object!\n\n")
-		ply:PrintMessage(HUD_PRINTCONSOLE, "PHYSICS  ==> Model doesn't have a physics object!\n\n")
+		ply:PrintMessage(HUD_PRINTCONSOLE, "VELOCITY ==> Entity has no physics object!\n\n")
+		ply:PrintMessage(HUD_PRINTCONSOLE, "PHYSICS  ==> Entity has no physics object!\n\n")
 	end
 	ply:PrintMessage(HUD_PRINTCONSOLE, "COLOR    ==> Color(" .. ent:GetColor().r .. ", " .. ent:GetColor().g .. ", " .. ent:GetColor().b .. ", " .. ent:GetColor().a .. ")")
 	ply:PrintMessage(HUD_PRINTCONSOLE, "-----------------------------------------------------------------------------------------------")
 	return true
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
@@ -44,7 +44,7 @@ function TOOL:RightClick(tr)
 	PrintTable(ent:GetSaveTable(true))
 	return true
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:Reload(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity

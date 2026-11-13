@@ -18,7 +18,7 @@ ENT.PhysicsSounds = true
 ENT.VJ_ID_Attackable = true
 
 scripted_ents.Alias("sent_vj_board", "prop_vj_board") -- !! Backwards Compatibility !!
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	VJ.AddKillIcon("prop_vj_board", ENT.PrintName, VJ.KILLICON_TYPE_ALIAS, "prop_physics")
 	
@@ -26,11 +26,11 @@ if CLIENT then
 		self:DrawModel()
 	end
 end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 if !SERVER then return end
 
 ENT.StartHealth = 50
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Initialize()
 	self:SetModel("models/props_debris/wood_board05a.mdl")
 	self:PhysicsInit(SOLID_VPHYSICS)
@@ -45,13 +45,13 @@ function ENT:Initialize()
 		phys:Wake()
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Use(activator)
-	if IsValid(activator) && activator:IsPlayer() then
+	if IsValid(activator) and activator:IsPlayer() then
 		activator:PickupObject(self)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnTakeDamage(dmginfo)
 	self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() * 0.05)
 	self:SetHealth(self:Health() - dmginfo:GetDamage())

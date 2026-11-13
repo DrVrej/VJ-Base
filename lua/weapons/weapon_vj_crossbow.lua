@@ -28,7 +28,7 @@ SWEP.Primary.DisableBulletCode = true
 SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_smoke", "vj_rifle_smoke_dark", "vj_rifle_smoke_flash", "vj_rifle_sparks2"}
 SWEP.PrimaryEffects_MuzzleParticlesAsOne = true
 SWEP.PrimaryEffects_SpawnShells = false
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function SWEP:OnPrimaryAttack(status, statusData)
 	if status == "Init" then
 		if CLIENT then return end
@@ -49,13 +49,13 @@ function SWEP:OnPrimaryAttack(status, statusData)
 		projectile:SetAngles(projectile:GetVelocity():Angle())
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local sdLoadDone = {"weapons/crossbow/bolt_load1.wav", "weapons/crossbow/bolt_load2.wav"}
 --
 function SWEP:OnReload(status)
 	if status == "Start" then
 		timer.Simple(SoundDuration("weapons/crossbow/reload1.wav"), function()
-			if IsValid(self) && IsValid(self:GetOwner()) then
+			if IsValid(self) and IsValid(self:GetOwner()) then
 				VJ.EmitSound(self:GetOwner(), sdLoadDone, self.NPC_ReloadSoundLevel)
 			end
 		end)

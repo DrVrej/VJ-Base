@@ -6,9 +6,6 @@ include("vj_base/ai/base_tank.lua")
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Core ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 200
 ENT.MovementType = VJ_MOVETYPE_PHYSICS
 ENT.ForceDamageFromBosses = true
@@ -22,57 +19,57 @@ ENT.DeathSoundLevel = 100
 
 ENT.SoundTbl_Breath = "vj_base/vehicles/armored/engine_idle.wav" -- Recommended to use looping WAV sounds!
 ENT.SoundTbl_Death = "VJ.Explosion"
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Tank Base ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------=[ CORE ]=--------------------------------------
 ENT.Tank_GunnerENT = false -- Gunner entity of the tank | false = No gunner | string = class name of the gunner
 ENT.Tank_PitchLimit = 8.5 -- Maximum vertical (up/down) angle difference for the enemy to be considered reachable
 ENT.Tank_YawLimit = 15 -- Maximum horizontal (left/right) angle difference from the enemy before the chassis starts turning
 ENT.Tank_AngleOffset = 0 -- Use to offset the forward angle if the model's y-axis isn't facing the correct direction
 ENT.Tank_TurningSpeed = 1.5 -- How fast the chassis turns while driving
 ENT.Tank_DrivingSpeed = 100 -- How fast the tank drives
-	-- ====== Sight ====== --
+
+--------------------------------------=[ SIGHT ]=--------------------------------------
 ENT.Tank_DriveAwayDistance = 1000 -- If the enemy is closer than this number, than move by either running over them or moving away for the gunner to fire
 ENT.Tank_DriveTowardsDistance = 2000 -- If the enemy is higher than this number, than move towards the enemy
 ENT.Tank_RanOverDistance = 500 -- If the enemy is within "self.Tank_DriveAwayDistance" & this number & not high up, then run over them!
-	-- ====== Collision ====== --
-	-- Used when the NPC is spawned
+
+--------------------------------------=[ COLLISION ]=--------------------------------------
+-- Applied when the NPC is spawned
 ENT.Tank_CollisionBoundSize = 90
 ENT.Tank_CollisionBoundUp = 100
 ENT.Tank_CollisionBoundDown = -10
-	-- ====== Death ====== --
+
+--------------------------------------=[ DEATH ]=--------------------------------------
 ENT.Tank_DeathDriverCorpse = false -- Driver corpse to spawn on death | false = Don't spawn anything
 ENT.Tank_DeathDriverCorpseChance = 3 -- Chance that the driver corpse spawns | 1 = always
 ENT.Tank_DeathDecal = "Scorch" -- Decal to spawn under the tank's location on death
-	-- ====== Sounds ====== --
-	-- Driving movement sounds | Recommended to use looping WAV sounds!
+
+--------------------------------------=[ SOUND ]=--------------------------------------
+	---------= Driving | Recommended to use looping WAV sounds! =---------
 ENT.HasMoveSound = true
 ENT.Tank_SoundTbl_DrivingEngine = "vj_base/vehicles/armored/engine_drive.wav"
 ENT.Tank_SoundTbl_Track = "vj_base/vehicles/armored/chassis_tracks.wav"
-	-- Run over sound
+
+	---------= Run Over =---------
 ENT.HasRunOverSound = true
 ENT.Tank_SoundTbl_RunOver = "VJ.Gib.Bone_Snap"
 
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---
+--------------------------------------=[ HOOKS ]=--------------------------------------
 -- Use the functions below to customize or add new systems and behaviors
 -- Use "self.BaseClass.FuncName(self)" or "baseclass.Get(baseName).FuncName(self)" to run the base code as well when overriding functions not listed below
---
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Tank_Init() end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Tank_GunnerSpawnPosition()
 	return self:GetPos()
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Tank_OnThink() end -- Return true to disable the default base code
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Tank_OnThinkActive() end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Tank_OnRunOver(ent) end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:GetNearDeathSparkPositions()
 	local randPos = math.random(1, 2)
 	if randPos == 1 then
@@ -81,9 +78,9 @@ function ENT:GetNearDeathSparkPositions()
 		self.Spark1:SetLocalPos(self:GetPos() + self:GetForward() * -100 + self:GetUp() * 60)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Tank_OnInitialDeath(dmginfo, hitgroup) end -- Return true to disable the default base code
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[
 Called when the tank is about to spawn death soldier model, death effects, and death sounds
 
@@ -116,7 +113,7 @@ Called when the tank is about to spawn death soldier model, death effects, and d
 	-> [nil | bool] : Depends on `status` value, refer to it for more details
 --]]
 function ENT:Tank_OnDeathCorpse(dmginfo, hitgroup, corpse, status, statusData) end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Tank_UpdateIdleParticles()
 	-- Example:
 	//local spawnPos = self:GetPos() + self:GetForward() * -100 + self:GetUp() * 40
@@ -128,7 +125,7 @@ function ENT:Tank_UpdateIdleParticles()
 	//effectData:SetOrigin(spawnPos + self:GetRight() * -20)
 	//util.Effect("VJ_VehicleExhaust", effectData, true, true)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Tank_UpdateMoveParticles()
 	-- Example:
 	//local spawnPos = self:GetPos() + self:GetForward() * -100
@@ -140,13 +137,10 @@ function ENT:Tank_UpdateMoveParticles()
 	//effectData:SetOrigin(spawnPos + self:GetRight() * -58)
 	//util.Effect("VJ_VehicleMove", effectData, true, true)
 end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- ///// BASE IMPLEMENTATION BELOW — Override with caution and only when necessary! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------=[ ///// BASE IMPLEMENTATION BELOW | Override with caution! \\\\\ ]=--------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Tank_IsMoving = false
 ENT.Tank_Status = 1
 ENT.Tank_NextLowHealthSpark = 0
@@ -161,7 +155,7 @@ local vj_npc_reduce_vfx = GetConVar("vj_npc_reduce_vfx")
 
 local metaEntity = FindMetaTable("Entity")
 local fGetTable = metaEntity.GetTable
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Init()
 	self:SetPhysicsDamageScale(0) -- Take no physics damage
 	self.Tank_NextIdleParticles = CurTime() + 1
@@ -199,18 +193,18 @@ function ENT:Init()
 		end
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnTouch(ent)
 	if !VJ_CVAR_AI_ENABLED then return end
-	if self.Tank_Status == 0 && self.Tank_IsMoving && vj_npc_melee:GetInt() != 0 && self.Tank_NextRunOver < CurTime() then
+	if self.Tank_Status == 0 and self.Tank_IsMoving and vj_npc_melee:GetInt() != 0 and self.Tank_NextRunOver < CurTime() then
 		self:Tank_RunOver(ent)
 		self.Tank_NextRunOver = CurTime() + 0.2
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Tank_RunOver(ent)
-	if ent != self && ent != self.Gunner && ent.VJ_ID_Living && self:Disposition(ent) == D_HT && ent:Alive() && !ent.VJ_ID_Boss && !ent.VJ_ID_Vehicle && !ent.VJ_ID_Aircraft then
-		if (ent:IsNPC() && runoverException[ent:GetClass()]) or (ent:IsPlayer() && VJ_CVAR_IGNOREPLAYERS) then return end
+	if ent != self and ent != self.Gunner and ent.VJ_ID_Living and self:Disposition(ent) == D_HT and ent:Alive() and !ent.VJ_ID_Boss and !ent.VJ_ID_Vehicle and !ent.VJ_ID_Aircraft then
+		if (ent:IsNPC() and runoverException[ent:GetClass()]) or (ent:IsPlayer() and VJ_CVAR_IGNOREPLAYERS) then return end
 		self:Tank_OnRunOver(ent)
 		self:Tank_PlaySoundSystem("RunOver")
 		ent:TakeDamage(self:ScaleByDifficulty(50), self, self)
@@ -218,9 +212,9 @@ function ENT:Tank_RunOver(ent)
 		ent:SetVelocity(ent:GetForward() * -200)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnThink()
-	if self:Tank_OnThink() != true && vj_npc_reduce_vfx:GetInt() == 0 then
+	if self:Tank_OnThink() != true and vj_npc_reduce_vfx:GetInt() == 0 then
 		local selfData = fGetTable(self)
 		local curTime = CurTime()
 		if curTime > selfData.Tank_NextIdleParticles then
@@ -228,7 +222,7 @@ function ENT:OnThink()
 			selfData.Tank_NextIdleParticles = curTime + 0.1
 		end
 	
-		if curTime > selfData.Tank_NextLowHealthSpark && self:Health() < (self:GetMaxHealth() * 0.30) then
+		if curTime > selfData.Tank_NextLowHealthSpark and self:Health() < (self:GetMaxHealth() * 0.30) then
 			local spark = ents.Create("env_spark")
 			selfData.Spark1 = spark
 			spark:SetKeyValue("Magnitude", "5")
@@ -242,7 +236,7 @@ function ENT:OnThink()
 		end
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local FACE_NONE = VJ.FACE_NONE
 --
 function ENT:OnThinkActive()
@@ -266,7 +260,7 @@ function ENT:OnThinkActive()
 		end
 		if tr.Hit then
 			local phys = self:GetPhysicsObject()
-			if IsValid(phys) && #phys:GetFrictionSnapshot() > 0 then
+			if IsValid(phys) and #phys:GetFrictionSnapshot() > 0 then
 				local eneData = selfData.EnemyData
 				local ene = eneData.Target
 				if IsValid(ene) then
@@ -279,7 +273,7 @@ function ENT:OnThinkActive()
 					-- If the enemy is very high up, then move away from it to help the gunner fire!
 					-- OR
 					-- If the enemy's height isn't very high AND the enemy is (within run over distance OR far away), then move towards the enemy!
-					if enemyIsHighUp or (angPitch > -selfData.Tank_PitchLimit && ((eneData.Distance < selfData.Tank_RanOverDistance) or (eneData.Distance > selfData.Tank_DriveTowardsDistance))) then
+					if enemyIsHighUp or (angPitch > -selfData.Tank_PitchLimit and ((eneData.Distance < selfData.Tank_RanOverDistance) or (eneData.Distance > selfData.Tank_DriveTowardsDistance))) then
 						-- Turning
 						local turnYaw;
 						if plyControlled then
@@ -345,7 +339,7 @@ function ENT:OnThinkActive()
 					self:Tank_PlaySoundSystem("Movement")
 					self:Tank_UpdateMoveParticles()
 					local curTime = CurTime()
-					if vj_npc_melee:GetInt() != 0 && selfData.Tank_NextRunOver < curTime then
+					if vj_npc_melee:GetInt() != 0 and selfData.Tank_NextRunOver < curTime then
 						for _, v in ipairs(ents.FindInSphere(myPos, 100)) do
 							self:Tank_RunOver(v)
 						end
@@ -362,7 +356,7 @@ function ENT:OnThinkActive()
 		selfData.Tank_IsMoving = false
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:SelectSchedule()
 	local selfData = fGetTable(self)
 	if selfData.Dead then return end
@@ -380,7 +374,7 @@ function ENT:SelectSchedule()
 			end
 		else
 			local eneDist = selfData.EnemyData.Distance
-			if (eneDist < selfData.Tank_DriveTowardsDistance && eneDist > selfData.Tank_DriveAwayDistance) or selfData.IsGuard then -- If between this two numbers, stay still
+			if (eneDist < selfData.Tank_DriveTowardsDistance and eneDist > selfData.Tank_DriveAwayDistance) or selfData.IsGuard then -- If between this two numbers, stay still
 				selfData.Tank_Status = 1
 			else
 				selfData.Tank_Status = 0
@@ -390,7 +384,7 @@ function ENT:SelectSchedule()
 		selfData.Tank_Status = 1
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnDeath(dmginfo, hitgroup, status)
 	if status == "Init" then
 		local gunner = self.Gunner
@@ -414,7 +408,7 @@ function ENT:OnDeath(dmginfo, hitgroup, status)
 		end
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local vec500z = Vector(0, 0, 500)
 local colorGray = Color(90, 90, 90)
 --
@@ -452,7 +446,7 @@ function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpse)
 		end
 
 		-- Effects / Particles
-		if self.HasGibOnDeathEffects && self:Tank_OnDeathCorpse(dmginfo, hitgroup, corpse, "Effects") != true then
+		if self.HasGibOnDeathEffects and self:Tank_OnDeathCorpse(dmginfo, hitgroup, corpse, "Effects") != true then
 			ParticleEffect("vj_explosion3", myPos, defAng)
 			ParticleEffect("vj_explosion2", myPos + self:GetForward() * -130, defAng)
 			ParticleEffect("vj_explosion2", myPos + self:GetForward() * 130, defAng)
@@ -465,7 +459,7 @@ function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpse)
 		end
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:CustomOnRemove()
 	VJ.STOPSOUND(self.CurrentTankMovingSound)
 	VJ.STOPSOUND(self.CurrentTankTrackSound)
@@ -473,7 +467,7 @@ function ENT:CustomOnRemove()
 		self.Gunner:Remove()
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Tank_PlaySoundSystem(sdSet)
 	local selfData = fGetTable(self)
 	if !selfData.HasSounds or !sdSet then return end
@@ -481,19 +475,19 @@ function ENT:Tank_PlaySoundSystem(sdSet)
 		if selfData.HasMoveSound then
 			-- Movement sound
 			local curMoveSD = selfData.CurrentTankMovingSound
-			if !curMoveSD or (curMoveSD && !curMoveSD:IsPlaying()) then
+			if !curMoveSD or (curMoveSD and !curMoveSD:IsPlaying()) then
 				VJ.STOPSOUND(curMoveSD)
 				selfData.CurrentTankMovingSound = VJ.CreateSound(self, VJ.PICK(selfData.Tank_SoundTbl_DrivingEngine), 80, 100)
 			end
 			-- Track sound
 			local curTrackSD = selfData.CurrentTankTrackSound
-			if !curTrackSD or (curTrackSD && !curTrackSD:IsPlaying()) then
+			if !curTrackSD or (curTrackSD and !curTrackSD:IsPlaying()) then
 				VJ.STOPSOUND(curTrackSD)
 				selfData.CurrentTankTrackSound = VJ.CreateSound(self, VJ.PICK(selfData.Tank_SoundTbl_Track), 70, 100)
 			end
 		end
 	elseif sdSet == "RunOver" then
-		if selfData.HasRunOverSound && CurTime() > selfData.Tank_NextRunOverSound then
+		if selfData.HasRunOverSound and CurTime() > selfData.Tank_NextRunOverSound then
 			self:EmitSound(VJ.PICK(selfData.Tank_SoundTbl_RunOver), 80, math.random(80, 100))
 			selfData.Tank_NextRunOverSound = CurTime() + 0.2
 		end

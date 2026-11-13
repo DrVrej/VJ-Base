@@ -11,16 +11,16 @@ local VJ_MOVETYPE_STATIONARY = VJ_MOVETYPE_STATIONARY
 local metaEntity = FindMetaTable("Entity")
 local fGetTable = metaEntity.GetTable
 local fGetPos = metaEntity.GetPos
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:SCHEDULE_FACE(faceTask, customFunc)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
-	if self.MovementType == VJ_MOVETYPE_STATIONARY && !self.CanTurnWhileStationary then return end
+	if self.MovementType == VJ_MOVETYPE_STATIONARY and !self.CanTurnWhileStationary then return end
 	local schedule = vj_ai_schedule.New("SCHEDULE_FACE")
 	schedule:EngTask(faceTask or "TASK_FACE_TARGET", 0)
 	if customFunc then customFunc(schedule) end
 	self:StartSchedule(schedule)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:SCHEDULE_GOTO_POSITION(moveTask, customFunc)
 	local moveType = self.MovementType
 	if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then
@@ -36,7 +36,7 @@ function ENT:SCHEDULE_GOTO_POSITION(moveTask, customFunc)
 	if customFunc then customFunc(schedule) end
 	self:StartSchedule(schedule)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:SCHEDULE_GOTO_TARGET(moveTask, customFunc)
 	local moveType = self.MovementType
 	if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then
@@ -51,7 +51,7 @@ function ENT:SCHEDULE_GOTO_TARGET(moveTask, customFunc)
 	if customFunc then customFunc(schedule) end
 	self:StartSchedule(schedule)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:SCHEDULE_COVER_ENEMY(moveTask, customFunc)
 	local moveType = self.MovementType; if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	local schedule = vj_ai_schedule.New("SCHEDULE_COVER_ENEMY")
@@ -71,7 +71,7 @@ function ENT:SCHEDULE_COVER_ENEMY(moveTask, customFunc)
 	if customFunc then customFunc(schedule) end
 	self:StartSchedule(schedule)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:SCHEDULE_COVER_ORIGIN(moveTask, customFunc)
 	local moveType = self.MovementType; if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	local schedule = vj_ai_schedule.New("SCHEDULE_COVER_ORIGIN")
@@ -90,7 +90,7 @@ function ENT:SCHEDULE_COVER_ORIGIN(moveTask, customFunc)
 	if customFunc then customFunc(schedule) end
 	self:StartSchedule(schedule)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local schedule_wander = vj_ai_schedule.New("SCHEDULE_IDLE_WANDER")
 	//schedule_wander:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 0)
 	//schedule_wander:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
@@ -104,16 +104,16 @@ function ENT:SCHEDULE_IDLE_WANDER()
 	local moveType = self.MovementType; if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	self:StartSchedule(schedule_wander)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:SCHEDULE_IDLE_STAND()
 	local selfData = fGetTable(self)
 	if self:IsMoving() or selfData.NextIdleTime > CurTime() then return end
 	local navType = self:GetNavType(); if navType == NAV_JUMP or navType == NAV_CLIMB then return end
-	local moveType = selfData.MovementType; if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) && (selfData.AA_CurrentMovePos or self:IsBusy("Activities")) then return end // self:GetVelocity():Length() > 0
+	local moveType = selfData.MovementType; if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) and (selfData.AA_CurrentMovePos or self:IsBusy("Activities")) then return end // self:GetVelocity():Length() > 0
 	self:MaintainIdleAnimation(self:GetIdealActivity() != ACT_IDLE)
 	return true
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:TASK_VJ_PLAY_ACTIVITY(taskStatus, data)
 	if taskStatus == TASKSTATUS_NEW then
 		//VJ.DEBUG_Print(self, "TASK_VJ_PLAY_ACTIVITY", "Start -", data.duration)
@@ -128,7 +128,7 @@ function ENT:TASK_VJ_PLAY_ACTIVITY(taskStatus, data)
 		//self:AutoMovement(self:GetAnimTimeInterval()) -- Causes extra walk frame to be applied, especially when switching from movement to animation
 	else
 		//self:AutoMovement(self:GetAnimTimeInterval())
-		if (CurTime() > data.animEndTime) or (self:IsSequenceFinished() && self:GetSequence() == self:GetIdealSequence()) then
+		if (CurTime() > data.animEndTime) or (self:IsSequenceFinished() and self:GetSequence() == self:GetIdealSequence()) then
 			//VJ.DEBUG_Print(self, "TASK_VJ_PLAY_ACTIVITY", "Stop")
 			if data.playbackRate then self:SetPlaybackRate(self.AnimPlaybackRate, true) end
 			self:TaskComplete()
@@ -139,7 +139,7 @@ function ENT:TASK_VJ_PLAY_ACTIVITY(taskStatus, data)
 		end
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:TASK_VJ_PLAY_SEQUENCE(taskStatus, data)
 	if taskStatus == TASKSTATUS_NEW then
 		//VJ.DEBUG_Print(self, "TASK_VJ_PLAY_SEQUENCE", "Start -", data.duration)
@@ -162,7 +162,7 @@ function ENT:TASK_VJ_PLAY_SEQUENCE(taskStatus, data)
 		end
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:RunAI() -- Called from the engine every 0.1 seconds
 	if self:GetState() == VJ_STATE_FREEZE or self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then self:MaintainActivity() return end
 	local selfData = fGetTable(self)
@@ -173,7 +173,7 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 	
 	-- Apply walk frames to both activities and sequences
 	-- Parts of it replicate TASK_PLAY_SEQUENCE - https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_basenpc_schedule.cpp#L3312
-	if !isMoving && self:GetSequenceMoveDist(self:GetSequence()) > 0 && !self:IsSequenceFinished() && ((self:GetSequence() == self:GetIdealSequence()) or (self:GetActivity() == ACT_DO_NOT_DISTURB)) && selfData.MovementType != VJ_MOVETYPE_AERIAL && selfData.MovementType != VJ_MOVETYPE_AQUATIC then
+	if !isMoving and self:GetSequenceMoveDist(self:GetSequence()) > 0 and !self:IsSequenceFinished() and ((self:GetSequence() == self:GetIdealSequence()) or (self:GetActivity() == ACT_DO_NOT_DISTURB)) and selfData.MovementType != VJ_MOVETYPE_AERIAL and selfData.MovementType != VJ_MOVETYPE_AQUATIC then
 		self:AutoMovement(self:GetAnimTimeInterval())
 	end
 	
@@ -194,7 +194,7 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 				self:SetMovementActivity(moveAct) -- Force update the movement sequence, aka "m_sequence" in the engine
 				local moveSeq = self:GetMovementSequence()
 				local idealSeq = self:GetIdealSequence()
-				if moveSeq != idealSeq && self:GetSequenceActivity(moveSeq) != self:GetSequenceActivity(idealSeq) then
+				if moveSeq != idealSeq and self:GetSequenceActivity(moveSeq) != self:GetSequenceActivity(idealSeq) then
 					self:SetIdealSequence(moveSeq)
 				end
 			end
@@ -202,7 +202,7 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 		
 		self:DoSchedule(curSchedule)
 		local activeSchedule = selfData.CurrentSchedule -- Prevent chained schedules from being interrupted by the previous schedule, such as turning animations started by OnFinish (otherwise they break)
-		if !activeSchedule or (activeSchedule == curSchedule && (curSchedule.CanBeInterrupted or self:IsScheduleFinished(curSchedule) or (curSchedule.HasMovement && !self:IsMoving()))) then
+		if !activeSchedule or (activeSchedule == curSchedule and (curSchedule.CanBeInterrupted or self:IsScheduleFinished(curSchedule) or (curSchedule.HasMovement and !self:IsMoving()))) then
 			self:SelectSchedule()
 		end
 	else
@@ -218,13 +218,13 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 	local ene = self:GetEnemy()
 	local eneValid = IsValid(ene)
 	
-	if eneValid && !selfData.Dead then
+	if eneValid and !selfData.Dead then
 		-- Handle "ConstantlyFaceEnemy" behavior
-		if selfData.ConstantlyFaceEnemy && self:MaintainConstantlyFaceEnemy() then
+		if selfData.ConstantlyFaceEnemy and self:MaintainConstantlyFaceEnemy() then
 			return
 		end
 		-- Face enemy for stationary types OR attacks
-		if (selfData.MovementType == VJ_MOVETYPE_STATIONARY && selfData.CanTurnWhileStationary) or (selfData.AttackType && ((selfData.MeleeAttackAnimationFaceEnemy && !selfData.MeleeAttack_IsPropAttack && selfData.AttackType == VJ.ATTACK_TYPE_MELEE) or (selfData.GrenadeAttackAnimationFaceEnemy && selfData.AttackType == VJ.ATTACK_TYPE_GRENADE && selfData.EnemyData.Visible) or (selfData.RangeAttackAnimationFaceEnemy && selfData.AttackType == VJ.ATTACK_TYPE_RANGE) or ((selfData.LeapAttackAnimationFaceEnemy == true or (selfData.LeapAttackAnimationFaceEnemy == 2 && !selfData.LeapAttackHasJumped)) && selfData.AttackType == VJ.ATTACK_TYPE_LEAP))) then
+		if (selfData.MovementType == VJ_MOVETYPE_STATIONARY and selfData.CanTurnWhileStationary) or (selfData.AttackType and ((selfData.MeleeAttackAnimationFaceEnemy and !selfData.MeleeAttack_IsPropAttack and selfData.AttackType == VJ.ATTACK_TYPE_MELEE) or (selfData.GrenadeAttackAnimationFaceEnemy and selfData.AttackType == VJ.ATTACK_TYPE_GRENADE and selfData.EnemyData.Visible) or (selfData.RangeAttackAnimationFaceEnemy and selfData.AttackType == VJ.ATTACK_TYPE_RANGE) or ((selfData.LeapAttackAnimationFaceEnemy == true or (selfData.LeapAttackAnimationFaceEnemy == 2 and !selfData.LeapAttackHasJumped)) and selfData.AttackType == VJ.ATTACK_TYPE_LEAP))) then
 			self:SetTurnTarget("Enemy")
 			return
 		end
@@ -232,12 +232,12 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 	
 	if turnData.Type then
 		-- If StopOnFace flag is set AND (Something has requested to take over by checking "ideal yaw != last set yaw") OR (we are facing ideal) then finish it!
-		if turnData.StopOnFace && (self:GetIdealYaw() != turnData.LastYaw or self:IsFacingIdealYaw()) then
+		if turnData.StopOnFace and (self:GetIdealYaw() != turnData.LastYaw or self:IsFacingIdealYaw()) then
 			self:ResetTurnTarget()
 		else
 			turnData.LastYaw = 0 -- To make sure the turning maintain works correctly
 			local turnTarget = turnData.Target
-			if turnData.Type == VJ.FACE_POSITION or (turnData.Type == VJ.FACE_POSITION_VISIBLE && self:VisibleVec(turnTarget)) then
+			if turnData.Type == VJ.FACE_POSITION or (turnData.Type == VJ.FACE_POSITION_VISIBLE and self:VisibleVec(turnTarget)) then
 				local resultAng = self:GetTurnAngle((turnTarget - fGetPos(self)):Angle())
 				if selfData.TurningUseAllAxis then
 					local myAng = self:GetAngles()
@@ -245,7 +245,7 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 				end
 				self:SetIdealYawAndUpdate(resultAng.y)
 				turnData.LastYaw = resultAng.y
-			elseif IsValid(turnTarget) && (turnData.Type == VJ.FACE_ENTITY or (turnData.Type == VJ.FACE_ENTITY_VISIBLE && self:Visible(turnTarget))) then
+			elseif IsValid(turnTarget) and (turnData.Type == VJ.FACE_ENTITY or (turnData.Type == VJ.FACE_ENTITY_VISIBLE and self:Visible(turnTarget))) then
 				local resultAng;
 				if selfData.TurningUseAllAxis then
 					local myAng = self:GetAngles()
@@ -261,7 +261,7 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 				end
 				self:SetIdealYawAndUpdate(resultAng.y)
 				turnData.LastYaw = resultAng.y
-			elseif eneValid && !selfData.Dead && (turnData.Type == VJ.FACE_ENEMY or (turnData.Type == VJ.FACE_ENEMY_VISIBLE && selfData.EnemyData.Visible)) then
+			elseif eneValid and !selfData.Dead and (turnData.Type == VJ.FACE_ENEMY or (turnData.Type == VJ.FACE_ENEMY_VISIBLE and selfData.EnemyData.Visible)) then
 				local resultAng;
 				if selfData.TurningUseAllAxis then
 					local myAng = self:GetAngles()
@@ -281,7 +281,7 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 		end
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Called whenever a task fails
 -----------------------------------------------------------]]
@@ -304,13 +304,13 @@ function ENT:OnTaskFailed(failCode, failString)
 			self:NextTask(curSchedule) -- Attempt to move on to the next task!
 		end
 		-- Handle "RunCode_OnFail"
-		if !curSchedule.OnFailExecuted && curSchedule.RunCode_OnFail then
+		if !curSchedule.OnFailExecuted and curSchedule.RunCode_OnFail then
 			curSchedule.OnFailExecuted = true
 			curSchedule.RunCode_OnFail(failCode, failString)
 		end
 	end)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnMovementFailed()
 	//VJ.DEBUG_Print(self, "OnMovementFailed", "warn")
 	-- Now handled in `OnTaskFailed`
@@ -327,15 +327,15 @@ function ENT:OnMovementFailed()
 		end
 	end*/
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnMovementComplete()
 	//VJ.DEBUG_Print(self, "OnMovementComplete")
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnStateChange(oldState, newState)
 	//VJ.DEBUG_Print(self, "OnStateChange", oldState, newState)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:TranslateNavGoal(ent, goal)
 	//VJ.DEBUG_Print(self, "TranslateNavGoal", ent, goal)
 	//VJ.DEBUG_TempEnt(goal)
@@ -354,16 +354,16 @@ function ENT:TranslateNavGoal(ent, goal)
 	end
 	//return goal + ent:GetForward()*math.random(-100, 100)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:StartSchedule(schedule)
 	//VJ.DEBUG_Print(self, "StartSchedule", schedule.Name)
 	local selfData = fGetTable(self)
-	if selfData.MovementType == VJ_MOVETYPE_STATIONARY && schedule.HasMovement then return end -- It's stationary therefore it should not move!
-	if !schedule.IsPlayAnim && self:GetState() >= VJ_STATE_ONLY_ANIMATION then return end -- Certain states should ONLY do animation schedules!
+	if selfData.MovementType == VJ_MOVETYPE_STATIONARY and schedule.HasMovement then return end -- It's stationary therefore it should not move!
+	if !schedule.IsPlayAnim and self:GetState() >= VJ_STATE_ONLY_ANIMATION then return end -- Certain states should ONLY do animation schedules!
 	local curSchedule = selfData.CurrentSchedule
 	if curSchedule then
 		-- If it's the same task AND it's opening a door OR doing a move wait then cancel the new schedule!
-		if schedule.Name == curSchedule.Name && (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetMoveDelay() > 0) then
+		if schedule.Name == curSchedule.Name and (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetMoveDelay() > 0) then
 			return
 		end
 		-- Clean up any schedule it may have been doing
@@ -377,7 +377,7 @@ function ENT:StartSchedule(schedule)
 	-- Handle facing data sent by schedule's "TurnData"
 		-- Type = Type of facing it should do | Target = The vector/ent to face (Not required for enemy facing!)
 	local schedTurnData = schedule.TurnData
-	if schedTurnData && selfData.CanTurnWhileMoving then
+	if schedTurnData and selfData.CanTurnWhileMoving then
 		local faceType = schedTurnData.Type
 		if faceType then
 			self:ResetTurnTarget()
@@ -399,7 +399,7 @@ function ENT:StartSchedule(schedule)
 	-- Clear certain systems that should be notified that we have moved
 	if schedule.HasMovement then
 		selfData.LastHiddenZoneT = 0
-		if !schedule.CanShootWhenMoving or selfData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND then // selfData.WeaponAttackState && selfData.WeaponAttackState >= VJ.WEP_ATTACK_STATE_FIRE
+		if !schedule.CanShootWhenMoving or selfData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND then // selfData.WeaponAttackState and selfData.WeaponAttackState >= VJ.WEP_ATTACK_STATE_FIRE
 			selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 		end
 		-- Movements shouldn't interrupt gestures
@@ -414,13 +414,13 @@ function ENT:StartSchedule(schedule)
 	selfData.CurrentTaskID = 1
 	self:SetTask(schedule:GetTask(1))
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:DoSchedule(schedule)
 	if self:TaskFinished() then self:NextTask(schedule) end
 	local curTask = self.CurrentTask
 	if curTask then self:RunTask(curTask) end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:StopCurrentSchedule()
 	local selfData = fGetTable(self)
 	local schedule = selfData.CurrentSchedule
@@ -436,14 +436,14 @@ function ENT:StopCurrentSchedule()
 		//self:SelectSchedule()
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:ScheduleFinished(schedule)
 	//VJ.DEBUG_Print(self, "ScheduleFinished", schedule)
 	local selfData = fGetTable(self)
 	local runFinish = false
 	if schedule then
 		-- Handle "RunCode_OnFinish"
-		if !schedule.OnFinishExecuted && schedule.RunCode_OnFinish then
+		if !schedule.OnFinishExecuted and schedule.RunCode_OnFinish then
 			schedule.OnFinishExecuted = true
 			runFinish = schedule.RunCode_OnFinish
 		end
@@ -466,7 +466,7 @@ function ENT:ScheduleFinished(schedule)
 	selfData.CurrentTaskID = nil
 	if runFinish then runFinish() end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:SetTask(task)
 	local selfData = fGetTable(self)
 	selfData.CurrentTask = task
@@ -474,7 +474,7 @@ function ENT:SetTask(task)
 	selfData.TaskStartTime = CurTime()
 	self:StartTask(selfData.CurrentTask)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:NextTask(schedule)
 	//VJ.DEBUG_Print(self, "NextTask", schedule)
 	local taskID = self.CurrentTaskID
@@ -487,14 +487,14 @@ function ENT:NextTask(schedule)
 	self:SetTaskStatus(TASKSTATUS_RUN_TASK)
 	self:SetTask(schedule:GetTask(taskID)) -- Switch to the next task
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Called every time a task is completed before moving onto to the next task
 -----------------------------------------------------------]]
 function ENT:OnTaskComplete()
 	self.CurrentTaskComplete = true
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Whether or not the current task is finished
 	Returns
@@ -503,7 +503,7 @@ end
 function ENT:TaskFinished()
 	return self.CurrentTaskComplete
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Whether or not the current schedule is fully finished | Used internally by the base
 		- schedule = The schedule to check for, should always be given "self.CurrentSchedule"!
@@ -512,21 +512,22 @@ end
 -----------------------------------------------------------]]
 function ENT:IsScheduleFinished(schedule)
 	local selfData = fGetTable(self)
-	return selfData.CurrentTaskComplete && (!selfData.CurrentTaskID or selfData.CurrentTaskID >= schedule:NumTasks())
+	return selfData.CurrentTaskComplete and (!selfData.CurrentTaskID or selfData.CurrentTaskID >= schedule:NumTasks())
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:StartTask(task)
 	task:Start(self)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:RunTask(task)
 	task:Run(self)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:TaskTime()
 	return CurTime() - self.TaskStartTime
 end
--- Engine tasks / schedules ---------------------------------------------------------------------------------------------------------------------------------------------
+
+-- Engine tasks / schedules
 function ENT:StartEngineTask(iTaskID, taskData) end
 function ENT:RunEngineTask(iTaskID, taskData) end
 function ENT:StartEngineSchedule(scheduleID) self:ScheduleFinished(self.CurrentSchedule) self.bDoingEngineSchedule = true end

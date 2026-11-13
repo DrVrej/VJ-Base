@@ -6,7 +6,7 @@
 if !VJ then VJ = {} end
 
 if !VJ.Plugins then VJ.Plugins = {} end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Registers the addon to the VJ Base plugin list
 		- name = Addon name
@@ -17,7 +17,7 @@ VJ.AddPlugin = function(name, type, version)
 	table.insert(VJ.Plugins, {Name = name or "Unknown", Type = type or "N/A", Version = version or "N/A"})
 end
 VJ.AddAddonProperty = VJ.AddPlugin -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Registers spawn menu category information
 		- name = Category name
@@ -30,7 +30,7 @@ VJ.AddCategoryInfo = function(category, options)
 	end
 	//list.Set("VJBASE_CATEGORY_INFO", category, {icon = options.Icon or "icon16/monkey.png"})
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Helper function to add kill icons
 		- class = Entity class to assign this kill icon to
@@ -63,7 +63,7 @@ local function addKillIcon(class, name, texture, data)
 end
 --
 VJ.AddKillIcon = addKillIcon
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Adds an entity to the NPC spawn list
 		- name = NPC's name
@@ -82,12 +82,12 @@ VJ.AddNPC = function(name, class, category, extra, old1)
 	end
 	list.Set("NPC", class, data)
 	list.Set("VJBASE_SPAWNABLE_NPC", class, data)
-	if CLIENT && !killicon.Exists(class) then
+	if CLIENT and !killicon.Exists(class) then
 		addKillIcon(class, name, VJ.KILLICON_DEFAULT)
 	end
 	duplicator.RegisterEntityClass(class, VJ.CreateDupe_NPC, "Class", "Equipment", "SpawnFlags", "Data")
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Adds an entity with weapons to the NPC spawn list
 		- name = NPC's name
@@ -99,7 +99,7 @@ end
 VJ.AddNPC_HUMAN = function(name, class, weapons, category, extra, old1)
 	VJ.AddNPC(name, class, category, table.Merge({Weapons = weapons}, extra or {}), old1)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Adds an entity to the NPC weapon override list
 		- name = Weapon's name
@@ -111,7 +111,7 @@ VJ.AddNPCWeapon = function(name, class, category)
 	list.Add("NPCUsableWeapons", data)
 	list.Add("VJBASE_SPAWNABLE_NPC_WEAPON", data)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Adds an entity to the weapon spawn list
 		- name = Weapon's name
@@ -122,7 +122,7 @@ end
 VJ.AddWeapon = function(name, class, category, extra, old1)
 	local data = {PrintName = name, ClassName = class, Category = category, Spawnable = true}
 	if extra != nil then
-		if isbool(category) && isstring(extra) then  -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+		if isbool(category) and isstring(extra) then  -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 			data.AdminOnly = category; data.Category = extra; if old1 then old1(data) end
 		else
 			table.Merge(data, extra)
@@ -132,7 +132,7 @@ VJ.AddWeapon = function(name, class, category, extra, old1)
 	list.Set("VJBASE_SPAWNABLE_WEAPON", class, data)
 	duplicator.RegisterEntityClass(class, VJ.CreateDupe_Weapon, "Data")
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Adds an entity to the entity spawn list
 		- name = Entity's name
@@ -143,7 +143,7 @@ end
 VJ.AddEntity = function(name, class, category, extra, old1, old2, old3, old4)
 	local data = {PrintName = name, ClassName = class, Category = category, Spawnable = true, DropToFloor = true}
 	if extra != nil then
-		if isstring(category) && isbool(extra) && isnumber(old1) && isbool(old2) then  -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+		if isstring(category) and isbool(extra) and isnumber(old1) and isbool(old2) then  -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 			data.Author = category; data.AdminOnly = extra; data.NormalOffset = old1; data.DropToFloor = old2; data.Category = old3; if old4 then old4(data) end
 		else
 			table.Merge(data, extra)
@@ -153,7 +153,7 @@ VJ.AddEntity = function(name, class, category, extra, old1, old2, old3, old4)
 	list.Set("VJBASE_SPAWNABLE_ENTITIES", class, data)
 	duplicator.RegisterEntityClass(class, VJ.CreateDupe_Entity, "Data")
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Registers a particle file
 		- fileName = Particle directory | EX: "particles/explosion.pcf"
@@ -166,7 +166,7 @@ VJ.AddParticle = function(fileDir, particleList)
 		PrecacheParticleSystem(name)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Registers a ConVar
 		- name = ConVar name
@@ -179,7 +179,7 @@ end
 VJ.AddConVar = function(name, defValue, flags, helpText, min, max)
 	return CreateConVar(name, defValue, flags or FCVAR_NONE, helpText or "", min, max)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Registers a client ConVar
 		- name = ConVar name

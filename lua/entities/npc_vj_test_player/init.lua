@@ -52,7 +52,7 @@ ENT.SoundTbl_IdleDialogueAnswer = {"common/wpn_denyselect.wav", "common/wpn_sele
 ENT.SoundTbl_FollowPlayer = "common/wpn_select.wav"
 ENT.SoundTbl_UnFollowPlayer = "common/wpn_denyselect.wav"
 ENT.SoundTbl_Death = {"player/pl_pain5.wav", "player/pl_pain6.wav", "player/pl_pain7.wav"}
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:PreInit()
 	-- Set all the player models into the model variable
 	-- WARNING: Do NOT use "ipairs", this is NOT a sequential table!
@@ -60,7 +60,7 @@ function ENT:PreInit()
 		self.Model[#self.Model + 1] = v
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Init()
 	VJ.EmitSound(self, "player/pl_drown1.wav") -- Player connect sound
 	
@@ -73,7 +73,7 @@ function ENT:Init()
 	-- Random playermodel color
 	self:SetPlayerColor(Color(math.Rand(0, 255), math.Rand(0, 255), math.Rand(0, 255)):ToVector())
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 /*function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpse)
 	-- Has to be client side, not worth networking, therefore this has been abandoned
 	corpse.SetupDataTables = function()
@@ -88,9 +88,9 @@ end
 	//corpse:SetDTVector(0, self:GetPlayerColor())
 	//corpse:SetPlayerColor(self:GetPlayerColor())
 end*/
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnGrenadeAttackExecute(status, grenade, overrideEnt, landDir, landingPos)
-	if status == "PostSpawn" && !IsValid(overrideEnt) then
+	if status == "PostSpawn" and !IsValid(overrideEnt) then
 		-- Glow and trail are both based on the original: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/hl2/grenade_frag.cpp#L158
 		local redGlow = ents.Create("env_sprite")
 		redGlow:SetKeyValue("model", "sprites/redglow1.vmt")
@@ -121,7 +121,7 @@ function ENT:OnGrenadeAttackExecute(status, grenade, overrideEnt, landDir, landi
 		end
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnDeath(dmginfo, hitgroup, status)
 	if status == "Init" then
 		local pos = self:GetPos()

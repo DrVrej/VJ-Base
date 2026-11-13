@@ -8,25 +8,25 @@ ENT.AutomaticFrameAdvance = false
 
 ENT.IsVJBaseSNPC = true
 ENT.IsVJBaseSNPC_Human = true
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:SetAutomaticFrameAdvance(val)
 	self.AutomaticFrameAdvance = val
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:MatFootStepQCEvent(data)
 	-- Return true to apply all changes done to the data table.
 	-- Return false to prevent the sound from playing.
 	-- Return nil or nothing to play the sound without altering it.
 	return false
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 //function ENT:FireAnimationEvent(pos, ang, event, name)
 	//VJ.DEBUG_Print(self, "FireAnimationEvent", pos, ang, event, name)
 //end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	function ENT:Init() end
-	---------------------------------------------------------------------------------------------------------------------------------------------
+	
 	--[[---------------------------------------------------------
 		UNCOMMENT TO USE | Called whenever CalcView is ran on the NPC controller | Useful to override the camera calculations
 			- controller = Controller entity (Includes all the necessary data)
@@ -47,7 +47,7 @@ if CLIENT then
 			--
 	-----------------------------------------------------------]]
 	-- function ENT:Controller_OnCalcView(controller, ply, origin, angles, fov) end
-	---------------------------------------------------------------------------------------------------------------------------------------------
+	
 	//ENT.RenderGroup = RENDERGROUP_BOTH
 	local metaEntity = FindMetaTable("Entity")
 	local fDrawModel = metaEntity.DrawModel

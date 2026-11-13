@@ -6,7 +6,7 @@
 if !CLIENT then return end
 
 VJ.Music_Queue = {}
---
+
 local IsValid = IsValid
 local vj_npc_snd_track_volume = GetConVar("vj_npc_snd_track_volume")
 --

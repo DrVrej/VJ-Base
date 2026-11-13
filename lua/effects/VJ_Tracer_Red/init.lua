@@ -3,19 +3,19 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
--- Based off of the GMod lasertracer
+-- Based off of the GMod "lasertracer"
 local beamMat = Material("effects/spark")
 local beamLength = 0.1
 local beamColor = Color(255, 0, 0, 255)
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function EFFECT:Init(data)
 	local startPos = data:GetStart()
 	self.EndPos = data:GetOrigin()
 	local ent = data:GetEntity()
 	local att = data:GetAttachment()
 
-	if IsValid(ent) && att > 0 then
-		if ent:GetOwner() == LocalPlayer() && LocalPlayer():GetViewModel() != LocalPlayer() then ent = ent:GetOwner():GetViewModel() end
+	if IsValid(ent) and att > 0 then
+		if ent:GetOwner() == LocalPlayer() and LocalPlayer():GetViewModel() != LocalPlayer() then ent = ent:GetOwner():GetViewModel() end
 		att = ent:GetAttachment(att)
 		if att then
 			startPos = att.Pos
@@ -27,7 +27,7 @@ function EFFECT:Init(data)
 	self.TracerTime = math.min(1, startPos:Distance(self.EndPos) / 10000) -- Calculate death time
 	self.DieTime = CurTime() + self.TracerTime -- Time until it dies (when it reaches its target)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function EFFECT:Think()
 	if CurTime() > self.DieTime then -- If it's dead then...
 		local dirNormalized = self.Dir:GetNormalized()
@@ -44,7 +44,7 @@ function EFFECT:Think()
 	end
 	return true
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function EFFECT:Render()
 	local fDelta = math.sqrt(math.Clamp((self.DieTime - CurTime()) / self.TracerTime, 0, 1))
 	local sinWave = math.sin(fDelta * math.pi)

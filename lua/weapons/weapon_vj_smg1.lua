@@ -36,7 +36,7 @@ SWEP.Secondary.Automatic = true
 SWEP.Secondary.Ammo = "SMG1_Grenade"
 
 SWEP.ReloadSound = "weapons/smg1/smg1_reload.wav"
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function SWEP:OnSecondaryAttack()
 	local owner = self:GetOwner()
 	owner:ViewPunch(Angle(-self.Primary.Recoil * 3, 0, 0))

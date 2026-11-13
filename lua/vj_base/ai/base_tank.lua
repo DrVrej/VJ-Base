@@ -3,8 +3,6 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
----------------------------------------------------------------------------------------------------------------------------------------------
--- TANK BASE --
 ENT.VJ_ID_Boss = true
 ENT.SightAngle = 360
 ENT.SightDistance = 10000
@@ -29,21 +27,21 @@ ENT.CanReceiveOrders = false
 ENT.DamageAllyResponse = false
 ENT.CombatDamageResponse = false
 ENT.DeathAllyResponse = "OnlyAlert"
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:SCHEDULE_FACE() end -- Tanks do NOT turn like normal NPCs!
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:MaintainAlertBehavior() end -- Tanks do NOT chase like normal NPCs!
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnDamaged(dmginfo, hitgroup, status)
 	-- Skip gravity gun damage and crossbow bolts
 	if status == "Init" then
 		local dmgInflictor = dmginfo:GetInflictor()
-		if dmginfo:IsDamageType(DMG_PHYSGUN) or (IsValid(dmgInflictor) && dmgInflictor:GetClass() == "crossbow_bolt") then
+		if dmginfo:IsDamageType(DMG_PHYSGUN) or (IsValid(dmgInflictor) and dmgInflictor:GetClass() == "crossbow_bolt") then
 			dmginfo:SetDamage(0)
 		end
 	-- Skip melee damages unless it's caused by a boss and is strong enough
-	elseif status == "PreDamage" && (dmginfo:IsDamageType(DMG_SLASH) or dmginfo:IsDamageType(DMG_CLUB) or dmginfo:IsDamageType(DMG_GENERIC)) then
-		if dmginfo:GetDamage() >= 30 && dmginfo:GetAttacker().VJ_ID_Boss then
+	elseif status == "PreDamage" and (dmginfo:IsDamageType(DMG_SLASH) or dmginfo:IsDamageType(DMG_CLUB) or dmginfo:IsDamageType(DMG_GENERIC)) then
+		if dmginfo:GetDamage() >= 30 and dmginfo:GetAttacker().VJ_ID_Boss then
 			dmginfo:SetDamage(dmginfo:GetDamage() / 2)
 		else
 			dmginfo:SetDamage(0)

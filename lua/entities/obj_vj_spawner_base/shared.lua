@@ -7,7 +7,7 @@ ENT.Category = "VJ Base"
 ENT.AutomaticFrameAdvance = true
 
 ENT.IsVJBaseSpawner = true
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	local metaEntity = FindMetaTable("Entity")
 	local fDrawModel = metaEntity.DrawModel

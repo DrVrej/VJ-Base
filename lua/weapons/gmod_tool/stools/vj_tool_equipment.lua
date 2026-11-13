@@ -10,7 +10,7 @@ TOOL.ClientConVar = {
 }
 
 local defaultConvars = TOOL:BuildConVarList()
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	local function ControlPanel(panel)
 		local reset = vgui.Create("DButton")
@@ -75,12 +75,12 @@ if CLIENT then
 			end
 		panel:AddItem(wepText)
 	end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 	function TOOL.BuildCPanel(panel)
 		ControlPanel(panel)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 -- For saves and duplications
 local function ApplyWeapon(ply, ent, data)
 	if !data or !data[1] then return end
@@ -90,7 +90,7 @@ local function ApplyWeapon(ply, ent, data)
 	end
 end
 duplicator.RegisterEntityModifier("vj_tool_equipment", ApplyWeapon)
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
@@ -105,7 +105,7 @@ function TOOL:LeftClick(tr)
 	end
 	return true
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity

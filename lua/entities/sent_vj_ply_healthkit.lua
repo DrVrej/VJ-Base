@@ -16,7 +16,7 @@ ENT.Spawnable = true
 ENT.AdminOnly = true
 
 ENT.PhysicsSounds = true
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	local vecOffset = Vector(7, -2, 6)
 	local angOffset = Angle(0, 90, 0)
@@ -28,7 +28,7 @@ if CLIENT then
 		cam.End3D2D()
 	end
 end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 if !SERVER then return end
 
 function ENT:Initialize()
@@ -44,7 +44,7 @@ function ENT:Initialize()
 		phys:Wake()
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Use(activator)
 	if activator:IsPlayer() then
 		self:EmitSound("HealthKit.Touch")
@@ -53,7 +53,7 @@ function ENT:Use(activator)
 		self:Remove()
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnTakeDamage(dmginfo)
 	self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() * 0.1)
 end

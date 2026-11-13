@@ -7,7 +7,7 @@ local IsValid = IsValid
 local defAng = Angle()
 local MsgC = MsgC
 local colorEnt = Color(255, 255, 255, 150)
---------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Prints the giving arguments in a organized fashion
 		- ent = Entity that the debug is being called from | DEFAULT = NULL
@@ -45,7 +45,7 @@ function VJ.DEBUG_Print(ent, callName, type, ...)
 	MsgC(colorEnt, ent, callName and (" | " .. callName) or "", " : ", colorType, unpack(printTbl))
 	MsgC(colorType, "\n")
 end
---------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Creates a test entity, useful to test trace or hit positions
 		- pos = Spawn position
@@ -71,7 +71,7 @@ function VJ.DEBUG_TempEnt(pos, ang, color, time, mdl)
 	timer.Simple(time or 3, function() if IsValid(ent) then ent:Remove() end end)
 	return ent
 end
---------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Runs the given function x amount of times and prints how long it took to run it
 		- count = Number of times to execute the given function

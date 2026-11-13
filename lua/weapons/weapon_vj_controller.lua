@@ -31,7 +31,7 @@ SWEP.DeploySound = sdFire
 local msg_player = {"You know NPC stands for Non-Player-Character, right?", "Looks like a player is already controlling this entity.", "You're about to become an NPC if you do that again."}
 local msg_ragdoll = {"You're being as productive as that corpse.", "Maybe try controlling it before it died?"}
 local msg_prop = {"This isn't prop hunt.", "Do you know how to turn the stove on?"}
----------------------------------------------------------------------------------------------------------------------------------------------
+--
 function SWEP:PrimaryAttack()
 	local owner = self:GetOwner()
 	if CLIENT or !owner:IsPlayer() then return end

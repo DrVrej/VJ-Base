@@ -12,13 +12,10 @@ ENT.CollisionDecalChance = 3
 ENT.CollisionSound = {"physics/flesh/flesh_squishy_impact_hard1.wav", "physics/flesh/flesh_squishy_impact_hard2.wav", "physics/flesh/flesh_squishy_impact_hard3.wav", "physics/flesh/flesh_squishy_impact_hard4.wav"}
 ENT.CollisionSoundLevel = 60
 ENT.CollisionSoundPitch = VJ.SET(90, 100)
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- ///// BASE IMPLEMENTATION BELOW — Override with caution and only when necessary! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------=[ ///// BASE IMPLEMENTATION BELOW | Override with caution! \\\\\ ]=--------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
 local stinkyMatTypes = {alienflesh = true, antlion = true, armorflesh = true, bloodyflesh = true, flesh = true, zombieflesh = true, player = true}
 local defDecals = {
 	[VJ.BLOOD_COLOR_RED] = "VJ_Blood_Red",
@@ -36,7 +33,7 @@ local vj_npc_gib_vfx = GetConVar("vj_npc_gib_vfx")
 
 local metaEntity = FindMetaTable("Entity")
 local fGetTable = metaEntity.GetTable
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Initialize()
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS) -- Use MOVETYPE_NONE for testing, makes the entity freeze!
@@ -72,7 +69,7 @@ function ENT:Initialize()
 	if vj_npc_snd_gib:GetInt() == 0 then self.CollisionSound = false end
 	if vj_npc_gib_vfx:GetInt() == 0 then self.CollisionDecal = false end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Think()
 	if self.IsStinky then
 		sound.EmitHint(SOUND_CARCASS, self:GetPos(), 400, 0.15, self) -- SOUND_MEAT = Do NOT use this because we would need to call "GetLoudestSoundHint" twice for each sound type!
@@ -80,7 +77,7 @@ function ENT:Think()
 		return true
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:PhysicsCollide(data, phys)
 	if data.OurOldVelocity:Length() < 18 then return end
 	local selfData = fGetTable(self)
@@ -93,7 +90,7 @@ function ENT:PhysicsCollide(data, phys)
 
 	-- Collision Decal
 	local collideDecal = VJ.PICK(selfData.CollisionDecal)
-	if collideDecal && math.random(1, selfData.CollisionDecalChance) == 1 then
+	if collideDecal and math.random(1, selfData.CollisionDecalChance) == 1 then
 		local myPos = self:GetPos() + self:GetUp() * 4 -- Move it up to prevent it from being too close to the ground
 		local tr = util.TraceLine({
 			start = myPos,
@@ -103,7 +100,7 @@ function ENT:PhysicsCollide(data, phys)
 		util.Decal(collideDecal, tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnTakeDamage(dmginfo)
 	self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() * 0.1)
 end

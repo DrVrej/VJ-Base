@@ -6,20 +6,20 @@ TOOL.Information = {
 	{name = "right"},
 	{name = "reload"},
 }
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	function TOOL.BuildCPanel(panel)
 		panel:Help("#vjbase.tool.general.note.recommend")
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
 	if !IsValid(ent) or !ent:IsNPC() or !ent.IsVJBaseSNPC then return end
 	local selectedNPC = self:GetEnt(1)
 	-- Unselect the NPC
-	if IsValid(selectedNPC) && selectedNPC == ent then
+	if IsValid(selectedNPC) and selectedNPC == ent then
 		self:ClearObjects()
 		self:GetOwner():ChatPrint(VJ.GetName(ent) .. " Has been unselected!")
 	-- Select the NPC
@@ -30,7 +30,7 @@ function TOOL:LeftClick(tr)
 	end
 	return true
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
@@ -58,7 +58,7 @@ function TOOL:RightClick(tr)
 	end
 	return true
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:Reload(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity

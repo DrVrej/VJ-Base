@@ -16,17 +16,17 @@ ENT.Spawnable = true
 ENT.AdminOnly = true
 
 scripted_ents.Alias("sent_vj_ply_spawnpoint", "sent_vj_ply_spawn") -- !! Backwards Compatibility !!
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	function ENT:Draw()
 		self:DrawModel()
 	end
 end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 if !SERVER then return end
 
 ENT.Active = true
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Initialize()
 	self:SetModel("models/props_junk/sawblade001a.mdl")
 	self:SetMoveType(MOVETYPE_NONE)
@@ -35,9 +35,9 @@ function ENT:Initialize()
 	self:SetUseType(SIMPLE_USE)
 	self:SetColor(VJ.COLOR_GREEN)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Use(activator)
-	if activator:IsPlayer() && activator:IsAdmin() then
+	if activator:IsPlayer() and activator:IsAdmin() then
 		if self.Active then
 			self.Active = false
 			self:EmitSound("hl1/fvox/deactivated.wav")
@@ -51,7 +51,7 @@ function ENT:Use(activator)
 		end
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:PhysgunPickup(ply)
 	return ply:IsAdmin()
 end

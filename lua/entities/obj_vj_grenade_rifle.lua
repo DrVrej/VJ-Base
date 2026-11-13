@@ -13,11 +13,11 @@ ENT.Contact = "http://steamcommunity.com/groups/vrejgaming"
 ENT.Category = "VJ Base"
 
 ENT.VJ_ID_Danger = true
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	VJ.AddKillIcon("obj_vj_grenade_rifle", ENT.PrintName, VJ.KILLICON_TYPE_ALIAS, "grenade_ar2")
 end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 if !SERVER then return end
 
 ENT.Model = "models/weapons/ar2_grenade.mdl"
@@ -29,19 +29,19 @@ ENT.RadiusDamageUseRealisticRadius = true
 ENT.RadiusDamageType = DMG_BLAST
 ENT.RadiusDamageForce = 90
 ENT.CollisionDecal = "Scorch"
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:InitPhys()
 	local phys = self:GetPhysicsObject()
 	if IsValid(phys) then
 		phys:AddAngleVelocity(Vector(0, math.random(300, 400), 0))
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Init()
 	ParticleEffectAttach("smoke_gib_01", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 	ParticleEffectAttach("Rocket_Smoke_Trail", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 local defAngle = Angle()
 --
 function ENT:OnDestroy(data, phys)

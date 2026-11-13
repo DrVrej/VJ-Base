@@ -31,7 +31,7 @@ SWEP.PrimaryEffects_MuzzleParticlesAsOne = true
 SWEP.Primary.DisableBulletCode = true
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_SpawnShells = false
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function SWEP:OnPrimaryAttack(status, statusData)
 	if status == "Init" then
 		if CLIENT then return end

@@ -5,13 +5,13 @@ TOOL.Information = {
 	{name = "left"},
 	{name = "right"},
 }
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	function TOOL.BuildCPanel(panel)
 		panel:Help("#tool.vj_tool_notarget.menu.label")
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	local owner = self:GetOwner()
@@ -25,7 +25,7 @@ function TOOL:LeftClick(tr)
 		return true
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity

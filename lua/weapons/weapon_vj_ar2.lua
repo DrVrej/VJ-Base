@@ -45,11 +45,11 @@ SWEP.Secondary.Ammo = "AR2AltFire"
 
 SWEP.DryFireSound = "weapons/ar2/ar2_empty.wav"
 SWEP.Reload_TimeUntilAmmoIsSet = 0.8
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function SWEP:NPC_SecondaryFire_BeforeTimer(eneEnt, fireTime)
 	VJ.EmitSound(self, "weapons/cguard/charging.wav", 70)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function SWEP:OnSecondaryAttack()
 	local owner = self:GetOwner()
 	local vm = owner:GetViewModel()
@@ -61,9 +61,7 @@ function SWEP:OnSecondaryAttack()
 	VJ.CreateSound(self, "weapons/cguard/charging.wav", 85)
 	
 	timer.Simple(fidgetTime, function()
-		if IsValid(self) && IsValid(owner) && owner:GetActiveWeapon() == self then
-			VJ.CreateSound(self, "weapons/irifle/irifle_fire2.wav", 90)
-
+		if IsValid(self) and IsValid(owner) and owner:GetActiveWeapon() == self then
 			if SERVER then
 				local projectile = ents.Create(self.NPC_SecondaryFireEnt)
 				projectile:SetPos(owner:GetShootPos())
@@ -78,6 +76,7 @@ function SWEP:OnSecondaryAttack()
 				end
 			end
 			
+			VJ.CreateSound(self, "weapons/irifle/irifle_fire2.wav", 90)
 			owner:ViewPunch(Angle(-self.Primary.Recoil * 3, 0, 0))
 			owner:SetAnimation(PLAYER_ATTACK1)
 			self:SendWeaponAnim(ACT_VM_SECONDARYATTACK)

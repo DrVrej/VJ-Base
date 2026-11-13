@@ -5,9 +5,8 @@ include("shared.lua")
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------=[ CORE ]=--------------------------------------
 ENT.Model = {} -- Model(s) to spawn with | Picks a random one if it's a table
 ENT.SingleSpawner = false -- Should it will spawn the entities once then remove itself?
 ENT.PauseSpawning = false -- When set to true, it stops spawning the entities until set to false again
@@ -31,31 +30,27 @@ ENT.EntitiesToSpawn = {}
 		NPC_Class = "" or {} -- Overrides the NPC's relation class with the given string or table | OPTIONAL | DEFAULT: ""
 		FriToPlyAllies = false or true -- If set to true, the NPC will be allied with the player, must have NPC class "CLASS_PLAYER_ALLY" | OPTIONAL | DEFAULT: false
 */
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Sound Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Sounds to play while idle
+
+--------------------------------------=[ SOUND ]=--------------------------------------
+	---------= Idle =---------
 ENT.SoundTbl_Idle = false -- false = Don't play any sounds | string or table of strings = Sounds to play
 ENT.IdleSoundChance = 1 -- How much chance to play the sound? | 1 = Always
 ENT.IdleSoundLevel = 80
 ENT.IdleSoundPitch = VJ.SET(80, 100)
 ENT.IdleSoundCooldown = VJ.SET(4, 10)
 
--- Sounds to play when it spawns an entity
+	---------= Entity Spawn =---------
 ENT.SoundTbl_SpawnEntity = false -- false = Don't play any sounds | string or table of strings = Sounds to play
 ENT.SpawnEntitySoundChance = 1 -- How much chance to play the sound? | 1 = Always
 ENT.SpawnEntitySoundLevel = 80
 ENT.SpawnEntitySoundPitch = VJ.SET(80, 100)
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---
+
+--------------------------------------=[ HOOKS ]=--------------------------------------
 -- Use the functions below to customize or add new systems and behaviors
 -- Use "self.BaseClass.FuncName(self)" or "baseclass.Get(baseName).FuncName(self)" to run the base code as well when overriding functions not listed below
---
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Init() end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Called when an entity spawns
 		- ent [entity] = Entity it spawned
@@ -64,17 +59,14 @@ function ENT:Init() end
 		- initSpawn [boolean] = Was this an initial spawn? Used by the base during initialization
 -----------------------------------------------------------]]
 function ENT:OnSpawnEntity(ent, spawnKey, spawnTbl, initSpawn) end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnThink() end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:CustomOnRemove() end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- ///// BASE IMPLEMENTATION BELOW — Override with caution and only when necessary! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------=[ ///// BASE IMPLEMENTATION BELOW | Override with caution! \\\\\ ]=--------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Dead = false
 ENT.NextIdleSoundT = 0
 
@@ -84,7 +76,7 @@ local defAng = Angle()
 
 local metaEntity = FindMetaTable("Entity")
 local fGetTable = metaEntity.GetTable
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Spawns an entity from the given information, recommended to not manually call this function!
 		- spawnKey = The key or the position in the table of the current entity to spawn
@@ -128,15 +120,15 @@ function ENT:SpawnEntity(spawnKey, spawnTbl, initSpawn)
 	ent:Spawn()
 	ent:Activate()
 	if spawnNPCClass then
-		ent.VJ_NPC_Class = istable(spawnNPCClass) && spawnNPCClass or {spawnNPCClass}
+		ent.VJ_NPC_Class = istable(spawnNPCClass) and spawnNPCClass or {spawnNPCClass}
 	end
 	if spawnFriToPlyAllies then
 		ent.AlliedWithPlayerAllies = true
 	end
-	if ent:IsNPC() && spawnWepPicked != false && string.lower(spawnWepPicked) != "none" then
+	if ent:IsNPC() and spawnWepPicked != false and string.lower(spawnWepPicked) != "none" then
 		if string.lower(spawnWepPicked) == "default" then -- Default weapon from the spawn menu
 			local npcInfo = list.GetEntry("NPC", ent:GetClass())
-			local getDefWep = npcInfo && VJ.PICK(npcInfo.Weapons)
+			local getDefWep = npcInfo and VJ.PICK(npcInfo.Weapons)
 			if getDefWep then
 				ent:Give(getDefWep)
 			end
@@ -157,7 +149,7 @@ function ENT:SpawnEntity(spawnKey, spawnTbl, initSpawn)
 			if !entSpawnTbl or entSpawnTbl.Ent != dataEnt then return end
 			entSpawnTbl.Ent = nil -- To make sure it only respawns it once!
 			timer.Simple(self.RespawnCooldown, function()
-				if IsValid(self) && self.CurrentEntities[dataSpawnKey] == entSpawnTbl then
+				if IsValid(self) and self.CurrentEntities[dataSpawnKey] == entSpawnTbl then
 					self:SpawnEntity(dataSpawnKey, entSpawnTbl, false)
 				end
 			end)
@@ -169,18 +161,18 @@ function ENT:SpawnEntity(spawnKey, spawnTbl, initSpawn)
 	
 	-- Play spawn sound
 	local sdTbl = self.SoundTbl_SpawnEntity
-	if sdTbl && math.random(1, self.SpawnEntitySoundChance) == 1 then
+	if sdTbl and math.random(1, self.SpawnEntitySoundChance) == 1 then
 		VJ.EmitSound(self, sdTbl, self.SpawnEntitySoundLevel, math.random(self.SpawnEntitySoundPitch.a, self.SpawnEntitySoundPitch.b))
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Initialize()
 	self:Init()
 	if self.CustomOnInitialize then self:CustomOnInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self:GetModel() == "models/error.mdl" then -- No model was detected
 		local mdl = VJ.PICK(self.Model)
-		if mdl && mdl != "models/props_junk/popcan01a.mdl" then
+		if mdl and mdl != "models/props_junk/popcan01a.mdl" then
 			self:SetModel(mdl)
 		else -- No models found in self.Model
 			self:DrawShadow(false)
@@ -202,7 +194,7 @@ function ENT:Initialize()
 		end
 	end)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Think()
 	local curTime = CurTime()
 	local selfData = fGetTable(self)
@@ -210,7 +202,7 @@ function ENT:Think()
 	
 	-- Idle sound
 	local sdTbl = selfData.SoundTbl_Idle
-	if sdTbl && curTime > selfData.NextIdleSoundT then
+	if sdTbl and curTime > selfData.NextIdleSoundT then
 		if math.random(1, selfData.IdleSoundChance) == 1 then
 			VJ.STOPSOUND(selfData.CurrentIdleSound)
 			selfData.CurrentIdleSound = VJ.CreateSound(self, sdTbl, selfData.IdleSoundLevel, math.random(selfData.IdleSoundPitch.a, selfData.IdleSoundPitch.b))
@@ -232,7 +224,7 @@ function ENT:Think()
 	self:NextThink(curTime + 0.5)
 	return true
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnRemove()
 	self:CustomOnRemove()
 	self.Dead = true

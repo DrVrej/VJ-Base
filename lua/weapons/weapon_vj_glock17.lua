@@ -38,7 +38,7 @@ SWEP.Secondary.Ammo = "Pistol"
 SWEP.AnimTbl_Deploy = ACT_VM_IDLE_TO_LOWERED
 SWEP.ReloadSound = "vj_base/weapons/glock17/reload.wav"
 SWEP.Reload_TimeUntilAmmoIsSet = 1.5
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function SWEP:OnSecondaryAttack()
 	self.Primary.Delay = 0.175
 	self.Primary.Cone = 20

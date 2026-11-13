@@ -13,12 +13,12 @@ ENT.Contact = "http://steamcommunity.com/groups/vrejgaming"
 ENT.Category = "VJ Base"
 
 ENT.PhysicsSolidMask = MASK_SHOT
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	VJ.AddKillIcon("obj_vj_crossbowbolt", ENT.PrintName, VJ.KILLICON_PROJECTILE)
 	// VJ.AddKillIcon("obj_vj_crossbowbolt", ENT.PrintName, VJ.KILLICON_TYPE_ALIAS, "crossbow_bolt")
 end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 if !SERVER then return end
 
 ENT.Model = "models/crossbow_bolt.mdl"
@@ -31,16 +31,16 @@ ENT.SoundTbl_OnCollide = "weapons/crossbow/hit1.wav"
 ENT.IdleSoundLevel = 60
 
 local sdHitEnt = {"weapons/crossbow/hitbod1.wav", "weapons/crossbow/hitbod2.wav"} // weapons/crossbow/bolt_skewer1.wav
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:InitPhys()
 	self:PhysicsInitSphere(1, "metal_bouncy")
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnCollision(data, phys)
 	local hitEnt = data.HitEntity
 	if IsValid(hitEnt) then
 		self.SoundTbl_OnCollide = sdHitEnt
-		if hitEnt:IsNPC() && hitEnt:GetHullType() == HULL_TINY then -- Ignite small NPCs
+		if hitEnt:IsNPC() and hitEnt:GetHullType() == HULL_TINY then -- Ignite small NPCs
 			hitEnt:Ignite(3)
 		end
 	else

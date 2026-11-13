@@ -3,9 +3,7 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Decals ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------=[ Decals ]=--------------------------------------
 game.AddDecal("VJ_Splat_Acid", {"vj_base/decals/splat_acid1", "vj_base/decals/splat_acid2", "vj_base/decals/splat_acid3", "vj_base/decals/splat_acid4"})
 game.AddDecal("VJ_Blood_Red", {"vj_base/decals/blood/red1", "vj_base/decals/blood/red2", "vj_base/decals/blood/red3", "vj_base/decals/blood/red4", "vj_base/decals/blood/red5", "vj_base/decals/blood/red6"})
 game.AddDecal("VJ_Blood_Yellow", {"vj_base/decals/blood/yellow1", "vj_base/decals/blood/yellow2", "vj_base/decals/blood/yellow3", "vj_base/decals/blood/yellow4", "vj_base/decals/blood/yellow5", "vj_base/decals/blood/yellow6"})
@@ -26,10 +24,9 @@ list.Add("PaintMaterials", "VJ_Blood_Blue")
 list.Add("PaintMaterials", "VJ_Blood_Purple")
 list.Add("PaintMaterials", "VJ_Blood_White")
 list.Add("PaintMaterials", "VJ_Blood_Oil")
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Model Precaching ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- Alien Gibs
+
+--------------------------------------=[ Model Precaches ]=--------------------------------------
+	---------= Alien Gibs =---------
 util.PrecacheModel("models/vj_base/gibs/alien/gib1.mdl")
 util.PrecacheModel("models/vj_base/gibs/alien/gib2.mdl")
 util.PrecacheModel("models/vj_base/gibs/alien/gib3.mdl")
@@ -40,7 +37,7 @@ util.PrecacheModel("models/vj_base/gibs/alien/gib7.mdl")
 util.PrecacheModel("models/vj_base/gibs/alien/gib_small1.mdl")
 util.PrecacheModel("models/vj_base/gibs/alien/gib_small2.mdl")
 util.PrecacheModel("models/vj_base/gibs/alien/gib_small3.mdl")
-	-- Human Gibs
+	---------= Human Gibs =---------
 util.PrecacheModel("models/vj_base/gibs/human/brain.mdl")
 util.PrecacheModel("models/vj_base/gibs/human/eye.mdl")
 util.PrecacheModel("models/vj_base/gibs/human/heart.mdl")
@@ -56,13 +53,12 @@ util.PrecacheModel("models/vj_base/gibs/human/gib7.mdl")
 util.PrecacheModel("models/vj_base/gibs/human/gib_small1.mdl")
 util.PrecacheModel("models/vj_base/gibs/human/gib_small2.mdl")
 util.PrecacheModel("models/vj_base/gibs/human/gib_small3.mdl")
-	-- Projectiles
+	---------= Projectiles =---------
 util.PrecacheModel("models/vj_base/projectiles/spit_acid_large.mdl")
 util.PrecacheModel("models/vj_base/projectiles/spit_acid_medium.mdl")
 util.PrecacheModel("models/vj_base/projectiles/spit_acid_small.mdl")
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Fonts ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------=[ Fonts ]=--------------------------------------
 if !CLIENT then return end
 for name, size in pairs({
 	VJBaseLarge = 34,

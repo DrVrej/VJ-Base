@@ -4,7 +4,7 @@
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
 VJ.AddParticle("particles/vj_blood.pcf", {
-	-- Blood pools
+	---------= Blood pools =---------
 	"vj_blood_pool_blue",
 	"vj_blood_pool_blue_small",
 	"vj_blood_pool_blue_tiny",
@@ -29,7 +29,7 @@ VJ.AddParticle("particles/vj_blood.pcf", {
 	"vj_blood_pool_yellow",
 	"vj_blood_pool_yellow_small",
 	"vj_blood_pool_yellow_tiny",
-	-- Blood impacts
+	---------= Blood impacts =---------
 	"vj_blood_impact_oil",
 	"vj_blood_impact_blue",
 	"vj_blood_impact_green",
@@ -40,12 +40,12 @@ VJ.AddParticle("particles/vj_blood.pcf", {
 	"vj_blood_impact_yellow",
 })
 VJ.AddParticle("particles/vj_environment.pcf", {
-	-- Aurora
+	---------= Aurora =---------
 	"vj_aurora_shockwave",
 	"vj_aurora_shockwave_ring",
 	"vj_aurora_shockwave_trails",
 	"vj_aurora_floaters",
-	-- Explosions
+	---------= Explosions =---------
 	"vj_explosion1",
 	"vj_explosion2",
 	"vj_explosion3",
@@ -66,13 +66,13 @@ VJ.AddParticle("particles/vj_environment.pcf", {
 	"vj_explosion_rocks2",
 	"vj_explosion_debris",
 	"vj_explosion_dirt",
-	-- Smoke (Black)
+	---------= Smoke (Black) =---------
 	"vj_smoke_black1",
 	"vj_smoke_black2",
-	-- Smoke (White)
+	---------= Smoke (White) =---------
 	"vj_smoke_white_medium",
 	"vj_smoke_white_narrow",
-	-- Steam
+	---------= Steam =---------
 	"vj_steam",
 	"vj_steam_small",
 	"vj_steam_small_full",
@@ -82,7 +82,7 @@ VJ.AddParticle("particles/vj_environment.pcf", {
 })
 VJ.AddParticle("particles/vj_projectiles.pcf", {
 	"vj_impact_dirty",
-	-- Acid Spits
+	---------= Acid Spits =---------
 	"vj_acid_idle",
 	"vj_acid_impact1",
 	"vj_acid_impact1_floaters",
@@ -101,12 +101,12 @@ VJ.AddParticle("particles/vj_projectiles.pcf", {
 	"vj_acid_impact3_slime",
 	"vj_acid_impact3_slime_small",
 	"vj_acid_impact3_trails",
-	-- Fireball
+	---------= Fireball =---------
 	"vj_fireball_idle",
 	"vj_fireball_idle_fire",
 	"vj_fireball_idle_glow",
 	"vj_fireball_idle_smoke",
-	-- Rockets
+	---------= Rockets =---------
 	"vj_rocket_idle1",
 	"vj_rocket_idle1_smoke",
 	"vj_rocket_idle1_flare",
@@ -122,22 +122,22 @@ VJ.AddParticle("particles/vj_weapons.pcf", {
 	"vj_rifle_smoke_dark",
 	"vj_rifle_sparks1",
 	"vj_rifle_sparks2",
-	-- Regular
+	---------= Regular =---------
 	"vj_rifle_full",
 	"vj_rifle_glow_large",
 	"vj_rifle_smoke_flash",
-	-- Regular (Blue)
+	---------= Regular (Blue) =---------
 	"vj_rifle_full_blue",
 	"vj_rifle_glow_large_blue",
 	"vj_rifle_smoke_flash_blue",
-	-- Blaster (Star Wars)
+	---------= Blaster (Star Wars) =---------
 	"vj_muzzle_blaster_red",
 	"vj_muzzle_blaster_blue",
-	-- Black Mesa Source Turret fire
+	---------= Black Mesa Source Turret fire =---------
 	"vj_bms_turret_full",
 	"vj_bms_turret_muzzle_smoke",
 })
--- Commonly used particles in NPC mods that the base game doesn't precache
+-- Commonly used particles in NPC mods that base game doesn't precache
 VJ.AddParticle("particles/fire_01.pcf", {
 	"burning_engine_01",
 	"burning_engine_fire",

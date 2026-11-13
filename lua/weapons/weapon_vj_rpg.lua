@@ -44,7 +44,7 @@ SWEP.PrimaryEffects_SpawnShells = false
 
 SWEP.ReloadSound = "vj_base/weapons/reload_rpg.wav"
 SWEP.Reload_TimeUntilAmmoIsSet = 0.8
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function SWEP:OnPrimaryAttack(status, statusData)
 	if status == "Init" then
 		if CLIENT then return end
@@ -77,7 +77,7 @@ function SWEP:OnPrimaryAttack(status, statusData)
 		self:SetBodygroup(1, 1)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function SWEP:PrimaryAttackEffects(owner)
 	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 2)
 	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 2)
@@ -85,12 +85,12 @@ function SWEP:PrimaryAttackEffects(owner)
 	timer.Simple(4, function() if IsValid(self) then self:StopParticles() end end)
 	self.BaseClass.PrimaryAttackEffects(self, owner)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function SWEP:OnReload(status)
 	if status == "Finish" then
 		self:SetBodygroup(1, 0)
 		local owner = self:GetOwner()
-		if IsValid(owner) && owner:IsPlayer() then
+		if IsValid(owner) and owner:IsPlayer() then
 			owner:GetViewModel():SetBodygroup(1, 0)
 		end
 	end

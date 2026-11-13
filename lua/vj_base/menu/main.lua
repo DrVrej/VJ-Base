@@ -10,7 +10,7 @@ local colorBlack = Color(0, 0, 0)
 local colorRed = Color(231, 76, 60)
 local colorDarkGreen = Color(0, 102, 0)
 local colorDarkBlue = Color(0, 0, 102)
---
+
 local function VJ_MAIN_ABOUT(panel)
 	panel:Help("VJ Base, short for Vrej Base, was established in 2012 with the aim of assisting in the development of various addons. It is popularly used to create scripted NPCs.")
 
@@ -137,7 +137,7 @@ local function VJ_MAIN_ABOUT(panel)
 	panel:Help("┣ Crowbar Collective - Original gib models, blood pool texture, Glock-17 model")
 	panel:Help("┗ Valve - Various assets")
 end
-----=================================----
+
 local function VJ_MAIN_CLIENT(panel)
 	panel:Help("#vjbase.menu.settings.client.label")
 	
@@ -171,9 +171,9 @@ local function VJ_MAIN_CLIENT(panel)
 	panel:CheckBox("#vjbase.menu.settings.client.lang.auto", "vj_language_auto")
 	panel:ControlHelp("#vjbase.menu.settings.client.lang.auto.label")
 end
-----=================================----
+
 local function VJ_MAIN_CLEANUP(panel)
-	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
+	if !game.SinglePlayer() and !LocalPlayer():IsAdmin() then
 		panel:Help("#vjbase.menu.general.admin.not")
 		panel:Help("#vjbase.menu.general.admin.only")
 		return
@@ -192,9 +192,9 @@ local function VJ_MAIN_CLEANUP(panel)
 	panel:Button("#vjbase.menu.cleanup.remove.ply.weapons", "vj_run_cleanup", "allweapons")
 	panel:Button("#vjbase.menu.cleanup.remove.ply.ammo", "vj_run_cleanup", "allammo")
 end
-----=================================----
+
 local function VJ_MAIN_SERVER(panel)
-	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
+	if !game.SinglePlayer() and !LocalPlayer():IsAdmin() then
 		panel:Help("#vjbase.menu.general.admin.not")
 		panel:Help("#vjbase.menu.general.admin.only")
 		return
@@ -214,7 +214,7 @@ local function VJ_MAIN_SERVER(panel)
 	panel:NumSlider("#vjbase.menu.settings.server.timescale.physics", "phys_timescale", 0, 2, 2)
 	panel:NumSlider("#vjbase.menu.settings.server.gravity", "sv_gravity", -200, 600, 2)
 end
-----=================================----
+
 local function VJ_MAIN_PLUGINS(panel)
 	local plugins = VJ.Plugins
 	
@@ -274,7 +274,7 @@ local function VJ_MAIN_PLUGINS(panel)
 		end
 	panel:AddPanel(tutorialButton)
 end
-----=================================----
+
 hook.Add("PopulateToolMenu", "VJ_PopulateToolMenu_Main", function()
 	spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_plugins", "#vjbase.menu.plugins", "", "", VJ_MAIN_PLUGINS)
 	spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_about", "#vjbase.menu.about", "", "", VJ_MAIN_ABOUT)

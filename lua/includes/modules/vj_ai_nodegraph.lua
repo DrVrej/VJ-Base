@@ -19,13 +19,13 @@ Nodegraph.NODE_TYPE_GROUND = 2
 Nodegraph.NODE_TYPE_AIR = 3
 Nodegraph.NODE_TYPE_CLIMB = 4
 Nodegraph.NODE_TYPE_WATER = 5
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Gets the map's nodegraph data and returns it as a Lua table with all the info! | WARNING: This is an internal function, causes major lag! AVOID CALLING!
 	Returns
 		- table, full nodegraph data generated from .ain file
 	
-	Based on the following:
+	Based on:
 	- https://developer.valvesoftware.com/wiki/.ain
 	- https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_networkmanager.cpp#L475
 -----------------------------------------------------------]]
@@ -165,7 +165,7 @@ function Nodegraph:ReadNodegraph()
 	FILE:Close()
 	return nodegraphData
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Initialize the Nodegraph object | WARNING: This is an internal function, avoid using!
 -----------------------------------------------------------]]
@@ -173,7 +173,7 @@ function Nodegraph:Init()
 	self.Data = self:ReadNodegraph()
 	MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base [AI Nodegraph module]: ", VJ.COLOR_SERVER, "Object created.\n")
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Get the nodegraph table
 	Returns
@@ -182,7 +182,7 @@ end
 function Nodegraph:GetNodegraph()
 	return self.Data
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Returns whether or not a nodegraph was found
 	Returns
@@ -191,7 +191,7 @@ end
 function Nodegraph:Exists()
 	return self.Data.NodeCount > 0
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Get a node's data by its ID
 		- nodeID = The node ID to search for in the nodes table
@@ -201,7 +201,7 @@ end
 function Nodegraph:GetNode(nodeID)
 	return self.Data.Nodes[nodeID]
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Get a link's data by its ID
 		- linkID = The link ID to search for in the links table
@@ -211,7 +211,7 @@ end
 function Nodegraph:GetLink(linkID)
 	return self.Data.Links[linkID]
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Get the nearest node to the given position
 		- pos = Position to find the closest node to
@@ -235,7 +235,7 @@ function Nodegraph:GetNearestNode(pos, nodeType)
 	end
 	return nearestNode
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Creates a new Nodegraph object
 	Returns

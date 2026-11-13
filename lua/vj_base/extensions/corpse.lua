@@ -4,7 +4,6 @@
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
 if !SERVER then return end
----------------------------------------------------------------------------------------------------------------------------------------------
 
 local stinkyMatTypes = {alienflesh = true, antlion = true, armorflesh = true, bloodyflesh = true, flesh = true, zombieflesh = true, player = true}
 	-- Material types: https://developer.valvesoftware.com/wiki/Material_surface_properties
@@ -16,7 +15,7 @@ local vj_npc_corpse_limit = GetConVar("vj_npc_corpse_limit")
 
 VJ.Corpse_Ents = {}
 VJ.Corpse_StinkyEnts = {}
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Adds an entity to the VJ corpse list (Entities here respect all VJ rules including corpse limit!)
 		- ent = The entity to add to the corpse list
@@ -43,7 +42,7 @@ function VJ.Corpse_Add(ent)
 		end
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 --[[---------------------------------------------------------
 	Adds an entity to the stinky entity list and makes it produce a stink
 		- ent = The entity to add to the list
@@ -62,7 +61,7 @@ function VJ.Corpse_AddStinky(ent, checkMat)
 		end
 	end
 	-- Add the entity to the stinky list (if possible)
-	if (!checkMat) or (IsValid(physObj) && stinkyMatTypes[physObj:GetMaterial()]) then
+	if (!checkMat) or (IsValid(physObj) and stinkyMatTypes[physObj:GetMaterial()]) then
 		corpses[#corpses + 1] = ent -- Add entity to the table
 		if !timer.Exists("vj_corpse_stink") then -- Start the stinky timer if it does NOT exist
 			timer.Create("vj_corpse_stink", 0.3, 0, function()

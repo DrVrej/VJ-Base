@@ -6,7 +6,7 @@ TOOL.Information = {
 	{name = "right"},
 	{name = "reload"},
 }
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	local function ControlPanel(panel)
 		VJ_TOOL_MOVER_ENTS = VJ_TOOL_MOVER_ENTS or {}
@@ -69,10 +69,10 @@ if CLIENT then
 			end
 		panel:AddPanel(unselectButton)
 	end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 	net.Receive("vj_tool_mover_cl_select", function(len)
 		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_mover" && hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_mover") then
+		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_mover" and hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_mover") then
 			local ent = net.ReadEntity()
 			local entName = language.GetPhrase(net.ReadString())
 			VJ_TOOL_MOVER_ENTS = VJ_TOOL_MOVER_ENTS or {}
@@ -103,12 +103,12 @@ if CLIENT then
 			net.SendToServer()
 		end
 	end)
----------------------------------------------------------------------------------------------------------------------------------------------
+
 	net.Receive("vj_tool_mover_cl_move", function(len)
 		local moveType = net.ReadBit()
 		local movePos = net.ReadVector()
 		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_mover" && hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_mover") then
+		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_mover" and hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_mover") then
 			for k, v in ipairs(VJ_TOOL_MOVER_ENTS) do
 				if !IsValid(v) then -- Remove any NPCs that no longer exist!
 					table.remove(VJ_TOOL_MOVER_ENTS, k)
@@ -130,14 +130,14 @@ if CLIENT then
 			end
 		end
 	end)
----------------------------------------------------------------------------------------------------------------------------------------------
+
 	function TOOL.BuildCPanel(panel)
 		ControlPanel(panel)
 	end
 else
 	net.Receive("vj_tool_mover_sv_select", function(len, ply)
 		local wep = ply:GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_mover" && hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_mover") then
+		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_mover" and hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_mover") then
 			local editType = net.ReadBit()
 			local entCount = net.ReadUInt(MAX_EDICT_BITS)
 			for _ = 1, entCount do
@@ -167,10 +167,10 @@ else
 			end
 		end
 	end)
----------------------------------------------------------------------------------------------------------------------------------------------
+
 	net.Receive("vj_tool_mover_sv_move", function(len, ply)
 		local wep = ply:GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_mover" && hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_mover") then
+		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_mover" and hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_mover") then
 			local moveType = net.ReadBit()
 			local movePos = net.ReadVector()
 			local moveTypeVJ = moveType == 1 and "TASK_RUN_PATH" or "TASK_WALK_PATH"
@@ -178,7 +178,7 @@ else
 			local entCount = net.ReadUInt(MAX_EDICT_BITS)
 			for k = 1, entCount do
 				local ent = net.ReadEntity()
-				if IsValid(ent) && ent:IsNPC() then
+				if IsValid(ent) and ent:IsNPC() then
 					ent:StopMoving()
 					ent:SetLastPosition(movePos)
 					if ent.IsVJBaseSNPC then
@@ -195,7 +195,7 @@ else
 		end
 	end)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
@@ -206,7 +206,7 @@ function TOOL:LeftClick(tr)
 	net.Send(self:GetOwner())
 	return true
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
 	net.Start("vj_tool_mover_cl_move")
@@ -215,7 +215,7 @@ function TOOL:RightClick(tr)
 	net.Send(self:GetOwner())
 	return true
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:Reload(tr)
 	if CLIENT then return true end
 	net.Start("vj_tool_mover_cl_move")

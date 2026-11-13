@@ -4,7 +4,7 @@ ENT.PrintName = "VJ Base NPC Controller"
 ENT.Author = "DrVrej"
 ENT.Contact = "http://steamcommunity.com/groups/vrejgaming"
 ENT.Category = "VJ Base"
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:SetupDataTables()
 	-- Entities
 	self:NetworkVar("Entity", "Bullseye")
@@ -33,7 +33,7 @@ function ENT:SetupDataTables()
 	-- HUD
 	self:NetworkVar("Bool", "HUDEnabled")
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if !CLIENT then return end
 
 ENT.VJC_Camera_Zoom = 100
@@ -43,11 +43,11 @@ local vec1 = Vector(1, 1, 1)
 local viewLerpVec = Vector()
 local viewLerpAng = Angle()
 local math_clamp = math.Clamp
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Draw()
 	return false
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:Initialize()
 	hook.Add("CalcView", self, self.CalcView)
 	hook.Add("PlayerBindPress", self, self.PlayerBindPress)
@@ -61,7 +61,7 @@ function ENT:Initialize()
 		ply.VJ_TheControllerEntity = self -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:OnRemove()
 	local ply = self:GetPlayer()
 	if IsValid(ply) then
@@ -76,14 +76,14 @@ function ENT:OnRemove()
 		npc:ManipulateBoneScale(self:GetCameraFP_Bone(), vec1)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:CalcView(ply, origin, angles, fov)
 	if !IsValid(self) or self:GetPlayer() != ply then return end
 	local camera = self:GetCamera()
 	local npc = self:GetNPC()
 	if !IsValid(camera) or !IsValid(npc) then return end
 	local viewEnt = ply:GetViewEntity()
-	if IsValid(viewEnt) && viewEnt:GetClass() == "gmod_cameraprop" then return end
+	if IsValid(viewEnt) and viewEnt:GetClass() == "gmod_cameraprop" then return end
 	local cameraMode = self:GetCameraMode()
 	local customData = npc.Controller_OnCalcView and npc:Controller_OnCalcView(self, ply, origin, angles, fov) or false
 	-- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -155,8 +155,8 @@ function ENT:CalcView(ply, origin, angles, fov)
 	end
 
 	-- Lerp the position and the angle
-	viewLerpVec = (cameraMode == 2 and pos) or (lerpSpeed != 0 && LerpVector(FrameTime() * lerpSpeed, viewLerpVec, pos) or pos)
-	viewLerpAng = (lerpSpeed != 0 && LerpAngle(FrameTime() * lerpSpeed, viewLerpAng, ang) or ang)
+	viewLerpVec = (cameraMode == 2 and pos) or (lerpSpeed != 0 and LerpVector(FrameTime() * lerpSpeed, viewLerpVec, pos) or pos)
+	viewLerpAng = (lerpSpeed != 0 and LerpAngle(FrameTime() * lerpSpeed, viewLerpAng, ang) or ang)
 	
 	-- Send the player's hit position to the controller entity
 	local tr = util.TraceLine({
@@ -164,7 +164,7 @@ function ENT:CalcView(ply, origin, angles, fov)
 		endpos = viewLerpVec + viewLerpAng:Forward() * 32768,
 		filter = function(ent) //{ply, camera, npc}
 			if ent == ply or ent == camera or ent == npc then return false end
-			if ent:GetClass() == "phys_bone_follower" && ent:GetOwner() == npc then return false end
+			if ent:GetClass() == "phys_bone_follower" and ent:GetOwner() == npc then return false end
 			return true
 		end,
 	})
@@ -180,14 +180,14 @@ function ENT:CalcView(ply, origin, angles, fov)
 		drawviewer = false, //(cameraMode == 2 and true) or false
 	}
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:PlayerBindPress(ply, bind, pressed)
 	-- Scroll wheel zooming
-	if !IsValid(self) or self:GetPlayer() != ply or (bind != "invprev" && bind != "invnext") or !IsValid(self:GetCamera()) or self:GetCameraMode() == 2 then return end
+	if !IsValid(self) or self:GetPlayer() != ply or (bind != "invprev" and bind != "invnext") or !IsValid(self:GetCamera()) or self:GetCameraMode() == 2 then return end
 	local speed = ply:GetInfoNum("vj_npc_cont_cam_zoom_speed", 10)
-	self.VJC_Camera_Zoom = math_clamp(self.VJC_Camera_Zoom + (bind == "invprev" && -speed or speed), 0, 500)
+	self.VJC_Camera_Zoom = math_clamp(self.VJC_Camera_Zoom + (bind == "invprev" and -speed or speed), 0, 500)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 -- Settings
 local box_roundness = 6
 local box_border_thickness = 2

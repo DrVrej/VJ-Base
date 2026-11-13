@@ -64,9 +64,13 @@ To keep the codebase clean and maintainable, please follow the guidelines below.
     ```lua
     MyPos = self:GetPos() + (6 / (3 - 1))
     ```
-  - Use Garry's Mod C-style NOT operators (`!`, `!=`) instead of Lua's `not` operator.
+  - Use Garry's Mod C-style NOT operator aliases (`!`, `!=`) instead of Lua's `not` operator.
     ```lua
     if dist != 100 and !self:HasEnemy() then
+    ```
+  - Use Lua's `and` / `or` logical operators instead of Garry's Mod C-style `&&` / `||` aliases.
+    ```lua
+    if dist == 100 and (self:HasEnemy() or seenEnemy) then
     ```
   - Use the minimum number of grouping brackets necessary, including for logical operators (OR, AND, NOT, etc.)
     ```lua
@@ -82,7 +86,7 @@ To keep the codebase clean and maintainable, please follow the guidelines below.
     someVar = 1 + 1
     ```
 - **Comments:**
-  - Take advantage of Garry's Mod comment aliases to differentiate between comment types.
+  - Take advantage of Garry's Mod C-style comment aliases to differentiate between comment types.
   - For commented-out (disabled) code, use `//` or `/* */`.
     ```lua
     local someNum = 1 + 2

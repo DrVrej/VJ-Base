@@ -2,7 +2,6 @@
 	*** Copyright (c) 2012-2026 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-NOTES: Some fixes are from: https://github.com/garrynewman/garrysmod/pull/524
 --------------------------------------------------*/
 if CLIENT then return end
 
@@ -12,9 +11,7 @@ local ai = ai
 local VJ = VJ
 local TASKSTATUS_NEW = TASKSTATUS_NEW
 local TASKSTATUS_RUN_TASK = TASKSTATUS_RUN_TASK
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Begin Metatable ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 module("vj_ai_task")
 local Task = {}
 Task.__index = Task
@@ -22,14 +19,14 @@ Task.__index = Task
 -- Types of tasks
 local TYPE_ENGINE = 1
 local TYPE_CUSTOM = 2
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function Task:InitEngine(name, data) -- Creates an engine based task
 	self.Name = name
 	self.Data = data or 0 -- Engine data must be a number
 	self.Type = TYPE_ENGINE
 	//self.EngineID -- Set later
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function Task:InitCustom(name, startFunc, endFunc, data) -- Create a custom task
 	self.Name = name
 	self.Data = data
@@ -37,7 +34,7 @@ function Task:InitCustom(name, startFunc, endFunc, data) -- Create a custom task
 	self.CustomStart = startFunc
 	self.CustomRun = endFunc
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function Task:Start(ent)
 	if self.Type == TYPE_CUSTOM then
 		if !self.CustomStart then return end
@@ -47,7 +44,7 @@ function Task:Start(ent)
 		ent:StartEngineTask(self.EngineID, self.Data)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function Task:Run(ent)
 	if self.Type == TYPE_CUSTOM then
 		if !self.CustomRun then return end
@@ -56,15 +53,15 @@ function Task:Run(ent)
 		ent:RunEngineTask(self.EngineID, self.Data)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function Task:IsEngineType()
 	return self.Type == TYPE_ENGINE
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function Task:IsCustomType()
 	return self.Type == TYPE_CUSTOM
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function New()
 	return setmetatable({}, Task)
 end

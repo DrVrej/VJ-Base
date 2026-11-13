@@ -43,13 +43,13 @@ SWEP.Secondary.Ammo = "Buckshot"
 
 SWEP.ReloadSound = {"weapons/shotgun/shotgun_reload1.wav", "weapons/shotgun/shotgun_reload2.wav", "weapons/shotgun/shotgun_reload3.wav"}
 SWEP.Reload_TimeUntilAmmoIsSet = 0.3
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function SWEP:OnPrimaryAttack(status, statusData)
 	if status == "PostFire" then
 		local owner = self:GetOwner()
-		if IsValid(owner) && owner:IsPlayer() then
+		if IsValid(owner) and owner:IsPlayer() then
 			timer.Simple(0.25, function()
-				if IsValid(self) && IsValid(owner) && owner:IsPlayer() then
+				if IsValid(self) and IsValid(owner) and owner:IsPlayer() then
 					self:EmitSound("Weapon_Shotgun.Special1")
 					local animTime = VJ.AnimDuration(owner:GetViewModel(), ACT_SHOTGUN_PUMP)
 					self:SendWeaponAnim(ACT_SHOTGUN_PUMP)
@@ -59,7 +59,7 @@ function SWEP:OnPrimaryAttack(status, statusData)
 		end
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function SWEP:OnSecondaryAttack()
 	if self:Clip1() > 1 then
 		self.Primary.Delay = 1
@@ -78,7 +78,7 @@ function SWEP:OnSecondaryAttack()
 	self:SetNextSecondaryFire(CurTime() + 1)
 	return true
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function SWEP:OnReload(status)
 	if status == "Finish" then
 		local owner = self:GetOwner()
@@ -87,7 +87,7 @@ function SWEP:OnReload(status)
 		self:SetClip1(self:Clip1() + 1)
 		if self.Primary.ClipSize > self:Clip1() then
 			timer.Simple(0.1, function()
-				if IsValid(self) && IsValid(self:GetOwner()) then
+				if IsValid(self) and IsValid(self:GetOwner()) then
 					self.Reloading = false
 					self:Reload()
 				end

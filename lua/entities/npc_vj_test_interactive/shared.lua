@@ -7,11 +7,11 @@ ENT.Information = "Interactive human NPC demo for developers.\nPress USE on it t
 ENT.Category = "VJ Base"
 
 ENT.VJ_ID_Civilian = true
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function ENT:MatFootStepQCEvent(data)
 	return
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	net.Receive("vj_npc_test_interactive_cl", function(len)
 		local ent = net.ReadEntity()

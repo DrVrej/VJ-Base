@@ -12,7 +12,7 @@ TOOL.ClientConVar = {
 }
 
 local defaultConvars = TOOL:BuildConVarList()
----------------------------------------------------------------------------------------------------------------------------------------------
+
 if CLIENT then
 	local function ControlPanel(panel)
 		local reset = vgui.Create("DButton")
@@ -67,12 +67,12 @@ if CLIENT then
 		panel:CheckBox("#tool.vj_tool_bullseye.menu.toggle.color", "vj_tool_bullseye_usecolor")
 		panel:CheckBox("#tool.vj_tool_bullseye.menu.toggle.startactivated", "vj_tool_bullseye_startactivate")
 	end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 	function TOOL.BuildCPanel(panel)
 		ControlPanel(panel)
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
+
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	local spawner = ents.Create("obj_vj_bullseye")

@@ -4,13 +4,10 @@
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
 local defFlags = FCVAR_ARCHIVE
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Admin Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 CreateConVar("vj_npc_admin_properties", 0, defFlags, "Should the NPC properties menu be restricted to admins only?")
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- NPC Attack & Weapon Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	---------= NPC Attack & Weapon Settings =---------
 CreateConVar("vj_npc_range", 1, defFlags, "Can NPCs do range attacks?")
 CreateConVar("vj_npc_leap", 1, defFlags, "Can NPCs do leap attacks?")
 CreateConVar("vj_npc_melee", 1, defFlags, "Can NPCs do melee attacks?")
@@ -24,9 +21,8 @@ CreateConVar("vj_npc_wep_secondary", 1, defFlags, "Can NPCs use a weapon's secon
 CreateConVar("vj_npc_wep_reload", 1, defFlags, "Can NPCs reload their weapon?")
 CreateConVar("vj_npc_wep_drop", 1, defFlags, "Should NPCs drop their weapon on death?")
 CreateConVar("vj_npc_wep_ply_pickup", 1, defFlags, "Can players pick up NPC dropped weapons?")
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- NPC AI Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	---------= NPC AI Settings =---------
 CreateConVar("vj_npc_sight_distance", 0, defFlags, "Override all NPCs to use the set number as their sight distance | 0 = Don't override")
 CreateConVar("vj_npc_sight_xray", 0, defFlags, "Should they have X-Ray vision with 360 FOV?")
 CreateConVar("vj_npc_wander", 1, defFlags, "Can NPCs wander around?")
@@ -47,9 +43,8 @@ CreateConVar("vj_npc_fri_player", 0, defFlags, "Makes all VJ NPCs friendly to Pl
 CreateConVar("vj_npc_fri_zombie", 0, defFlags, "Makes all VJ NPCs friendly to Zombies")
 CreateConVar("vj_npc_fri_antlion", 0, defFlags, "Makes all VJ NPCs friendly to Antlion")
 CreateConVar("vj_npc_fri_combine", 0, defFlags, "Makes all VJ NPCs friendly to Combine")
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- General Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	---------= General Settings =---------
 CreateConVar("vj_npc_difficulty", 0, defFlags, "Difficulty of all NPCs")
 CreateConVar("vj_npc_anim_death", 1, defFlags, "Can NPCs play death animation?")
 CreateConVar("vj_npc_god", 0, defFlags, "Should NPCs be invincible?")
@@ -71,18 +66,16 @@ CreateConVar("vj_npc_gib_fadetime", 90, defFlags, "Time until gibs fade out")
 CreateConVar("vj_npc_loot", 1, defFlags, "Can NPCs drop loot on death?")
 CreateConVar("vj_npc_ply_frag", 1, defFlags, "Should players receive frags (points) when killing NPCs?")
 CreateConVar("vj_npc_ply_chat", 1, defFlags, "Can NPC post in a player's chat? | EX: \"Scientist is now following you\"")
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- NPC Performance Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	---------= NPC Performance Settings =---------
 CreateConVar("vj_npc_processtime", 1, defFlags, "How often does the NPC do performance-heavy processing?")
 CreateConVar("vj_npc_poseparams", 1, defFlags, "Can NPCs have pose parameters?")
 CreateConVar("vj_npc_shadows", 1, defFlags, "Should NPC shadows draw?")
 CreateConVar("vj_npc_ikchains", 1, defFlags, "Can NPCs have IK chains?")
 CreateConVar("vj_npc_forcelowlod", 0, defFlags, "Should NPCs be forced to use the lowest LOD?")
 CreateConVar("vj_npc_reduce_vfx", 0, defFlags, "Reduces VFX, especially non-essential ones | EX: Eye glow, idle particles")
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- NPC Sound Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	---------= NPC Sound Settings =---------
 CreateConVar("vj_npc_snd", 1, defFlags, "Can NPCs play sounds?")
 CreateConVar("vj_npc_snd_track", 1, defFlags, "Can NPCs play soundtracks?")
 CreateConVar("vj_npc_snd_idle", 1, defFlags, "Can NPCs play idle sounds?")
@@ -107,9 +100,8 @@ CreateConVar("vj_npc_snd_receiveorder", 1, defFlags, "Can NPCs play on receive o
 CreateConVar("vj_npc_snd_danger", 1, defFlags, "Can NPCs play grenade and danger sight sounds?")
 CreateConVar("vj_npc_snd_wep_reload", 1, defFlags, "Can NPCs play weapon reload call out sounds?")
 CreateConVar("vj_npc_snd_wep_suppressing", 1, defFlags, "Can NPCs play suppressing callout sounds?")
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- NPC Developer Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	---------= NPC Developer Settings =---------
 CreateConVar("vj_npc_debug", 0, FCVAR_NONE, "Enables NPC debugging mode | Required for other debug convars to work!")
 CreateConVar("vj_npc_debug_engine", 0, defFlags, "Enables engine debugging")
 CreateConVar("vj_npc_debug_attack", 0, defFlags, "Enables attack debugging")
@@ -120,33 +112,29 @@ CreateConVar("vj_npc_debug_resetenemy", 0, defFlags, "Prints whenever an NPC has
 CreateConVar("vj_npc_debug_lastseenenemytime", 0, defFlags, "Prints the last visible time of the NPC's current enemy")
 CreateConVar("vj_npc_debug_takingcover", 0, defFlags, "Prints whether an NPC is taking cover or not")
 CreateConVar("vj_npc_debug_weapon", 0, defFlags, "Enables weapon debugging")
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- NPC Controller Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	---------= NPC Controller Settings =---------
 VJ.AddClientConVar("vj_npc_cont_hud", 1, "Display HUD when controlling NPCs")
 VJ.AddClientConVar("vj_npc_cont_cam_zoom_dist", 5, "Distance that the zoom moves between each interval")
 VJ.AddClientConVar("vj_npc_cont_cam_zoom_speed", 10, "How fast the camera zooms in & out")
 VJ.AddClientConVar("vj_npc_cont_cam_speed", 6, "How fast the camera moves (lerping)")
 VJ.AddClientConVar("vj_npc_cont_debug", 0, "Display developer entities", 0, 1, false)
 VJ.AddClientConVar("vj_npc_cont_diewithnpc", 0, "Player should die with the NPC (Requires respawn!)")
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- NPC Client Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	---------= NPC Client Settings =---------
 VJ.AddClientConVar("vj_npc_spawn_guard", 0, "Spawn all VJ NPCs with guarding behavior enabled", 0, 1, false)
 VJ.AddClientConVar("vj_npc_snd_track_volume", 1, "Overrides the volume of all NPC soundtracks | 1 = Don't override (100%) | 0.5 = 50% | 3 = 300%", 0, 5)
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Weapon Client Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	---------= Weapon Client Settings =---------
 VJ.AddClientConVar("vj_wep_autopickup", 0, "Should weapons be picked up automatically or only if USE key is pressed?")
 VJ.AddClientConVar("vj_wep_muzzleflash", 1, "Should weapons make a muzzle flash?")
 VJ.AddClientConVar("vj_wep_muzzleflash_light", 1, "Should weapons make a dynamic light when being fired?")
 VJ.AddClientConVar("vj_wep_shells", 1, "Should weapons drop bullet shells?")
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Console Commands ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------=[ Console Commands ]=--------------------------------------
 if SERVER then
 	concommand.Add("vj_run_npc_num", function(ply, cmd, args)
-		if IsValid(ply) && !ply:IsAdmin() then return end
+		if IsValid(ply) and !ply:IsAdmin() then return end
 		local numNPC = 0
 		local numVJ = 0
 		local numNextBot = 0
@@ -163,7 +151,7 @@ if SERVER then
 		local msg = "Total NPCs: " .. numNPC .. " | VJ NPCs: " .. numVJ .. " | NextBots: " .. numNextBot
 		if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
 	end, nil, "Prints the number of NPCs in the map. Admin only!", FCVAR_DONTRECORD)
-	---------------------------------------------------------------------------------------------------------------------------------------------
+	
 	local cTypes = {
 		vjnpcs = "VJ NPCs",
 		npcs = "NPCs",
@@ -177,7 +165,7 @@ if SERVER then
 		allammo = "Removed All Your Ammo",
 	}
 	concommand.Add("vj_run_cleanup", function(ply, cmd, args)
-		if IsValid(ply) && !ply:IsAdmin() then return end
+		if IsValid(ply) and !ply:IsAdmin() then return end
 		local cType = args[1]
 		local count = 0
 		if !cTypes[cType] then -- No type or invalid type given, so clean up all
@@ -187,13 +175,13 @@ if SERVER then
 			for _, v in ipairs(player.GetAll()) do
 				v:ConCommand("r_cleardecals")
 			end
-		elseif IsValid(ply) && cType == "allweapons" then
+		elseif IsValid(ply) and cType == "allweapons" then
 			ply:StripWeapons()
-		elseif IsValid(ply) && cType == "allammo" then
+		elseif IsValid(ply) and cType == "allammo" then
 			ply:RemoveAllAmmo()
 		else
 			for _, ent in ipairs(ents.GetAll()) do
-				if ((cType == "npcs" or (cType == "vjnpcs" && ent.IsVJBaseSNPC)) && ent:IsNPC()) or (cType == "spawners" && ent.IsVJBaseSpawner) or (cType == "corpses" && (ent.IsVJBaseCorpse or ent.IsVJBaseCorpse_Gib)) or (cType == "gibs" && ent.IsVJBaseCorpse_Gib) or (cType == "groundweapons" && ent:IsWeapon() && ent:GetOwner() == NULL) or (cType == "props" && ent:GetClass() == "prop_physics" && (ent:GetParent() == NULL or (IsValid(ent:GetParent()) && ent:GetParent():Health() <= 0 && (ent:GetParent():IsNPC() or ent:GetParent():IsPlayer())))) then
+				if ((cType == "npcs" or (cType == "vjnpcs" and ent.IsVJBaseSNPC)) and ent:IsNPC()) or (cType == "spawners" and ent.IsVJBaseSpawner) or (cType == "corpses" and (ent.IsVJBaseCorpse or ent.IsVJBaseCorpse_Gib)) or (cType == "gibs" and ent.IsVJBaseCorpse_Gib) or (cType == "groundweapons" and ent:IsWeapon() and ent:GetOwner() == NULL) or (cType == "props" and ent:GetClass() == "prop_physics" and (ent:GetParent() == NULL or (IsValid(ent:GetParent()) and ent:GetParent():Health() <= 0 and (ent:GetParent():IsNPC() or ent:GetParent():IsPlayer())))) then
 					ent:Remove()
 					count = count + 1
 				end
@@ -210,7 +198,7 @@ if SERVER then
 			ply:EmitSound("buttons/button15.wav")
 		end
 	end, nil, "Used to cleanup various things in the map. Admin only!", FCVAR_DONTRECORD)
-	---------------------------------------------------------------------------------------------------------------------------------------------
+	
 elseif CLIENT then
 	concommand.Add("vj_run_meme", function(ply, cmd, args)
 		if ply:SteamID() != "STEAM_0:0:22688298" then return end
