@@ -58,7 +58,8 @@ function ENT:Tank_Init() end
 
 function ENT:Tank_OnThink() end -- Return true to disable the default base code (Its just the Tank_UpdateIdleParticles)
 
-function ENT:Tank_OnThinkActive() end
+-- UNCOMMENT TO USE
+-- function ENT:Tank_OnThinkActive() end
 
 function ENT:Tank_OnPrepareShell() end
 
@@ -161,7 +162,7 @@ function ENT:OnThinkActive()
 	local turning = false
 	local ene = parent:GetEnemy()
 	self:SetEnemy(ene)
-	self:Tank_OnThinkActive()
+	local fOnThinkActive = selfData.Tank_OnThinkActive; if fOnThinkActive then fOnThinkActive(self) end
 	self:SelectSchedule()
 	selfData.Tank_FacingTarget = false
 	

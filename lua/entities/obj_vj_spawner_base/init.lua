@@ -60,7 +60,8 @@ function ENT:Init() end
 -----------------------------------------------------------]]
 function ENT:OnSpawnEntity(ent, spawnKey, spawnTbl, initSpawn) end
 
-function ENT:OnThink() end
+-- UNCOMMENT TO USE
+-- function ENT:OnThink() end
 
 function ENT:CustomOnRemove() end
 
@@ -198,7 +199,7 @@ end
 function ENT:Think()
 	local curTime = CurTime()
 	local selfData = fGetTable(self)
-	self:OnThink()
+	local fOnThink = selfData.OnThink; if fOnThink then fOnThink(self) end
 	
 	-- Idle sound
 	local sdTbl = selfData.SoundTbl_Idle

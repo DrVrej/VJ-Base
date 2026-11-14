@@ -74,7 +74,8 @@ function ENT:InitPhys() /* Example: self:PhysicsInitSphere(1, "metal_bouncy") */
 
 function ENT:Init() end
 
-function ENT:OnThink() end
+-- UNCOMMENT TO USE
+-- function ENT:OnThink() end
 
 function ENT:OnDamaged(dmginfo) end
 
@@ -99,6 +100,9 @@ local defVec = Vector()
 local PICK = VJ.PICK
 local PROJ_COLLISION_REMOVE = VJ.PROJ_COLLISION_REMOVE
 local PROJ_COLLISION_PERSIST = VJ.PROJ_COLLISION_PERSIST
+
+local metaEntity = FindMetaTable("Entity")
+local fGetTable = metaEntity.GetTable
 
 function ENT:Initialize()
 	self:PreInit()
@@ -181,10 +185,11 @@ function ENT:Initialize()
 end
 
 function ENT:Think()
-	if self.Dead then VJ.STOPSOUND(self.CurrentIdleSound) return end
+	local selfData = fGetTable(self)
+	if selfData.Dead then VJ.STOPSOUND(selfData.CurrentIdleSound) return end
 	//self:SetAngles(self:GetVelocity():Angle())
 	self:NextThink(CurTime())
-	self:OnThink()
+	local fOnThink = selfData.OnThink; if fOnThink then fOnThink(self) end
 	self:PlaySound("Idle")
 	return true
 end
@@ -200,7 +205,7 @@ function ENT:DealDamage(data, phys)
 	local hitEnts = false -- Entities that have been damaged (direct or radius)
 	local dmgPos = (data and data.HitPos) or self:GetPos()
 	if IsValid(dataEnt) and ((dataEnt.IsVJBaseBullseye and dataEnt.VJ_Controlled) or dataEnt.VJ_Controlling) then return end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
-	local selfData = self:GetTable()
+	local selfData = fGetTable(self)
 	
 	if selfData.DoesRadiusDamage then
 		local attackEnt = ownerValid and owner or self -- The entity that will be set as the attacker
@@ -296,7 +301,7 @@ function ENT:StartTouch(ent)
 end
 
 function ENT:PhysicsCollide(data, phys)
-	local selfData = self:GetTable()
+	local selfData = fGetTable(self)
 	if selfData.Dead then return end
 	
 	if !self:OnCollision(data, phys) then
@@ -371,7 +376,7 @@ end
 
 function ENT:PlaySound(sdSet)
 	if !sdSet then return end
-	local selfData = self:GetTable()
+	local selfData = fGetTable(self)
 	if sdSet == "Startup" then
 		if selfData.HasStartupSounds and math.random(1, selfData.StartupSoundChance) == 1 then
 			VJ.EmitSound(self, selfData.SoundTbl_Startup, selfData.StartupSoundLevel, math.random(selfData.StartupSoundPitch.a, selfData.StartupSoundPitch.b))

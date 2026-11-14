@@ -585,9 +585,11 @@ function ENT:Init()
 	-- self:SetSurroundingBounds(Vector(150, 150, 200), Vector(-150, -150, 0))
 end
 
-function ENT:OnThink() end
+-- UNCOMMENT TO USE
+-- function ENT:OnThink() end
 
-function ENT:OnThinkActive() end
+-- UNCOMMENT TO USE
+-- function ENT:OnThinkActive() end
 
 -- UNCOMMENT TO USE | Called at the end of every entity it checks every process time
 -- NOTE: "calculatedDisp" can in some cases be nil
@@ -697,11 +699,13 @@ function ENT:OnInvestigate(ent) end
 
 function ENT:OnResetEnemy() end
 
-function ENT:OnAlert(ent) end
+-- UNCOMMENT TO USE
+-- function ENT:OnAlert(ent) end
 
+-- UNCOMMENT TO USE
 -- "ally" = Ally that we called for help
 -- "isFirst" = Is this the first ally that received this call? Use this to avoid running certain multiple times when many allies are around!
-function ENT:OnCallForHelp(ally, isFirst) end
+-- function ENT:OnCallForHelp(ally, isFirst) end
 
 --[[---------------------------------------------------------
 	UNCOMMENT TO USE | Called constantly on think as long as it can attack and has an enemy
@@ -895,7 +899,8 @@ function ENT:OnAllyKilled(ent) end
 --]]
 function ENT:OnDamaged(dmginfo, hitgroup, status) end
 
-function ENT:OnBleed(dmginfo, hitgroup) end
+-- UNCOMMENT TO USE
+-- function ENT:OnBleed(dmginfo, hitgroup) end
 
 --[[
  Called whenever the NPC attempts to play flinch
@@ -1378,7 +1383,7 @@ function ENT:Think()
 		selfData.NextBreathSoundT = curTime + dur
 	end
 	
-	self:OnThink()
+	local fOnThink = selfData.OnThink; if fOnThink then fOnThink(self) end
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	local moveType = selfData.MovementType
 	local moveTypeAA = moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC
@@ -1389,8 +1394,8 @@ function ENT:Think()
 			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - selfData.EnemyData.VisibleTime) .. " (" .. VJ.GetName(self) .. ")") end
 		end
 		
-		//self:SetPlaybackRate(self.AnimationPlaybackRate)
-		self:OnThinkActive()
+		//self:SetPlaybackRate(selfData.AnimationPlaybackRate)
+		local fOnThinkActive = selfData.OnThinkActive; if fOnThinkActive then fOnThinkActive(self) end
 		
 		-- For AA move types
 		if moveTypeAA then
@@ -1703,8 +1708,8 @@ function ENT:Think()
 				
 				-- Attacks
 				if !selfData.PauseAttacks and !selfData.Flinching and !selfData.FollowData.StopAct and curTime > selfData.NextDoAnyAttackT and self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK and selfData.Behavior != VJ_BEHAVIOR_PASSIVE and selfData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE then
-					-- Attack priority in order: Custom --> Melee --> Range --> Leap
-					local funcThinkAtk = self.OnThinkAttack; if funcThinkAtk then funcThinkAtk(self, !!selfData.AttackType, ene) end
+					-- Attack priority order: Custom --> Melee --> Range --> Leap
+					local fOnThinkAttack = selfData.OnThinkAttack; if fOnThinkAttack then fOnThinkAttack(self, !!selfData.AttackType, ene) end
 					
 					-- Melee Attack
 					if selfData.HasMeleeAttack and selfData.IsAbleToMeleeAttack and !selfData.AttackType then

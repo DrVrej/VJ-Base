@@ -182,7 +182,8 @@ function SWEP:OnEquip(newOwner) end
 
 function SWEP:OnDeploy() end
 
-function SWEP:OnThink() end
+-- UNCOMMENT TO USE
+-- function SWEP:OnThink() end
 
 function SWEP:OnGetBulletPos() end -- Return a position to override the bullet spawn position
 
@@ -526,15 +527,16 @@ function SWEP:GetBulletPos()
 	local owner = fGetOwner(self)
 	if !IsValid(owner) then return fGetPos(self) end -- Fail safe
 	if owner:IsPlayer() then return owner:GetShootPos() end -- Players always use "GetShootPos"!
+	local selfData = fGetTable(self)
 	
 	-- Custom Position
-	local customPos = self:OnGetBulletPos()
+	local customPos = selfData.OnGetBulletPos(self)
 	if customPos then
 		return customPos
 	end
 	
 	-- Attachment
-	local bulletAttach = self.NPC_BulletSpawnAttachment
+	local bulletAttach = selfData.NPC_BulletSpawnAttachment
 	if bulletAttach then
 		local attachID = self:LookupAttachment(bulletAttach)
 		if attachID != 0 and attachID != -1 then
@@ -543,7 +545,7 @@ function SWEP:GetBulletPos()
 	end
 	
 	-- Check if we have a common attachment
-	local comAttach = self.ComAttachmentID
+	local comAttach = selfData.ComAttachmentID
 	if comAttach then
 		return fGetAttachment(self, comAttach).Pos
 	end
@@ -560,11 +562,11 @@ function SWEP:GetBulletPos()
 end
 
 function SWEP:Think() -- NOTE: This only runs for players!
-	self:OnThink()
+	local selfData = fGetTable(self)
+	local fOnThink = selfData.OnThink; if fOnThink then fOnThink(self) end
 	if !SERVER then return end
 	local owner = fGetOwner(self)
 	if !IsValid(owner) then return end
-	local selfData = fGetTable(self)
 	local curTime = CurTime()
 	self:MaintainWorldModel(selfData, owner)
 	-- Idle Animation
@@ -589,10 +591,10 @@ function SWEP:NPC_Think()
 	
 	local selfData = fGetTable(self)
 	selfData.MaintainWorldModel(self, selfData, owner)
-	selfData.OnThink(self)
+	local fOnThink = selfData.OnThink; if fOnThink then fOnThink(self) end
 	
 	if !selfData.IsMeleeWeapon and selfData.NPC_NextPrimaryFire and CurTime() > selfData.NPC_NextPrimaryFireT and selfData.NPC_CanFire(self, selfData, owner) then
-		selfData.NPCShoot_Primary(self)
+		selfData.NPCShoot_Primary(self, selfData, owner)
 	end
 end
 
@@ -641,25 +643,27 @@ function SWEP:NPC_CanFire(selfData, owner)
 	return false
 end
 
-function SWEP:NPCShoot_Primary()
-	local owner = fGetOwner(self)
+function SWEP:NPCShoot_Primary(selfData, owner)
+	owner = owner or fGetOwner(self)
 	if !IsValid(owner) then return end
 	local ene = owner:GetEnemy()
-	if !owner.VJ_Controlled and (!IsValid(ene) or !owner:Visible(ene)) then return end
-	if owner.IsVJBaseSNPC then
-		owner:UpdatePoseParamTracking()
+	local ownerData = fGetTable(owner)
+	if !ownerData.VJ_Controlled and (!IsValid(ene) or !owner:Visible(ene)) then return end
+	if ownerData.IsVJBaseSNPC then
+		ownerData.UpdatePoseParamTracking(owner)
 	end
+	selfData = selfData or fGetTable(self)
 	
 	-- Secondary Fire
-	if self.NPC_HasSecondaryFire and owner.Weapon_CanSecondaryFire and CurTime() > self.NPC_SecondaryFireNextT and fGetPos(ene):Distance(fGetPos(owner)) <= self.NPC_SecondaryFireDistance then
-		if math.random(1, self.NPC_SecondaryFireChance) == 1 then
-			local anim, animDur, animType = owner:PlayAnim(owner.AnimTbl_WeaponAttackSecondary, true, false, true)
+	if selfData.NPC_HasSecondaryFire and ownerData.Weapon_CanSecondaryFire and CurTime() > selfData.NPC_SecondaryFireNextT and fGetPos(ene):Distance(fGetPos(owner)) <= selfData.NPC_SecondaryFireDistance then
+		if math.random(1, selfData.NPC_SecondaryFireChance) == 1 then
+			local anim, animDur, animType = ownerData.PlayAnim(owner, ownerData.AnimTbl_WeaponAttackSecondary, true, false, true)
 			if animType != VJ.ANIM_TYPE_GESTURE then
 				animDur = animDur - 0.5
 			end
 			local fireTime = anim == ACT_INVALID and 0 or owner.Weapon_SecondaryFireTime or animDur
-			self.NPC_SecondaryFireNextT = CurTime() + fireTime + 0.5 -- Prevent attempting to fire again
-			self:NPC_SecondaryFire_BeforeTimer(ene, fireTime)
+			selfData.NPC_SecondaryFireNextT = CurTime() + fireTime + 0.5 -- Prevent attempting to fire again
+			selfData.NPC_SecondaryFire_BeforeTimer(self, ene, fireTime)
 			timer.Simple(fireTime, function()
 				if IsValid(self) and IsValid(owner) and fGetOwner(self) == owner and fGetActiveWeapon(owner) == self and IsValid(owner:GetEnemy()) and (anim == ACT_INVALID or animType == VJ.ANIM_TYPE_GESTURE or VJ.IsCurrentAnim(owner, anim)) then -- ONLY check for cur anim IF it even had one!
 					self:NPC_SecondaryFire()
@@ -672,12 +676,12 @@ function SWEP:NPCShoot_Primary()
 			end)
 			return
 		else
-			self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
+			selfData.NPC_SecondaryFireNextT = CurTime() + math.Rand(selfData.NPC_SecondaryFireNext.a, selfData.NPC_SecondaryFireNext.b)
 		end
 	end
 	
 	-- Primary Fire
-	timer.Simple(self.NPC_TimeUntilFire, function()
+	timer.Simple(selfData.NPC_TimeUntilFire, function()
 		if !IsValid(self) then return end
 		local curTime = CurTime()
 		if curTime > self.NPC_NextPrimaryFireT and IsValid(owner) and fGetOwner(self) == owner and fGetActiveWeapon(owner) == self and self:NPC_CanFire() then

@@ -66,7 +66,8 @@ end
 
 function ENT:Tank_OnThink() end -- Return true to disable the default base code
 
-function ENT:Tank_OnThinkActive() end
+-- UNCOMMENT TO USE
+-- function ENT:Tank_OnThinkActive() end
 
 function ENT:Tank_OnRunOver(ent) end
 
@@ -243,7 +244,7 @@ function ENT:OnThinkActive()
 	local selfData = fGetTable(self)
 	if selfData.Dead then return end
 	selfData.TurnData.Type = FACE_NONE -- This effectively makes it never face anything through Lua
-	self:Tank_OnThinkActive()
+	local fOnThinkActive = selfData.Tank_OnThinkActive; if fOnThinkActive then fOnThinkActive(self) end
 	self:SelectSchedule()
 
 	local hasDebug = selfData.VJ_DEBUG

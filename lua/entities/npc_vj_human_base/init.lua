@@ -572,9 +572,11 @@ function ENT:Init()
 	-- self:SetSurroundingBounds(Vector(150, 150, 200), Vector(-150, -150, 0))
 end
 
-function ENT:OnThink() end
+-- UNCOMMENT TO USE
+-- function ENT:OnThink() end
 
-function ENT:OnThinkActive() end
+-- UNCOMMENT TO USE
+-- function ENT:OnThinkActive() end
 
 -- UNCOMMENT TO USE | Called at the end of every entity it checks every process time
 -- NOTE: "calculatedDisp" can in some cases be nil
@@ -696,11 +698,13 @@ function ENT:OnInvestigate(ent) end
 
 function ENT:OnResetEnemy() end
 
-function ENT:OnAlert(ent) end
+-- UNCOMMENT TO USE
+-- function ENT:OnAlert(ent) end
 
+-- UNCOMMENT TO USE
 -- "ally" = Ally that we called for help
 -- "isFirst" = Is this the first ally that received this call? Use this to avoid running certain multiple times when many allies are around!
-function ENT:OnCallForHelp(ally, isFirst) end
+-- function ENT:OnCallForHelp(ally, isFirst) end
 
 --[[---------------------------------------------------------
 	UNCOMMENT TO USE | Called constantly on think as long as it can attack and has an enemy
@@ -858,7 +862,8 @@ function ENT:OnAllyKilled(ent) end
 --]]
 function ENT:OnDamaged(dmginfo, hitgroup, status) end
 
-function ENT:OnBleed(dmginfo, hitgroup) end
+-- UNCOMMENT TO USE
+-- function ENT:OnBleed(dmginfo, hitgroup) end
 
 --[[
  Called whenever the NPC attempts to play flinch
@@ -2187,7 +2192,7 @@ function ENT:Think()
 		end
 	end
 	
-	self:OnThink()
+	local fOnThink = selfData.OnThink; if fOnThink then fOnThink(self) end
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	if VJ_CVAR_AI_ENABLED and self:GetState() != VJ_STATE_FREEZE and !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
 		if selfData.VJ_DEBUG then
@@ -2197,8 +2202,8 @@ function ENT:Think()
 			if IsValid(selfData.WeaponEntity) and GetConVar("vj_npc_debug_weapon"):GetInt() == 1 then VJ.DEBUG_Print(self, false, " : Weapon -> " .. tostring(selfData.WeaponEntity) .. " | Ammo: " .. selfData.WeaponEntity:Clip1() .. " / " .. selfData.WeaponEntity:GetMaxClip1() .. " | Accuracy: " .. selfData.Weapon_Accuracy) end
 		end
 		
-		//self:SetPlaybackRate(self.AnimationPlaybackRate)
-		self:OnThinkActive()
+		//self:SetPlaybackRate(selfData.AnimationPlaybackRate)
+		local fOnThinkActive = selfData.OnThinkActive; if fOnThinkActive then fOnThinkActive(self) end
 		
 		-- Update follow system's data
 		//print("------------------")
@@ -2434,8 +2439,8 @@ function ENT:Think()
 				
 				-- Attacks
 				if !selfData.PauseAttacks and !selfData.Flinching and !selfData.FollowData.StopAct and curTime > selfData.NextDoAnyAttackT and self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK and selfData.Behavior != VJ_BEHAVIOR_PASSIVE and selfData.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE then
-					-- Attack priority in order: Custom --> Melee --> Grenade
-					local funcThinkAtk = self.OnThinkAttack; if funcThinkAtk then funcThinkAtk(self, !!selfData.AttackType, ene) end
+					-- Attack priority order: Custom --> Melee --> Grenade
+					local fOnThinkAttack = selfData.OnThinkAttack; if fOnThinkAttack then fOnThinkAttack(self, !!selfData.AttackType, ene) end
 					local curWepValid = IsValid(curWep)
 					
 					-- Melee Attack
@@ -3047,8 +3052,8 @@ end
 		- Boolean, Whether or not it can fire its active weapon
 -----------------------------------------------------------]]
 function ENT:CanFireWeapon(checkDist, checkDistOnly)
-	if self:OnWeaponCanFire() == false then return false end
 	local selfData = fGetTable(self)
+	if selfData.OnWeaponCanFire(self) == false then return false end
 	local curWep = selfData.WeaponEntity
 	if selfData.PauseAttacks or !IsValid(curWep) or self:GetWeaponState() != VJ.WEP_STATE_READY then return false end
 	

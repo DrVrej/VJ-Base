@@ -1352,15 +1352,6 @@ function ENT:GetLastDamageHitGroup()
 end
 
 --[[---------------------------------------------------------
-	Time since the NPC has been damaged (Uses CurTime!)
-	Returns
-		- number, time
------------------------------------------------------------]]
-function ENT:GetLastDamageTime()
-	return self:GetInternalVariable("m_flLastDamageTime")
-end
-
---[[---------------------------------------------------------
 	Number of times NPC has been damaged. Useful for tracking 1-shot kills
 	Returns
 		- number, the damage count
@@ -2040,7 +2031,7 @@ function ENT:DoEnemyAlert(ent)
 	eneData.TimeAcquired = curTime
 	eneData.VisibleTime = curTime
 	eneData.DistanceNearest = VJ.GetNearestDistance(self, ent, true)
-	self:OnAlert(ent)
+	local fOnAlert = selfData.OnAlert; if fOnAlert then fOnAlert(self, ent) end
 	if curTime > selfData.NextAlertSoundT then
 		self:PlaySoundSystem("Alert")
 		selfData.NextAlertSoundT = curTime + math.Rand(selfData.NextSoundTime_Alert.a, selfData.NextSoundTime_Alert.b)
@@ -2103,11 +2094,11 @@ function ENT:MaintainRelationships()
 	local eneVisCount = 0
 	local myPos = fGetPos(self)
 	local mySightDist = fGetMaxLookDistance(self)
-	local myHandlePerceived = self.HandlePerceivedRelationship
+	local myHandlePerceived = selfData.HandlePerceivedRelationship
 	local myCanAlly = selfData.CanAlly
 	local myFriPlyAllies = selfData.AlliedWithPlayerAllies
 	local notIsNeutral = myBehavior != VJ_BEHAVIOR_NEUTRAL
-	local customFunc = self.OnMaintainRelationships
+	local customFunc = selfData.OnMaintainRelationships
 	local nearestDist = false
 	local it = 1
 	while it <= #entities do //for it = 1, #entities do
@@ -2182,11 +2173,7 @@ function ENT:MaintainRelationships()
 					-- Handle caching
 					//VJ.DEBUG_Print(self, false, "not cached", ent, calculatedDisp)
 					self:SetRelationshipMemory(ent, MEM_CACHE_CLASSES, entClasses)
-					if calculatedDisp then
-						self:SetRelationshipMemory(ent, MEM_CACHE_DISPOSITION, calculatedDisp)
-					else -- No value set, then clear the cache!
-						self:SetRelationshipMemory(ent, MEM_CACHE_DISPOSITION, nil)
-					end
+					self:SetRelationshipMemory(ent, MEM_CACHE_DISPOSITION, calculatedDisp or nil) -- nil = clear cache if no value is set
 				else
 					-- Class cache found! Check if we also have a disposition cache
 					local entCachedDisposition = entMemory[MEM_CACHE_DISPOSITION]
@@ -2421,7 +2408,7 @@ function ENT:Allies_CallHelp(dist)
 					end
 				end
 				
-				selfData.OnCallForHelp(self, ent, isFirst)
+				local fOnCallForHelp = selfData.OnCallForHelp; if fOnCallForHelp then fOnCallForHelp(self, ent, isFirst) end
 				if isFirst then
 					selfData.PlaySoundSystem(self, "CallForHelp")
 					if curTime > selfData.AnimLockTime and curTime > selfData.NextCallForHelpAnimationT then
@@ -2751,7 +2738,7 @@ function ENT:PlayFootstepSound(customSD)
 		local pickedSD = customSD and PICK(customSD) or PICK(selfData.SoundTbl_FootStep)
 		if pickedSD then
 			VJ.EmitSound(self, pickedSD, selfData.FootstepSoundLevel, self:GetSoundPitch(selfData.FootstepSoundPitch))
-			local funcCustom = self.OnFootstepSound; if funcCustom then funcCustom(self, footstepType, pickedSD) end
+			local funcCustom = selfData.OnFootstepSound; if funcCustom then funcCustom(self, footstepType, pickedSD) end
 		end
 	end
 end
@@ -3368,7 +3355,7 @@ function ENT:OnTakeDamage(dmginfo)
 	
 	local function DoBleed()
 		if selfData.Bleeds then
-			self:OnBleed(dmginfo, hitgroup)
+			local fOnBleed = selfData.OnBleed; if fOnBleed then fOnBleed(self, dmginfo, hitgroup) end
 			-- Spawn the blood particle only if it's not caused by the default fire entity [Causes the damage position to be at Vector()]
 			if selfData.HasBloodParticle and !isFireEnt then self:SpawnBloodParticles(dmginfo, hitgroup) end
 			if selfData.HasBloodDecal then self:SpawnBloodDecals(dmginfo, hitgroup) end
@@ -3398,7 +3385,6 @@ function ENT:OnTakeDamage(dmginfo)
 		selfData.HealthRegenDelayT = curTime + (math.Rand(healthRegen.Delay.a, healthRegen.Delay.b) * 1.5)
 	end
 	self:SetSaveValue("m_iDamageCount", self:GetTotalDamageCount() + 1)
-	self:SetSaveValue("m_flLastDamageTime", curTime)
 	self:OnDamaged(dmginfo, hitgroup, "PostDamage")
 	DoBleed()
 	
@@ -3572,7 +3558,7 @@ function ENT:OnTakeDamage(dmginfo)
 		end
 		self:BeginDeath(dmginfo, hitgroup)
 	end
-	return 1
+	return dmginfo:GetDamage()
 end
 
 local vecZ500 = Vector(0, 0, 500)
