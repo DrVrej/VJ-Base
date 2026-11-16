@@ -210,7 +210,10 @@ function ENT:Tank_RunOver(ent)
 		self:Tank_PlaySoundSystem("RunOver")
 		ent:TakeDamage(self:ScaleByDifficulty(50), self, self)
 		VJ.DamageSpecialEnts(self, ent)
-		ent:SetVelocity(ent:GetForward() * -200)
+		local moveType = ent:GetMoveType()
+		if moveType == MOVETYPE_WALK or moveType == MOVETYPE_STEP or moveType == MOVETYPE_VPHYSICS then
+			ent:SetVelocity(ent:GetForward() * -200)
+		end
 	end
 end
 
