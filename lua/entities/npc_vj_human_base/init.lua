@@ -1879,15 +1879,19 @@ function ENT:Initialize()
 end
 
 function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
-	self:ClearCondition(COND_ENEMY_UNREACHABLE)
 	local selfData = fGetTable(self)
 	local moveType = selfData.MovementType; if moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then self:AA_ChaseEnemy() return end
-	if selfData.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" then return end // and (self:GetEnemyLastKnownPos():Distance(fGetPos(fGetEnemy(self))) <= 12)
 	local navType = self:GetNavType(); if navType == NAV_JUMP or navType == NAV_CLIMB then return end
 	if doLOSChase then
+		--[[ IMPLEMENTATION: LOS stall refresh
+			"TASK_GET_PATH_TO_ENEMY_LOS" can remain active without reporting completion or failure, while "IsMoving" / "IsGoalActive" still return true
+			1. Refresh after 6 seconds on the current task, even during a healthy execution, because the enemy may have moved away from the position used by the original LOS search
+			2. Refresh if "TASK_GET_PATH_TO_ENEMY_LOS" has lasted 3+ seconds and no movement is detected, which identifies the observed LOS stall
+		--]]
+		if selfData.CurrentScheduleName == "SCHEDULE_ALERT_CHASE_LOS" and self:TaskTime() < 6 and (selfData.CurrentTaskID != 1 or self:GetIdealMoveSpeed() > 0 or self:TaskTime() < 3) then return end
 		local cachedSchedule = selfData.CacheScheduleChaseLOS
 		if !cachedSchedule then
-			local schedule_alert_chase = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE")
+			local schedule_alert_chase = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE_LOS")
 			schedule_alert_chase:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
 			//schedule_alert_chase:EngTask("TASK_RUN_PATH", 0)
 			schedule_alert_chase:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
@@ -1898,15 +1902,23 @@ function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 			schedule_alert_chase.RunCode_OnFail = function()
 				local ene = fGetEnemy(self)
 				if IsValid(ene) then
-					self:RememberUnreachable(ene, 0)
-					//self:SCHEDULE_ALERT_CHASE(false)
+					self:SetCondition(COND_ENEMY_UNREACHABLE)
+					self:RememberUnreachable(ene)
 				end
+				selfData.NextChaseTime = CurTime() + 2 -- Prevent spam calling "SCHEDULE_ALERT_CHASE_LOS", especially when the enemy is further than "m_flDistTooFar"
+				self:SCHEDULE_IDLE_STAND()
 			end
 			cachedSchedule = schedule_alert_chase
 			selfData.CacheScheduleChaseLOS = cachedSchedule
 		end
+		-- IMPLEMENTATION: Temporarily cap "m_flDistTooFar" so "TASK_GET_PATH_TO_ENEMY_LOS" searches for a destination within the NPC's current maximum weapon firing distance
+		local orgTooFar = self:GetInternalVariable("m_flDistTooFar")
+		self:SetSaveValue("m_flDistTooFar", math.min(orgTooFar, selfData.Weapon_MaxDistance - 10)) -- Decrease it a little bit to act as a buffer
 		self:StartSchedule(cachedSchedule)
+		self:SetSaveValue("m_flDistTooFar", orgTooFar)
 	else
+		if selfData.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" then return end // and (self:GetEnemyLastKnownPos():Distance(fGetPos(fGetEnemy(self))) <= 12)
+		self:ClearCondition(COND_ENEMY_UNREACHABLE)
 		local cachedSchedule = selfData.CacheScheduleChase
 		if !cachedSchedule then
 			local schedule_alert_chase = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE")
@@ -1917,6 +1929,7 @@ function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 			//schedule_alert_chase.ResetOnFail = true
 			schedule_alert_chase.CanShootWhenMoving = true
 			schedule_alert_chase.CanBeInterrupted = true
+			schedule_alert_chase.RunCode_OnFail = function() self:SCHEDULE_IDLE_STAND() end
 			cachedSchedule = schedule_alert_chase
 			selfData.CacheScheduleChase = cachedSchedule
 		end
@@ -1958,15 +1971,43 @@ function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to alw
 	
 	if !alwaysChase and (selfData.DisableChasingEnemy or selfData.IsGuard) then self:SCHEDULE_IDLE_STAND() return end
 	
-	-- If the enemy is not reachable
-	if (fHasCondition(self, COND_ENEMY_UNREACHABLE) or self:IsUnreachable(ene)) and (IsValid(fGetActiveWeapon(self)) and (!fGetActiveWeapon(self).IsMeleeWeapon)) then
-		self:SCHEDULE_ALERT_CHASE(true)
-		self:RememberUnreachable(ene, 2)
-	else -- Is reachable, so chase the enemy!
-		self:SCHEDULE_ALERT_CHASE(false)
+	if moveType == VJ_MOVETYPE_GROUND then
+		--[[ IMPLEMENTATION: Enemy reachability
+			Why:
+			1. "IsUnreachable" checks remembered failures, not actual reachability, it returns false when the memory expires or the enemy moves over 120 units from its recorded position
+			2. COND_ENEMY_UNREACHABLE can remain set after the memory clears and must be cleared when a route becomes available
+			3. Repeated failed chase attempts can interrupt idle animations, wandering, and LOS chasing
+			Logic:
+			1. When the memory clears but COND_ENEMY_UNREACHABLE remains, use "CanBuildRoute" to check reachability without replacing the current navigation goal
+			2. If a route exists, clear the condition and allow direct chasing
+			3. Otherwise, renew unreachable memory to delay the next check and continue the idle, wander, or LOS fallback
+		--]]
+		local eneReachable = !self:IsUnreachable(ene)
+		if eneReachable and fHasCondition(self, COND_ENEMY_UNREACHABLE) then
+			eneReachable = self:CanBuildRoute(fGetPos(ene), nil, -1, ene, false)
+			if eneReachable then
+				self:ClearCondition(COND_ENEMY_UNREACHABLE)
+			else
+				self:RememberUnreachable(ene)
+			end
+		end
+		if !eneReachable then -- Remembered failure or failed route check; prevent direct chasing
+			local wep = fGetActiveWeapon(self)
+			if IsValid(wep) and !wep.IsMeleeWeapon then -- Ranged weapon: attempt to form an LOS
+				self:SCHEDULE_ALERT_CHASE(true)
+			elseif math.random(1, 30) == 1 and !self:IsMoving() then -- Melee / unarmed: idle or wander around
+				selfData.NextWanderTime = 0
+				self:MaintainIdleBehavior(1)
+			else
+				self:SCHEDULE_IDLE_STAND()
+			end
+		else -- Is reachable, chase the enemy!
+			self:SCHEDULE_ALERT_CHASE()
+		end
+	else
+		self:SCHEDULE_ALERT_CHASE()
 	end
 	
-	-- Set the next chase time
 	if selfData.NextChaseTime > curTime then return end -- Don't set it if it's already set!
 	selfData.NextChaseTime = curTime + (((eneData.Distance > 2000) and 1) or 0.1) -- If the enemy is far, increase the delay!
 end
@@ -3209,7 +3250,7 @@ function ENT:SelectSchedule()
 								goto goto_checkwep
 							else
 								-- Everything failed, go after the enemy!
-								if selfData.WeaponAttackState and selfData.WeaponAttackState >= VJ.WEP_ATTACK_STATE_FIRE and selfData.CurrentScheduleName != "SCHEDULE_ALERT_CHASE" then
+								if selfData.WeaponAttackState and selfData.WeaponAttackState >= VJ.WEP_ATTACK_STATE_FIRE and selfData.CurrentScheduleName != "SCHEDULE_ALERT_CHASE" and selfData.CurrentScheduleName != "SCHEDULE_ALERT_CHASE_LOS" then
 									selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 								end
 								self:MaintainAlertBehavior()
