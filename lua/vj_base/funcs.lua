@@ -784,7 +784,15 @@ end
 -----------------------------------------------------------]]
 function VJ.DamageSpecialEnts(attacker, ent, dmgInfo)
 	if ent:GetClass() == "npc_turret_floor" and !ent:GetInternalVariable("m_bSelfDestructing") then
-		ent:Fire("selfdestruct")
+		if dmgInfo then
+			local amt = math.max(1, ent:Health() - dmgInfo:GetDamage()) -- 0 = Causes bugged physics
+			ent:SetHealth(amt)
+			if amt <= 1 then
+				ent:Fire("selfdestruct")
+			end
+		else
+			ent:Fire("selfdestruct")
+		end
 		local phys = ent:GetPhysicsObject()
 		if IsValid(phys) then
 			phys:EnableMotion(true)
