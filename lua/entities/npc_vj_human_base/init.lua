@@ -2466,7 +2466,7 @@ function ENT:Think()
 						eneData.VisiblePosReal = ene:EyePos() -- Use EyePos because "Visible" uses it to run the trace in the engine! | For origin, use "self:GetEnemyLastSeenPos()"
 					end
 					if firingWep then self:PlaySoundSystem("Suppressing") end
-				elseif firingWep then
+				elseif firingWep and (selfData.WeaponAttackState != VJ.WEP_ATTACK_STATE_FIRE_BREAKABLE or !selfData.Weapon_BreakableAimPos) then
 					selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 				end
 
@@ -3127,6 +3127,7 @@ local bitsDanger = bit.bor(SOUND_BULLET_IMPACT, SOUND_COMBAT, SOUND_WORLD, SOUND
 --
 function ENT:SelectSchedule()
 	local selfData = fGetTable(self)
+	selfData.Weapon_BreakableAimPos = nil
 	if selfData.VJ_Controlled or selfData.Dead then return end
 	
 	local curTime = CurTime()
@@ -3235,10 +3236,23 @@ function ENT:SelectSchedule()
 					selfData.AllowWeaponOcclusionDelay = false
 				-- Check if enemy is in sight, then continue...
 				elseif self:CanFireWeapon(true, true) then
-					-- I can't see the enemy from my eyes
-					if self:DoCoverTrace(self:EyePos(), enePos_Eye, true) then // or (!eneData.Visible)
+					local trEyeCovered, trEye = self:DoCoverTrace(self:EyePos(), enePos_Eye, true)
+					local trWepCovered, trWep, trWepEnt;
+					local breakableCover = false
+					-- Can I see the enemy from eyes?
+					if trEyeCovered then // or (!eneData.Visible)
 						if selfData.TakingCoverT > curTime then return end -- Do NOT interrupt when taking cover (such as "CombatDamageResponse")
 						if self:GetWeaponState() != VJ.WEP_STATE_RELOADING then
+							local trEyeEnt = trEye.Entity
+							-- Check if its a breakable blocker that we can shoot and break
+							if IsValid(trEyeEnt) and wep.IsVJBaseWeapon and !wep.IsMeleeWeapon and !trEyeEnt.VJ_ID_Living and trEyeEnt.VJ_ID_Attackable and trEyeEnt:Health() > 0 and trEyeEnt:GetInternalVariable("m_takedamage") > 1 then
+								trWepCovered, trWep = self:DoCoverTrace(wep:GetBulletPos(), enePos_Eye, false)
+								trWepEnt = trWep.Entity
+								if IsValid(trWepEnt) and !trWepEnt.VJ_ID_Living and trWepEnt.VJ_ID_Attackable and trWepEnt:Health() > 0 and trWepEnt:GetInternalVariable("m_takedamage") > 1 then
+									breakableCover = true
+									goto goto_weapon
+								end
+							end
 							-- Wait when enemy is occluded
 							if selfData.Weapon_OcclusionDelay and selfData.WeaponAttackState != VJ.WEP_ATTACK_STATE_AIM_OCCLUSION and !wep.IsMeleeWeapon and selfData.AllowWeaponOcclusionDelay and (curTime - selfData.WeaponLastShotTime) <= 4.5 and eneData.Distance > selfData.Weapon_OcclusionDelayMinDist then
 								selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_AIM_OCCLUSION
@@ -3247,7 +3261,7 @@ function ENT:SelectSchedule()
 							-- I am hidden, so stand up in case I am crouching if I had detected to be in a hidden position and the enemy may be visible!
 							elseif curTime < selfData.LastHiddenZoneT and !self:DoCoverTrace(myPosCentered + self:GetUp() * 30, enePos_Eye + self:GetUp() * 30, true) then
 								self:MaintainIdleBehavior(2) -- Make it play idle stand (Which will turn into ACT_IDLE_ANGRY)
-								goto goto_checkwep
+								goto goto_weapon
 							else
 								-- Everything failed, go after the enemy!
 								if selfData.WeaponAttackState and selfData.WeaponAttackState >= VJ.WEP_ATTACK_STATE_FIRE and selfData.CurrentScheduleName != "SCHEDULE_ALERT_CHASE" and selfData.CurrentScheduleName != "SCHEDULE_ALERT_CHASE_LOS" then
@@ -3259,9 +3273,9 @@ function ENT:SelectSchedule()
 						goto goto_conditions
 					end
 					-- I can see the enemy...
-					::goto_checkwep::
-					if wep.IsVJBaseWeapon then -- VJ Base weapons
-						-- Do proper weapon aim turning, based on "FInAimCone" - https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/mp/src/game/server/ai_basenpc.cpp#L2584
+					::goto_weapon::
+					if wep.IsVJBaseWeapon then
+						-- Apply weapon aim turning, based on "FInAimCone" - https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/mp/src/game/server/ai_basenpc.cpp#L2584
 						if !selfData.HasPoseParameterLooking then -- Pose parameter looking is disabled then always face
 							self:SetTurnTarget("Enemy")
 						else
@@ -3276,21 +3290,18 @@ function ENT:SelectSchedule()
 								self:UpdatePoseParamTracking(true) -- Reset pose parameters to help with turning snaps
 							end
 						end
-						// self:MaintainAlertBehavior()
-						-- if covered, try to move forward by calculating the distance between the prop and the NPC
-						local inCover, inCoverTrace = self:DoCoverTrace(myPosCentered, enePos_Eye, false, {SetLastHiddenTime = true})
-						local inCoverEnt = inCoverTrace.Entity
-						local wepInCover, wepInCoverTrace = self:DoCoverTrace(wep:GetBulletPos(), enePos_Eye, false)
-						local wepInCoverEnt = wepInCoverTrace.Entity
-						//print("Is covered? ", inCover)
-						//print("Is gun covered? ", wepInCover)
-						local inCoverEntLiving = false -- The covered entity is NOT a living entity
-						if IsValid(inCoverEnt) and inCoverEnt.VJ_ID_Living then
-							inCoverEntLiving = true
+						
+						local trBodyCovered, trBody = self:DoCoverTrace(myPosCentered, enePos_Eye, false, {SetLastHiddenTime = true})
+						local trBodyEnt = trBody.Entity
+						if !trWep then
+							trWepCovered, trWep = self:DoCoverTrace(wep:GetBulletPos(), enePos_Eye, false)
+							trWepEnt = trWep.Entity
 						end
+						//print("Eye covered? ", trEyeCovered); print("Body covered? ", trBodyCovered); print("Weapon covered? ", trWepCovered)
 						if !wep.IsMeleeWeapon then
+							local trBodyEntLiving = IsValid(trBodyEnt) and trBodyEnt.VJ_ID_Living -- Body trace hit a living entity
 							-- If friendly in line of fire, then move!
-							if inCoverEntLiving and selfData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND and curTime > selfData.TakingCoverT and IsValid(wepInCoverEnt) and wepInCoverEnt:IsNPC() and wepInCoverEnt != self and (self:Disposition(wepInCoverEnt) == D_LI or self:Disposition(wepInCoverEnt) == D_NU) and wepInCoverTrace.HitPos:Distance(wepInCoverTrace.StartPos) <= 3000 then
+							if trBodyEntLiving and (selfData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND or selfData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_BREAKABLE) and curTime > selfData.TakingCoverT and IsValid(trWepEnt) and trWepEnt:IsNPC() and trWepEnt != self and (self:Disposition(trWepEnt) == D_LI or self:Disposition(trWepEnt) == D_NU) and trWep.HitPos:Distance(trWep.StartPos) <= 3000 then
 								local moveCheck = PICK(VJ.TraceDirections(self, "Quick", 50, true, false, 4, true, true))
 								if moveCheck then
 									self:StopMoving()
@@ -3300,21 +3311,24 @@ function ENT:SelectSchedule()
 									self:SCHEDULE_GOTO_POSITION("TASK_WALK_PATH", function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.TurnData = {Type = VJ.FACE_ENEMY} end)
 								end
 							end
-
+							-- Detected a blocker that can be targeted
+							if breakableCover then
+								selfData.Weapon_BreakableAimPos = trWep.HitPos
 							-- NPC is behind cover...
-							if inCover then
+							elseif trBodyCovered then
 								-- Behind cover and I am taking cover, don't fire!
 								if curTime < selfData.TakingCoverT then
 									goto goto_conditions
-								elseif curTime > selfData.NextMoveOnGunCoveredT and ((inCoverTrace.HitPos:Distance(myPos) > 150 and !inCoverEntLiving) or (wepInCover and !wepInCoverEnt.VJ_ID_Living)) then
+								-- Try to move forward to the cover
+								elseif curTime > selfData.NextMoveOnGunCoveredT and ((trBody.HitPos:Distance(myPos) > 150 and !trBodyEntLiving) or (trWepCovered and !trWepEnt.VJ_ID_Living)) then
 									selfData.AllowWeaponOcclusionDelay = false
 									local nearestPos;
 									local nearestEntPos;
-									if IsValid(inCoverEnt) then
-										nearestPos, nearestEntPos = VJ.GetNearestPositions(self, inCoverEnt)
+									if IsValid(trBodyEnt) then
+										nearestPos, nearestEntPos = VJ.GetNearestPositions(self, trBodyEnt)
 										nearestPos.z = myPos.z; nearestEntPos.z = myPos.z -- Floor the Z-axis as it can be used for a movement position!
 									else
-										nearestPos, nearestEntPos = self:NearestPoint(inCoverTrace.HitPos), inCoverTrace.HitPos
+										nearestPos, nearestEntPos = self:NearestPoint(trBody.HitPos), trBody.HitPos
 									end
 									nearestEntPos = nearestEntPos - self:GetForward() * 15
 									if nearestPos:Distance(nearestEntPos) <= (selfData.IsGuard and 100 or 1000) then
@@ -3338,7 +3352,6 @@ function ENT:SelectSchedule()
 									selfData.NextMoveOnGunCoveredT = curTime + 2
 									return
 								end
-							//else -- NPC is NOT behind cover
 							end
 						end
 
@@ -3366,7 +3379,7 @@ function ENT:SelectSchedule()
 								end
 								-- If it's already doing a firing animation, then do NOT restart the animation
 								if VJ.IsCurrentAnim(self, self:TranslateActivity(selfData.WeaponAttackAnim)) then
-									selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_FIRE_STAND
+									selfData.WeaponAttackState = breakableCover and VJ.WEP_ATTACK_STATE_FIRE_BREAKABLE or VJ.WEP_ATTACK_STATE_FIRE_STAND
 								-- If the current activity isn't the last weapon animation and it's not a transition, then continue
 								elseif self:GetActivity() != selfData.WeaponAttackAnim and self:GetActivity() != ACT_TRANSITION then
 									self:OnWeaponAttack()
@@ -3384,7 +3397,7 @@ function ENT:SelectSchedule()
 									else
 										-- Crouch fire
 										local anim_crouch = self:TranslateActivity(PICK(selfData.AnimTbl_WeaponAttackCrouch))
-										if selfData.Weapon_CanCrouchAttack and !inCover and !wepInCover and eneData.Distance > 500 and VJ.AnimExists(self, anim_crouch) and math.random(1, selfData.Weapon_CrouchAttackChance) == 1 and !self:DoCoverTrace(wep:GetBulletPos() + self:GetUp() * -18, enePos_Eye, true) then
+										if selfData.Weapon_CanCrouchAttack and !trBodyCovered and !trWepCovered and eneData.Distance > 500 and VJ.AnimExists(self, anim_crouch) and math.random(1, selfData.Weapon_CrouchAttackChance) == 1 and !self:DoCoverTrace(wep:GetBulletPos() + self:GetUp() * -18, enePos_Eye, true) then
 											finalAnim = anim_crouch
 										-- Standing fire
 										else
@@ -3395,14 +3408,14 @@ function ENT:SelectSchedule()
 										VJ.EmitSound(self, wep.NPC_BeforeFireSound, wep.NPC_BeforeFireSoundLevel, math.Rand(wep.NPC_BeforeFireSoundPitch.a, wep.NPC_BeforeFireSoundPitch.b))
 										self:PlayAnim(finalAnim, false, 0, true)
 										selfData.WeaponAttackAnim = finalAnim
-										selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_FIRE_STAND
+										selfData.WeaponAttackState = breakableCover and VJ.WEP_ATTACK_STATE_FIRE_BREAKABLE or VJ.WEP_ATTACK_STATE_FIRE_STAND
 										selfData.NextWeaponAttackT_Base = curTime + 0.2
 									end
 								end
 							end
 						end
-						-- Move randomly when shooting
-						if selfData.Weapon_Strafe and !inCover and !selfData.IsGuard and !selfData.IsFollowing and !wep.IsMeleeWeapon and (!wep.NPC_StandingOnly) and selfData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND and curTime > selfData.NextWeaponStrafeT and (curTime - eneData.TimeAcquired) > 2 and (eneData.Distance < (selfData.Weapon_MaxDistance / 1.25)) then
+						-- Weapon strafing behavior
+						if selfData.Weapon_Strafe and !trBodyCovered and !selfData.IsGuard and !selfData.IsFollowing and !wep.IsMeleeWeapon and !wep.NPC_StandingOnly and selfData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND and curTime > selfData.NextWeaponStrafeT and (curTime - eneData.TimeAcquired) > 2 and (eneData.Distance < (selfData.Weapon_MaxDistance / 1.25)) then
 							if self:OnWeaponStrafe() != false then
 								local moveCheck = PICK(VJ.TraceDirections(self, "Radial", math.random(150, 400), true, false, 12, true))
 								if moveCheck then

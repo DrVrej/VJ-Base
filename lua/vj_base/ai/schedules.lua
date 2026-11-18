@@ -399,7 +399,7 @@ function ENT:StartSchedule(schedule)
 	-- Clear certain systems that should be notified that we have moved
 	if schedule.HasMovement then
 		selfData.LastHiddenZoneT = 0
-		if !schedule.CanShootWhenMoving or selfData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND then // selfData.WeaponAttackState and selfData.WeaponAttackState >= VJ.WEP_ATTACK_STATE_FIRE
+		if !schedule.CanShootWhenMoving or selfData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND or selfData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_BREAKABLE then // selfData.WeaponAttackState and selfData.WeaponAttackState >= VJ.WEP_ATTACK_STATE_FIRE
 			selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 		end
 		-- Movements shouldn't interrupt gestures

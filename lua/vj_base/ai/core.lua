@@ -1181,6 +1181,9 @@ function ENT:GetAimPosition(target, aimOrigin, predictionRate, projectileSpeed)
 		end
 	else -- NOT visible
 		if target == fGetEnemy(self) then -- For current enemy, use the last known enemy location
+			if self.Weapon_BreakableAimPos and self.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_BREAKABLE then
+				return Vector(self.Weapon_BreakableAimPos)
+			end
 			return Vector(self.EnemyData.VisiblePos)
 		end
 		return target:BodyTarget(aimOrigin)

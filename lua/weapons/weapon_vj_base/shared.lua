@@ -607,7 +607,7 @@ function SWEP:NPC_CanFire(selfData, owner)
 	if (isVJHuman and IsValid(ene) and !ownerData.CanFireWeapon(owner, true, true)) or (selfData.NPC_StandingOnly and owner:IsMoving()) then
 		return false
 	end
-	if !isVJHuman or ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE or (ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND and VJ.IsCurrentAnim(owner, ownerData.WeaponAttackAnim)) then
+	if !isVJHuman or ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE or ((ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND or (ownerData.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_BREAKABLE and ownerData.Weapon_BreakableAimPos)) and VJ.IsCurrentAnim(owner, ownerData.WeaponAttackAnim)) then
 		if selfData.IsMeleeWeapon then return true end
 		local isControlled = ownerData.VJ_Controlled
 		-- For VJ Humans only, ammo check
@@ -648,7 +648,7 @@ function SWEP:NPCShoot_Primary(selfData, owner)
 	if !IsValid(owner) then return end
 	local ene = owner:GetEnemy()
 	local ownerData = fGetTable(owner)
-	if !ownerData.VJ_Controlled and (!IsValid(ene) or !owner:Visible(ene)) then return end
+	if !ownerData.VJ_Controlled and (!IsValid(ene) or (!owner:Visible(ene) and (ownerData.WeaponAttackState != VJ.WEP_ATTACK_STATE_FIRE_BREAKABLE or !ownerData.Weapon_BreakableAimPos))) then return end
 	if ownerData.IsVJBaseSNPC then
 		ownerData.UpdatePoseParamTracking(owner)
 	end

@@ -106,6 +106,7 @@ VJ.WEP_ATTACK_STATE_AIM_MOVE		= 2 -- It's aiming the weapon and moving but not f
 VJ.WEP_ATTACK_STATE_AIM_OCCLUSION	= 3 -- It's aiming the weapon because the enemy is occluded and it ran the "Weapon_OcclusionDelay" behavior (not firing)
 VJ.WEP_ATTACK_STATE_FIRE			= 10 -- It's firing the weapon (including while standing still OR moving)
 VJ.WEP_ATTACK_STATE_FIRE_STAND		= 11 -- It's firing the weapon while standing still or crouching
+VJ.WEP_ATTACK_STATE_FIRE_BREAKABLE	= 12 -- It's firing at a breakable cover that is blocking LOS to the enemy
 
 -- NPC weapon inventory status
 VJ.WEP_INVENTORY_NONE				= 0 -- Currently using no weapon | DEFAULT
