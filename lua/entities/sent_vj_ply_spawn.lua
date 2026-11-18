@@ -16,12 +16,6 @@ ENT.Spawnable = true
 ENT.AdminOnly = true
 
 scripted_ents.Alias("sent_vj_ply_spawnpoint", "sent_vj_ply_spawn") -- !! Backwards Compatibility !!
-
-if CLIENT then
-	function ENT:Draw()
-		self:DrawModel()
-	end
-end
 --------------------------------------------------------------------------------
 if !SERVER then return end
 
@@ -37,19 +31,11 @@ function ENT:Initialize()
 end
 
 function ENT:Use(activator)
-	if activator:IsPlayer() and activator:IsAdmin() then
-		if self.Active then
-			self.Active = false
-			self:EmitSound("hl1/fvox/deactivated.wav")
-			self:SetColor(VJ.COLOR_RED)
-			activator:PrintMessage(HUD_PRINTTALK, "#vjbase.spawnpoint.print.deactivated")
-		else
-			self.Active = true
-			self:EmitSound("hl1/fvox/activated.wav")
-			self:SetColor(VJ.COLOR_GREEN)
-			activator:PrintMessage(HUD_PRINTTALK, "#vjbase.spawnpoint.print.activated")
-		end
-	end
+	if !activator:IsPlayer() or !activator:IsAdmin() then return end
+	self.Active = !self.Active
+	self:EmitSound(self.Active and "hl1/fvox/activated.wav" or "hl1/fvox/deactivated.wav")
+	self:SetColor(self.Active and VJ.COLOR_GREEN or VJ.COLOR_RED)
+	activator:PrintMessage(HUD_PRINTTALK, self.Active and "#vjbase.spawnpoint.print.activated" or "#vjbase.spawnpoint.print.deactivated")
 end
 
 function ENT:PhysgunPickup(ply)

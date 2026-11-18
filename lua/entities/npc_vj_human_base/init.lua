@@ -3229,7 +3229,7 @@ function ENT:SelectSchedule()
 			end
 			
 			if self:CanFireWeapon(false, false) and self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK then
-				-- Enemy to far away or not allowed to fire a weapon
+				-- Enemy too far away or not allowed to fire a weapon
 				if eneData.Distance > selfData.Weapon_MaxDistance or curTime < selfData.NextWeaponAttackT then
 					self:MaintainAlertBehavior()
 					selfData.AllowWeaponOcclusionDelay = false
@@ -3316,7 +3316,7 @@ function ENT:SelectSchedule()
 									else
 										nearestPos, nearestEntPos = self:NearestPoint(inCoverTrace.HitPos), inCoverTrace.HitPos
 									end
-									nearestEntPos = nearestEntPos - self:GetForward()*15
+									nearestEntPos = nearestEntPos - self:GetForward() * 15
 									if nearestPos:Distance(nearestEntPos) <= (selfData.IsGuard and 100 or 1000) then
 										if selfData.IsGuard then self.GuardData.Position = nearestEntPos; self.GuardData.Direction = nearestEntPos + self:GetForward() * 51 end -- Set the guard position to this new position that provides cover
 										self:SetLastPosition(nearestEntPos)
@@ -3413,7 +3413,7 @@ function ENT:SelectSchedule()
 							end
 							selfData.NextWeaponStrafeT = curTime + math.Rand(selfData.Weapon_StrafeCooldown.a, selfData.Weapon_StrafeCooldown.b)
 						end
-					else -- None VJ Base weapons
+					else -- Non-VJ weapons
 						self:SetTurnTarget("Enemy")
 						selfData.WeaponAttackState = VJ.WEP_ATTACK_STATE_FIRE_STAND
 						self:OnWeaponAttack()

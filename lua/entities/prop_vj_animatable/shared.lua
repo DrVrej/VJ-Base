@@ -7,8 +7,5 @@ ENT.Category = "VJ Base"
 ENT.AutomaticFrameAdvance = true
 
 if CLIENT then
-	local metaEntity = FindMetaTable("Entity")
-	local fDrawModel = metaEntity.DrawModel
-	function ENT:Draw() fDrawModel(self) end
-	function ENT:DrawTranslucent() self:Draw() end
+	VJ.AddKillIcon("prop_vj_animatable", ENT.PrintName, VJ.KILLICON_TYPE_ALIAS, "prop_physics")
 end

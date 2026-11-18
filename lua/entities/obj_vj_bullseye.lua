@@ -71,15 +71,9 @@ end
 
 function ENT:Use(activator)
 	if !activator:IsPlayer() or self.ForceEntAsEnemy or !self.CanToggle then return end
-	if !self.Active then
-		self:SetActive(true)
-		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.bullseye.print.activated")
-		self:EmitSound(sdActivated, 70)
-	else
-		self:SetActive(false)
-		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.bullseye.print.deactivated")
-		self:EmitSound(sdDeactivated, 70)
-	end
+	self:SetActive(!self.Active)
+	activator:PrintMessage(HUD_PRINTTALK, self.Active and "#vjbase.bullseye.print.activated" or "#vjbase.bullseye.print.deactivated")
+	self:EmitSound(self.Active and sdActivated or sdDeactivated, 70)
 end
 
 function ENT:OnTakeDamage(dmginfo)

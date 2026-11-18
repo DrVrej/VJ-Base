@@ -34,7 +34,6 @@ function ENT:Initialize()
 	self:SetModel("models/items/ar2_grenade.mdl")
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
-	self:SetSolid(SOLID_VPHYSICS)
 	self:SetColor(VJ.COLOR_RED)
 	self:SetUseType(SIMPLE_USE)
 	self:AddEFlags(EFL_DONTBLOCKLOS)
@@ -110,13 +109,13 @@ function ENT:PhysicsCollide(data, physobj)
 		dmg:SetAttacker(IsValid(owner) and owner or self)
 		dmg:SetInflictor(self)
 		dmg:SetDamagePosition(data.HitPos)
-		hitEnt:TakeDamageInfo(dmg, self)
+		hitEnt:TakeDamageInfo(dmg)
 		//hitEnt:Ignite(1)
 	end
 end
 
 function ENT:OnTakeDamage(dmginfo)
-	self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() * 0.1)
+	self:TakePhysicsDamage(dmginfo)
 end
 
 function ENT:OnRemove()

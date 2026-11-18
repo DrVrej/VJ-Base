@@ -27,10 +27,6 @@ if CLIENT then
 	ENT.NextActivationCheck = 0
 	ENT.CreatedParticles = false
 	
-	function ENT:Draw()
-		self:DrawModel()
-	end
-	
 	function ENT:Think()
 		local curTime = CurTime()
 		if curTime > self.NextActivationCheck then
@@ -68,7 +64,6 @@ if !SERVER then return end
 
 function ENT:Initialize()
 	self:SetModel("models/vj_base/fireplace.mdl")
-	//self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_NONE)
 	self:SetSolid(SOLID_VPHYSICS)
 	self:SetUseType(SIMPLE_USE)

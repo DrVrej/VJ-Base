@@ -96,7 +96,7 @@ function ENT:OnBounce(data, phys)
 	if target then
 		local norm = ((target:GetPos() + target:OBBCenter()) - myPos):GetNormalized()
 		if self:GetForward():Dot(norm) < 0.75 then -- Lowered the visual range from 0.95, too accurate
-			phys:SetVelocity(norm * math.max(phys:GetVelocity():Length(), math.max(data.OurOldVelocity:Length(), data.Speed)))
+			phys:SetVelocity(norm * math.max(phys:GetVelocity():Length(), data.OurOldVelocity:Length(), data.Speed))
 		end
 	end
 end
@@ -115,7 +115,7 @@ function ENT:OnCollision(data, phys)
 			dmgInfo:SetInflictor(self)
 			dmgInfo:SetDamagePosition(data.HitPos)
 			VJ.DamageSpecialEnts(owner, ent, dmgInfo)
-			ent:TakeDamageInfo(dmgInfo, self)
+			ent:TakeDamageInfo(dmgInfo)
 		end
 	else
 		VJ.EmitSound(ent, "NPC_CombineBall.KillImpact")
@@ -126,7 +126,7 @@ function ENT:OnCollision(data, phys)
 		dmgInfo:SetInflictor(self)
 		dmgInfo:SetDamagePosition(data.HitPos)
 		VJ.DamageSpecialEnts(self, ent, dmgInfo)
-		ent:TakeDamageInfo(dmgInfo, self)
+		ent:TakeDamageInfo(dmgInfo)
 	end
 
 	if ent.VJ_ID_Living then return end

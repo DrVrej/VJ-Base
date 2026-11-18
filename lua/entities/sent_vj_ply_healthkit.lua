@@ -35,7 +35,6 @@ function ENT:Initialize()
 	self:SetModel("models/items/healthkit.mdl")
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
-	self:SetSolid(SOLID_VPHYSICS)
 	self:SetUseType(SIMPLE_USE)
 	self:AddEFlags(EFL_DONTBLOCKLOS)
 	
@@ -55,5 +54,5 @@ function ENT:Use(activator)
 end
 
 function ENT:OnTakeDamage(dmginfo)
-	self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() * 0.1)
+	self:TakePhysicsDamage(dmginfo)
 end

@@ -60,11 +60,8 @@ function ENT:Initialize()
 	end
 	
 	-- Used to correct the blood data (Ex: Eating system uses this!)
-	if self.BloodData then
-		self.BloodData.Decal = self.CollisionDecal
-	else
-		self.BloodData = {Decal = self.CollisionDecal}
-	end
+	self.BloodData = self.BloodData or {}
+	self.BloodData.Decal = self.CollisionDecal
 	
 	if vj_npc_snd_gib:GetInt() == 0 then self.CollisionSound = false end
 	if vj_npc_gib_vfx:GetInt() == 0 then self.CollisionDecal = false end
@@ -102,5 +99,5 @@ function ENT:PhysicsCollide(data, phys)
 end
 
 function ENT:OnTakeDamage(dmginfo)
-	self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() * 0.1)
+	self:TakePhysicsDamage(dmginfo)
 end

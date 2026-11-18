@@ -238,7 +238,7 @@ function ENT:DealDamage(data, phys)
 		dmgInfo:SetInflictor(self)
 		dmgInfo:SetDamagePosition(dmgPos)
 		VJ.DamageSpecialEnts(attacker, dataEnt, dmgInfo)
-		dataEnt:TakeDamageInfo(dmgInfo, self)
+		dataEnt:TakeDamageInfo(dmgInfo)
 	end
 	
 	self:OnDealDamage(data, phys, hitEnts)

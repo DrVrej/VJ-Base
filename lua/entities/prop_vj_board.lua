@@ -21,10 +21,6 @@ scripted_ents.Alias("sent_vj_board", "prop_vj_board") -- !! Backwards Compatibil
 
 if CLIENT then
 	VJ.AddKillIcon("prop_vj_board", ENT.PrintName, VJ.KILLICON_TYPE_ALIAS, "prop_physics")
-	
-	function ENT:Draw()
-		self:DrawModel()
-	end
 end
 --------------------------------------------------------------------------------
 if !SERVER then return end
@@ -35,7 +31,6 @@ function ENT:Initialize()
 	self:SetModel("models/props_debris/wood_board05a.mdl")
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
-	self:SetSolid(SOLID_VPHYSICS)
 	self:SetUseType(SIMPLE_USE)
 	self:SetMaxHealth(self.StartHealth)
 	self:SetHealth(self.StartHealth)
@@ -53,7 +48,7 @@ function ENT:Use(activator)
 end
 
 function ENT:OnTakeDamage(dmginfo)
-	self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() * 0.05)
+	self:TakePhysicsDamage(dmginfo)
 	self:SetHealth(self:Health() - dmginfo:GetDamage())
 	if self:Health() <= 0 then
 		local effectData = EffectData()
@@ -61,4 +56,5 @@ function ENT:OnTakeDamage(dmginfo)
 		util.Effect("VJ_Dust_Small", effectData)
 		self:Remove()
 	end
+	return dmginfo:GetDamage()
 end

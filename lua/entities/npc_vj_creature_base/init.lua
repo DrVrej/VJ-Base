@@ -2030,7 +2030,7 @@ function ENT:ExecuteMeleeAttack(isPropAttack)
 						dmgInfo:SetInflictor(self)
 						dmgInfo:SetAttacker(self)
 						VJ.DamageSpecialEnts(self, ent, dmgInfo)
-						ent:TakeDamageInfo(dmgInfo, self)
+						ent:TakeDamageInfo(dmgInfo)
 					end
 					-- Apply bleeding damage
 					if selfData.MeleeAttackBleedEnemy and ent.VJ_ID_Living and (!ent.VJ_ID_Boss or selfData.VJ_ID_Boss) and math.random(1, selfData.MeleeAttackBleedEnemyChance) == 1 then
@@ -2197,7 +2197,7 @@ function ENT:ExecuteLeapAttack()
 					dmgInfo:SetDamageType(selfData.LeapAttackDamageType)
 					dmgInfo:SetAttacker(self)
 					if ent.VJ_ID_Living then dmgInfo:SetDamageForce(self:GetForward() * ((dmgInfo:GetDamage() + 100) * 70)) end
-					ent:TakeDamageInfo(dmgInfo, self)
+					ent:TakeDamageInfo(dmgInfo)
 				end
 				if ent:IsPlayer() then
 					ent:ViewPunch(Angle(math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount, math.random(-1, 1) * dmgAmount))
