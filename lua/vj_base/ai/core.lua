@@ -1860,7 +1860,7 @@ function ENT:MaintainMedicBehavior()
 			
 			timer.Create("medic_heal" .. self:EntIndex(), timeUntilHeal, 1, function()
 				if IsValid(self) and self:Alive() then
-					if !IsValid(ally) then -- Ally doesn't exist anymore, reset
+					if !IsValid(ally) or !ally:Alive() then -- Ally doesn't exist anymore or has died, reset
 						self:ResetMedicBehavior()
 					else -- If it exists...
 						if self:CheckRelationship(ally) != D_LI then self:ResetMedicBehavior() return end -- I no longer like them, stop healing them!
