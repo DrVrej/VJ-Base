@@ -203,7 +203,7 @@ end
 
 --------------------------------------=[ Error Checks ]=--------------------------------------
 	---------= Outdated Game =---------
-if SERVER and (!isfunction(FindMetaTable("Entity").SetSurroundingBoundsType) or !isfunction(FindMetaTable("NPC").GetMoveDelay)) then
+if SERVER and (!isfunction(FindMetaTable("Entity").CanBuildRoute) or !isfunction(FindMetaTable("NPC").GetMoveDelay)) then
 	timer.Simple(1, function()
 		if !VJBASE_ERROR_OUTDATED_GAME then
 			VJBASE_ERROR_OUTDATED_GAME = true

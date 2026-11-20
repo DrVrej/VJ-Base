@@ -185,7 +185,8 @@ function SWEP:OnDeploy() end
 -- UNCOMMENT TO USE
 -- function SWEP:OnThink() end
 
-function SWEP:OnGetBulletPos() end -- Return a position to override the bullet spawn position
+-- UNCOMMENT TO USE
+-- function SWEP:OnGetBulletPos() end -- Return a position to override the bullet spawn position
 
 function SWEP:OnDrawWorldModel() return true end -- Return false to not draw the world model | This is client side only!
 
@@ -530,9 +531,12 @@ function SWEP:GetBulletPos()
 	local selfData = fGetTable(self)
 	
 	-- Custom Position
-	local customPos = selfData.OnGetBulletPos(self)
-	if customPos then
-		return customPos
+	local fOnGetBulletPos = selfData.OnGetBulletPos
+	if fOnGetBulletPos then
+		local customPos = fOnGetBulletPos(self)
+		if customPos then
+			return customPos
+		end
 	end
 	
 	-- Attachment
@@ -1080,8 +1084,8 @@ end
 
 if CLIENT then
 	function SWEP:DrawWorldModel()
-		local drawMdl = self:OnDrawWorldModel() and self:GetDrawWorldModel()
 		local selfData = fGetTable(self)
+		local drawMdl = selfData.OnDrawWorldModel(self) and self:GetDrawWorldModel()
 		local offsetData = selfData.WorldModelOffsetParams
 		if offsetData.Enabled then
 			local owner = fGetOwner(self)

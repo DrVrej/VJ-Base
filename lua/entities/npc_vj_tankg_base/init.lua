@@ -99,17 +99,18 @@ Called when the tank is firing its shell
 --]]
 function ENT:Tank_OnFireShell(status, statusData) end
 
-function ENT:Tank_UpdateIdleParticles()
-	-- Example:
-	//local spawnPos = self:GetPos() + self:GetForward() * -100 + self:GetUp() * 40
-	//local effectData = EffectData()
-	//effectData:SetScale(1)
-	//effectData:SetEntity(self)
-	//effectData:SetOrigin(spawnPos + self:GetRight() * 20)
-	//util.Effect("VJ_VehicleExhaust", effectData, true, true)
-	//effectData:SetOrigin(spawnPos + self:GetRight() * -20)
-	//util.Effect("VJ_VehicleExhaust", effectData, true, true)
-end
+-- UNCOMMENT TO USE
+-- function ENT:Tank_UpdateIdleParticles()
+-- 	-- Example:
+-- 	local spawnPos = self:GetPos() + self:GetForward() * -100 + self:GetUp() * 40
+-- 	local effectData = EffectData()
+-- 	effectData:SetScale(1)
+-- 	effectData:SetEntity(self)
+-- 	effectData:SetOrigin(spawnPos + self:GetRight() * 20)
+-- 	util.Effect("VJ_VehicleExhaust", effectData, true, true)
+-- 	effectData:SetOrigin(spawnPos + self:GetRight() * -20)
+-- 	util.Effect("VJ_VehicleExhaust", effectData, true, true)
+-- end
 
 ------------------------------------------------------------------------------------------------------------------------------------------------
 --------------------------------------=[ ///// BASE IMPLEMENTATION BELOW | Override with caution! \\\\\ ]=--------------------------------------
@@ -144,9 +145,10 @@ function ENT:Init()
 end
 
 function ENT:OnThink()
-	if self:Tank_OnThink() != true and vj_npc_reduce_vfx:GetInt() == 0 and self.Tank_NextIdleParticles < CurTime() then
-		self:Tank_UpdateIdleParticles()
-		self.Tank_NextIdleParticles = CurTime() + 0.1
+	local selfData = fGetTable(self)
+	if selfData.Tank_OnThink(self) != true and vj_npc_reduce_vfx:GetInt() == 0 and selfData.Tank_NextIdleParticles < CurTime() then
+		local fUpdateIdleParticle = selfData.Tank_UpdateIdleParticles; if fUpdateIdleParticle then fUpdateIdleParticle(self) end
+		selfData.Tank_NextIdleParticles = CurTime() + 0.1
 	end
 end
 
@@ -177,8 +179,8 @@ function ENT:OnThinkActive()
 			-- If the enemy is within the barrel firing limit AND its height is is reachable AND the enemy is not extremely close, then FIRE!
 			if math.abs(angYaw) < selfData.Tank_YawLimit and math.abs(angPitch) < selfData.Tank_PitchLimit and selfData.EnemyData.Distance > selfData.Tank_Shell_FireMin then
 				selfData.Tank_FacingTarget = true
-				if self.Tank_HasShellAttack and self:Visible(ene) then
-					self:Tank_PrepareShell()
+				if selfData.Tank_HasShellAttack and self:Visible(ene) then
+					selfData.Tank_PrepareShell(self)
 				end
 			-- Turn towards the enemy
 			elseif math.abs(angYaw) > selfData.Tank_YawLimit then
@@ -194,7 +196,7 @@ function ENT:OnThinkActive()
 		end
 	end
 	
-	if turning then self:Tank_PlaySoundSystem("Movement") else VJ.STOPSOUND(selfData.CurrentTankMovingSound) end
+	if turning then selfData.Tank_PlaySoundSystem(self, "Movement") else VJ.STOPSOUND(selfData.CurrentTankMovingSound) end
 end
 
 function ENT:SelectSchedule()
@@ -202,8 +204,8 @@ function ENT:SelectSchedule()
 	if selfData.Dead then return end
 	
 	local eneValid = IsValid(self:GetEnemy())
-	self:PlayIdleSound(eneValid)
-	self:MaintainIdleBehavior()
+	selfData.PlayIdleSound(self, eneValid)
+	selfData.MaintainIdleBehavior(self)
 	
 	if eneValid then
 		-- Can always fire when being controlled
@@ -223,21 +225,22 @@ function ENT:SelectSchedule()
 end
 
 function ENT:Tank_PrepareShell()
-	if (CurTime() < self.Tank_Shell_NextFireT) or (self:GetParent().VJ_Controlled and !self:GetParent().VJ_Controller:GetPlayer():KeyDown(IN_ATTACK2)) then return end
+	local selfData = fGetTable(self)
+	if (CurTime() < selfData.Tank_Shell_NextFireT) or (self:GetParent().VJ_Controlled and !self:GetParent().VJ_Controller:GetPlayer():KeyDown(IN_ATTACK2)) then return end
 	
 	-- If it's already ready, then just fire it!
-	if self.Tank_Shell_Status == TANK_SHELL_STATUS_READY then
-		self:Tank_FireShell()
+	if selfData.Tank_Shell_Status == TANK_SHELL_STATUS_READY then
+		selfData.Tank_FireShell(self)
 	-- Otherwise reload and fire
-	elseif self.Tank_Shell_Status == TANK_SHELL_STATUS_EMPTY then
-		self:Tank_OnPrepareShell()
-		self:Tank_PlaySoundSystem("ShellReload")
-		self.Tank_Shell_Status = TANK_SHELL_STATUS_RELOADING
+	elseif selfData.Tank_Shell_Status == TANK_SHELL_STATUS_EMPTY then
+		selfData.Tank_OnPrepareShell(self)
+		selfData.Tank_PlaySoundSystem(self, "ShellReload")
+		selfData.Tank_Shell_Status = TANK_SHELL_STATUS_RELOADING
 		local ene = self:GetEnemy()
 		if IsValid(ene) and (!ene:IsNPC() or (ene:IsNPC() and ene:GetEnemy() == self:GetParent())) then -- Don't run away when you don't even know that the tank exists!
-			sound.EmitHint(SOUND_DANGER, ene:GetPos() + ene:OBBCenter(), 80, self.Tank_Shell_TimeUntilFire, self)
+			sound.EmitHint(SOUND_DANGER, ene:GetPos() + ene:OBBCenter(), 80, selfData.Tank_Shell_TimeUntilFire, self)
 		end
-		timer.Create("timer_shell_attack" .. self:EntIndex(), self.Tank_Shell_TimeUntilFire, 1, function()
+		timer.Create("timer_shell_attack" .. self:EntIndex(), selfData.Tank_Shell_TimeUntilFire, 1, function()
 			self.Tank_Shell_Status = TANK_SHELL_STATUS_READY
 			self:Tank_FireShell()
 		end)
@@ -249,12 +252,12 @@ function ENT:Tank_FireShell()
 	local ene = self:GetEnemy()
 	if !VJ_CVAR_AI_ENABLED or selfData.Dead or !selfData.Tank_FacingTarget or !IsValid(ene) then return end
 	if self:Visible(ene) then
-		self:Tank_PlaySoundSystem("ShellFire")
+		selfData.Tank_PlaySoundSystem(self, "ShellFire")
 		
-		if self:Tank_OnFireShell("Init") != true then
+		if selfData.Tank_OnFireShell(self, "Init") != true then
 			local shell = ents.Create(selfData.Tank_Shell_Entity)
 			local spawnPos;
-			local onCreateCall = self:Tank_OnFireShell("OnCreate", shell)
+			local onCreateCall = selfData.Tank_OnFireShell(self, "OnCreate", shell)
 			if isvector(onCreateCall) then
 				spawnPos = onCreateCall
 			else
@@ -273,14 +276,14 @@ function ENT:Tank_FireShell()
 			shell:Spawn()
 			shell:Activate()
 			shell:SetOwner(self)
-			if self:Tank_OnFireShell("OnSpawn", shell) != true then
+			if selfData.Tank_OnFireShell(self, "OnSpawn", shell) != true then
 				local phys = shell:GetPhysicsObject()
 				if IsValid(phys) then
 					phys:SetVelocity(calculatedVel)
 				end
 			end
 		end
-		if self:Tank_OnFireShell("Effects") != true then
+		if selfData.Tank_OnFireShell(self, "Effects") != true then
 			local myAng = self:GetAngles()
 			local myAngForward = myAng + Angle(0, selfData.Tank_AngleOffset, 0)
 			local muzzleFlashPos = self:LocalToWorld(selfData.Tank_Shell_MuzzleFlashPos)

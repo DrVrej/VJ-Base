@@ -12,8 +12,8 @@ include("shared.lua")
 --------------------------------------=[ MAIN ]=--------------------------------------
 ENT.Model = false -- Model(s) to spawn with | Picks a random one if it's a table
 ENT.CanChatMessage = true -- Is it allowed to post in a player's chat? | Example: "Blank no longer likes you."
-
-	---------= Health =---------
+ENT.HullType = HULL_HUMAN -- List of Hull types: https://wiki.facepunch.com/gmod/Enums/HULL
+ENT.EntitiesToNoCollide = false -- Set to a table of entity class names for it to not collide with otherwise leave it to false
 ENT.StartHealth = 50
 ENT.HealthRegenParams = {
 	Enabled = false, -- Can it regenerate its health?
@@ -21,12 +21,6 @@ ENT.HealthRegenParams = {
 	Delay = VJ.SET(2, 4), -- Delay between each regeneration
 	ResetOnDmg = true, -- Should the delay reset when it receives damage?
 }
-
-	---------= Collision =---------
-ENT.HullType = HULL_HUMAN -- List of Hull types: https://wiki.facepunch.com/gmod/Enums/HULL
-ENT.EntitiesToNoCollide = false -- Set to a table of entity class names for it to not collide with otherwise leave it to false
-
-	---------= NPC Controller =---------
 ENT.ControllerParams = {
 	CameraMode = 1, -- Sets the default camera mode | 1 = Third Person, 2 = First Person
 	ThirdP_Offset = Vector(), -- The offset for the controller when the camera is in third person
@@ -230,6 +224,13 @@ ENT.DeathAnimationTime = false -- How long should the death animation play? | fa
 ENT.DeathAnimationChance = 1 -- Put 1 if you want it to play the animation all the time
 ENT.DeathAnimationDecreaseLengthAmount = 0 -- This will decrease the time until it turns into a corpse
 
+	---------= Dismemberment / Gib =---------
+ENT.CanGib = true -- Can it dismember? | Makes "CreateGibEntity" fail and overrides "CanGibOnDeath" to false
+ENT.CanGibOnDeath = true -- Can it dismember on death?
+ENT.GibOnDeathFilter = true -- Should it only gib and call "self:HandleGibOnDeath" when it's killed by a specific damage types? | false = Call "self:HandleGibOnDeath" from any damage type
+ENT.HasGibOnDeathSounds = true -- Does it have gib sounds? | Mostly used for the settings menu
+ENT.HasGibOnDeathEffects = true -- Does it spawn particles on death or when it gibs? | Mostly used for the settings menu
+
 	---------= Corpse =---------
 ENT.HasDeathCorpse = true -- Should a corpse spawn when it's killed?
 ENT.DeathCorpseEntityClass = false -- Corpse's class | false = Let the base automatically detect the class
@@ -238,13 +239,6 @@ ENT.DeathCorpseCollisionType = COLLISION_GROUP_DEBRIS -- Collision type for the 
 ENT.DeathCorpseFade = false -- Should the corpse fade after the given amount of seconds? | false = Don't fade | number = Fade out time
 ENT.DeathCorpseSetBoneAngles = true -- This can be used to stop the corpse glitching or flying on death
 ENT.DeathCorpseApplyForce = true -- Should the force of the damage be applied to the corpse?
-
-	---------= Dismemberment / Gib =---------
-ENT.CanGib = true -- Can it dismember? | Makes "CreateGibEntity" fail and overrides "CanGibOnDeath" to false
-ENT.CanGibOnDeath = true -- Can it dismember on death?
-ENT.GibOnDeathFilter = true -- Should it only gib and call "self:HandleGibOnDeath" when it's killed by a specific damage types? | false = Call "self:HandleGibOnDeath" from any damage type
-ENT.HasGibOnDeathSounds = true -- Does it have gib sounds? | Mostly used for the settings menu
-ENT.HasGibOnDeathEffects = true -- Does it spawn particles on death or when it gibs? | Mostly used for the settings menu
 
 	---------= Loot Drop =---------
 ENT.DropWeaponOnDeath = true -- Should it drop its weapon on death?
@@ -712,7 +706,7 @@ function ENT:OnResetEnemy() end
 		1. isAttacking [boolean] : Whether or not the base has detected that performing an attacking
 		2. enemy [entity] : Current active enemy
 -----------------------------------------------------------]]
-function ENT:OnThinkAttack(isAttacking, enemy) end
+-- function ENT:OnThinkAttack(isAttacking, enemy) end
 
 --[[
 Called when melee attack is triggered

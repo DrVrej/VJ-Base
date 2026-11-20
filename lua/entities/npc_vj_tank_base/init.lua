@@ -115,29 +115,31 @@ Called when the tank is about to spawn death soldier model, death effects, and d
 --]]
 function ENT:Tank_OnDeathCorpse(dmginfo, hitgroup, corpse, status, statusData) end
 
-function ENT:Tank_UpdateIdleParticles()
-	-- Example:
-	//local spawnPos = self:GetPos() + self:GetForward() * -100 + self:GetUp() * 40
-	//local effectData = EffectData()
-	//effectData:SetScale(1)
-	//effectData:SetEntity(self)
-	//effectData:SetOrigin(spawnPos + self:GetRight() * 20)
-	//util.Effect("VJ_VehicleExhaust", effectData, true, true)
-	//effectData:SetOrigin(spawnPos + self:GetRight() * -20)
-	//util.Effect("VJ_VehicleExhaust", effectData, true, true)
-end
+-- UNCOMMENT TO USE
+-- function ENT:Tank_UpdateIdleParticles()
+-- 	-- Example:
+-- 	local spawnPos = self:GetPos() + self:GetForward() * -100 + self:GetUp() * 40
+-- 	local effectData = EffectData()
+-- 	effectData:SetScale(1)
+-- 	effectData:SetEntity(self)
+-- 	effectData:SetOrigin(spawnPos + self:GetRight() * 20)
+-- 	util.Effect("VJ_VehicleExhaust", effectData, true, true)
+-- 	effectData:SetOrigin(spawnPos + self:GetRight() * -20)
+-- 	util.Effect("VJ_VehicleExhaust", effectData, true, true)
+-- end
 
-function ENT:Tank_UpdateMoveParticles()
-	-- Example:
-	//local spawnPos = self:GetPos() + self:GetForward() * -100
-	//local effectData = EffectData()
-	//effectData:SetScale(1)
-	//effectData:SetEntity(self)
-	//effectData:SetOrigin(spawnPos + self:GetRight() * 58)
-	//util.Effect("VJ_VehicleMove", effectData, true, true)
-	//effectData:SetOrigin(spawnPos + self:GetRight() * -58)
-	//util.Effect("VJ_VehicleMove", effectData, true, true)
-end
+-- UNCOMMENT TO USE
+-- function ENT:Tank_UpdateMoveParticles()
+-- 	-- Example:
+-- 	local spawnPos = self:GetPos() + self:GetForward() * -100
+-- 	local effectData = EffectData()
+-- 	effectData:SetScale(1)
+-- 	effectData:SetEntity(self)
+-- 	effectData:SetOrigin(spawnPos + self:GetRight() * 58)
+-- 	util.Effect("VJ_VehicleMove", effectData, true, true)
+-- 	effectData:SetOrigin(spawnPos + self:GetRight() * -58)
+-- 	util.Effect("VJ_VehicleMove", effectData, true, true)
+-- end
 
 ------------------------------------------------------------------------------------------------------------------------------------------------
 --------------------------------------=[ ///// BASE IMPLEMENTATION BELOW | Override with caution! \\\\\ ]=--------------------------------------
@@ -218,11 +220,11 @@ function ENT:Tank_RunOver(ent)
 end
 
 function ENT:OnThink()
-	if self:Tank_OnThink() != true and vj_npc_reduce_vfx:GetInt() == 0 then
-		local selfData = fGetTable(self)
+	local selfData = fGetTable(self)
+	if selfData.Tank_OnThink(self) != true and vj_npc_reduce_vfx:GetInt() == 0 then
 		local curTime = CurTime()
 		if curTime > selfData.Tank_NextIdleParticles then
-			self:Tank_UpdateIdleParticles()
+			local fUpdateIdleParticle = selfData.Tank_UpdateIdleParticles; if fUpdateIdleParticle then fUpdateIdleParticle(self) end
 			selfData.Tank_NextIdleParticles = curTime + 0.1
 		end
 	
@@ -231,7 +233,7 @@ function ENT:OnThink()
 			selfData.Spark1 = spark
 			spark:SetKeyValue("Magnitude", "5")
 			spark:SetKeyValue("TrailLength", "2")
-			self:GetNearDeathSparkPositions()
+			selfData.GetNearDeathSparkPositions(self)
 			spark:Spawn()
 			spark:Activate()
 			spark:Fire("SparkOnce")
@@ -340,12 +342,12 @@ function ENT:OnThinkActive()
 				if hasMoved or phys:GetVelocity():Length() > 10 then
 					hasMoved = true
 					selfData.Tank_IsMoving = true
-					self:Tank_PlaySoundSystem("Movement")
-					self:Tank_UpdateMoveParticles()
+					selfData.Tank_PlaySoundSystem(self, "Movement")
+					local fUpdateMoveParticles = selfData.Tank_UpdateMoveParticles; if fUpdateMoveParticles then fUpdateMoveParticles(self) end
 					local curTime = CurTime()
 					if vj_npc_melee:GetInt() != 0 and selfData.Tank_NextRunOver < curTime then
 						for _, v in ipairs(ents.FindInSphere(myPos, 100)) do
-							self:Tank_RunOver(v)
+							selfData.Tank_RunOver(self, v)
 						end
 						selfData.Tank_NextRunOver = curTime + 0.2
 					end
@@ -366,8 +368,8 @@ function ENT:SelectSchedule()
 	if selfData.Dead then return end
 
 	local eneValid = IsValid(self:GetEnemy())
-	self:PlayIdleSound(eneValid)
-	self:MaintainIdleBehavior()
+	selfData.PlayIdleSound(self, eneValid)
+	selfData.MaintainIdleBehavior(self)
 	
 	if eneValid then
 		if selfData.VJ_Controlled then
