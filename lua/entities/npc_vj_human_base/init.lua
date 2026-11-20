@@ -2687,21 +2687,24 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 	-- Handle possible destinations:
 		-- Enemy not valid --> Best position away from the NPC and allies
 		-- Enemy valid AND Enemy visible --> Enemy's position
-		-- Enemy valid AND Enemy not visible AND last seen position is visible --> Enemy's last visible position
-		-- Enemy valid AND Enemy not visible AND last seen position is not visible --> Cancel attack
-		-- Enemy valid AND Enemy not visible AND last seen position is not visible AND grenade is live throw back --> Best position away from the NPC and allies
+		-- Enemy valid AND Enemy hidden --> Enemy's last visible position, only if:
+			-- 1. Position is within grenade attack distance limits
+			-- 2. Position is visible
+			-- 3. Enemy remains within "GrenadeAttackMaxDistance" of that position
+		-- Enemy valid AND Enemy hidden AND Last seen position hidden
+			--> Normal attack --> Cancel attack
+			--> Live grenade throwback --> Best position away from the NPC and allies
 	if IsValid(ene) then
-		-- If enemy is visible then face them!
 		if eneData.Visible then
-			landDir = "Enemy" -- Do NOT face random pos, even if "self.GrenadeAttackAnimationFaceEnemy" is disabled!
-		else -- We have a hidden enemy...
+			landDir = "Enemy" -- Face enemy, even if "self.GrenadeAttackAnimationFaceEnemy" is disabled!
+		else
 			-- Attempt to flush the enemy out of hiding
-			if self:VisibleVec(eneData.VisiblePos) and fGetPos(ene):Distance(eneData.VisiblePos) <= self.GrenadeAttackMaxDistance then // self.GrenadeAttackMaxDistance
-				landDir = "EnemyLastVis" -- We are going to face flush position, do NOT face random pos!
-			-- If can't flush the enemy, then face random open position ONLY if we are given a live entity, otherwise...
-			-- If live entity is NOT given and it's allowed to continue, it will cause the NPC to throw a grenade when both the enemy and its flush position are hidden!
+			local flushDist = fGetPos(self):Distance(eneData.VisiblePos)
+			if flushDist > self.GrenadeAttackMinDistance and flushDist < self.GrenadeAttackMaxDistance and self:VisibleVec(eneData.VisiblePos) and fGetPos(ene):Distance(eneData.VisiblePos) <= self.GrenadeAttackMaxDistance then // self.GrenadeAttackMaxDistance
+				landDir = "EnemyLastVis" -- Face flush position
+			-- Can't flush the enemy? Then face an open position ONLY if we are given a live entity, otherwise it will cause the NPC to throw a grenade when both the enemy and its flush position are hidden!
 			elseif !isLiveEnt then
-				return false
+				return false -- Cancel attack
 			end
 		end
 	end
