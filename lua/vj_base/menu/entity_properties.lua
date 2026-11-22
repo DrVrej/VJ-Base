@@ -63,15 +63,13 @@ properties.Add("vj_pr_npc_guard", {
 			if ent.IsGuard then
 				ply:ChatPrint("Disabled Guarding for " .. ent:GetName() .. ".")
 				ent.IsGuard = false
-				ent.GuardData.Position = false
-				ent.GuardData.Direction = false
 			else
 				ply:ChatPrint("Enabled Guarding for " .. ent:GetName() .. ".")
 				ent:StopMoving()
 				ent.IsGuard = true
-				ent.GuardData.Position = false
-				ent.GuardData.Direction = false
 			end
+			ent.GuardData.Position = false
+			ent.GuardData.Direction = false
 		else
 			ply:ChatPrint("Unable to change setting for " .. ent:GetName() .. ".")
 		end

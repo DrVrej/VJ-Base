@@ -2111,7 +2111,7 @@ function ENT:DoChangeWeapon(wep, invSwitch)
 			self.WeaponInventoryStatus = VJ.WEP_INVENTORY_PRIMARY
 			-- If this is completely new weapon, then set the weapon inventory's primary to this weapon
 			local curPrimary = self.WeaponInventory.Primary
-			if curWep != self.WeaponInventory.Primary then
+			if curWep != curPrimary then
 				if IsValid(curPrimary) then curPrimary:Remove() end -- Remove the old primary weapon
 				self.WeaponInventory.Primary = curWep
 			end

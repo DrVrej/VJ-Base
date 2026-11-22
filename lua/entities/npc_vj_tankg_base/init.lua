@@ -256,11 +256,8 @@ function ENT:Tank_FireShell()
 		
 		if selfData.Tank_OnFireShell(self, "Init") != true then
 			local shell = ents.Create(selfData.Tank_Shell_Entity)
-			local spawnPos;
-			local onCreateCall = selfData.Tank_OnFireShell(self, "OnCreate", shell)
-			if isvector(onCreateCall) then
-				spawnPos = onCreateCall
-			else
+			local spawnPos = selfData.Tank_OnFireShell(self, "OnCreate", shell)
+			if !isvector(spawnPos) then
 				spawnPos = self:LocalToWorld(selfData.Tank_Shell_SpawnPos)
 			end
 			local calculatedVel;

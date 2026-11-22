@@ -76,9 +76,7 @@ if CLIENT then
 		panel:AddItem(wepText)
 	end
 
-	function TOOL.BuildCPanel(panel)
-		ControlPanel(panel)
-	end
+	TOOL.BuildCPanel = ControlPanel
 end
 
 -- For saves and duplications

@@ -169,7 +169,7 @@ function ENT:CalcView(ply, origin, angles, fov)
 		end,
 	})
 	//ParticleEffect("vj_impact_dirty", tr.HitPos, Angle(), npc)
-	net.Start("vj_controller_sv")
+	net.Start("vj_sv_controller")
 		net.WriteVector(tr.HitPos)
 	net.SendToServer()
 	

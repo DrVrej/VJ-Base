@@ -431,20 +431,18 @@ function SWEP:Equip(newOwner)
 		local replacementWep = self.ReplacementWeapon
 		if replacementWep then
 			if isstring(replacementWep) then replacementWep = {replacementWep} end
+			-- Go in order until a weapon is valid
 			for _, weapon in ipairs(replacementWep) do
-				-- Go in order until a weapon is valid
-				if IsValid(newOwner:Give(weapon)) then
-					self:Remove()
-					return
-				elseif newOwner:HasWeapon(weapon) then -- Failed to give weapon, check if it already has it!
+				if !IsValid(newOwner:Give(weapon)) then -- Failed to give weapon, check if it already has it!
+					if !newOwner:HasWeapon(weapon) then continue end
 					local actualWeapon = newOwner:GetWeapon(weapon)
 					local ammoType = actualWeapon:GetPrimaryAmmoType()
 					if ammoType != -1 then -- Give a clip of the replacement weapon
 						newOwner:GiveAmmo(actualWeapon:GetMaxClip1(), ammoType)
 					end
-					self:Remove()
-					return
 				end
+				self:Remove()
+				return
 			end
 		end
 		if !self.IsMeleeWeapon then
@@ -858,8 +856,7 @@ function SWEP:PrimaryAttack()
 		if anim then
 			owner:SetAnimation(PLAYER_ATTACK1)
 			self:SendWeaponAnim(anim)
-			local delay = curTime + VJ.AnimDuration(owner:GetViewModel(), anim)
-			selfData.PLY_AnimLockTime = delay
+			selfData.PLY_AnimLockTime = curTime + VJ.AnimDuration(owner:GetViewModel(), anim)
 		end
 	end
 	selfData.OnPrimaryAttack(self, "PostFire")

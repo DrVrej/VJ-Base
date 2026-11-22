@@ -17,7 +17,7 @@ local fGetClass = metaEntity.GetClass
 
 local entInfos = {
 	-- Resistance
-	npc_citizen = {classNPC = "CLASS_PLAYER_ALLY", func = function(ent)
+	npc_citizen = {relClass = "CLASS_PLAYER_ALLY", func = function(ent)
 		if ent:HasSpawnFlags(SF_CITIZEN_MEDIC) then -- Medic rebels
 			ent.IsMedic = true
 		end
@@ -25,42 +25,42 @@ local entInfos = {
 			return "CLASS_COMBINE"
 		end
 	end},
-	npc_vortigaunt = {classNPC = "CLASS_PLAYER_ALLY"},
-	npc_monk = {classNPC = "CLASS_PLAYER_ALLY"},
-	npc_dog = {classNPC = "CLASS_PLAYER_ALLY"},
-	npc_barney = {classNPC = "CLASS_PLAYER_ALLY"},
-	npc_alyx = {classNPC = "CLASS_PLAYER_ALLY"},
-	npc_magnusson = {classNPC = "CLASS_PLAYER_ALLY", func = function(ent) ent.VJ_ID_Civilian = true end},
-	npc_mossman = {classNPC = "CLASS_PLAYER_ALLY", func = function(ent) ent.VJ_ID_Civilian = true end},
-	npc_kleiner = {classNPC = "CLASS_PLAYER_ALLY", func = function(ent) ent.VJ_ID_Civilian = true end},
-	npc_fisherman = {classNPC = "CLASS_PLAYER_ALLY", func = function(ent) ent.VJ_ID_Civilian = true end},
-	npc_eli = {classNPC = "CLASS_PLAYER_ALLY", func = function(ent) ent.VJ_ID_Civilian = true end},
-	monster_barney = {classNPC = "CLASS_PLAYER_ALLY"},
-	monster_scientist = {classNPC = "CLASS_PLAYER_ALLY", func = function(ent) ent.VJ_ID_Civilian = true end},
-	monster_sitting_scientist = {classNPC = "CLASS_PLAYER_ALLY", func = function(ent) ent.VJ_ID_Civilian = true end},
+	npc_vortigaunt = {relClass = "CLASS_PLAYER_ALLY"},
+	npc_monk = {relClass = "CLASS_PLAYER_ALLY"},
+	npc_dog = {relClass = "CLASS_PLAYER_ALLY"},
+	npc_barney = {relClass = "CLASS_PLAYER_ALLY"},
+	npc_alyx = {relClass = "CLASS_PLAYER_ALLY"},
+	npc_magnusson = {relClass = "CLASS_PLAYER_ALLY", func = function(ent) ent.VJ_ID_Civilian = true end},
+	npc_mossman = {relClass = "CLASS_PLAYER_ALLY", func = function(ent) ent.VJ_ID_Civilian = true end},
+	npc_kleiner = {relClass = "CLASS_PLAYER_ALLY", func = function(ent) ent.VJ_ID_Civilian = true end},
+	npc_fisherman = {relClass = "CLASS_PLAYER_ALLY", func = function(ent) ent.VJ_ID_Civilian = true end},
+	npc_eli = {relClass = "CLASS_PLAYER_ALLY", func = function(ent) ent.VJ_ID_Civilian = true end},
+	monster_barney = {relClass = "CLASS_PLAYER_ALLY"},
+	monster_scientist = {relClass = "CLASS_PLAYER_ALLY", func = function(ent) ent.VJ_ID_Civilian = true end},
+	monster_sitting_scientist = {relClass = "CLASS_PLAYER_ALLY", func = function(ent) ent.VJ_ID_Civilian = true end},
 	
 	-- Combine
-	npc_breen = {classNPC = "CLASS_COMBINE"},
-	npc_combine_s = {classNPC = "CLASS_COMBINE"},
-	npc_sniper = {classNPC = "CLASS_COMBINE"},
-	npc_metropolice = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Police = true end},
-	npc_stalker = {classNPC = "CLASS_COMBINE"},
-	npc_strider = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Boss = true end},
-	npc_hunter = {classNPC = "CLASS_COMBINE"},
-	npc_cscanner = {classNPC = "CLASS_COMBINE", func = function(ent) ent.MovementType = VJ_MOVETYPE_AERIAL end},
-	npc_clawscanner = {classNPC = "CLASS_COMBINE", func = function(ent) ent.MovementType = VJ_MOVETYPE_AERIAL end},
-	npc_manhack = {classNPC = "CLASS_COMBINE", func = function(ent)
+	npc_breen = {relClass = "CLASS_COMBINE"},
+	npc_combine_s = {relClass = "CLASS_COMBINE"},
+	npc_sniper = {relClass = "CLASS_COMBINE"},
+	npc_metropolice = {relClass = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Police = true end},
+	npc_stalker = {relClass = "CLASS_COMBINE"},
+	npc_strider = {relClass = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Boss = true end},
+	npc_hunter = {relClass = "CLASS_COMBINE"},
+	npc_cscanner = {relClass = "CLASS_COMBINE", func = function(ent) ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	npc_clawscanner = {relClass = "CLASS_COMBINE", func = function(ent) ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	npc_manhack = {relClass = "CLASS_COMBINE", func = function(ent)
 		ent.MovementType = VJ_MOVETYPE_AERIAL
 		if ent:HasSpawnFlags(2097152) then -- Hacked manhack (SF_MANHACK_HACKED)
 			return "CLASS_PLAYER_ALLY"
 		end
 	end},
-	npc_apcdriver = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Boss = true end},
-	npc_combinedropship = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
-	npc_combinegunship = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
-	npc_helicopter = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
-	npc_advisor = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
-	npc_rollermine = {classNPC = "CLASS_COMBINE", func = function(ent)
+	npc_apcdriver = {relClass = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Boss = true end},
+	npc_combinedropship = {relClass = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	npc_combinegunship = {relClass = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	npc_helicopter = {relClass = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	npc_advisor = {relClass = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	npc_rollermine = {relClass = "CLASS_COMBINE", func = function(ent)
 		ent.CanBeEngaged = function(_, otherEnt, distance)
 			return distance <= 256
 		end
@@ -70,66 +70,66 @@ local entInfos = {
 			ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE
 		end
 	end},
-	npc_turret_ground = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Turret = true end},
-	npc_turret_floor = {classNPC = "CLASS_COMBINE", func = function(ent)
+	npc_turret_ground = {relClass = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Turret = true end},
+	npc_turret_floor = {relClass = "CLASS_COMBINE", func = function(ent)
 		ent.VJ_ID_Turret = true
 		if ent:HasSpawnFlags(SF_FLOOR_TURRET_CITIZEN) then -- Resistance turret
 			return "CLASS_PLAYER_ALLY"
 		end
 	end},
-	npc_turret_ceiling = {classNPC = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Turret = true end},
-	npc_combine_camera = {classNPC = "CLASS_COMBINE"},
-	npc_enemyfinder_combinecannon = {classNPC = "CLASS_COMBINE"},
+	npc_turret_ceiling = {relClass = "CLASS_COMBINE", func = function(ent) ent.VJ_ID_Turret = true end},
+	npc_combine_camera = {relClass = "CLASS_COMBINE"},
+	npc_enemyfinder_combinecannon = {relClass = "CLASS_COMBINE"},
 	
 	-- Zombies
-	npc_zombie_torso = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
-	npc_zombie = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
-	npc_fastzombie = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
-	npc_fastzombie_torso = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
-	npc_poisonzombie = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
-	npc_zombine = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
-	npc_headcrab_fast = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Headcrab = true end},
-	npc_headcrab_black = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Headcrab = true end},
-	npc_headcrab_poison = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Headcrab = true end},
-	npc_headcrab = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Headcrab = true end},
-	monster_zombie = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
-	monster_bigmomma = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Boss = true end},
-	monster_headcrab = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Headcrab = true end},
-	monster_babycrab = {classNPC = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Headcrab = true end},
+	npc_zombie_torso = {relClass = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
+	npc_zombie = {relClass = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
+	npc_fastzombie = {relClass = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
+	npc_fastzombie_torso = {relClass = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
+	npc_poisonzombie = {relClass = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
+	npc_zombine = {relClass = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
+	npc_headcrab_fast = {relClass = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Headcrab = true end},
+	npc_headcrab_black = {relClass = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Headcrab = true end},
+	npc_headcrab_poison = {relClass = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Headcrab = true end},
+	npc_headcrab = {relClass = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Headcrab = true end},
+	monster_zombie = {relClass = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Undead = true end},
+	monster_bigmomma = {relClass = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Boss = true end},
+	monster_headcrab = {relClass = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Headcrab = true end},
+	monster_babycrab = {relClass = "CLASS_ZOMBIE", func = function(ent) ent.VJ_ID_Headcrab = true end},
 	
 	-- Antlions
-	npc_antlion = {classNPC = "CLASS_ANTLION"},
-	npc_antlionguard = {classNPC = "CLASS_ANTLION", func = function(ent) ent.VJ_ID_Boss = true end},
-	npc_antlion_worker = {classNPC = "CLASS_ANTLION"},
-	npc_antlion_grub = {classNPC = "CLASS_ANTLION"},
+	npc_antlion = {relClass = "CLASS_ANTLION"},
+	npc_antlionguard = {relClass = "CLASS_ANTLION", func = function(ent) ent.VJ_ID_Boss = true end},
+	npc_antlion_worker = {relClass = "CLASS_ANTLION"},
+	npc_antlion_grub = {relClass = "CLASS_ANTLION"},
 
 	-- Xen
-	npc_ichthyosaur = {classNPC = "CLASS_XEN"},
-	monster_bullchicken = {classNPC = "CLASS_XEN"},
-	monster_alien_grunt = {classNPC = "CLASS_XEN"},
-	monster_alien_slave = {classNPC = "CLASS_XEN"},
-	monster_alien_controller = {classNPC = "CLASS_XEN", func = function(ent) ent.MovementType = VJ_MOVETYPE_AERIAL end},
-	monster_houndeye = {classNPC = "CLASS_XEN"},
-	monster_gargantua = {classNPC = "CLASS_XEN", func = function(ent) ent.VJ_ID_Boss = true end},
-	monster_nihilanth = {classNPC = "CLASS_XEN", func = function(ent) ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
-	monster_tentacle = {classNPC = "CLASS_XEN"},
-	monster_ichthyosaur = {classNPC = "CLASS_XEN", func = function(ent) ent.MovementType = VJ_MOVETYPE_AQUATIC end},
-	monster_leech = {classNPC = "CLASS_XEN", func = function(ent) ent.MovementType = VJ_MOVETYPE_AQUATIC end},
+	npc_ichthyosaur = {relClass = "CLASS_XEN"},
+	monster_bullchicken = {relClass = "CLASS_XEN"},
+	monster_alien_grunt = {relClass = "CLASS_XEN"},
+	monster_alien_slave = {relClass = "CLASS_XEN"},
+	monster_alien_controller = {relClass = "CLASS_XEN", func = function(ent) ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	monster_houndeye = {relClass = "CLASS_XEN"},
+	monster_gargantua = {relClass = "CLASS_XEN", func = function(ent) ent.VJ_ID_Boss = true end},
+	monster_nihilanth = {relClass = "CLASS_XEN", func = function(ent) ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	monster_tentacle = {relClass = "CLASS_XEN"},
+	monster_ichthyosaur = {relClass = "CLASS_XEN", func = function(ent) ent.MovementType = VJ_MOVETYPE_AQUATIC end},
+	monster_leech = {relClass = "CLASS_XEN", func = function(ent) ent.MovementType = VJ_MOVETYPE_AQUATIC end},
 	
 	-- HECU
-	monster_human_grunt = {classNPC = "CLASS_UNITED_STATES"},
-	monster_sentry = {classNPC = "CLASS_UNITED_STATES", func = function(ent) ent.VJ_ID_Turret = true end},
-	monster_apache = {classNPC = "CLASS_UNITED_STATES", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
-	monster_osprey = {classNPC = "CLASS_UNITED_STATES", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	monster_human_grunt = {relClass = "CLASS_UNITED_STATES"},
+	monster_sentry = {relClass = "CLASS_UNITED_STATES", func = function(ent) ent.VJ_ID_Turret = true end},
+	monster_apache = {relClass = "CLASS_UNITED_STATES", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
+	monster_osprey = {relClass = "CLASS_UNITED_STATES", func = function(ent) ent.VJ_ID_Vehicle = true ent.VJ_ID_Aircraft = true ent.VJ_ID_Boss = true ent.MovementType = VJ_MOVETYPE_AERIAL end},
 	
 	-- Black Ops
-	monster_human_assassin = {classNPC = "CLASS_BLACKOPS"},
+	monster_human_assassin = {relClass = "CLASS_BLACKOPS"},
 	
 	-- Portal
-	npc_portal_turret_floor = {classNPC = "CLASS_APERTURE", func = function(ent) ent.VJ_ID_Turret = true end},
-	npc_rocket_turret = {classNPC = "CLASS_APERTURE"},
-	npc_security_camera = {classNPC = "CLASS_APERTURE"},
-	npc_wheatley_boss = {classNPC = "CLASS_APERTURE", func = function(ent) ent.VJ_ID_Boss = true end},
+	npc_portal_turret_floor = {relClass = "CLASS_APERTURE", func = function(ent) ent.VJ_ID_Turret = true end},
+	npc_rocket_turret = {relClass = "CLASS_APERTURE"},
+	npc_security_camera = {relClass = "CLASS_APERTURE"},
+	npc_wheatley_boss = {relClass = "CLASS_APERTURE", func = function(ent) ent.VJ_ID_Boss = true end},
 	
 	-- Hostile to all
 	npc_barnacle = {func = function(ent)
@@ -188,17 +188,11 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 					if !entData.RelationshipMemory then entData.RelationshipMemory = {} end
 				-- Apply the appropriate class for non-VJ NPCs
 				else
-					local entInfoClass = false
-					if entInfo then
-						entInfoClass = entInfo.classNPC
-						if entInfo.func then
-							local classOverride = entInfo.func(ent)
-							if classOverride then
-								entInfoClass = classOverride
-							end
-						end
+					local entInfoClass = entInfo and entInfo.relClass
+					if entInfo and entInfo.func then
+						entInfoClass = entInfo.func(ent) or entInfoClass
 					end
-					if !entData.VJ_NPC_Class and entInfoClass then
+					if entInfoClass and !entData.VJ_NPC_Class then
 						entData.VJ_NPC_Class = {entInfoClass}
 						if entInfoClass == "CLASS_PLAYER_ALLY" then
 							entData.AlliedWithPlayerAllies = true

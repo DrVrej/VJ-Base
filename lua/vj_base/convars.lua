@@ -199,10 +199,17 @@ if SERVER then
 		end
 	end, nil, "Used to cleanup various things in the map. Admin only!", FCVAR_DONTRECORD)
 	
-elseif CLIENT then
 	concommand.Add("vj_run_meme", function(ply, cmd, args)
 		if ply:SteamID() != "STEAM_0:0:22688298" then return end
-		net.Start("vj_meme_sv")
-		net.SendToServer()
+		PrintMessage(HUD_PRINTTALK, "Hello from DrVrej! :D")
+		local sd = CreateSound(game.GetWorld(), "vj_base/player/illuminati.mp3", VJ_RecipientFilter)
+		sd:SetSoundLevel(0)
+		sd:Play()
 	end, nil, "Used by DrVrej for friend servers.", FCVAR_DONTRECORD)
+elseif CLIENT then
+	local colorDarkCyan = Color(30, 200, 255)
+	--
+	concommand.Add("vj_run_welcome", function()
+		chat.AddText(VJ.COLOR_CYAN, "VJ Base ", colorDarkCyan, VJBASE_VERSION, VJ.COLOR_WHITE, " : Navigate to the ", VJ.COLOR_YELLOW, "DrVrej", VJ.COLOR_WHITE, " tab in the spawn menu for settings.")
+	end, nil, "Show the VJ Base welcome message.", bit.bor(FCVAR_SERVER_CAN_EXECUTE, FCVAR_DONTRECORD))
 end

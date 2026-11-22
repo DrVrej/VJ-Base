@@ -156,13 +156,12 @@ if CLIENT then
 		panel:ControlHelp(language.GetPhrase("#tool.vj_tool_relationship.menu.toggle.plyallied.help"))
 	end
 
-	function TOOL.BuildCPanel(panel)
-		ControlPanel(panel)
-	end
+	TOOL.BuildCPanel = ControlPanel
 
-	net.Receive("vj_tool_relationship_cl_select", function(len)
+	net.Receive("vj_sh_tool_relationship", function(len)
 		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_relationship" and hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_relationship") then
+		if !wep:IsValid() or wep:GetClass() != "gmod_tool" or wep:GetMode() != "vj_tool_relationship" or !hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_relationship") then return end
+		if net.ReadBool() then -- Select
 			local entName = language.GetPhrase(net.ReadString())
 			local classCount = net.ReadUInt(9)
 			chat.AddText(VJ.COLOR_GREEN, "Obtained", VJ.COLOR_ORANGE_VIVID, " " .. entName .. "'s ", VJ.COLOR_GREEN, "relationship class list!")
@@ -175,35 +174,29 @@ if CLIENT then
 				getPanel:Clear()
 				ControlPanel(getPanel)
 			end)
-		end
-	end)
-
-	net.Receive("vj_tool_relationship_cl_apply", function(len)
-		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_relationship" and hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_relationship") then
+		else -- Apply
 			local ent = net.ReadEntity()
 			local entName = language.GetPhrase(net.ReadString())
 			chat.AddText(VJ.COLOR_GREEN, "#tool.vj_tool_relationship.print.applied", VJ.COLOR_ORANGE_VIVID, tostring(entName))
-			net.Start("vj_tool_relationship_sv_apply")
+			net.Start("vj_sh_tool_relationship")
 				net.WriteEntity(ent)
 				net.WriteTable(VJ_TOOL_RELATIONSHIP_LIST)
 			net.SendToServer()
 		end
 	end)
 else
-	net.Receive("vj_tool_relationship_sv_apply", function(len, ply)
+	net.Receive("vj_sh_tool_relationship", function(len, ply)
 		local wep = ply:GetActiveWeapon()
-		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_relationship" and hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_relationship") then
-			local ent = net.ReadEntity()
-			local classtbl = net.ReadTable()
-			if #classtbl > 0 then
-				ent.VJ_NPC_Class = classtbl
-				if !ent:IsPlayer() and table.HasValue(classtbl, "CLASS_PLAYER_ALLY") and ply:GetInfoNum("vj_tool_relationship_allytoplyallies", 1) == 1 then
-					ent.AlliedWithPlayerAllies = true
-				end
-			else
-				ent.VJ_NPC_Class = {}
+		if !wep:IsValid() or wep:GetClass() != "gmod_tool" or wep:GetMode() != "vj_tool_relationship" or !hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_relationship") then return end
+		local ent = net.ReadEntity()
+		local classtbl = net.ReadTable()
+		if #classtbl > 0 then
+			ent.VJ_NPC_Class = classtbl
+			if !ent:IsPlayer() and table.HasValue(classtbl, "CLASS_PLAYER_ALLY") and ply:GetInfoNum("vj_tool_relationship_allytoplyallies", 1) == 1 then
+				ent.AlliedWithPlayerAllies = true
 			end
+		else
+			ent.VJ_NPC_Class = {}
 		end
 	end)
 end
@@ -212,7 +205,8 @@ function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
 	if IsValid(ent) and ent.VJ_ID_Living then
-		net.Start("vj_tool_relationship_cl_apply")
+		net.Start("vj_sh_tool_relationship")
+			net.WriteBool(false) -- Apply
 			net.WriteEntity(ent)
 			net.WriteString(VJ.GetName(ent))
 		net.Send(self:GetOwner())
@@ -234,7 +228,8 @@ function TOOL:RightClick(tr)
 			owner:ChatPrint("ERROR! " .. entName .. " has no classes assigned!")
 			return false
 		end
-		net.Start("vj_tool_relationship_cl_select")
+		net.Start("vj_sh_tool_relationship")
+			net.WriteBool(true) -- Select
 			net.WriteString(entName)
 			net.WriteUInt(#entClasses, 9)
 			for _, v in ipairs(ent.VJ_NPC_Class) do
@@ -247,7 +242,8 @@ end
 
 function TOOL:Reload(tr)
 	if CLIENT then return true end
-	net.Start("vj_tool_relationship_cl_apply")
+	net.Start("vj_sh_tool_relationship")
+		net.WriteBool(false) -- Apply
 		net.WriteEntity(self:GetOwner())
 		net.WriteString("Yourself")
 	net.Send(self:GetOwner())

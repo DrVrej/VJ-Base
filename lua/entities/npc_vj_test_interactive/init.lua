@@ -23,7 +23,7 @@ end
 
 function ENT:OnInput(key, activator, caller, data)
 	if key == "Use" and IsValid(activator) and activator:IsPlayer() and activator:Alive() then
-		net.Start("vj_npc_test_interactive_cl")
+		net.Start("vj_cl_npc_test_interactive")
 			net.WriteEntity(self)
 		net.Send(activator)
 		activator:EmitSound("vj_base/player/illuminati.mp3", 75)

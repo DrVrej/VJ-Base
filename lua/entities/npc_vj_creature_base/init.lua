@@ -1163,7 +1163,6 @@ function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 			2. Refresh if "TASK_GET_PATH_TO_ENEMY_LOS" has lasted 3+ seconds and no movement is detected, which identifies the observed LOS stall
 		--]]
 		if selfData.CurrentScheduleName == "SCHEDULE_ALERT_CHASE_LOS" and self:TaskTime() < 6 and (selfData.CurrentTaskID != 1 or self:GetIdealMoveSpeed() > 0 or self:TaskTime() < 3) then return end
-		print("SCHEDULE_ALERT_CHASE_LOS")
 		local cachedSchedule = selfData.CacheScheduleChaseLOS
 		if !cachedSchedule then
 			local schedule_alert_chase = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE_LOS")
@@ -1403,7 +1402,7 @@ function ENT:Think()
 						local moveSpeed = selfData.AA_CurrentMoveMaxSpeed
 						-- Only decelerate if the distance is smaller than the max speed!
 						if selfData.AA_MoveDecelerate > 1 and dist < moveSpeed then
-							moveSpeed = math_min(math_max(dist, moveSpeed / selfData.AA_MoveDecelerate), moveSpeed)
+							moveSpeed = math_max(dist, moveSpeed / selfData.AA_MoveDecelerate)
 						elseif selfData.AA_MoveAccelerate > 0 then
 							moveSpeed = Lerp(FrameTime() * selfData.AA_MoveAccelerate, myVelLen, moveSpeed)
 						end

@@ -132,20 +132,12 @@ VJ.AddNPCWeapon("VJ_Crowbar", "weapon_vj_crowbar")
 --------------------------------------=[ Misc Initialization ]=--------------------------------------
 if SERVER then
 	---------= Network Messages =---------
-	util.AddNetworkString("vj_welcome_cl")
-	util.AddNetworkString("vj_music_cl")
-	util.AddNetworkString("vj_meme_sv")
-	util.AddNetworkString("vj_npc_test_interactive_cl")
-	util.AddNetworkString("vj_controller_sv")
-	util.AddNetworkString("vj_tool_mover_cl_select")
-	util.AddNetworkString("vj_tool_mover_cl_move")
-	util.AddNetworkString("vj_tool_mover_sv_select")
-	util.AddNetworkString("vj_tool_mover_sv_move")
-	util.AddNetworkString("vj_tool_relationship_cl_select")
-	util.AddNetworkString("vj_tool_relationship_cl_apply")
-	util.AddNetworkString("vj_tool_relationship_sv_apply")
-	util.AddNetworkString("vj_tool_spawner_cl_create")
-	util.AddNetworkString("vj_tool_spawner_sv_create")
+	util.AddNetworkString("vj_cl_music")
+	util.AddNetworkString("vj_cl_npc_test_interactive")
+	util.AddNetworkString("vj_sv_controller")
+	util.AddNetworkString("vj_sh_tool_mover")
+	util.AddNetworkString("vj_sh_tool_relationship")
+	util.AddNetworkString("vj_sh_tool_spawner")
 	
 	---------= AI Modules =---------
 	require("vj_ai_schedule")
@@ -169,19 +161,9 @@ if SERVER then
 	
 	hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 		timer.Simple(1, function()
-			if VJBASE_DISABLE_INIT_MESSAGE != true then
-				net.Start("vj_welcome_cl")
-				net.Send(ply)
-			end
+			if !IsValid(ply) or VJBASE_DISABLE_INIT_MESSAGE == true then return end
+			ply:ConCommand("vj_run_welcome")
 		end)
-	end)
-	
-	net.Receive("vj_meme_sv", function(len, ply)
-		if ply:SteamID() != "STEAM_0:0:22688298" then return end
-		PrintMessage(HUD_PRINTTALK, "Hello from DrVrej! :D")
-		local sd = CreateSound(game.GetWorld(), "vj_base/player/illuminati.mp3", VJ_RecipientFilter)
-		sd:SetSoundLevel(0)
-		sd:Play()
 	end)
 elseif CLIENT then
 	hook.Add("AddToolMenuTabs", "VJ_AddToolMenuTabs", function()
@@ -193,17 +175,11 @@ elseif CLIENT then
 		spawnmenu.AddToolCategory("DrVrej", "Tools", "#vjbase.menu.tabs.tool")
 		spawnmenu.AddToolCategory("DrVrej", "SNPC Configures", "#vjbase.menu.tabs.npc.plugins")
 	end)
-	
-	local colorDarkCyan = Color(30, 200, 255)
-	--
-	net.Receive("vj_welcome_cl", function(len)
-		chat.AddText(VJ.COLOR_CYAN, "VJ Base ", colorDarkCyan, VJBASE_VERSION, VJ.COLOR_WHITE, " : Navigate to the ", VJ.COLOR_YELLOW, "DrVrej", VJ.COLOR_WHITE, " tab in the spawn menu for settings.")
-	end)
 end
 
 --------------------------------------=[ Error Checks ]=--------------------------------------
 	---------= Outdated Game =---------
-if SERVER and (!isfunction(FindMetaTable("Entity").CanBuildRoute) or !isfunction(FindMetaTable("NPC").GetMoveDelay)) then
+if SERVER and (!isfunction(FindMetaTable("NPC").CanBuildRoute) or !isfunction(FindMetaTable("NPC").GetMoveDelay)) then
 	timer.Simple(1, function()
 		if !VJBASE_ERROR_OUTDATED_GAME then
 			VJBASE_ERROR_OUTDATED_GAME = true

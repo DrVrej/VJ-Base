@@ -13,7 +13,7 @@ function ENT:MatFootStepQCEvent(data)
 end
 
 if CLIENT then
-	net.Receive("vj_npc_test_interactive_cl", function(len)
+	net.Receive("vj_cl_npc_test_interactive", function(len)
 		local ent = net.ReadEntity()
 		if !IsValid(ent) or ent:GetClass() != "npc_vj_test_interactive" or !ent:Alive() then return end
 		local ply = LocalPlayer()

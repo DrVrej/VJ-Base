@@ -32,7 +32,7 @@ local function VJ_Music_Tick()
 	end
 end
 --
-net.Receive("vj_music_cl", function(len)
+net.Receive("vj_cl_music", function(len)
 	local ent = net.ReadEntity()
 	local sdFile = net.ReadString()
 	local sdVol = net.ReadFloat()

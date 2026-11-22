@@ -54,9 +54,7 @@ if CLIENT then
 		panel:NumSlider("#tool.vj_tool_health.menu.toggle.regen.delay", "vj_tool_health_healthregen_delay", 0, 10000, 0)
 	end
 
-	function TOOL.BuildCPanel(panel)
-		ControlPanel(panel)
-	end
+	TOOL.BuildCPanel = ControlPanel
 end
 
 function TOOL:LeftClick(tr)

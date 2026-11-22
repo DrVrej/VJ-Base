@@ -304,7 +304,7 @@ end
 
 -- Sadly no other way, this is the most reliable way to sync the position from client to server in time
 	-- Also avoids garbage positions that output from other methods
-net.Receive("vj_controller_sv", function(len, ply)
+net.Receive("vj_sv_controller", function(len, ply)
 	-- Set the controller's bullseye position if the player is controlling an NPC AND controller entity exists AND Bullseye exists --> Protect against spam ?
 	if ply.VJ_Controlling and IsValid(ply.VJ_Controller) and ply.VJ_Controller.VJC_Bullseye_RefreshPos and IsValid(ply.VJ_Controller:GetBullseye()) then
 		ply.VJ_Controller:GetBullseye():SetPos(net.ReadVector())
@@ -447,15 +447,14 @@ function ENT:StartMovement(direction, rotation)
 	if npc:GetState() != VJ_STATE_NONE then return end
 
 	local DEBUG = ply:GetInfoNum("vj_npc_cont_debug", 0) == 1
-	local plyAimVec = direction
-	plyAimVec.z = 0
-	plyAimVec:Rotate(rotation)
+	direction.z = 0
+	direction:Rotate(rotation)
 	local npcPosOrg = npc:GetPos()
 	local centerToPos = npc:OBBCenter():Distance(npc:OBBMins()) + 20 // npc:OBBMaxs().z
 	local npcPos = npcPosOrg + npc:GetUp() * centerToPos
 	local groundSpeed = math.min(math.max(npc:GetSequenceGroundSpeed(npc:GetSequence()), 300), 9999)
 	local defaultFilter = {self, npc, ply}
-	local forwardTr = util.TraceLine({start = npcPos, endpos = npcPos + plyAimVec * groundSpeed, filter = defaultFilter})
+	local forwardTr = util.TraceLine({start = npcPos, endpos = npcPos + direction * groundSpeed, filter = defaultFilter})
 	local forwardDist = npcPos:Distance(forwardTr.HitPos)
 	local wallToSelf = forwardDist - (npc:OBBMaxs().y) -- Use Y instead of X because X is left/right whereas Y is forward/backward
 	if DEBUG then
@@ -465,7 +464,7 @@ function ENT:StartMovement(direction, rotation)
 		debugoverlay.Text(forwardTr.HitPos, "forwardTr.HitPos", 3, false)
 	end
 	if forwardDist >= 25 then
-		local finalPos = npcPosOrg + plyAimVec * wallToSelf
+		local finalPos = npcPosOrg + direction * wallToSelf
 		finalPos.z = forwardTr.HitPos.z
 		-- Check if ground is valid!
 		local downTr = util.TraceLine({start = finalPos, endpos = finalPos + self:GetUp() * -(200 + centerToPos), filter = defaultFilter})

@@ -282,10 +282,10 @@ function ENT:CreateGibEntity(class, models, extra, customFunc)
 		local vel = extra.Vel or Vector(math.Rand(-100, 100), math.Rand(-100, 100), math.Rand(150, 250))
 		if self.SavedDmgInfo then
 			local dmgForce = self.SavedDmgInfo.force / 70
-			if extra.Vel_ApplyDmgForce != false and extra.Vel != "UseDamageForce" then -- Use both damage force AND given velocity
-				vel = vel + dmgForce
-			elseif extra.Vel == "UseDamageForce" then -- Use damage force
+			if extra.Vel == "UseDamageForce" then -- Use damage force
 				vel = dmgForce
+			elseif extra.Vel_ApplyDmgForce != false then -- Use both damage force AND given velocity
+				vel = vel + dmgForce
 			end
 		end
 		bloodType = (extra.BloodType or bloodType or self.BloodColor) -- Certain entities such as the VJ Gib entity, you can use this to set its gib type
@@ -420,9 +420,9 @@ function ENT:OnEat(status, statusData)
 		-- Health changes
 		local food = self.EatingData.Target
 		local damage = 15 -- How much damage food will receive
-		local foodHP = food:Health() -- Food's health
-		local myHP = self:Health() -- NPC's current health
-		self:SetHealth(math.Clamp(myHP + ((damage > foodHP and foodHP) or damage), myHP, self:GetMaxHealth() < myHP and myHP or self:GetMaxHealth())) -- Give health to the NPC
+		local foodHP = food:Health()
+		local myHP = self:Health()
+		self:SetHealth(math.Clamp(myHP + math_min(damage, foodHP), myHP, math_max(myHP, self:GetMaxHealth()))) -- Give health to the NPC
 		food:SetHealth(foodHP - damage) -- Decrease corpse health
 		-- Blood effects
 		local bloodData = food.BloodData
@@ -2551,7 +2551,7 @@ function ENT:Flinch(dmginfo, hitgroup)
 		local _, animDur = self:PlayAnim(pickedAnim, true, false, false)
 		timer.Create("flinch_reset" .. self:EntIndex(), animDur, 1, function() self.Flinching = false end)
 		self:OnFlinch(dmginfo, hitgroup, "Execute")
-		selfData.NextFlinchT = curTime + (!selfData.FlinchCooldown and animDur or selfData.FlinchCooldown)
+		selfData.NextFlinchT = curTime + (selfData.FlinchCooldown or animDur)
 	end
 end
 
@@ -2760,10 +2760,9 @@ function ENT:PlayIdleSound(combatIdle)
 			selfData.CurrentIdleSound = VJ.CreateSound(self, combatIdle, selfData.CombatIdleSoundLevel, self:GetSoundPitch(selfData.CombatIdleSoundPitch))
 		end
 	elseif math.random(1, selfData.IdleSoundChance) == 1 then
-		local playRegular = true
+		local foundEnt;
 		local pickedSD = PICK(selfData.SoundTbl_IdleDialogue)
 		if pickedSD and selfData.HasIdleDialogueSounds and math.random(1, 2) == 1 then
-			local foundEnt;
 			local canAnswer = false
 			-- Don't break the loop unless we hit a VJ NPC that can answer back otherwise just return a living entity that is friendly
 			for _, ent in ipairs(ents.FindInSphere(fGetPos(self), selfData.IdleDialogueDistance)) do
@@ -2784,7 +2783,6 @@ function ENT:PlayIdleSound(combatIdle)
 				end
 			end
 			if foundEnt then
-				playRegular = false
 				StopSD(selfData.CurrentIdleSound)
 				selfData.CurrentIdleSound = VJ.CreateSound(self, pickedSD, selfData.IdleDialogueSoundLevel, self:GetSoundPitch(selfData.IdleDialogueSoundPitch))
 				if canAnswer then -- If we have a VJ NPC that can answer
@@ -2827,7 +2825,7 @@ function ENT:PlayIdleSound(combatIdle)
 			end
 		end
 		-- Didn't play a dialogue so play regular
-		if playRegular then
+		if !foundEnt then
 			pickedSD = PICK(selfData.SoundTbl_Idle)
 			if pickedSD then
 				StopSD(selfData.CurrentIdleSound)
@@ -3245,10 +3243,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 		if selfData.HasDangerSightSounds and CurTime() > selfData.NextDangerSightSoundT then
 			local pickedSD = PICK(selfData.SoundTbl_DangerSight)
 			if sdSet == "GrenadeSight" then
-				local grenSD = PICK(selfData.SoundTbl_GrenadeSight)
-				if grenSD then
-					pickedSD = grenSD
-				end
+				pickedSD = PICK(selfData.SoundTbl_GrenadeSight) or pickedSD
 			end
 			local sdDur = 3
 			if (pickedSD and math.random(1, selfData.DangerSightSoundChance) == 1) or customSD then
@@ -3945,7 +3940,7 @@ function ENT:StartSoundTrack()
 	local pickedSD = PICK(selfData.SoundTbl_SoundTrack)
 	if !pickedSD then return end
 	selfData.VJ_SD_PlayingMusic = true
-	net.Start("vj_music_cl")
+	net.Start("vj_cl_music")
 		net.WriteEntity(self)
 		net.WriteString(pickedSD)
 		net.WriteFloat(selfData.SoundTrackVolume)
@@ -4102,22 +4097,12 @@ function ENT:InitConvars()
 		if c.snd_range:GetInt() == 0 then selfData.HasRangeAttackSounds = false end
 		if c.snd_leap:GetInt() == 0 then selfData.HasLeapAttackSounds = false end
 		local propAPType = c.melee_propint:GetInt()
-		if propAPType != 1 then
-			if propAPType == 0 then -- Disable
-				selfData.PropInteraction = false
-			elseif propAPType == 2 and selfData.PropInteraction != "OnlyPush" then -- Only damage
-				if selfData.PropInteraction == "OnlyDamage" then
-					selfData.PropInteraction = false
-				else
-					selfData.PropInteraction = "OnlyDamage"
-				end
-			elseif propAPType == 3 and selfData.PropInteraction != "OnlyDamage" then -- Only push
-				if selfData.PropInteraction == "OnlyPush" then
-					selfData.PropInteraction = false
-				else
-					selfData.PropInteraction = "OnlyPush"
-				end
-			end
+		if propAPType == 0 then -- Disable
+			selfData.PropInteraction = false
+		elseif propAPType == 2 and selfData.PropInteraction != "OnlyPush" then -- Only damage
+			selfData.PropInteraction = selfData.PropInteraction != "OnlyDamage" and "OnlyDamage" or false
+		elseif propAPType == 3 and selfData.PropInteraction != "OnlyDamage" then -- Only push
+			selfData.PropInteraction = selfData.PropInteraction != "OnlyPush" and "OnlyPush" or false
 		end
 	elseif selfData.IsVJBaseSNPC_Human then
 		if c.wep:GetInt() == 0 then selfData.Weapon_Disabled = true end

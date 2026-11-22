@@ -31,7 +31,8 @@ if CLIENT then
 			-- Double click to remove an entity from the list
 			function selectedList:DoDoubleClick(lineID, line)
 				chat.AddText(VJ.COLOR_GREEN, "NPC", VJ.COLOR_ORANGE_VIVID, " " .. line:GetValue(1) .. " ", VJ.COLOR_GREEN, "unselected!")
-				net.Start("vj_tool_mover_sv_select")
+				net.Start("vj_sh_tool_mover")
+					net.WriteBool(true) -- Select
 					net.WriteBit(1)
 					net.WriteUInt(1, MAX_EDICT_BITS)
 					net.WriteEntity(line:GetValue(2))
@@ -54,7 +55,8 @@ if CLIENT then
 				local entsCount = #VJ_TOOL_MOVER_ENTS
 				if entsCount > 0 then
 					chat.AddText(VJ.COLOR_ORANGE_VIVID, "#tool.vj_tool_mover.print.unselectedall")
-					net.Start("vj_tool_mover_sv_select")
+					net.Start("vj_sh_tool_mover")
+						net.WriteBool(true) -- Select
 						net.WriteBit(1)
 						net.WriteUInt(entsCount, MAX_EDICT_BITS)
 						for i = 1, entsCount do
@@ -70,9 +72,10 @@ if CLIENT then
 		panel:AddPanel(unselectButton)
 	end
 
-	net.Receive("vj_tool_mover_cl_select", function(len)
+	net.Receive("vj_sh_tool_mover", function(len)
 		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_mover" and hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_mover") then
+		if !wep:IsValid() or wep:GetClass() != "gmod_tool" or wep:GetMode() != "vj_tool_mover" or !hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_mover") then return end
+		if net.ReadBool() then -- Select
 			local ent = net.ReadEntity()
 			local entName = language.GetPhrase(net.ReadString())
 			VJ_TOOL_MOVER_ENTS = VJ_TOOL_MOVER_ENTS or {}
@@ -96,19 +99,15 @@ if CLIENT then
 			local getPanel = controlpanel.Get("vj_tool_mover")
 			getPanel:Clear()
 			ControlPanel(getPanel)
-			net.Start("vj_tool_mover_sv_select")
+			net.Start("vj_sh_tool_mover")
+				net.WriteBool(true) -- Select
 				net.WriteBit(editType)
 				net.WriteUInt(1, MAX_EDICT_BITS)
 				net.WriteEntity(ent)
 			net.SendToServer()
-		end
-	end)
-
-	net.Receive("vj_tool_mover_cl_move", function(len)
-		local moveType = net.ReadBit()
-		local movePos = net.ReadVector()
-		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_mover" and hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_mover") then
+		else -- Move
+			local moveType = net.ReadBit()
+			local movePos = net.ReadVector()
 			for k, v in ipairs(VJ_TOOL_MOVER_ENTS) do
 				if !IsValid(v) then -- Remove any NPCs that no longer exist!
 					table.remove(VJ_TOOL_MOVER_ENTS, k)
@@ -119,7 +118,8 @@ if CLIENT then
 			end
 			local entsCount = #VJ_TOOL_MOVER_ENTS
 			if entsCount > 0 then
-				net.Start("vj_tool_mover_sv_move")
+				net.Start("vj_sh_tool_mover")
+					net.WriteBool(false) -- Move
 					net.WriteBit(moveType)
 					net.WriteVector(movePos)
 					net.WriteUInt(entsCount, MAX_EDICT_BITS)
@@ -131,13 +131,12 @@ if CLIENT then
 		end
 	end)
 
-	function TOOL.BuildCPanel(panel)
-		ControlPanel(panel)
-	end
+	TOOL.BuildCPanel = ControlPanel
 else
-	net.Receive("vj_tool_mover_sv_select", function(len, ply)
+	net.Receive("vj_sh_tool_mover", function(len, ply)
 		local wep = ply:GetActiveWeapon()
-		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_mover" and hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_mover") then
+		if !wep:IsValid() or wep:GetClass() != "gmod_tool" or wep:GetMode() != "vj_tool_mover" or !hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_mover") then return end
+		if net.ReadBool() then -- Select
 			local editType = net.ReadBit()
 			local entCount = net.ReadUInt(MAX_EDICT_BITS)
 			for _ = 1, entCount do
@@ -155,9 +154,9 @@ else
 					end
 				elseif editType == 1 then -- Remove
 					if ent.IsVJBaseSNPC then
-						ent.DisableWandering = ent.VJ_Mover_Wander != nil and ent.VJ_Mover_Wander or false
-						ent.DisableChasingEnemy = ent.VJ_Mover_Chase != nil and ent.VJ_Mover_Chase or false
-						ent.Weapon_FindCoverOnReload = ent.VJ_Mover_Weapon_FindCoverOnReload != nil and ent.VJ_Mover_Weapon_FindCoverOnReload or false
+						ent.DisableWandering = ent.VJ_Mover_Wander or false
+						ent.DisableChasingEnemy = ent.VJ_Mover_Chase or false
+						ent.Weapon_FindCoverOnReload = ent.VJ_Mover_Weapon_FindCoverOnReload or false
 						ent.VJ_Mover_Wander = nil
 						ent.VJ_Mover_Chase = nil
 						ent.VJ_Mover_Weapon_FindCoverOnReload = nil
@@ -165,12 +164,7 @@ else
 					end
 				end
 			end
-		end
-	end)
-
-	net.Receive("vj_tool_mover_sv_move", function(len, ply)
-		local wep = ply:GetActiveWeapon()
-		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_mover" and hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_mover") then
+		else -- Move
 			local moveType = net.ReadBit()
 			local movePos = net.ReadVector()
 			local moveTypeVJ = moveType == 1 and "TASK_RUN_PATH" or "TASK_WALK_PATH"
@@ -200,7 +194,8 @@ function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
 	if !ent:IsNPC() then return end
-	net.Start("vj_tool_mover_cl_select")
+	net.Start("vj_sh_tool_mover")
+		net.WriteBool(true) -- Select
 		net.WriteEntity(ent)
 		net.WriteString(VJ.GetName(ent))
 	net.Send(self:GetOwner())
@@ -209,7 +204,8 @@ end
 
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
-	net.Start("vj_tool_mover_cl_move")
+	net.Start("vj_sh_tool_mover")
+		net.WriteBool(false) -- Move
 		net.WriteBit(1)
 		net.WriteVector(tr.HitPos)
 	net.Send(self:GetOwner())
@@ -218,7 +214,8 @@ end
 
 function TOOL:Reload(tr)
 	if CLIENT then return true end
-	net.Start("vj_tool_mover_cl_move")
+	net.Start("vj_sh_tool_mover")
+		net.WriteBool(false) -- Move
 		net.WriteBit(0)
 		net.WriteVector(tr.HitPos)
 	net.Send(self:GetOwner())

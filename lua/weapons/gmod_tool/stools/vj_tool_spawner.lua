@@ -210,68 +210,64 @@ if CLIENT then
 		panel:NumSlider("#tool.vj_tool_spawner.menu.delaytime", "vj_tool_spawner_nextspawntime", 0, 1000, 0)
 	end
 
-	net.Receive("vj_tool_spawner_cl_create", function(len)
+	net.Receive("vj_sh_tool_spawner", function(len)
 		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_spawner" and hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_spawner") then
-			local spawnPos = net.ReadVector()
-			local spawnType = net.ReadBit()
-			net.Start("vj_tool_spawner_sv_create")
-				net.WriteVector(spawnPos)
-				net.WriteBit(spawnType)
-				net.WriteType(VJ_TOOL_SPAWNER_LIST)
-			net.SendToServer()
-		end
+		if !wep:IsValid() or wep:GetClass() != "gmod_tool" or wep:GetMode() != "vj_tool_spawner" or !hook.Run("CanTool", LocalPlayer(), LocalPlayer():GetEyeTrace(), "vj_tool_spawner") then return end
+		local spawnPos = net.ReadVector()
+		local spawnType = net.ReadBit()
+		net.Start("vj_sh_tool_spawner")
+			net.WriteVector(spawnPos)
+			net.WriteBit(spawnType)
+			net.WriteType(VJ_TOOL_SPAWNER_LIST)
+		net.SendToServer()
 	end)
 
-	function TOOL.BuildCPanel(panel)
-		ControlPanel(panel)
-	end
+	TOOL.BuildCPanel = ControlPanel
 else
 	local spawnSounds = {"garrysmod/save_load1.wav", "garrysmod/save_load2.wav", "garrysmod/save_load3.wav", "garrysmod/save_load4.wav"}
 	--
-	net.Receive("vj_tool_spawner_sv_create", function(len, ply)
+	net.Receive("vj_sh_tool_spawner", function(len, ply)
 		local wep = ply:GetActiveWeapon()
-		if wep:IsValid() and wep:GetClass() == "gmod_tool" and wep:GetMode() == "vj_tool_spawner" and hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_spawner") then
-			local spawnPos = net.ReadVector()
-			local spawnType = net.ReadBit()
-			local spawnEntries = net.ReadType()
-			if table.IsEmpty(spawnEntries) then
-				ply:ChatPrint("#tool.vj_tool_spawner.print.nothingspawn")
-				return
-			end
-			
-			-- Create the spawner
-			local spawner = ents.Create("obj_vj_spawner_base")
-			spawner:SetPos(spawnPos)
-			local spawnAng = ply:GetAngles()
-			spawnAng.yaw = spawnAng.yaw + 180
-			spawner:SetAngles(spawnAng)
-			spawner.EntitiesToSpawn = {}
-			for k, v in pairs(spawnEntries) do
-				//if v.IsVJBaseSpawner == true then ply:ChatPrint("Can't be spawned because it's a spawner") end
-				local relClass = v.Relationship.Class
-				if relClass == "" then relClass = nil end
-				spawner.EntitiesToSpawn[k] = {SpawnPosition = v.SpawnPosition, Entities = {v.Ent}, WeaponsList = {v.Wep}, NPC_Class = relClass, FriToPlyAllies = tobool(v.Relationship.FriToPlyAllies)}
-			end
-			if ply:GetInfoNum("vj_tool_spawner_playsound", 1) == 1 then
-				spawner.SoundTbl_SpawnEntity = spawnSounds
-			end
-			spawner.SingleSpawner = spawnType == 1
-			spawner.RespawnCooldown = ply:GetInfoNum("vj_tool_spawner_nextspawntime", 3)
-			spawner:SetCreator(ply)
-			spawner:Spawn()
-			spawner:Activate()
-			undo.Create("NPC Spawner")
-				undo.AddEntity(spawner)
-				undo.SetPlayer(ply)
-			undo.Finish()
+		if !wep:IsValid() or wep:GetClass() != "gmod_tool" or wep:GetMode() != "vj_tool_spawner" or !hook.Run("CanTool", ply, ply:GetEyeTrace(), "vj_tool_spawner") then return end
+		local spawnPos = net.ReadVector()
+		local spawnType = net.ReadBit()
+		local spawnEntries = net.ReadType()
+		if table.IsEmpty(spawnEntries) then
+			ply:ChatPrint("#tool.vj_tool_spawner.print.nothingspawn")
+			return
 		end
+		
+		-- Create the spawner
+		local spawner = ents.Create("obj_vj_spawner_base")
+		spawner:SetPos(spawnPos)
+		local spawnAng = ply:GetAngles()
+		spawnAng.yaw = spawnAng.yaw + 180
+		spawner:SetAngles(spawnAng)
+		spawner.EntitiesToSpawn = {}
+		for k, v in pairs(spawnEntries) do
+			//if v.IsVJBaseSpawner == true then ply:ChatPrint("Can't be spawned because it's a spawner") end
+			local relClass = v.Relationship.Class
+			if relClass == "" then relClass = nil end
+			spawner.EntitiesToSpawn[k] = {SpawnPosition = v.SpawnPosition, Entities = {v.Ent}, WeaponsList = {v.Wep}, NPC_Class = relClass, FriToPlyAllies = tobool(v.Relationship.FriToPlyAllies)}
+		end
+		if ply:GetInfoNum("vj_tool_spawner_playsound", 1) == 1 then
+			spawner.SoundTbl_SpawnEntity = spawnSounds
+		end
+		spawner.SingleSpawner = spawnType == 1
+		spawner.RespawnCooldown = ply:GetInfoNum("vj_tool_spawner_nextspawntime", 3)
+		spawner:SetCreator(ply)
+		spawner:Spawn()
+		spawner:Activate()
+		undo.Create("NPC Spawner")
+			undo.AddEntity(spawner)
+			undo.SetPlayer(ply)
+		undo.Finish()
 	end)
 end
 
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
-	net.Start("vj_tool_spawner_cl_create")
+	net.Start("vj_sh_tool_spawner")
 		net.WriteVector(tr.HitPos)
 		net.WriteBit(0)
 	net.Send(self:GetOwner())
@@ -280,7 +276,7 @@ end
 
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
-	net.Start("vj_tool_spawner_cl_create")
+	net.Start("vj_sh_tool_spawner")
 		net.WriteVector(tr.HitPos)
 		net.WriteBit(1)
 	net.Send(self:GetOwner())

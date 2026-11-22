@@ -68,9 +68,7 @@ if CLIENT then
 		panel:CheckBox("#tool.vj_tool_bullseye.menu.toggle.startactivated", "vj_tool_bullseye_startactivate")
 	end
 
-	function TOOL.BuildCPanel(panel)
-		ControlPanel(panel)
-	end
+	TOOL.BuildCPanel = ControlPanel
 end
 
 function TOOL:LeftClick(tr)

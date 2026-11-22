@@ -385,9 +385,8 @@ function VJ.AnimDuration(ent, anim)
 		local animEdited, _, hasGes = VJ.StripAnimTags(anim)
 		if !animEdited then return 0 end
 		local seqID = ent:LookupSequence(animEdited)
-		anim = animEdited
 		if hasGes and seqID == -1 then
-			return ent:SequenceDuration(ent:SelectWeightedSequence(tonumber(anim)))
+			seqID = ent:SelectWeightedSequence(tonumber(animEdited))
 		end
 		return ent:SequenceDuration(seqID)
 	end
@@ -812,10 +811,9 @@ end
 		1. Check for "targetname" keyvalue used by engine's I/O system using "ent:GetName()"
 		2. Check for the variable "ent.PrintName"
 		3. Check for the name assigned to the class in the NPC spawn menu list
-		4. Check for the name assigned to the class in the Weapon spawn menu list
-		5. Check for the name assigned to the class in the Entities spawn menu list
-		6. Check if the client has a language translation for the entity's class
-		7. If all above fails and useClassFallback is true, return the entity's class
+		4. Check for the name assigned to the class in the Weapon or Entities spawn menu list
+		5. Check if the client has a language translation for the entity's class
+		6. If all above fails and useClassFallback is true, return the entity's class
 -----------------------------------------------------------]]
 function VJ.GetName(ent, useClassFallback)
 	local getNameFunc = ent.GetName
@@ -837,14 +835,9 @@ function VJ.GetName(ent, useClassFallback)
 		return CLIENT and language.GetPhrase(menuName_NPC.Name) or menuName_NPC.Name
 	end
 	
-	local menuName_Wep = list.GetEntry("Weapon", entClass)
-	if menuName_Wep then
-		return CLIENT and language.GetPhrase(menuName_Wep.PrintName) or menuName_Wep.PrintName
-	end
-	
-	local menuName_Ent = list.GetEntry("SpawnableEntities", entClass)
-	if menuName_Ent then
-		return CLIENT and language.GetPhrase(menuName_Ent.PrintName) or menuName_Ent.PrintName
+	local menuName_Misc = list.GetEntry("Weapon", entClass) or list.GetEntry("SpawnableEntities", entClass)
+	if menuName_Misc then
+		return CLIENT and language.GetPhrase(menuName_Misc.PrintName) or menuName_Misc.PrintName
 	end
 	
 	if CLIENT then
