@@ -925,7 +925,7 @@ function metaEntity:CalculateProjectile(algorithmType, startPos, targetPos, stre
 	if algorithmType == "Line" then return VJ.CalculateTrajectory(self, (isVJ and IsValid(ene)) and ene or NULL, "Line", startPos, isVJ and 1 or targetPos, strength) elseif algorithmType == "Curve" then return VJ.CalculateTrajectory(self, (isVJ and IsValid(ene)) and ene or NULL, "CurveOld", startPos, targetPos, strength) end
 end
 function VJ.IsProp(ent) return ent.VJ_ID_Prop end
-function VJ_IsProp(ent) return ent.VJ_ID_Prop end
+VJ_IsProp = VJ.IsProp
 VJ_PICK = VJ.PICK
 VJ_PICKRANDOMTABLE = VJ.PICK
 VJ_STOPSOUND = VJ.STOPSOUND

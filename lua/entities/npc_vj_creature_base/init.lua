@@ -1140,11 +1140,7 @@ function ENT:Initialize()
 		-- This is needed as setting "NextThink" to CurTime will cause performance drops, so we set the idle maintain in a separate hook that runs every tick
 		local thinkHook = hook.GetTable()["Think"]
 		if !thinkHook or !thinkHook[self] then
-			if #self:GetBoneFollowers() > 0 then
-				hook.Add("Think", self, animThinkExtra)
-			else
-				hook.Add("Think", self, animThink)
-			end
+			hook.Add("Think", self, #self:GetBoneFollowers() > 0 and animThinkExtra or animThink)
 		else
 			VJ.DEBUG_Print(self, false, "warn", "has an existing embedded \"Think\" hook already, which is disallowing the default base hook from assigning. Make sure to handle \"MaintainIdleAnimation\" in the overridden hook!")
 		end

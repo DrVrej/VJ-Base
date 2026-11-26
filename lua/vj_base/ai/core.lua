@@ -1100,7 +1100,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 	return resultAng
 end
 
-function ENT:DeltaIdealYaw() -- Based on: https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/game/server/ai_motor.cpp#L780
+function ENT:DeltaIdealYaw() -- Based on: https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/game/server/ai_motor.cpp#L780
 	local flCurrentYaw = (360 / 65536) * (math.floor(self:GetLocalAngles().y * (65536 / 360)) % 65535)
 	if flCurrentYaw == self:GetIdealYaw() then
 		return 0
@@ -2212,19 +2212,9 @@ function ENT:MaintainRelationships()
 				//ent:AddEntityRelationship(self, D_LI, 0)
 				fAddEntityRelationship(self, ent, D_LI, 0)
 				
-				-- Handle how non-VJ NPCs feel towards us
+				-- Handle how non-VJ NPCs feel towards us to make sure non VJ NPCs will respect how entities should feel towards this NPC in case it's overridden
 				if entType == ENT_TYPE_NPC and !ent.IsVJBaseSNPC then
-					-- This is here to make sure non VJ NPCs will respect how entities should feel towards this NPC in case it's overridden
-					if myHandlePerceived then
-						local result = myHandlePerceived(self, ent, distanceToEnt, true)
-						if result then
-							ent:AddEntityRelationship(self, result, 0)
-						else
-							ent:AddEntityRelationship(self, D_LI, 0)
-						end
-					else
-						ent:AddEntityRelationship(self, D_LI, 0)
-					end
+					ent:AddEntityRelationship(self, (myHandlePerceived and myHandlePerceived(self, ent, distanceToEnt, true)) or D_LI, 0)
 				end
 				
 				-- YieldToAlliedPlayers system, Based on:
@@ -2233,7 +2223,7 @@ function ENT:MaintainRelationships()
 				if entType == ENT_TYPE_PLAYER and selfData.YieldToAlliedPlayers and !selfData.IsGuard and ent:GetMoveType() != MOVETYPE_NOCLIP then // and !self:IsBusy("Activities")
 					local plyVel = ent:GetInternalVariable("m_vecSmoothedVelocity")
 					if plyVel:LengthSqr() >= 19600 then -- 140 * 140 = 19600
-						local delta = self:WorldSpaceCenter() - (ent:WorldSpaceCenter() + plyVel * 0.4);
+						local delta = self:WorldSpaceCenter() - (ent:WorldSpaceCenter() + plyVel * 0.4)
 						local myMaxs = self:OBBMaxs()
 						local myMins = self:OBBMins()
 						local zCalc = (myMaxs.z - myMins.z) * 0.5
@@ -2248,19 +2238,9 @@ function ENT:MaintainRelationships()
 					end
 				end
 			else
-				-- Handle how non-VJ NPCs feel towards us
+				-- Handle how non-VJ NPCs feel towards us to make sure non VJ NPCs will respect how entities should feel towards this NPC in case it's overridden
 				if entType == ENT_TYPE_NPC and !ent.IsVJBaseSNPC then
-					-- This is here to make sure non VJ NPCs will respect how entities should feel towards this NPC in case it's overridden
-					if myHandlePerceived then
-						local result = myHandlePerceived(self, ent, distanceToEnt, false)
-						if result then
-							ent:AddEntityRelationship(self, result, 0)
-						else
-							ent:AddEntityRelationship(self, D_HT, 0)
-						end
-					else
-						ent:AddEntityRelationship(self, D_HT, 0)
-					end
+					ent:AddEntityRelationship(self, (myHandlePerceived and myHandlePerceived(self, ent, distanceToEnt, false)) or D_HT, 0)
 				end
 				
 				local ene = fGetEnemy(self)
@@ -3415,7 +3395,7 @@ function ENT:OnTakeDamage(dmginfo)
 						self:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
 						if selfData.IsFollowing and selfData.FollowData.Target == dmgAttacker then self:ResetFollowBehavior() end
 						self:SetRelationshipMemory(dmgAttacker, VJ.MEM_OVERRIDE_DISPOSITION, D_HT)
-						self:AddEntityRelationship(dmgAttacker, D_HT, 2)
+						fAddEntityRelationship(self, dmgAttacker, D_HT, 2)
 						selfData.TakingCoverT = curTime + 2
 						self:PlaySoundSystem("BecomeEnemyToPlayer")
 						if !IsValid(fGetEnemy(self)) then
@@ -3494,12 +3474,12 @@ function ENT:OnTakeDamage(dmginfo)
 					-- Attempt to find who damaged me | RESULT: May become alerted and set its enemy if attacker is visible
 					if dmgAttacker and dmgAttacker.VJ_ID_Living and (dmgResponse == true or dmgResponse == "OnlySearch") then
 						local sightDist = fGetMaxLookDistance(self)
-						sightDist = math_min(math_max(sightDist / 2, sightDist <= 1000 and sightDist or 1000), sightDist)
+						sightDist = math_min(sightDist, math_max(1000, sightDist / 2))
 						-- IF normal sight dist is less than 1000 then change nothing, OR ELSE use half the distance with 1000 as minimum
 						if fGetPos(self):Distance(fGetPos(dmgAttacker)) <= sightDist and self:Visible(dmgAttacker) then
 							local dispLvl = self:CheckRelationship(dmgAttacker)
 							if dispLvl == D_HT or dispLvl == D_NU then
-								//self:AddEntityRelationship(dmgAttacker, D_HT, 10)
+								//fAddEntityRelationship(self, dmgAttacker, D_HT, 10)
 								self:OnSetEnemyFromDamage(dmginfo, hitgroup)
 								selfData.NextCallForHelpT = curTime + 1
 								self:ForceSetEnemy(dmgAttacker, true)
@@ -3614,7 +3594,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 							ally:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
 							if ally.IsFollowing and ally.FollowData.Target == dmgAttacker then ally:ResetFollowBehavior() end
 							ally:SetRelationshipMemory(dmgAttacker, VJ.MEM_OVERRIDE_DISPOSITION, D_HT)
-							ally:AddEntityRelationship(dmgAttacker, D_HT, 2)
+							fAddEntityRelationship(ally, dmgAttacker, D_HT, 2)
 							if ally.CanChatMessage then
 								dmgAttacker:PrintMessage(HUD_PRINTTALK, VJ.GetName(ally) .. " no longer likes you.")
 							end

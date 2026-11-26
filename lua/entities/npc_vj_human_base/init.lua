@@ -1860,11 +1860,7 @@ function ENT:Initialize()
 		-- This is needed as setting "NextThink" to CurTime will cause performance drops, so we set the idle maintain in a separate hook that runs every tick
 		local thinkHook = hook.GetTable()["Think"]
 		if !thinkHook or !thinkHook[self] then
-			if #self:GetBoneFollowers() > 0 then
-				hook.Add("Think", self, animThinkExtra)
-			else
-				hook.Add("Think", self, animThink)
-			end
+			hook.Add("Think", self, #self:GetBoneFollowers() > 0 and animThinkExtra or animThink)
 		else
 			VJ.DEBUG_Print(self, false, "warn", "has an existing embedded \"Think\" hook already, which is disallowing the default base hook from assigning. Make sure to handle \"MaintainIdleAnimation\" in the overridden hook!")
 		end
@@ -2479,7 +2475,7 @@ function ENT:Think()
 					local curWepValid = IsValid(curWep)
 					
 					-- Melee Attack
-					if selfData.HasMeleeAttack and selfData.IsAbleToMeleeAttack and !selfData.AttackType and (!curWepValid or (curWepValid and (!curWep.IsMeleeWeapon))) and ((plyControlled and selfData.VJ_Controller:GetPlayer():KeyDown(IN_ATTACK)) or (!plyControlled and (eneDistNear < selfData.MeleeAttackDistance and eneIsVisible) and (self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackAngleRadius))))) and self:OnMeleeAttack("PreInit", ene) != true then
+					if selfData.HasMeleeAttack and selfData.IsAbleToMeleeAttack and !selfData.AttackType and (!curWepValid or !curWep.IsMeleeWeapon) and ((plyControlled and selfData.VJ_Controller:GetPlayer():KeyDown(IN_ATTACK)) or (!plyControlled and (eneDistNear < selfData.MeleeAttackDistance and eneIsVisible) and (self:GetHeadDirection():Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(selfData.MeleeAttackAngleRadius))))) and self:OnMeleeAttack("PreInit", ene) != true then
 						local seed = curTime; selfData.AttackSeed = seed
 						selfData.IsAbleToMeleeAttack = false
 						selfData.AttackType = VJ.ATTACK_TYPE_MELEE
